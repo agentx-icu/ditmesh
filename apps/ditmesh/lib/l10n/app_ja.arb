@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "バナーとロック画面にテキストとモールスを表示します。オフにすると、メッセージが届いたことだけを知らせます。",
   "accountNotificationsAllow": "通知を許可",
   "accountNotificationsAllowSubtitle": "システムに通知の許可を求めます",
+  "accountNotificationsBlocked": "システム設定でブロック中",
+  "accountNotificationsBlockedSubtitle": "DitMesh のメッセージ通知はシステム設定でオフになっています。システム設定で再度オンにしてください。",
   "accountNotificationsDenied": "DitMesh の通知はシステム設定でオフになっています。",
   "accountBackupSaveFile": "バックアップファイルを保存",
   "accountBackupShareFile": "バックアップファイルを共有",

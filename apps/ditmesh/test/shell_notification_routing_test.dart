@@ -9,9 +9,11 @@ import 'package:ditmesh/notifications/notifications.dart';
 import 'package:ditmesh/notifications/testing/fake_badge_api.dart';
 import 'package:ditmesh/notifications/testing/fake_local_notifications_api.dart';
 import 'package:ditmesh/ui/account/backup_file_gateway.dart';
+import 'package:ditmesh/ui/account/unlock_page.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/groups/group_invites_page.dart';
+import 'package:ditmesh/ui/moderation/terms_gate_page.dart';
 import 'package:ditmesh/ui/pages/groups_page.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
@@ -27,6 +29,8 @@ final String _peerConv = 'c2c_$_peer';
 Future<FakeLocalNotificationsApi> _pump(
   WidgetTester tester, {
   String? launchPayload,
+  String? password,
+  bool termsAccepted = true,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1.0;
@@ -40,6 +44,7 @@ Future<FakeLocalNotificationsApi> _pump(
       toxId: FakeIdentityService.toxIdForSeed(1),
       displayName: 'Router Tester',
     ),
+    password: password,
     connectDelay: Duration.zero,
     dataDirectoryPath: freshDataDirectory(),
   );
@@ -51,11 +56,26 @@ Future<FakeLocalNotificationsApi> _pump(
         notifications: api,
         badge: FakeBadgeApi(),
       ),
-      localeStore: acceptedTermsStore(),
+      localeStore: termsAccepted ? acceptedTermsStore() : null,
     ),
   );
   await settle(tester);
   return api;
+}
+
+/// Types [password] on the unlock page and submits it.
+Future<void> _unlock(WidgetTester tester, String password) async {
+  final Finder page = find.byType(UnlockPage);
+  expect(page, findsOneWidget);
+  await tester.enterText(
+    find.descendant(of: page, matching: find.byType(TextField)),
+    password,
+  );
+  await tester.pump();
+  await tester.tap(
+    find.descendant(of: page, matching: find.byType(FilledButton)),
+  );
+  await settle(tester);
 }
 
 void main() {
@@ -69,6 +89,52 @@ void main() {
     expect(find.byType(ConversationScreen), findsOneWidget);
     // An unknown peer is titled with its short key, not the raw id.
     expect(find.textContaining(_peerConv), findsNothing);
+  });
+
+  testWidgets('a cold-start tap survives the unlock page of a '
+      'password-locked identity', (tester) async {
+    await _pump(
+      tester,
+      launchPayload: OpenConversationTarget(_peerConv).encode(),
+      password: 'hunter2',
+    );
+    expect(find.byType(ConversationScreen), findsNothing);
+    await _unlock(tester, 'hunter2');
+    expect(find.byType(ConversationScreen), findsOneWidget);
+  });
+
+  testWidgets('a tap while the unlock page shows is routed after unlock', (
+    tester,
+  ) async {
+    final api = await _pump(tester, password: 'hunter2');
+    api.tapTarget(OpenConversationTarget(_peerConv));
+    await settle(tester);
+    expect(find.byType(ConversationScreen), findsNothing);
+    await _unlock(tester, 'hunter2');
+    expect(find.byType(ConversationScreen), findsOneWidget);
+  });
+
+  testWidgets('a cold-start tap survives unlock and the terms gate', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      launchPayload: OpenConversationTarget(_peerConv).encode(),
+      password: 'hunter2',
+      termsAccepted: false,
+    );
+    await _unlock(tester, 'hunter2');
+    expect(find.byType(TermsGatePage), findsOneWidget);
+    expect(find.byType(ConversationScreen), findsNothing);
+    final Finder agree = find.byKey(
+      const ValueKey('terms-agree'),
+      skipOffstage: false,
+    );
+    await tester.ensureVisible(agree);
+    await tester.pumpAndSettle();
+    await tester.tap(agree);
+    await settle(tester);
+    expect(find.byType(ConversationScreen), findsOneWidget);
   });
 
   testWidgets('tapping the same conversation again does not stack it', (

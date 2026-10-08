@@ -221,6 +221,58 @@ void main() {
     });
   });
 
+  test('N4: identical snapshots never kick, before or after a change', () {
+    fakeAsync((async) {
+      setUpTrigger();
+      emit(async, wifi);
+      // Android re-reports the same identity on every signal-strength step
+      // (NetworkPathChannel.kt keeps strength out of the identity).
+      for (var i = 0; i < 20; i++) {
+        emit(async, wifi);
+        async.elapse(const Duration(milliseconds: 500));
+      }
+      expect(kicks, 0);
+      emit(async, cell);
+      async.elapse(const Duration(seconds: 4));
+      expect(kicks, 1);
+      // The same burst inside the 30 s window must not arm a trailing kick.
+      for (var i = 0; i < 20; i++) {
+        emit(async, cell);
+        async.elapse(const Duration(seconds: 3));
+      }
+      async.elapse(const Duration(minutes: 2));
+      expect(kicks, 1);
+    });
+  });
+
+  test('N3: validation arriving on the same network is one change', () {
+    // Android captive portal: the network is joined unvalidated, the login
+    // completes, validation flips. Handle and addresses are unchanged; the
+    // identity differs only in the validation part the Kotlin side appends.
+    const portal = NetworkPathSnapshot(
+      available: true,
+      identity: '101|wifi|10.1.1.7|unvalidated',
+    );
+    const loggedIn = NetworkPathSnapshot(
+      available: true,
+      identity: '101|wifi|10.1.1.7|validated',
+    );
+    fakeAsync((async) {
+      setUpTrigger();
+      emit(async, cell);
+      emit(async, portal);
+      async.elapse(const Duration(seconds: 4));
+      expect(kicks, 1, reason: 'joining the portal network is a change');
+      async.elapse(const Duration(seconds: 30));
+      emit(async, loggedIn);
+      async.elapse(const Duration(seconds: 4));
+      expect(kicks, 2, reason: 'the validation flip is the post-login kick');
+      emit(async, loggedIn);
+      async.elapse(const Duration(minutes: 1));
+      expect(kicks, 2);
+    });
+  });
+
   test('platform events are parsed defensively', () {
     setUpTrigger();
     expect(

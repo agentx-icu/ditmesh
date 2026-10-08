@@ -10,6 +10,7 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/telegraph_sessions.dart';
 import '../../../training/training_controller.dart';
 import '../../telegraph/telegraph_labels.dart';
+import '../drill_session_guard.dart';
 
 /// Codebook recall (F13): a round of cards, character → code and code →
 /// character, in one codebook. Revealing the answer marks the card
@@ -125,24 +126,35 @@ class _TelegraphRecallScreenState extends State<TelegraphRecallScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(s.telegraphRecallTitle),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: _index / _deck.length,
-            minHeight: 4,
+    // Leaving mid-deck loses the cards answered so far and whatever is typed
+    // or revealed on the current card (the session is only recorded once the
+    // deck is done): ask first, like the drills.
+    return DrillLeaveGuard(
+      guard:
+          !_done &&
+          (_index > 0 ||
+              _lastCorrect != null ||
+              _revealed ||
+              _code.text.isNotEmpty),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(s.telegraphRecallTitle),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4),
+            child: LinearProgressIndicator(
+              value: _index / _deck.length,
+              minHeight: 4,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: _done ? _summary(context) : _card(context),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: _done ? _summary(context) : _card(context),
+              ),
             ),
           ),
         ),
@@ -252,9 +264,7 @@ class _TelegraphRecallScreenState extends State<TelegraphRecallScreen> {
         FilledButton(
           key: const Key('telegraph-next'),
           onPressed: _next,
-          child: Text(
-            _index == _deck.length - 1 ? s.learnFinish : s.learnNext,
-          ),
+          child: Text(_index == _deck.length - 1 ? s.learnFinish : s.learnNext),
         ),
       ],
     ];

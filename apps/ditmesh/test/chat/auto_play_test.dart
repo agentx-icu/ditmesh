@@ -5,6 +5,7 @@ import 'package:ditmesh/i18n/key_value_store.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/chat/input_mode.dart';
+import 'package:ditmesh/ui/chat/morse_playback_controller.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import 'test_support.dart';
@@ -118,6 +119,107 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
+    });
+
+    testWidgets('inactive (a call banner, control centre) holds auto-play '
+        'until resumed', (tester) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      final first = h.service.receiveMessage('c2c_$kPeerKey', 'R');
+      final second = h.service.receiveMessage('c2c_$kPeerKey', 'TU');
+      await tester.pump();
+      expect(h.playback.isPlaying, isFalse);
+      // Queued, under the controller's limits, but held.
+      expect(h.playback.queuedIds, [first.id, second.id]);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(h.playback.playingId, first.id);
+      expect(h.playback.queuedIds, [second.id]);
+    });
+
+    testWidgets('a message already queued does not start while inactive', (
+      tester,
+    ) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      final first = h.service.receiveMessage('c2c_$kPeerKey', 'E');
+      final second = h.service.receiveMessage('c2c_$kPeerKey', 'TU');
+      await tester.pump();
+      expect(h.playback.playingId, first.id);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      // The first clip ends under the overlay: the next one must wait.
+      h.clock.advance(const Duration(seconds: 2));
+      await tester.pump();
+      expect(h.playback.isPlaying, isFalse);
+      expect(h.playback.queuedIds, [second.id]);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(h.playback.playingId, second.id);
+    });
+
+    testWidgets('a flood while inactive keeps only the newest messages', (
+      tester,
+    ) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      for (var i = 0; i < 12; i++) {
+        h.service.receiveMessage('c2c_$kPeerKey', 'E');
+      }
+      await tester.pump();
+      expect(h.playback.isPlaying, isFalse);
+      expect(
+        h.playback.queuedIds.length,
+        MorsePlaybackController.maxQueuedAuto,
+      );
+    });
+
+    testWidgets('closing an inactive conversation drops its queue and '
+        'releases the hold', (tester) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      h.service.receiveMessage('c2c_$kPeerKey', 'R');
+      await tester.pump();
+      expect(h.playback.queuedIds, hasLength(1));
+      expect(h.playback.holdAutomatic, isTrue);
+      await tester.pumpWidget(h.wrap(const SizedBox()));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(h.playback.queuedIds, isEmpty);
+      expect(h.playback.holdAutomatic, isFalse);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    });
+
+    testWidgets('messages held while inactive are dropped when the app goes '
+        'to the background instead', (tester) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      h.service.receiveMessage('c2c_$kPeerKey', 'R');
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      // The resume sequence: a message arriving between hidden and resumed
+      // waits too; the one from before the background period is gone.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      final late = h.service.receiveMessage('c2c_$kPeerKey', 'K');
+      await tester.pump();
+      expect(h.playback.isPlaying, isFalse);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(h.playback.playingId, late.id);
+      expect(h.playback.queuedIds, isEmpty);
     });
 
     testWidgets('the playback sheet has the switch too', (tester) async {

@@ -103,6 +103,11 @@ class NotificationCenter {
   final NotificationPlatform _platform;
   final NotificationComposer _composer;
 
+  final ValueNotifier<Set<NotificationChannelKind>> _blocked =
+      ValueNotifier<Set<NotificationChannelKind>>(
+        const <NotificationChannelKind>{},
+      );
+
   final StreamController<NotificationTapTarget> _taps =
       StreamController<NotificationTapTarget>.broadcast();
 
@@ -169,6 +174,14 @@ class NotificationCenter {
   bool get needsPermission =>
       _platform.supportsOsNotifications && _platform.needsRuntimePermission;
 
+  /// Channels the user has turned off in the OS settings (Android channel
+  /// importance `none`): the permission reads as granted, but every post to
+  /// such a channel is dropped by the OS. Read at [start] and again each
+  /// time the app returns to the foreground, since the user changes it in
+  /// Settings while the app is in the background.
+  ValueListenable<Set<NotificationChannelKind>> get blockedChannels =>
+      _blocked;
+
   /// [owner] (a conversation screen) shows [conversationId] to the user
   /// right now. While the app is in the foreground its notification is
   /// dismissed immediately and no new one is posted.
@@ -210,6 +223,7 @@ class NotificationCenter {
       _ready = await _notifications.initialize(onTap: _onTap);
     }
     if (_disposed) return;
+    unawaited(_refreshBlockedChannels());
     _knownInvites.addAll(_chat.groupInvites.map((GroupInvite i) => i.inviteId));
     _onFriendRequests(_chat.friendRequests);
     _messageSub = _chat.messageEvents.listen(_onMessage);
@@ -261,6 +275,7 @@ class NotificationCenter {
     if (_disposed) return;
     _disposed = true;
     if (_started) _isForeground.removeListener(_onForegroundChanged);
+    _blocked.dispose();
     final pending = <Future<void>>[
       ?_messageSub?.cancel(),
       ?_friendRequestSub?.cancel(),
@@ -401,6 +416,7 @@ class NotificationCenter {
     final String? id = _activeConversation;
     if (id != null) unawaited(_clearConversation(id));
     _askPermissionIfForeground();
+    unawaited(_refreshBlockedChannels());
   }
 
   void _onTap(String payload) {
@@ -460,31 +476,6 @@ class NotificationCenter {
     } catch (error, stack) {
       _report('cancel($payload)', error, stack);
     }
-  }
-
-  // ---- Badge -------------------------------------------------------------------
-
-  void _updateBadge(int total) {
-    if (!_platform.supportsBadge || _disposed) return;
-    _badgeWriter.write(total);
-  }
-
-  // ---- Lookups -----------------------------------------------------------------
-
-  Conversation? _conversationFor(String id) {
-    for (final Conversation c in _chat.conversations) {
-      if (c.id == id) return c;
-    }
-    return null;
-  }
-
-  String? _friendName(String publicKey) {
-    for (final Friend f in _chat.friends) {
-      if (f.publicKey == publicKey && f.displayName.trim().isNotEmpty) {
-        return f.displayName.trim();
-      }
-    }
-    return null;
   }
 
   static void _report(String what, Object error, StackTrace stack) {

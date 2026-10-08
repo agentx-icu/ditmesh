@@ -378,4 +378,91 @@ void main() {
       expect(runtime.applied, isEmpty);
     },
   );
+
+  group('N5: a kick never applies the old session\'s nodes to a new one', () {
+    const fromOldFetch = BootstrapNode(
+      host: '192.0.2.10',
+      port: 33445,
+      publicKey: _key,
+      udpOnline: true,
+    );
+    const fromNewFetch = BootstrapNode(
+      host: '192.0.2.20',
+      port: 33445,
+      publicKey: _key,
+      udpOnline: true,
+    );
+    late List<Completer<BootstrapCatalogue>> fetches;
+    setUp(() async {
+      fetches = [];
+      await service.dispose();
+      service = Tim2ToxNetworkBootstrapService(
+        store: store,
+        runtime: runtime,
+        fetchNodes: () {
+          final gate = Completer<BootstrapCatalogue>();
+          fetches.add(gate);
+          return gate.future;
+        },
+      );
+      await service.initialize();
+      // Engine start: fallback applied, catalogue fetch #0 left pending.
+      await service.sessionStarted();
+      expect(fetches, hasLength(1));
+    });
+
+    test('a catalogue fetched for the stopped session is dropped', () async {
+      final kick = service.rebootstrap();
+      await Future<void>.delayed(Duration.zero);
+      expect(fetches, hasLength(2), reason: 'the kick is awaiting its fetch');
+      // Identity switch: the engine stops this session and starts another.
+      service.sessionStopped();
+      await service.sessionStarted();
+      expect(fetches, hasLength(3));
+      runtime.applied.clear();
+      fetches[1].complete(
+        const BootstrapCatalogue(nodes: [fromOldFetch], fromFallback: false),
+      );
+      await kick;
+      expect(
+        runtime.applied,
+        isEmpty,
+        reason: 'the old kick must not reach the new native instance',
+      );
+      fetches[2].complete(
+        const BootstrapCatalogue(nodes: [fromNewFetch], fromFallback: false),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.applied, [fromNewFetch]);
+    });
+
+    test('node application stops at the session stop between nodes', () async {
+      final gate = Completer<bool>();
+      var calls = 0;
+      runtime.applyOverride = (_) =>
+          ++calls == 1 ? gate.future : Future<bool>.value(true);
+      runtime.applied.clear();
+      final kick = service.rebootstrap();
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.applied, hasLength(1), reason: 'saved node, in native');
+      service.sessionStopped();
+      gate.complete(true);
+      await kick;
+      expect(runtime.applied, hasLength(1));
+      expect(fetches, hasLength(1), reason: 'no fetch for a stopped session');
+    });
+
+    test('isCurrent turning false while the catalogue is pending', () async {
+      var live = true;
+      final kick = service.rebootstrap(isCurrent: () => live);
+      await Future<void>.delayed(Duration.zero);
+      runtime.applied.clear();
+      live = false;
+      fetches[1].complete(
+        const BootstrapCatalogue(nodes: [fromOldFetch], fromFallback: false),
+      );
+      await kick;
+      expect(runtime.applied, isEmpty);
+    });
+  });
 }

@@ -38,6 +38,8 @@ flutter build ios --release --no-codesign
 
 Consult `--help` for the script's target spelling/options before a new host build. Desktop runner integration finds libraries in `build/native/`; Android stages jniLibs and iOS stages an XCFramework. Stage the required native libraries before building the application.
 
+Android SDK levels are pinned in `apps/ditmesh/android/app/build.gradle.kts` (`compileSdk` 36, `minSdk` 24, `targetSdk` 36) rather than inherited from the Flutter Gradle plugin, so a Flutter upgrade cannot move them silently; `ndkVersion` follows Flutter but must stay at r28 or newer. The Android native build links every library with 16 KB page-size flags and refuses to stage a `libtim2tox_ffi.so` or `libc++_shared.so` whose `PT_LOAD` segments are not 16 KB aligned (Google Play requirement for apps targeting Android 15+). CI repeats the check on the release APK, including the Flutter and plugin libraries, and verifies the APK's zip alignment with `zipalign -c -P 16`.
+
 After the application build, run from the root:
 
 ```bash

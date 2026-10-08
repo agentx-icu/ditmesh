@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "배너와 잠금 화면에 텍스트와 모스 부호를 표시합니다. 끄면 메시지가 왔다는 것만 알립니다.",
   "accountNotificationsAllow": "알림 허용",
   "accountNotificationsAllowSubtitle": "시스템에 알림 권한을 요청합니다",
+  "accountNotificationsBlocked": "시스템 설정에서 차단됨",
+  "accountNotificationsBlockedSubtitle": "DitMesh의 메시지 알림이 시스템 설정에서 꺼져 있습니다. 시스템 설정에서 다시 켜 주세요.",
   "accountNotificationsDenied": "시스템 설정에서 DitMesh 알림이 꺼져 있습니다.",
   "accountBackupSaveFile": "백업 파일 저장",
   "accountBackupShareFile": "백업 파일 공유",

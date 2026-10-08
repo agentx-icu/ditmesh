@@ -596,6 +596,12 @@ class SPt extends S {
   String get accountNotificationsAllowSubtitle => 'Pedir permissão ao sistema';
 
   @override
+  String get accountNotificationsBlocked => 'Bloqueadas nas definições do sistema';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'As notificações de mensagens do DitMesh estão desativadas nas definições do sistema. Reative-as lá.';
+
+  @override
   String get accountNotificationsDenied => 'As notificações do DitMesh estão desligadas nas configurações do sistema.';
 
   @override

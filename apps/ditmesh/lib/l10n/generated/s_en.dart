@@ -594,6 +594,12 @@ class SEn extends S {
   String get accountNotificationsAllowSubtitle => 'Ask the system for permission';
 
   @override
+  String get accountNotificationsBlocked => 'Blocked in system settings';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'Message notifications for DitMesh are turned off in the system settings. Turn them on there to get banners again.';
+
+  @override
   String get accountNotificationsDenied => 'Notifications are off for DitMesh in the system settings.';
 
   @override

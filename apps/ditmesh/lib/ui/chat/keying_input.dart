@@ -82,6 +82,7 @@ class _KeyingInputState extends State<KeyingInput> {
   IambicKeyer? _keyer;
   Timer? _tick;
   bool _reportedPending = false;
+  bool _disposing = false;
 
   bool get _hasPending =>
       _decoder.pendingPattern.isNotEmpty ||
@@ -197,7 +198,7 @@ class _KeyingInputState extends State<KeyingInput> {
       case DecodeEventKind.element:
         break;
     }
-    if (mounted) setState(() {});
+    if (mounted && !_disposing) setState(() {});
     _reportPending();
   }
 
@@ -207,6 +208,12 @@ class _KeyingInputState extends State<KeyingInput> {
       widget.controller?._state = null;
     }
     _tick?.cancel();
+    // Leaving with a character half keyed: commit it, as send and the mode
+    // switch do, instead of dropping it silently. The decoder's event stream
+    // is synchronous, so the text reaches the owner before it is released;
+    // the owner records it for its own dispose-time draft flush.
+    _disposing = true;
+    _complete();
     unawaited(_events.cancel());
     _disposeKeyer();
     _decoder.dispose();
@@ -227,6 +234,11 @@ class _KeyingInputState extends State<KeyingInput> {
           size: widget.height - 12,
           autofocus: true,
           label: context.s.learnStraightKeyLabel,
+          // Screen readers intercept raw pointer timing: offer one dit / one
+          // dah as custom actions, like the Learn keyer does.
+          semanticDit: widget.timing.dit,
+          semanticDitLabel: context.s.learnDitLabel,
+          semanticDahLabel: context.s.learnDahLabel,
         ),
       ),
       KeyingMode.paddles => PaddleButtons(

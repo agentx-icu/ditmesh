@@ -7,13 +7,17 @@
 # an APK without one).
 #
 # Thin wrapper over tool/ci/build_tim2tox.sh --target android (the one place the
-# CMake flags, the pinned static libsodium and the post-build gates live).
+# CMake flags — including the 16 KB page-size link flags Google Play requires
+# for 64-bit libraries — the pinned static libsodium and the post-build gates
+# live; an unaligned libtim2tox_ffi.so or libc++_shared.so fails the build).
 # Equivalent of toxee's tool/build_android_ffi.sh with ToxAV permanently off.
 #
 # Env overrides:
 #   ABIS         space- or comma-separated (default "arm64-v8a";
 #                e.g. "arm64-v8a armeabi-v7a x86_64" — x86_64 for emulators)
-#   ANDROID_API  minSdk the .so targets (default 21)
+#   ANDROID_API  lowest API level the .so targets (default 21; the app's
+#                minSdk is 24, pinned in apps/ditmesh/android/app/build.gradle.kts,
+#                so a 21 library runs on every supported device)
 #   NDK / ANDROID_NDK_HOME / ANDROID_NDK_ROOT / ANDROID_HOME  NDK discovery
 set -euo pipefail
 

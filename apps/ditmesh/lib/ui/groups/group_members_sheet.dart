@@ -19,6 +19,8 @@ Future<void> showGroupMembersSheet(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    // Dragged to full height the handle must stay below the status bar.
+    useSafeArea: true,
     builder: (_) => DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.5,
@@ -62,6 +64,9 @@ class _MembersBody extends StatelessWidget {
         }
         return ListView(
           controller: scroll,
+          // The sheet is edge-to-edge: the last member's menu must end above
+          // the home indicator / gesture bar once the list is scrolled down.
+          padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),

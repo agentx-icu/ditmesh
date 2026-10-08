@@ -252,4 +252,187 @@ void main() {
     await c.keyingSink.prepare();
     expect(sink.prepareCalls, 1);
   });
+
+  group('mobile lifecycle', () {
+    late _FakeForeground foreground;
+
+    setUp(() {
+      c.dispose();
+      foreground = _FakeForeground();
+      c = MorsePlaybackController(
+        sink: sink,
+        clock: clock,
+        foreground: foreground,
+      );
+    });
+
+    test('backgrounding pauses a tapped clip; the foreground resumes it '
+        'where it stopped', () async {
+      await c.play('e', 'E', _t);
+      clock.advance(_ms * 20);
+      foreground.set(false);
+      expect(sink.log, [(true, 0), (false, 20)]);
+      // The timeline must not run on silently (or buzz in a pocket).
+      clock.advance(_ms * 500);
+      expect(sink.log.length, 2);
+      expect(c.playingId, 'e');
+      foreground.set(true);
+      await _settle();
+      clock.advance(_ms * 40);
+      expect(sink.log.sublist(2), [(true, 520), (false, 560)]);
+      expect(c.playingId, isNull);
+    });
+
+    test(
+      'messages received in the background wait for the foreground',
+      () async {
+        foreground.set(false);
+        c.enqueue('a', 'E', _t);
+        await _settle();
+        expect(c.playingId, isNull);
+        expect(c.queuedIds, ['a']);
+        expect(sink.log, isEmpty);
+        foreground.set(true);
+        await _settle();
+        expect(c.playingId, 'a');
+        expect(sink.log, [(true, 0)]);
+      },
+    );
+
+    test('a clip whose prepare ends in the background starts paused', () async {
+      c.enqueue('a', 'E', _t);
+      foreground.set(false);
+      await _settle();
+      expect(sink.log, [(true, 0), (false, 0)]);
+      clock.advance(_ms * 500);
+      expect(sink.log.length, 2);
+      expect(c.playingId, 'a');
+      foreground.set(true);
+      await _settle();
+      clock.advance(_ms * 60);
+      expect(sink.log.sublist(2), [(true, 500), (false, 560)]);
+      expect(c.playingId, isNull);
+    });
+
+    test('the player resumes only after lifecycle-gated sinks heard the '
+        'foreground', () async {
+      c.dispose();
+      final _GatedSink gated = _GatedSink(sink, foreground);
+      c = MorsePlaybackController(
+        sink: gated,
+        clock: clock,
+        foreground: foreground,
+      );
+      await c.play('e', 'E', _t);
+      clock.advance(_ms * 20);
+      foreground.set(false);
+      expect(sink.log, [(true, 0), (false, 20)]);
+      // Resumed synchronously inside the controller's listener the key-down
+      // would reach the sink before its own listener ran, and be dropped.
+      foreground.set(true);
+      await _settle();
+      clock.advance(_ms * 40);
+      expect(sink.log.sublist(2), [(true, 20), (false, 60)]);
+      expect(c.playingId, isNull);
+    });
+
+    test('holdAutomatic keeps queued messages until it is cleared', () async {
+      c.enqueue('a', 'E', _t);
+      await _settle();
+      expect(c.playingId, 'a');
+      c.enqueue('b', 'E', _t);
+      c.holdAutomatic = true;
+      clock.advance(_ms * 60);
+      await _settle();
+      expect(c.playingId, isNull, reason: 'a finished');
+      expect(c.queuedIds, ['b']);
+      clock.advance(_ms * 2000);
+      await _settle();
+      expect(c.playingId, isNull, reason: 'no automatic start while held');
+      c.holdAutomatic = false;
+      await _settle();
+      expect(c.playingId, 'b');
+    });
+
+    test('a hold set while an automatic clip prepares puts it back', () async {
+      c.enqueue('a', 'E', _t);
+      c.holdAutomatic = true;
+      await _settle();
+      expect(sink.log, isEmpty);
+      expect(c.playingId, isNull);
+      expect(c.queuedIds, ['a']);
+      c.holdAutomatic = false;
+      await _settle();
+      expect(c.playingId, 'a');
+    });
+
+    test('holdAutomatic does not stop a tapped bubble', () async {
+      c.holdAutomatic = true;
+      await c.play('m', 'E', _t);
+      expect(c.playingId, 'm');
+    });
+
+    test('dispose stops listening to the lifecycle', () {
+      expect(foreground.listeners, isNotEmpty);
+      c.dispose();
+      expect(foreground.cancelled, 1);
+    });
+  });
+}
+
+final class _FakeForeground implements AppForeground {
+  @override
+  bool isForeground = true;
+  final List<void Function(bool foreground)> listeners =
+      <void Function(bool foreground)>[];
+  int cancelled = 0;
+
+  @override
+  void Function() listen(void Function(bool foreground) onChange) {
+    listeners.add(onChange);
+    return () {
+      listeners.remove(onChange);
+      cancelled++;
+    };
+  }
+
+  /// Notifies in subscription order, like the widgets binding does.
+  void set(bool foreground) {
+    isForeground = foreground;
+    for (final void Function(bool) l in List.of(listeners)) {
+      l(foreground);
+    }
+  }
+}
+
+/// A sink that gates itself on the lifecycle the way SidetoneSink and
+/// HapticSink do: subscribes in [prepare] (after the controller did) and
+/// ignores [on] while it believes the app is in the background.
+final class _GatedSink implements MorseSink {
+  _GatedSink(this._inner, this._foreground);
+
+  final MorseSink _inner;
+  final AppForeground _foreground;
+  bool _background = false;
+  void Function()? _stop;
+
+  @override
+  Future<void> prepare() async {
+    _stop ??= _foreground.listen((bool fg) => _background = !fg);
+    await _inner.prepare();
+  }
+
+  @override
+  void on() {
+    if (!_background) _inner.on();
+  }
+
+  @override
+  void off() => _inner.off();
+
+  @override
+  Future<void> dispose() async {
+    _stop?.call();
+    await _inner.dispose();
+  }
 }

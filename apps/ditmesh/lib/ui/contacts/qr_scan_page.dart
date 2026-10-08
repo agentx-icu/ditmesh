@@ -67,14 +67,19 @@ class _QrScanPageState extends State<QrScanPage> {
               left: 16,
               right: 16,
               bottom: 32,
-              child: Material(
-                color: Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    s.chatScanQrNotToxId,
-                    textAlign: TextAlign.center,
+              // The camera runs edge-to-edge; keep the hint above the home
+              // indicator and clear of a landscape notch.
+              child: SafeArea(
+                top: false,
+                child: Material(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      s.chatScanQrNotToxId,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),

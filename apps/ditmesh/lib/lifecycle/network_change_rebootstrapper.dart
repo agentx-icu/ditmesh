@@ -6,8 +6,13 @@ import 'package:flutter/services.dart';
 /// One report from the platform's default-network watcher.
 ///
 /// [identity] names the effective default path (Android: network handle,
-/// transports and link addresses; iOS: the preferred interface of the
-/// satisfied `NWPath` and its addresses). It is only compared for equality.
+/// transports, link addresses and whether Android validated Internet on it,
+/// so a captive-portal login counts as a change; iOS: the interface types the
+/// satisfied `NWPath` uses, their addresses and the gateways). It is only
+/// compared for equality; signal strength is never part of it.
+///
+/// [available] is the platform's "a default path exists", not a reachability
+/// verdict: a captive-portal network is available and unvalidated.
 @immutable
 class NetworkPathSnapshot {
   const NetworkPathSnapshot({required this.available, this.identity});

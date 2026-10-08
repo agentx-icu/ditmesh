@@ -20,17 +20,29 @@ enum PlaybackOrigin { manual, auto }
 /// [keyingHoldoff] after the last key-up) nothing plays, not even a tapped
 /// bubble, so the keyer and the player never fight over the sink; an
 /// interrupted auto-played message goes back to the head of the queue. Tests inject a [NullSink] and a `FakeClock`.
+///
+/// Mobile lifecycle ([AppForeground], mobile only): while the app is in the
+/// background the clip sounding is paused and nothing queued starts; the
+/// foreground resumes the clip where it stopped. Without this the timeline
+/// runs on silently (the sinks mute themselves) and a tapped message is
+/// gone when the phone is unlocked, or, on iOS, the elements missed while
+/// suspended are raced through on return. [holdAutomatic] is the finer gate
+/// for `inactive`, where the sinks keep sounding but nothing new may start.
 class MorsePlaybackController extends ChangeNotifier {
   MorsePlaybackController({
     MorseSink? sink,
     Clock? clock,
+    AppForeground? foreground,
     @visibleForTesting SidetoneSink? sidetone,
   }) : _sidetone = sidetone ?? (sink == null ? SidetoneSink() : null),
-      clock = clock ?? SystemClock.shared {
+       _foreground = foreground ?? const BindingAppForeground(),
+       clock = clock ?? SystemClock.shared {
     this.sink = sink ?? CompositeSink(<MorseSink>[_sidetone!, HapticSink()]);
     keyingSink = _KeyingSink(this);
     _player = MorsePlayer(sink: this.sink, clock: this.clock);
     _subscription = _player.events.listen(_onEvent);
+    _background = !_foreground.isForeground;
+    _stopListening = _foreground.listen(_onForegroundChanged);
   }
 
   /// Quiet time after the last hand-keyed element before playback resumes.
@@ -59,10 +71,26 @@ class MorsePlaybackController extends ChangeNotifier {
   /// What hand keyers must key into: forwards to [sink] and pauses playback.
   late final MorseSink keyingSink;
   final Clock clock;
+  final AppForeground _foreground;
   late final MorsePlayer _player;
   late final StreamSubscription<PlayerEvent> _subscription;
+  late final void Function() _stopListening;
   Future<void>? _prepared;
   bool _disposed = false;
+  bool _background = false;
+  bool _holdAuto = false;
+
+  /// While true no automatic clip starts (a tapped bubble still plays). The
+  /// conversation sets it while the app is `inactive` (a call banner,
+  /// control centre, a permission dialog), so a received message never
+  /// begins sounding over an overlay; queued clips stay queued, under
+  /// [maxQueuedAuto]. Clearing it starts the next one, hold-off permitting.
+  bool get holdAutomatic => _holdAuto;
+  set holdAutomatic(bool hold) {
+    if (_disposed || _holdAuto == hold) return;
+    _holdAuto = hold;
+    if (!hold) unawaited(_advance());
+  }
 
   final Queue<_Clip> _queue = Queue<_Clip>();
 
@@ -194,7 +222,14 @@ class MorsePlaybackController extends ChangeNotifier {
   /// Starts the oldest queued clip when nothing sounds and hand keying is
   /// neither down nor within its hold-off (then a timer retries).
   Future<void> _advance() {
-    if (_disposed || _current != null || _keyDown || _queue.isEmpty) {
+    if (_disposed ||
+        _background ||
+        _current != null ||
+        _keyDown ||
+        _queue.isEmpty) {
+      return Future<void>.value();
+    }
+    if (_holdAuto && _queue.first.origin == PlaybackOrigin.auto) {
       return Future<void>.value();
     }
     final Duration? quietAt = _quietAt;
@@ -242,9 +277,20 @@ class MorsePlaybackController extends ChangeNotifier {
     notifyListeners();
     await prepare();
     if (_disposed || token != _startToken) return;
+    if (_holdAuto && clip.origin == PlaybackOrigin.auto) {
+      // The app went `inactive` while the sink prepared: back to the head of
+      // the queue until the hold is cleared.
+      _queue.addFirst(clip);
+      _trimAuto(keep: clip);
+      _reset();
+      return;
+    }
     final double? toneHz = clip.toneHz;
     if (toneHz != null && _sidetone != null) _sidetone.frequencyHz = toneHz;
     _player.play(_timeline(clip));
+    // The app left the foreground while the sink prepared: hold the clip at
+    // its first element until it is back.
+    if (_background) _player.pause();
   }
 
   /// An auto-played clip waits for whatever part of a word gap has not
@@ -309,6 +355,24 @@ class MorsePlaybackController extends ChangeNotifier {
     unawaited(_advance());
   }
 
+  void _onForegroundChanged(bool foreground) {
+    if (_disposed || foreground == !_background) return;
+    _background = !foreground;
+    if (_background) {
+      _player.pause();
+      return;
+    }
+    // The sinks that gate themselves on the lifecycle (sidetone, haptics)
+    // subscribed after this controller, so they hear the change after it:
+    // resume on a microtask, once their listeners have run, or the player
+    // would re-key sinks that still believe they are in the background.
+    scheduleMicrotask(() {
+      if (_disposed || _background) return;
+      _player.resume();
+      unawaited(_advance());
+    });
+  }
+
   void _onEvent(PlayerEvent event) {
     switch (event) {
       case PlayerElementStarted(:final index, :final element):
@@ -343,6 +407,7 @@ class MorsePlaybackController extends ChangeNotifier {
     _disposed = true;
     _queue.clear();
     _cancelHold();
+    _stopListening();
     unawaited(_subscription.cancel());
     unawaited(_player.dispose());
     unawaited(sink.dispose());

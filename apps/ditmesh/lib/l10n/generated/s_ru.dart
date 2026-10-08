@@ -633,6 +633,12 @@ class SRu extends S {
   String get accountNotificationsAllowSubtitle => 'Запросить разрешение у системы';
 
   @override
+  String get accountNotificationsBlocked => 'Заблокированы в настройках системы';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'Уведомления о сообщениях DitMesh отключены в настройках системы. Включите их там снова.';
+
+  @override
   String get accountNotificationsDenied => 'Уведомления DitMesh выключены в системных настройках.';
 
   @override

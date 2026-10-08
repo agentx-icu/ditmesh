@@ -8,6 +8,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
+import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
 import '../receive/answer_keypad.dart';
@@ -167,27 +168,33 @@ class _PlacementScreenState extends State<PlacementScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(s.placementTitle),
-        actions: <Widget>[
-          if (_phase == _Phase.round || _phase == _Phase.tierResult)
-            TextButton(onPressed: _stopEarly, child: Text(s.placementStop)),
-        ],
-      ),
-      body: _flash(
-        SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: switch (_phase) {
-                  _Phase.intro => _intro(context),
-                  _Phase.round => _roundView(context),
-                  _Phase.tierResult => _tierResult(context),
-                  _Phase.result => _result(context),
-                },
+    // Android back / predictive back / the iOS swipe mid-assessment would drop
+    // every tier answered so far silently (nothing is recorded until the
+    // assessment finishes or is stopped early): ask first, like the drills.
+    return DrillLeaveGuard(
+      guard: _phase == _Phase.round || _phase == _Phase.tierResult,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(s.placementTitle),
+          actions: <Widget>[
+            if (_phase == _Phase.round || _phase == _Phase.tierResult)
+              TextButton(onPressed: _stopEarly, child: Text(s.placementStop)),
+          ],
+        ),
+        body: _flash(
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: switch (_phase) {
+                    _Phase.intro => _intro(context),
+                    _Phase.round => _roundView(context),
+                    _Phase.tierResult => _tierResult(context),
+                    _Phase.result => _result(context),
+                  },
+                ),
               ),
             ),
           ),

@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 
@@ -27,16 +25,31 @@ abstract interface class AudioSessionApi {
 /// * `mixWithOthers`: opening a screen that prepares a sidetone must not stop
 ///   the user's music or podcast; the session is also never interrupted by a
 ///   non-mixable app starting.
+///
+/// Platform gating uses [defaultTargetPlatform] unless `platformOverride` is
+/// given, and the session comes from `openSession` (default: the plugin's
+/// shared `AVAudioSession`, which exists on iOS only). Both seams exist so a
+/// test can pin the values actually handed to the plugin; production code
+/// passes neither.
 final class PlatformAudioSessionApi implements AudioSessionApi {
-  const PlatformAudioSessionApi();
+  const PlatformAudioSessionApi({
+    TargetPlatform? platformOverride,
+    AVAudioSession Function()? openSession,
+  }) : _platformOverride = platformOverride,
+       _openSession = openSession;
+
+  final TargetPlatform? _platformOverride;
+  final AVAudioSession Function()? _openSession;
+
+  TargetPlatform get _platform => _platformOverride ?? defaultTargetPlatform;
 
   @override
   Future<void> configureForPlayback() async {
-    if (kIsWeb || !Platform.isIOS) {
+    if (kIsWeb || _platform != TargetPlatform.iOS) {
       return;
     }
     try {
-      final session = AVAudioSession();
+      final session = (_openSession ?? AVAudioSession.new)();
       await session.setCategory(
         AVAudioSessionCategory.playback,
         AVAudioSessionCategoryOptions.mixWithOthers,

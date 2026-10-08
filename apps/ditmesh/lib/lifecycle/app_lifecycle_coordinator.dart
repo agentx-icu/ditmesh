@@ -17,7 +17,10 @@ import 'lifecycle_hint.dart';
 ///   background budget (`NotificationPlatform.backgroundBudget`: iOS ~30 s,
 ///   Android ~60 s / OEM-dependent) flips [mayBeDisconnected] and emits
 ///   [LifecycleHint.mayBeDisconnected]. Desktop never suspends, so no
-///   countdown runs there.
+///   countdown runs there. The countdown cannot fire while the OS has the
+///   process frozen, so on resume the wall-clock length of the period is
+///   compared with the budget as well, and a period that outlasted it still
+///   emits the hint (once) before [LifecycleHint.foreground].
 /// - On resume after any background period, `IdentityService.connect()` is
 ///   called (the contract guarantees idempotency) so a node that is not
 ///   running (a failed start, a teardown) comes back without the user
@@ -36,7 +39,11 @@ import 'lifecycle_hint.dart';
 /// (control centre, an incoming call banner, a permission dialog) and for a
 /// desktop window merely losing focus, none of which hide the conversation.
 /// `hidden` (window minimised / app switcher) and `paused` count as
-/// background on every platform.
+/// background on every platform. `detached` is the state both mobile engines
+/// seed the binding with before the first real lifecycle message, and is
+/// delivered again after `paused` at engine teardown: only the latter is a
+/// background period (and that one has already begun), so `detached` before
+/// the first `resumed` is ignored.
 class AppLifecycleCoordinator with WidgetsBindingObserver {
   AppLifecycleCoordinator({
     required IdentityService identity,
@@ -45,8 +52,10 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
     Duration? backgroundBudget,
     Future<void> Function()? onBackground,
     BackgroundTaskApi backgroundTasks = const NoopBackgroundTaskApi(),
+    DateTime Function()? wallClock,
   }) : _identity = identity,
        _clock = clock ?? SystemClock.shared,
+       _wallClock = wallClock ?? DateTime.now,
        _platform = platform ?? NotificationPlatform.detect(),
        _budgetOverride = backgroundBudget,
        _onBackground = onBackground,
@@ -54,6 +63,11 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
 
   final IdentityService _identity;
   final Clock _clock;
+
+  /// Wall-clock time, the only time that keeps advancing while the OS has
+  /// the process frozen; see [_enterForeground].
+  final DateTime Function() _wallClock;
+  DateTime? _backgroundAt;
   final NotificationPlatform _platform;
   final Duration? _budgetOverride;
   final Future<void> Function()? _onBackground;
@@ -71,6 +85,7 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
   Timer? _budgetTimer;
   bool _attached = false;
   bool _inBackground = false;
+  bool _sawForeground = false;
   bool _disposed = false;
 
   ValueListenable<bool> get isForeground => _foreground;
@@ -112,8 +127,11 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
         break;
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
-      case AppLifecycleState.detached:
         _enterBackground();
+      case AppLifecycleState.detached:
+        // The engine's seed state at launch is not a background period; the
+        // teardown one (after `paused`) is, and has already been entered.
+        if (_sawForeground) _enterBackground();
     }
   }
 
@@ -132,6 +150,7 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
   void _enterBackground() {
     if (_inBackground) return;
     _inBackground = true;
+    _backgroundAt = _wallClock();
     // Asked for first so the flush below runs under the extended grace time,
     // and owned (with the countdown) before any listener runs: a listener
     // that resumes or disposes re-entrantly must find something to release.
@@ -193,6 +212,7 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
   }
 
   void _enterForeground() {
+    _sawForeground = true;
     _budgetTimer?.cancel();
     _budgetTimer = null;
     _releaseBackgroundTask();
@@ -203,6 +223,20 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
       return;
     }
     _inBackground = false;
+    // The countdown is a Dart timer: when the OS froze the process before it
+    // fired, the timer and `resumed` race on return, so the period is also
+    // measured on the wall clock. A period that outlasted the budget still
+    // reports it, once, before `foreground`.
+    final Duration? budget = backgroundBudget;
+    final DateTime? since = _backgroundAt;
+    _backgroundAt = null;
+    if (budget != null &&
+        since != null &&
+        !_mayBeDisconnected.value &&
+        _wallClock().difference(since) >= budget) {
+      _mayBeDisconnected.value = true;
+      _emit(LifecycleHint.mayBeDisconnected);
+    }
     _foreground.value = true;
     _mayBeDisconnected.value = false;
     _emit(LifecycleHint.foreground);

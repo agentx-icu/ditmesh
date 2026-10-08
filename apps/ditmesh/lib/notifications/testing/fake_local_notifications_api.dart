@@ -137,4 +137,14 @@ final class FakeLocalNotificationsApi implements LocalNotificationsApi {
     cancelAllCalls++;
     _active.clear();
   }
+
+  /// Channels the OS reports as turned off by the user.
+  Set<NotificationChannelKind> blocked = <NotificationChannelKind>{};
+  int blockedChannelChecks = 0;
+
+  @override
+  Future<Set<NotificationChannelKind>> blockedChannels() async {
+    blockedChannelChecks++;
+    return Set<NotificationChannelKind>.of(blocked);
+  }
 }

@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "Text und Morse in Bannern und auf dem Sperrbildschirm. Aus: nur der Hinweis, dass eine Nachricht kam.",
   "accountNotificationsAllow": "Benachrichtigungen erlauben",
   "accountNotificationsAllowSubtitle": "Das System um Erlaubnis bitten",
+  "accountNotificationsBlocked": "In den Systemeinstellungen blockiert",
+  "accountNotificationsBlockedSubtitle": "Nachrichtenbenachrichtigungen von DitMesh sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort wieder ein.",
   "accountNotificationsDenied": "Benachrichtigungen für DitMesh sind in den Systemeinstellungen ausgeschaltet.",
   "accountBackupSaveFile": "Sicherungsdatei speichern",
   "accountBackupShareFile": "Sicherungsdatei teilen",
