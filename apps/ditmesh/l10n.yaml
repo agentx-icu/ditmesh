@@ -1,0 +1,20 @@
+# gen-l10n configuration for the ditmesh app. Run inside apps/ditmesh:
+#   flutter gen-l10n
+# (also runs automatically on build/run because pubspec.yaml has
+# `flutter: generate: true`).
+#
+# Sources: lib/l10n/app_en.arb (template) + every app_<locale>.arb.
+# Output:  lib/l10n/generated/s.dart (+ s_<language>.dart), class `S`,
+#          used as `S.of(context)` or the `context.s` extension
+#          (lib/i18n/l10n_extension.dart).
+#
+# Note: `synthetic-package` is deliberately NOT set. Flutter 3.41 removed the
+# synthetic package; the key has no effect and only prints a warning.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-dir: lib/l10n/generated
+output-localization-file: s.dart
+output-class: S
+nullable-getter: false
+# Keep the generated files stable (no dart format churn between machines).
+format: false

@@ -1,0 +1,88 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Notifications (lib/notifications/). flutter_local_notifications >= 16
+         merges POST_NOTIFICATIONS and VIBRATE from its own manifest; they are
+         repeated here so the Android 13+ runtime permission the app requests
+         (NotificationCenter.ensurePermission) is visible in this file. No
+         scheduled-notification / boot receivers and no ActionBroadcastReceiver:
+         ditmesh only posts live notifications from the Tox poll loop, never
+         schedules them and has no notification actions. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Tox P2P networking. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Camera: scanning a friend's Tox ID QR code (ui/contacts, mobile_scanner). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- CAMERA implies android.hardware.camera AND camera.autofocus as
+         *required* features, which hides the app on Play for devices with a
+         fixed-focus or front-only camera (many tablets, Chromebooks). QR
+         scanning is optional, so none of the camera features is required. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <!-- Microphone: decoding Morse from audio (ui/listen, record).
+         RECORD_AUDIO implies a required android.hardware.microphone; Listen is
+         one optional tab, so mic-less devices must still see the app. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <!-- Platform backup is off (same policy as toxee): the files dir holds the
+         Tox profile (the identity's private key, plaintext when no password is
+         set), chat history and settings. Google Auto Backup / adb backup
+         (allowBackup, fullBackupContent) and the Android 12+ device-to-device
+         transfer (dataExtractionRules) would copy that identity off the device
+         unattended and clone it onto a second phone. The in-app, encrypted
+         .mcqbackup export is the supported way to move an identity. -->
+    <application
+        android:label="DitMesh"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:localeConfig="@xml/locale_config">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher (lib/ui/moderation/site_links.dart): the privacy
+             policy / terms / support pages in the browser. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+    </queries>
+</manifest>

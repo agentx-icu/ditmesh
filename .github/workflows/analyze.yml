@@ -1,0 +1,115 @@
+name: Analyze
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Supersede an in-flight run when a PR is pushed again. Scoped to
+  # pull_request so a push-to-main run is never aborted midway.
+  group: analyze-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # third_party/tim2tox (Dart side only; nested c-toxcore is not needed
+          # for analysis and tests without the native library).
+          submodules: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          # Caches the Flutter SDK download/extract (~2.5 min/job).
+          cache: true
+
+      # Vendors the Tencent Cloud Chat SDK that tim2tox_dart depends on, applies
+      # tim2tox's patch series and writes the root pubspec_overrides.yaml.
+      # Must run BEFORE pub get (same rule as toxee).
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      # Pub workspace: one resolution at the root covers every package/app.
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      - name: Install pinned workflow linter
+        run: |
+          curl -fsSL --retry 3 --connect-timeout 30 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            -o "$RUNNER_TEMP/actionlint.tar.gz"
+          printf '%s  %s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' "$RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Workflow and shell syntax gate
+        run: |
+          actionlint -pyflakes= .github/workflows/*.yml
+          shellcheck -S warning -x build_all.sh tool/*.sh tool/ci/*.sh
+          for script in build_all.sh tool/*.sh tool/ci/*.sh; do
+            bash -n "$script"
+          done
+          ruby -c apps/ditmesh/ios/Podfile
+          ruby -c apps/ditmesh/macos/Podfile
+
+      # Hard gate: zero issues. The root analysis_options.yaml applies to every
+      # package (none carries its own), so this is one lint set, not N.
+      - name: Flutter analyze (hard gate)
+        run: |
+          set -euo pipefail
+          for dir in packages/* apps/*; do
+            [ -f "$dir/pubspec.yaml" ] || continue
+            echo "::group::flutter analyze $dir"
+            flutter analyze "$dir"
+            echo "::endgroup::"
+          done
+
+      # The repo-root scripts under tool/ resolve against the workspace root
+      # pubspec; same lint set, infos are fatal too.
+      - name: Dart analyze tool/ (hard gate)
+        run: dart analyze --fatal-infos tool
+
+      - name: Complexity guard (500 LOC, baseline ratchet)
+        run: dart run tool/check_complexity.dart
+
+      - name: Import guard (layering)
+        run: dart run tool/import_guard.dart
+
+      # No hard-coded user-visible prose in apps/ditmesh/lib: text sinks
+      # (Text, tooltip, labelText, ...) must read from the ARBs. Its own
+      # tests run with the app tests (apps/ditmesh/test/i18n/).
+      - name: UI literal guard (localisation)
+        run: dart run tool/ui_literal_guard.dart
+
+      - name: Release version consistency
+        run: bash tool/ci/release_version.sh
+
+      - name: Packaging regression tests
+        run: python3 tool/ci/release_config_test.py
+
+      - name: Screenshot import regression tests
+        run: python3 tool/screenshots/capture_import_test.py
+
+      # Tests tagged `needs-native` require libtim2tox_ffi and run from the
+      # native workflow instead.
+      - name: Tests
+        run: |
+          set -euo pipefail
+          for dir in packages/* apps/*; do
+            [ -f "$dir/pubspec.yaml" ] && [ -d "$dir/test" ] || continue
+            echo "::group::flutter test $dir"
+            (cd "$dir" && flutter test --exclude-tags=needs-native)
+            echo "::endgroup::"
+          done

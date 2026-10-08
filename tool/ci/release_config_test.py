@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""Regression checks for mismatched versions and incomplete release uploads."""
+import hashlib
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import unittest
+
+from macos_components import configure_components
+
+TOOLS = Path(__file__).resolve().parent
+
+
+class ReleaseValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.spec = self.root / "pubspec.yaml"
+        self.spec.write_text("version: 2.3.4+17\n")
+        self.env = dict(os.environ, DITMESH_APP_PUBSPEC=str(self.spec))
+        self.env.pop("GITHUB_REF_TYPE", None)
+        self.env.pop("GITHUB_REF_NAME", None)
+
+    def run_script(self, script, *args, **env):
+        return subprocess.run(
+            ["bash", str(TOOLS / script), *map(str, args)],
+            env=dict(self.env, **env), capture_output=True, text=True,
+            check=False,
+        )
+
+    def test_tag_must_match_embedded_app_version(self):
+        valid = self.run_script("release_version.sh", GITHUB_REF_TYPE="tag",
+                                GITHUB_REF_NAME="v2.3.4")
+        self.assertEqual(valid.returncode, 0, valid.stderr)
+        self.assertEqual(valid.stdout.strip(), "2.3.4")
+        build = self.run_script("release_version.sh", "--build-number")
+        self.assertEqual(build.returncode, 0, build.stderr)
+        self.assertEqual(build.stdout.strip(), "17")
+        for tag in ("v9.9.9", "v2.3.4-beta", "2.3.4"):
+            with self.subTest(tag=tag):
+                invalid = self.run_script("release_version.sh",
+                                          GITHUB_REF_TYPE="tag",
+                                          GITHUB_REF_NAME=tag)
+                self.assertNotEqual(invalid.returncode, 0)
+
+    def test_missing_build_number_is_rejected(self):
+        self.spec.write_text("version: 2.3.4\n")
+        self.assertNotEqual(self.run_script("release_version.sh").returncode, 0)
+
+    def test_complete_set_creates_verifiable_checksums(self):
+        suffixes = (
+            "linux-x86_64.deb", "linux-x86_64.rpm", "linux-x86_64.tar.gz",
+            "windows-x64.msi", "windows-x64.zip", "macos-arm64.pkg",
+            "macos-arm64.zip", "macos-x86_64.pkg", "macos-x86_64.zip",
+            "android.apk", "android.aab", "ios-unsigned.ipa",
+        )
+        dist = self.root / "dist"
+        dist.mkdir()
+        assets = [dist / f"ditmesh-2.3.4-{suffix}" for suffix in suffixes]
+        for asset in assets:
+            asset.write_bytes(asset.name.encode())
+        result = self.run_script("verify_release_assets.sh", dist, "v2.3.4")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = (dist / "SHA256SUMS").read_text().splitlines()
+        self.assertEqual(len(manifest), 12)
+        for line in manifest:
+            digest, name = line.split("  ", 1)
+            self.assertEqual(digest, hashlib.sha256((dist / name).read_bytes()).hexdigest())
+        assets[0].unlink()
+        self.assertNotEqual(self.run_script("verify_release_assets.sh", dist,
+                                           "v2.3.4").returncode, 0)
+        assets[0].write_bytes(b"restored")
+        (dist / "unreviewed.zip").write_bytes(b"unexpected")
+        self.assertNotEqual(self.run_script("verify_release_assets.sh", dist,
+                                           "v2.3.4").returncode, 0)
+
+    def test_installer_cannot_relocate_into_another_app(self):
+        child = {"RootRelativeBundlePath": "DitMesh.app/Contents/Frameworks/common.framework",
+                 "ChildBundles": [{"RootRelativeBundlePath": "DitMesh.app/Contents/Frameworks/common.framework/privacy.bundle"}]}
+        entries = [{"RootRelativeBundlePath": child["RootRelativeBundlePath"]},
+                   {"RootRelativeBundlePath": "DitMesh.app",
+                    "BundleIsRelocatable": True, "ChildBundles": [child]}]
+        result = configure_components(entries)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["RootRelativeBundlePath"], "DitMesh.app")
+        self.assertTrue(result[0]["BundleHasStrictIdentifier"])
+        self.assertFalse(result[0]["BundleIsRelocatable"])
+        self.assertFalse(result[0]["ChildBundles"][0]["BundleIsRelocatable"])
+        self.assertFalse(result[0]["ChildBundles"][0]["ChildBundles"][0]["BundleIsRelocatable"])
+        self.assertTrue(entries[1]["BundleIsRelocatable"])
+        with self.assertRaises(ValueError):
+            configure_components([])
+
+    def test_ios_download_failure_stops_before_native_configuration(self):
+        # iOS calls nested functions through command substitutions, where bash
+        # disables errexit. Failed downloads must still stop the entire slice.
+        scripts = self.root / "tool" / "ci"
+        scripts.mkdir(parents=True)
+        for script in ("build_tim2tox.sh", "common.sh"):
+            shutil.copyfile(TOOLS / script, scripts / script)
+        ffi = self.root / "third_party" / "tim2tox" / "ffi"
+        ffi.mkdir(parents=True)
+        (ffi / "CMakeLists.txt").write_text("# Unused fixture\n")
+        toxcore = ffi.parent / "third_party" / "c-toxcore"
+        toxcore.mkdir(parents=True)
+        (toxcore / "CMakeLists.txt").write_text("# Unused fixture\n")
+        flutter = self.root / "flutter"
+        headers = flutter / "bin" / "cache" / "dart-sdk" / "include"
+        headers.mkdir(parents=True)
+        (headers / "dart_api_dl.h").touch()
+        commands = self.root / "commands"
+        commands.mkdir()
+        marker = self.root / "configured"
+        stubs = {
+            "curl": "exit 7\n",
+            "xcrun": 'case "$*" in *--show-sdk-path*) echo /mock-sdk ;; *) echo /mock-clang ;; esac\n',
+            "cmake": f'touch "{marker}"\nexit 1\n',
+            "lipo": "exit 1\n",
+            "install_name_tool": "exit 1\n",
+        }
+        for name, body in stubs.items():
+            command = commands / name
+            command.write_text("#!/bin/sh\n" + body)
+            command.chmod(0o755)
+        result = subprocess.run(
+            ["bash", str(scripts / "build_tim2tox.sh"), "--target",
+             "ios-device", "--no-stage-app"],
+            env=dict(self.env, RUNNER_OS="macOS", FLUTTER_ROOT=str(flutter),
+                     DITMESH_NATIVE_BUILD_ROOT=str(self.root / "native"),
+                     PATH=f"{commands}{os.pathsep}{os.environ['PATH']}"),
+            capture_output=True, text=True, check=False, timeout=10,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Failed to download", result.stderr)
+        self.assertIn("arm64 slice failed", result.stderr)
+        self.assertFalse(marker.exists(), result.stderr)
+        self.assertFalse(list((self.root / "native").rglob("*.part.*")))
+
+
+if __name__ == "__main__":
+    unittest.main()

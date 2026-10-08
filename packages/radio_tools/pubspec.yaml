@@ -1,0 +1,15 @@
+name: radio_tools
+description: Pure-Dart amateur radio helpers - Maidenhead locators, great-circle distance and bearing, IARU band edges and antenna lengths, CW speed and RST reports. No Flutter dependency.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  morse_core: ^0.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  test: ^1.25.0

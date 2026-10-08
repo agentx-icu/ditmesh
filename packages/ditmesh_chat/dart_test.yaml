@@ -1,0 +1,6 @@
+tags:
+  # Needs libtim2tox_ffi built and loadable (see README "Native smoke test").
+  # Skipped automatically when the library cannot be opened; exclude
+  # explicitly in CI with `flutter test --exclude-tags=needs-native`.
+  needs-native:
+    timeout: 5m

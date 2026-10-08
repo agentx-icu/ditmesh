@@ -1,0 +1,16 @@
+name: morse_trainer
+description: Pure-Dart Morse training pedagogy - Koch course, Farnsworth settings, drill generators, alignment-based scoring, spaced repetition, send diagnostics and progress. No Flutter dependency.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  meta: ^1.16.0
+  morse_core: ^0.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  test: ^1.25.0

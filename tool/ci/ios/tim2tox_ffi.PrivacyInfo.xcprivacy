@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Privacy manifest of tim2tox_ffi.framework (c-toxcore + libsodium +
+     Tim2Tox), copied into the framework by tool/ci/build_tim2tox.sh.
+     No tracking, nothing collected: the library only talks to Tox peers.
+     Required-reason APIs: `stat` / `fstat` (nm -u of the iOS slice) read the
+     size and timestamps of the profile, history and queue files inside the
+     app container (C617.1). Re-check with `nm -u` after a Tim2Tox bump. -->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

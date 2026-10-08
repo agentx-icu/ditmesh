@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-10-08",
+  "use_case": "ui-mockup",
+  "prompt": "Use case: ui-mockup. Asset type: GitHub README product concept board for DitMesh. Generate a polished landscape product design image for DitMesh, an existing Material 3 Morse-only Tox peer-to-peer chat app. One desktop chat interface at left and one mobile group conversation at right on a quiet off-white presentation canvas. Calm muted teal accent, warm gray background, restrained rounded surfaces, clear typography. Desktop navigation rail has exactly Chat, Groups, Reference, Me (no Learn tab). Conversation contains familiar CW text CQ CQ, DE BG7ABC, RST 599 and dot/dash Morse previews with small playback buttons. Compose area has read-only decoded draft, Straight key and Paddles selector, prominent press-to-key pad, Send button; absolutely NO writable keyboard text chat field. Mobile bottom navigation same four destinations, group called CW Practice. Exact headline text 'DitMesh'. Subtitle 'Chat in Morse code'. Small footer 'Product design concept · October 2026'. Clearly an interface concept, not a photo or screenshot. No login form, no phone/email registration, no lesson dashboard, no unrelated branding or fake marketing badges. Balanced readable realistic app layout."
+}

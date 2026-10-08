@@ -1,0 +1,23 @@
+name: ditmesh_workspace
+description: Pub workspace root for DitMesh (Morse-only direct and group chat over Tox). Not published.
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+
+# Every package under packages/ and apps/ joins this workspace with
+# `resolution: workspace` in its own pubspec. Run `dart pub get` once here.
+workspace:
+  - packages/ditmesh_chat_api
+  - packages/morse_core
+  - packages/morse_io
+  - packages/morse_trainer
+  - apps/ditmesh
+  - packages/ditmesh_chat
+  - packages/morse_dsp
+  - packages/radio_tools
+
+# Dependencies of the repo-root scripts under tool/ (resolved by the same
+# workspace `dart pub get`). tool/ui_literal_guard.dart parses the app with it.
+dev_dependencies:
+  analyzer: ^10.0.1

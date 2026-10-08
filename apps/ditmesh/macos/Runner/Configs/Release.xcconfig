@@ -1,0 +1,6 @@
+#include "../../Flutter/Flutter-Release.xcconfig"
+#include "Warnings.xcconfig"
+
+// Release packages carry the backend for the build host's architecture.
+// Debug keeps standard architectures so Flutter can select arm64 destinations.
+ARCHS = $(NATIVE_ARCH_ACTUAL)

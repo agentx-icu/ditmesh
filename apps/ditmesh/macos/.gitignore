@@ -1,0 +1,15 @@
+# Flutter-related
+**/Flutter/ephemeral/
+**/Pods/
+
+# Xcode-related
+**/dgph
+**/xcuserdata/
+
+# ditmesh: bundle libtim2tox_ffi — prebuilt native artifacts staged by tool/ci/build_tim2tox.sh --target macos
+Frameworks/libtim2tox_ffi.dylib
+Frameworks/libsodium*.dylib
+
+# ditmesh: bundle libtim2tox_ffi — prebuilt native artifacts staged by tool/ci/build_tim2tox.sh --target macos
+Frameworks/libtim2tox_ffi.dylib
+Frameworks/libsodium*.dylib

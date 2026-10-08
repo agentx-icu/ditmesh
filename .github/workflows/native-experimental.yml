@@ -1,0 +1,171 @@
+name: Experimental ARM native builds
+
+# These libraries are experimental; app packages are not published for ARM
+# Linux or Windows. This independent workflow has its own failure status.
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  FLUTTER_VERSION: "3.41.9"
+  DART_VERSION: "3.11.5"
+
+jobs:
+  experimental:
+    name: experimental native ${{ matrix.target }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'ci:arm')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-aarch64
+            runner: ubuntu-24.04-arm
+            experimental: true
+            timeout: 60
+            dart_only: true
+          - target: windows-arm64
+            runner: windows-11-arm
+            experimental: true
+            timeout: 90
+            vcpkg_triplet: arm64-windows
+            msvc_arch: arm64
+            dart_only: true
+
+    steps:
+      - name: Configure Git line endings (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      # ubuntu-24.04-arm / windows-11-arm: subosito/flutter-action fails with
+      # "Unable to determine Flutter version ... architecture: arm64" because
+      # Flutter ships only x64 archives for Linux/Windows. The standalone Dart
+      # SDK (same version Flutter bundles) is published for both arm64
+      # platforms; build_tim2tox.sh stages its include/ under a shim
+      # FLUTTER_ROOT when `dart` is on PATH and `flutter` is not.
+      - name: Set up Dart SDK (arm64 runner, no Flutter archive)
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_VERSION }}
+          architecture: arm64
+
+      - name: Verify Dart SDK headers (arm64 runner)
+        run: |
+          set -euo pipefail
+          dart --version
+          sdk="$(cd "$(dirname "$(command -v dart)")/.." && pwd)"
+          # Tim2Tox compiles dart_api_dl.c as well as including the header.
+          for f in dart_api_dl.h dart_api_dl.c; do
+            [[ -f "$sdk/include/$f" ]] || { echo "::error::$f missing under $sdk/include"; exit 1; }
+          done
+          echo "dart sdk: $sdk ($(cat "$sdk/version"))"
+
+      - name: Resolve tim2tox revision (cache key)
+        id: t2t_rev
+        run: echo "sha=$(git rev-parse HEAD:third_party/tim2tox)" >> "$GITHUB_OUTPUT"
+
+      # libtim2tox_ffi is a pure function of (tim2tox SHA, target, build
+      # script, toolchain image); cache the finished artifact directory and skip
+      # the build on a hit. The dependency prefix (static libsodium) is cached
+      # separately so a tim2tox bump does not rebuild libsodium.
+      - name: Cache built libtim2tox_ffi
+        id: cache_native
+        uses: actions/cache@v4
+        with:
+          path: build/native/${{ matrix.target }}
+          # The Flutter/Dart pins are part of the key on EVERY row: the library
+          # compiles dart_api_dl.c from the SDK headers, so a pin bump must not
+          # restore a cache entry built against older headers (the Dart-only
+          # arm64 rows read DART_VERSION, the others get Dart via FLUTTER_VERSION).
+          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native-experimental.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh') }}
+
+      - name: Cache libsodium prefix
+        if: steps.cache_native.outputs.cache-hit != 'true' && !startsWith(matrix.target, 'windows')
+        uses: actions/cache@v4
+        with:
+          path: build/native/.deps
+          key: libsodium-1.0.20-${{ matrix.target }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tool/ci/build_tim2tox.sh') }}
+
+      # ---- per-OS prerequisites --------------------------------------------
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux' && steps.cache_native.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          for attempt in 1 2 3; do
+            if sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build pkg-config patchelf; then
+              exit 0
+            fi
+            echo "apt-get attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 15))
+          done
+          exit 1
+
+      # vcpkg provides libsodium (dynamic) + pthreads-win32 + pkgconf; both DLLs
+      # are captured next to tim2tox_ffi.dll by the build script.
+      - name: Install vcpkg and native dependencies (Windows)
+        if: runner.os == 'Windows' && steps.cache_native.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $vcpkgRoot = Join-Path $env:RUNNER_TEMP "vcpkg"
+          git init $vcpkgRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C $vcpkgRoot remote add origin https://github.com/microsoft/vcpkg
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C $vcpkgRoot fetch --depth 1 origin 2750401336fb7c95f6619657a46a7e798661341c
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C $vcpkgRoot checkout --detach FETCH_HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$vcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$vcpkgRoot\vcpkg.exe" install `
+            libsodium:${{ matrix.vcpkg_triplet }} `
+            pthreads:${{ matrix.vcpkg_triplet }} `
+            pkgconf:${{ matrix.vcpkg_triplet }}
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "VCPKG_ROOT=$vcpkgRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # vcvars so cmake's project() finds MSVC for the requested arch.
+      - name: Set up MSVC developer environment (Windows)
+        if: runner.os == 'Windows' && steps.cache_native.outputs.cache-hit != 'true'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+
+      # ---- build ------------------------------------------------------------
+      - name: Build libtim2tox_ffi (desktop)
+        if: steps.cache_native.outputs.cache-hit != 'true'
+        env:
+          # msvc-dev-cmd leaks VS's bundled vcpkg into VCPKG_ROOT; re-pin ours.
+          VCPKG_ROOT: ${{ runner.os == 'Windows' && format('{0}/vcpkg', runner.temp) || '' }}
+        run: bash tool/ci/build_tim2tox.sh --target "${{ matrix.target }}" --mode release --no-stage-app
+
+      # Gate the BYTES that will be uploaded (a cache hit never ran CMake).
+      - name: Assert artifact carries no Tim2Tox test hooks
+        run: bash tool/ci/assert_no_test_hooks.sh "build/native/${{ matrix.target }}"
+
+      - name: List artifact
+        run: find "build/native/${{ matrix.target }}" -maxdepth 3 | sort
+
+      - name: Upload libtim2tox_ffi
+        uses: actions/upload-artifact@v4
+        with:
+          name: tim2tox-ffi-${{ matrix.target }}
+          path: build/native/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 14

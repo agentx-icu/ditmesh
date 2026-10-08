@@ -1,0 +1,10 @@
+/* French permission purpose strings for the NS*UsageDescription
+   keys in Info.plist. The product name DitMesh stays untranslated;
+   other terms follow lib/l10n/app_*.arb. Every NS*UsageDescription key
+   needs an entry here (test/i18n/platform_locales_test.dart). */
+
+/* Shown when DitMesh first asks for the camera (scanning a Tox ID QR code). */
+"NSCameraUsageDescription" = "DitMesh utilise la caméra uniquement pour scanner le code QR de l’identifiant Tox d’un ami.";
+
+/* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
+"NSMicrophoneUsageDescription" = "DitMesh utilise le microphone uniquement pour décoder le code Morse que vous diffusez ou manipulez à proximité.";

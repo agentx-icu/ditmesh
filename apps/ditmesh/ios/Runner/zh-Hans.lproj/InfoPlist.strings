@@ -1,0 +1,10 @@
+/* Simplified Chinese permission purpose strings for the NS*UsageDescription
+   keys in Info.plist. The product name DitMesh stays untranslated. Every
+   NS*UsageDescription key needs an entry here
+   (test/i18n/platform_locales_test.dart). */
+
+/* Shown when DitMesh first asks for the camera (scanning a Tox ID QR code). */
+"NSCameraUsageDescription" = "DitMesh 仅使用相机扫描好友的 Tox ID 二维码。";
+
+/* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
+"NSMicrophoneUsageDescription" = "DitMesh 仅使用麦克风解码你在附近播放或拍发的莫尔斯电码。";

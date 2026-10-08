@@ -1,0 +1,45 @@
+// ditmesh overlay (third_party/overlays/tencent_cloud_chat_sdk): no
+// com.tencent.imsdk dependency, no jniLibs. The Dart side loads
+// libtim2tox_ffi (bundled by the app) through dart:ffi.
+group 'com.tencent.chat.tencent_cloud_chat_sdk'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.tencent.chat.tencent_cloud_chat_sdk'
+    }
+    compileSdkVersion 34
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 19
+        consumerProguardFiles 'consumer-proguard-rules.txt'
+    }
+
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}

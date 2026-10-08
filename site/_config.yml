@@ -1,0 +1,16 @@
+# GitHub Pages site for DitMesh: privacy policy, terms of use and support,
+# linked from the app (Me > About) and from App Store Connect.
+# Built and deployed by .github/workflows/pages.yml (Jekyll, this directory).
+title: DitMesh
+description: Morse-only direct and group chat over the Tox peer-to-peer network.
+lang: en
+# Project site: every page lives under /ditmesh (the URLs the app opens).
+baseurl: /ditmesh
+url: https://agentx-icu.github.io
+theme: minima
+# Public support contact (App Review 1.5): GitHub issues. There is no e-mail.
+support_url: https://github.com/agentx-icu/ditmesh/issues
+source_url: https://github.com/agentx-icu/ditmesh
+exclude:
+  - README.md
+  - README.zh-CN.md
