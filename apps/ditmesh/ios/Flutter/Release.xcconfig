@@ -1,0 +1,5 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+#include "Generated.xcconfig"
+
+// Every DitMesh build includes encrypted Tox chat.
+DITMESH_INFOPLIST = Runner/Info.plist

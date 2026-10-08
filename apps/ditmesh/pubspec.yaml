@@ -1,0 +1,79 @@
+name: ditmesh
+description: "Morse-only direct and group chat over the Tox peer-to-peer network."
+publish_to: 'none'
+version: 1.0.0+1
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Localisation (lib/l10n/ ARB files -> lib/l10n/generated/ via gen-l10n).
+  # intl must match the version flutter_localizations pins for this Flutter.
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  morse_core: ^0.1.0
+  morse_io: ^0.1.0
+  morse_trainer: ^0.1.0
+  ditmesh_chat_api: ^0.1.0
+  ditmesh_chat: ^0.1.0
+  # Audio Morse decoding (lib/ui/listen/): pure-Dart DSP + microphone PCM
+  # stream. record 6.2.x is the newest line that resolves on Dart 3.11 /
+  # Flutter 3.41 (7.x needs Dart ^3.12, Flutter >=3.44).
+  morse_dsp: ^0.1.0
+  # Radio tools (lib/ui/tools/): locator, bands, CW speed, RST maths.
+  radio_tools: ^0.1.0
+  record: ^6.2.1
+  path: ^1.9.0
+  path_provider: ^2.1.3
+  provider: ^6.1.0
+  file_picker: ^13.1.0
+  share_plus: ^13.3.0
+  qr_flutter: ^4.1.0
+  # Opens the privacy policy / terms / support pages from Me → About (App
+  # Review 5.1.1) and the guidelines page; no mail, no other scheme.
+  url_launcher: ^6.3.2
+  mobile_scanner: ^7.4.2
+  # Desktop shell (lib/desktop/): window persistence + system tray. All calls
+  # are gated on defaultTargetPlatform; the plugins federate to no-ops on mobile.
+  window_manager: ^0.5.2
+  tray_manager: ^0.5.3
+  screen_retriever: ^0.2.2
+  # Notifications (lib/notifications/): OS notifications on all five
+  # platforms (Windows via the endorsed flutter_local_notifications_windows)
+  # and the unread badge (Android/iOS/macOS only; no-op elsewhere). Both are
+  # reached only through LocalNotificationsApi / BadgeApi.
+  flutter_local_notifications: ^22.3.1
+  app_badge_plus: ^1.3.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # integration_test/ + test_driver/: real-platform launch tests and the
+  # product-screenshot walk (tool/screenshots/capture.sh).
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  # Deterministic debounce/cooldown coverage for mobile network handover.
+  fake_async: ^1.3.3
+  # Native persistence tests force an uncached read of backend preferences.
+  shared_preferences: ^2.2.2
+  # test/moderation/: a fake UrlLauncherPlatform records the site links
+  # instead of opening a browser.
+  url_launcher_platform_interface: ^2.3.2
+  plugin_platform_interface: ^2.1.8
+  # Used only by tool/gen_tray_icons.dart to render assets/tray/*.png|ico.
+  image: ^4.10.1
+
+flutter:
+  uses-material-design: true
+  # Runs gen-l10n (l10n.yaml) on build/run so lib/l10n/generated/ stays fresh.
+  generate: true
+  assets:
+    - assets/tray/
+    - icon/app_icon_1024.png

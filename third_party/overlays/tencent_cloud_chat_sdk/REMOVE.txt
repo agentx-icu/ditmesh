@@ -1,0 +1,11 @@
+# Paths (relative to the vendored plugin root) removed before the overlay
+# files are copied. One per line; directories are removed recursively.
+ios/Classes
+ios/Frameworks
+macos/Frameworks
+android/src/main/jniLibs
+android/src/main/java
+windows/lib
+windows/tencent_cloud_chat_sdk_plugin.cpp
+windows/tencent_cloud_chat_sdk_plugin.h
+ohos/libs

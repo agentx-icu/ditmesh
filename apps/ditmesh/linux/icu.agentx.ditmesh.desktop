@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=DitMesh
+GenericName=Morse code chat
+GenericName[zh_CN]=莫尔斯电码聊天
+Comment=Key Morse code to friends and groups over the Tox P2P network
+Comment[zh_CN]=通过 Tox 点对点网络与好友和群组用电码聊天
+Exec=ditmesh
+Icon=ditmesh
+Categories=Network;Chat;HamRadio;
+Keywords=morse;cw;ham;radio;tox;chat;
+Terminal=false
+StartupWMClass=icu.agentx.ditmesh

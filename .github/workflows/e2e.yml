@@ -1,0 +1,232 @@
+name: E2E
+
+# Top of the test pyramid (doc/testing/TEST_PYRAMID.md): the real app on
+# macOS, Linux and Windows runners — the real main() click-through and the
+# screenshot scene walk, then the screenshot pipeline itself with the frames
+# as an artifact (the only source of the Linux and Windows frames).
+# Opt-in: manual, or the `ci:e2e` label on a pull request.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DITMESH_ALLOW_MISSING_FFI: "1"
+
+jobs:
+  macos:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    timeout-minutes: 45
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+          pub-cache: false
+
+      # Same order as analyze.yml: vendor + overlay before pub get.
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      - name: Drop flutter_soloud's cached CMake build
+        run: bash tool/ci/clean_apple_plugin_cache.sh macos
+
+      # No libtim2tox_ffi on the runner: the Podfile warns and the app is
+      # UI-only, which is exactly what the fake backend needs. One app launch
+      # per file: several integration files in one `flutter test` run on a
+      # desktop device fail to attach to the second launch.
+      - name: Real-UI tests (fake backend)
+        run: |
+          set -euo pipefail
+          cd apps/ditmesh
+          for f in integration_test/*_test.dart; do
+            flutter test "$f" -d macos --dart-define=DITMESH_FAKE_BACKEND=true
+          done
+
+      # Staging inside the workspace so a failed run's frames are still
+      # uploaded (the default staging is a temp dir the runner discards).
+      - name: Screenshots
+        env:
+          DITMESH_SHOT_STAGING: build/shot_staging
+        run: tool/screenshots/capture.sh --platforms macos --out build/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-macos
+          path: |
+            build/screenshots
+            build/shot_staging
+          if-no-files-found: warn
+
+  linux:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    timeout-minutes: 45
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+
+      # Same package set as the native workflow's Linux app build, plus a
+      # virtual X server for the real window and a CJK font: the runner image
+      # has none, so the zh frames would render every Chinese glyph as tofu
+      # (a Chinese-locale desktop ships one; Flutter uses the system fonts).
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config clang libgtk-3-dev liblzma-dev libstdc++-12-dev libsecret-1-dev gnome-keyring dbus-x11 libayatana-appindicator3-dev libasound2-dev xvfb fonts-noto-cjk
+
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      # No libtim2tox_ffi: CMake only warns and the fake backend needs none.
+      # The X screen is larger than the 1280x800 capture window so the
+      # harness's exact-size check can hold.
+      - name: Real-UI tests (fake backend)
+        run: |
+          set -euo pipefail
+          flutter config --enable-linux-desktop
+          cd apps/ditmesh
+          # The persistence test uses the real Secret Service. Keep its keyring
+          # and support files separate from any existing runner user session.
+          ditmesh_keyring_root="$(mktemp -d)"
+          trap 'rm -rf "$ditmesh_keyring_root"' EXIT
+          export XDG_DATA_HOME="$ditmesh_keyring_root/data"
+          export XDG_RUNTIME_DIR="$ditmesh_keyring_root/runtime"
+          mkdir -p "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          dbus-run-session -- bash -euo pipefail <<'DITMESH_LINUX_E2E'
+          printf '%s' 'ditmesh-ci-keyring' | \
+            gnome-keyring-daemon --unlock --daemonize --components=secrets \
+              --control-directory "$XDG_RUNTIME_DIR/keyring"
+          for f in integration_test/*_test.dart; do
+            xvfb-run -a -s '-screen 0 1920x1080x24' \
+              flutter test "$f" -d linux --dart-define=DITMESH_FAKE_BACKEND=true
+          done
+          DITMESH_LINUX_E2E
+
+      - name: Screenshots
+        env:
+          DITMESH_SHOT_STAGING: build/shot_staging
+        run: |
+          xvfb-run -a -s '-screen 0 1920x1080x24' \
+            tool/screenshots/capture.sh --platforms linux --out build/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-linux
+          path: |
+            build/screenshots
+            build/shot_staging
+          if-no-files-found: warn
+
+  windows:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    timeout-minutes: 60
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Configure Git line endings
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+
+      # The runner's display is 1024x768, which squeezes the 1280x800 capture
+      # window (the harness then fails on the size, by design). Give the
+      # session a 1920x1080 display first.
+      - name: Raise the display resolution
+        shell: pwsh
+        run: |
+          Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          Add-Type -AssemblyName System.Windows.Forms
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          Write-Host "primary screen: $($b.Width)x$($b.Height)"
+          if ($b.Width -lt 1300 -or $b.Height -lt 900) { throw "display still $($b.Width)x$($b.Height)" }
+
+      # capture.sh reads `flutter devices --machine` with python3; the
+      # Windows image only has `python`.
+      - name: Provide python3
+        run: |
+          if ! command -v python3 >/dev/null 2>&1; then
+            mkdir -p "$HOME/shim"
+            printf '#!/bin/sh\nexec python "$@"\n' > "$HOME/shim/python3"
+            chmod +x "$HOME/shim/python3"
+            echo "$HOME/shim" >> "$GITHUB_PATH"
+          fi
+
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      # No tim2tox_ffi.dll: CMake only warns and the fake backend needs none.
+      # One app launch per file (see the macOS job).
+      - name: Real-UI tests (fake backend)
+        run: |
+          set -euo pipefail
+          flutter config --enable-windows-desktop
+          cd apps/ditmesh
+          for f in integration_test/*_test.dart; do
+            flutter test "$f" -d windows --dart-define=DITMESH_FAKE_BACKEND=true
+          done
+
+      - name: Screenshots
+        env:
+          DITMESH_SHOT_STAGING: build/shot_staging
+        run: tool/screenshots/capture.sh --platforms windows --out build/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-windows
+          path: |
+            build/screenshots
+            build/shot_staging
+          if-no-files-found: warn

@@ -1,0 +1,29 @@
+name: morse_io
+description: Renders Morse timelines to sound / haptics / light and turns on-screen or keyboard keying into decoder events. Flutter, all five platforms.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  morse_core: ^0.1.0
+  flutter_soloud: ^4.1.7
+  # iOS AVAudioSession category: flutter_soloud 4.x leaves the session to the
+  # app (miniaudio runs with sessionCategory none), so without this the
+  # sidetone plays in the default SoloAmbient category and the ring/silent
+  # switch mutes it. See lib/src/audio_session_api.dart.
+  audio_session: ^0.2.4
+  vibration: ^3.2.1
+  torch_light: ^1.1.0
+  # Keeps the screen on while a session needs it (Listen capture), so the
+  # phone's auto-lock does not background the app and stop the microphone.
+  wakelock_plus: ^1.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,13 @@
+name: tencent_cloud_chat_common
+description: >-
+  Dependency stub. tim2tox_dart's pubspec requires tencent_cloud_chat_common
+  (a Tencent Cloud Chat UIKit widget package) but only its Tim2ToxSdkPlatform
+  imports it, and ditmesh never compiles that file. This empty package
+  satisfies pub resolution without pulling the UIKit plugin tree (TUICore,
+  hive, audioplayers, permission_handler, ...) into the ditmesh app. Remove it
+  once upstream splits a UIKit-free tim2tox_core package (plan §3.2, line D).
+version: 4.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.0.0

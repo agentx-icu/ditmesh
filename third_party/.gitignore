@@ -1,0 +1,7 @@
+# Vendored by tool/bootstrap_deps.dart from the pub.dev archive pinned in
+# tim2tox/tool/tencent_cloud_chat_sdk.lock.json, then patched in place.
+# Regenerated on every bootstrap; never commit it. Anchored: the committed
+# overlay lives at overlays/tencent_cloud_chat_sdk/ and must not match.
+/tencent_cloud_chat_sdk/
+# Bootstrap state (version + sha256 + patch digest) for --offline-check-only.
+.vendor_state.json

@@ -1,0 +1,10 @@
+diff --git a/source/ToxManager.cpp b/source/ToxManager.cpp
+--- a/source/ToxManager.cpp
++++ b/source/ToxManager.cpp
+@@ -241,2 +241,6 @@ void ToxManager::initialize(const Tox_Options* options,
++    // DitMesh restores NGC membership and peer state with the Tox identity.
++    // Set this before tox_new loads savedata; the upstream default is false.
++    tox_options_set_experimental_groups_persistence(opts, true);
++
+     if (savedata && savedata_length > 0) {
+         tox_options_set_savedata_type(opts, TOX_SAVEDATA_TYPE_TOX_SAVE);

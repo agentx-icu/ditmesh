@@ -1,0 +1,56 @@
+name: Visual matrix
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+          cache: true
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+      - name: Resolve pinned workspace
+        run: dart pub get --enforce-lockfile
+      - name: Install real multilingual fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-core fonts-noto-cjk fonts-noto-mono fontconfig
+          test -s /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+          test -s /usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc
+      - name: Render bounded language and style coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mono="$(fc-match -f '%{file}' 'Noto Sans Mono')"
+          test -s "$mono"
+          cd apps/ditmesh
+          flutter test test/appearance/visual_matrix_test.dart --no-pub \
+            --dart-define=DITMESH_RENDER_MATRIX=true \
+            --dart-define=DITMESH_MATRIX_DIR="$GITHUB_WORKSPACE/build/visual-matrix" \
+            --dart-define=DITMESH_MATRIX_FONT=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc \
+            --dart-define=DITMESH_MATRIX_MONO_FONT="$mono" \
+            --dart-define=DITMESH_MATRIX_SERIF_FONT=/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-matrix-ditmesh
+          path: build/visual-matrix
+          if-no-files-found: error
+          retention-days: 14

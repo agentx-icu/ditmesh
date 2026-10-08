@@ -1,0 +1,11 @@
+/* English permission purpose strings. Mirrors the NS*UsageDescription values
+   in Info.plist; keep both in sync (test/i18n/platform_locales_test.dart). */
+
+/* Shown when DitMesh first asks for the camera (scanning a Tox ID QR code). */
+"NSCameraUsageDescription" = "DitMesh uses the camera only to scan a friend's Tox ID QR code.";
+
+/* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
+"NSMicrophoneUsageDescription" = "DitMesh uses the microphone only to decode Morse code you play or key nearby.";
+
+/* Connecting to local Tox peers and bootstrap nodes. */
+"NSLocalNetworkUsageDescription" = "DitMesh uses the local network to connect to Tox peers and bootstrap nodes on your network.";

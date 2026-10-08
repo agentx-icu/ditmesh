@@ -1,0 +1,13 @@
+/* Japanese permission purpose strings for the NS*UsageDescription
+   keys in Info.plist. The product name DitMesh stays untranslated;
+   other terms follow lib/l10n/app_*.arb. Every NS*UsageDescription key
+   needs an entry here (test/i18n/platform_locales_test.dart). */
+
+/* Shown when DitMesh first asks for the camera (scanning a Tox ID QR code). */
+"NSCameraUsageDescription" = "DitMesh はカメラを、友達の Tox ID の QR コードを読み取るためだけに使用します。";
+
+/* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
+"NSMicrophoneUsageDescription" = "DitMesh はマイクを、近くで再生または打鍵されたモールス符号を解読するためだけに使用します。";
+
+/* Connecting to local Tox peers and bootstrap nodes. */
+"NSLocalNetworkUsageDescription" = "DitMesh はローカルネットワークを使用して、同じネットワーク上の Tox ユーザーとブートストラップノードに接続します。";
