@@ -123,6 +123,12 @@ class SJa extends S {
   String get errorUnknown => '問題が発生しました';
 
   @override
+  String get errorTeardownUnconfirmed => '前回の Tox セッションがまだ完全に停止していません。しばらくしてから再試行するか、アプリを再起動してください。';
+
+  @override
+  String get errorIdentityRecoveryPending => '前回のアイデンティティがまだ復元待ちです。アプリを再起動して再試行するか、アイデンティティのデータを削除してやり直してください。';
+
+  @override
   String get languageTitle => '言語';
 
   @override
@@ -738,6 +744,9 @@ class SJa extends S {
 
   @override
   String get accountDeleteButton => '削除';
+
+  @override
+  String get accountRecoveryPendingDiscard => '復元待ちのアイデンティティを破棄してやり直す';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4400,5 +4409,39 @@ class SJa extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'この相手はフレンドリストにいません。メッセージを送るには再度追加してください。';
+
+  @override
+  String get chatAcceptWithPassword => 'パスワードを入力して承諾';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return '$name のパスワード';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'グループのパスワード';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name への参加が拒否されました。パスワードが違うか、入力されていません。';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name への参加が拒否されました。グループが満員です。';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name への参加が拒否されました。';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name への再接続が拒否されました。履歴は保持されています。グループのパスワードで再試行してください。';
   }
 }

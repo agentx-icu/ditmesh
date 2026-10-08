@@ -123,6 +123,12 @@ class SZh extends S {
   String get errorUnknown => '出了点问题';
 
   @override
+  String get errorTeardownUnconfirmed => '上一个 Tox 会话尚未完全停止。请稍后重试，或重启应用。';
+
+  @override
+  String get errorIdentityRecoveryPending => '上一个身份仍在等待恢复。请重启应用重试，或删除身份数据后重新开始。';
+
+  @override
   String get languageTitle => '语言';
 
   @override
@@ -738,6 +744,9 @@ class SZh extends S {
 
   @override
   String get accountDeleteButton => '删除';
+
+  @override
+  String get accountRecoveryPendingDiscard => '丢弃等待恢复的身份并重新开始';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4401,6 +4410,40 @@ class SZh extends S {
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP：$udp · TCP：$tcp';
   }
+
+  @override
+  String get errorNotFriend => '对方已不在你的好友列表中。重新添加后才能发送消息。';
+
+  @override
+  String get chatAcceptWithPassword => '使用密码接受';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return '$name 的密码';
+  }
+
+  @override
+  String get chatGroupPasswordField => '群组密码';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name 拒绝了加入：密码错误或未填写。';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name 拒绝了加入：群组已满。';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name 拒绝了加入。';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name 拒绝了重新连接。历史记录已保留；请使用群组密码重试。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -4520,6 +4563,12 @@ class SZhHant extends SZh {
 
   @override
   String get errorUnknown => '出了點問題';
+
+  @override
+  String get errorTeardownUnconfirmed => '上一個 Tox 工作階段尚未完全停止。請稍後重試，或重新啟動應用程式。';
+
+  @override
+  String get errorIdentityRecoveryPending => '上一個身分仍在等待復原。請重新啟動應用程式重試，或刪除身分資料後重新開始。';
 
   @override
   String get languageTitle => '語言';
@@ -5137,6 +5186,9 @@ class SZhHant extends SZh {
 
   @override
   String get accountDeleteButton => '刪除';
+
+  @override
+  String get accountRecoveryPendingDiscard => '捨棄等待復原的身分並重新開始';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -8799,5 +8851,39 @@ class SZhHant extends SZh {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP：$udp · TCP：$tcp';
+  }
+
+  @override
+  String get errorNotFriend => '對方已不在你的好友名單中。重新加入後才能傳送訊息。';
+
+  @override
+  String get chatAcceptWithPassword => '使用密碼接受';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return '$name 的密碼';
+  }
+
+  @override
+  String get chatGroupPasswordField => '群組密碼';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name 拒絕了加入：密碼錯誤或未填寫。';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name 拒絕了加入：群組已滿。';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name 拒絕了加入。';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。';
   }
 }

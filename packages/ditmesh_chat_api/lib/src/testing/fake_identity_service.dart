@@ -63,6 +63,11 @@ final class FakeIdentityService
   /// the startup gate's error/retry path.
   Object? inspectError;
 
+  /// While set, [create] refuses with `identity_recovery_pending` the way
+  /// the backend does when an interrupted restore left a previous identity
+  /// waiting in staging; [deleteIdentity] (the explicit discard) clears it.
+  bool recoveryPending = false;
+
   final String? _dataDirectoryPath;
   int _nextSeed;
   _StoredProfile? _disk;
@@ -129,6 +134,12 @@ final class FakeIdentityService
     required String displayName,
     String? password,
   }) async {
+    if (recoveryPending) {
+      throw const ChatException(
+        'identity_recovery_pending',
+        'A previous identity is still waiting to be recovered',
+      );
+    }
     if (_disk != null) {
       // Like the backend: delete (or import over) the existing one first.
       throw const ChatException('identity_exists', 'An identity already exists');
@@ -323,6 +334,7 @@ final class FakeIdentityService
   Future<void> deleteIdentity() async {
     await disconnect();
     _disk = null;
+    recoveryPending = false;
     _setCurrent(null);
   }
 

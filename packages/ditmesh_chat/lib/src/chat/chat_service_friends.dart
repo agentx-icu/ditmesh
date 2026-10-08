@@ -15,6 +15,89 @@ class _FriendsPart {
   final Map<String, String> _names = {};
   final Set<String> _online = {};
 
+  /// Bumped by every [remove]: a send that awaited across one re-checks
+  /// its target.
+  int removals = 0;
+
+  /// Keys whose [remove] is still running: a send to them is refused even
+  /// while native still lists the friend.
+  final Set<String> removing = {};
+
+  /// Withdrawals whose metadata write failed too, per account prefix
+  /// (identity-scoped; kept in memory until a write succeeds).
+  final Map<String, Set<String>> _unrecorded = {};
+
+  /// Records that the queued row [messageId] for [peer] must be withdrawn:
+  /// with the identity's metadata (it outlives a disconnect, like the
+  /// outbox it is in), or in memory while that write fails.
+  Future<void> recordWithdrawal(String peer, String messageId) async {
+    try {
+      await _owner._meta.addWithdrawal(peer, messageId);
+    } catch (e, st) {
+      _owner._logger.error('[Chat] could not record a withdrawal', e, st);
+      rememberWithdrawal(_owner._accountPrefix, peer, messageId);
+    }
+  }
+
+  /// In-memory record for the identity of [accountPrefix] (captured before
+  /// an await the session may not survive).
+  void rememberWithdrawal(String accountPrefix, String peer, String id) =>
+      _unrecorded.putIfAbsent(accountPrefix, () => {}).add('$peer\t$id');
+
+  /// Takes every row still queued for [key] out of the durable outbox: a
+  /// removed (or blocked) friend's queue would otherwise never drain, and
+  /// its history rows are gone with the friendship. Rows the outbox does
+  /// not let go of now are recorded and retried every refresh round.
+  Future<void> withdrawQueuedFor(FfiChatService svc, String key) async {
+    final queue = svc.offlineMessageQueuePersistence;
+    for (final peer in queue.getPeerIds().toList()) {
+      if (ConversationIds.normalizeKey(peer) != key) continue;
+      for (final item in queue.getMessages(peer).toList()) {
+        final id = item.msgID;
+        if (id == null || id.isEmpty) continue;
+        await svc.cancelQueuedMessage(peer, id);
+        _owner._ensureCurrent(svc);
+        if (queue.getMessages(peer).any((m) => m.msgID == id)) {
+          await recordWithdrawal(peer, id);
+          _owner._ensureCurrent(svc);
+        }
+      }
+    }
+  }
+
+  /// Every refresh round: a recorded row still in the outbox is cancelled
+  /// again (whatever a cancel answers, the outbox decides next round: a
+  /// concurrent cancel may still fail); a row gone from it is forgotten.
+  Future<void> retryWithdrawals(FfiChatService svc) async {
+    final memory = _unrecorded.putIfAbsent(_owner._accountPrefix, () => {});
+    final queue = svc.offlineMessageQueuePersistence;
+    for (final entry in {..._owner._meta.withdrawals, ...memory}) {
+      final tab = entry.indexOf('\t');
+      final peer = tab > 0 ? entry.substring(0, tab) : '';
+      final id = tab > 0 ? entry.substring(tab + 1) : '';
+      bool queued() =>
+          id.isNotEmpty && queue.getMessages(peer).any((m) => m.msgID == id);
+      try {
+        if (queued()) {
+          await svc.cancelQueuedMessage(peer, id);
+          if (!_owner._isCurrent(svc)) return;
+        }
+        if (queued()) {
+          if (memory.contains(entry)) {
+            await _owner._meta.addWithdrawal(peer, id);
+            memory.remove(entry);
+          }
+        } else {
+          memory.remove(entry);
+          await _owner._meta.removeWithdrawal(entry);
+        }
+      } catch (e, st) {
+        _owner._logger.error('[Chat] withdrawal retry failed', e, st);
+      }
+      if (!_owner._isCurrent(svc)) return;
+    }
+  }
+
   String? nameOf(String publicKey) => _names[publicKey];
 
   bool isOnline(String publicKey) => _online.contains(publicKey);
@@ -261,8 +344,15 @@ class _FriendsPart {
 
   Future<void> remove(FfiChatService svc, String publicKey) async {
     final key = ConversationIds.normalizeKey(publicKey);
-    await svc.removeFriend(key);
+    removals++;
+    removing.add(key);
+    try {
+      await svc.removeFriend(key);
+    } finally {
+      removing.remove(key);
+    }
     _owner._ensureCurrent(svc);
+    await withdrawQueuedFor(svc, key);
     _names.remove(key);
     _online.remove(key);
     await _owner._forgetMeta(svc, ConversationIds.c2c(key));

@@ -38,6 +38,8 @@
   "errorGroupNotFound": "Группа не найдена.",
   "errorMessageTooLong": "Текст превышает предел длины одного сообщения Tox.",
   "errorUnknown": "Произошла ошибка",
+  "errorTeardownUnconfirmed": "Предыдущий сеанс Tox ещё не полностью остановлен. Повторите попытку через минуту или перезапустите приложение.",
+  "errorIdentityRecoveryPending": "Предыдущая личность всё ещё ожидает восстановления. Перезапустите приложение, чтобы повторить попытку, или удалите данные личности, чтобы начать заново.",
   "languageTitle": "Язык",
   "languageSystemDefault": "Как в системе",
   "languageSaveFailed": "Не удалось сохранить язык. Попробуйте ещё раз.",
@@ -182,6 +184,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "Введите DELETE",
   "accountDeleteButton": "Удалить",
+  "accountRecoveryPendingDiscard": "Отбросить ожидающую личность и начать заново",
   "accountRestoreFileChosenSize": "Выбрана резервная копия ({bytes} байт)",
   "chatSearchConversations": "Поиск бесед",
   "chatNoConversations": "Пока нет бесед",
@@ -1266,5 +1269,13 @@
   "bootstrapSource": "Официальный список публичных узлов",
   "bootstrapOnline": "В сети",
   "bootstrapOffline": "Не в сети",
-  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}"
+  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}",
+  "errorNotFriend": "Этого человека больше нет в списке друзей. Добавьте его снова, чтобы отправлять сообщения.",
+  "chatAcceptWithPassword": "Принять с паролем",
+  "chatGroupPasswordTitle": "Пароль для {name}",
+  "chatGroupPasswordField": "Пароль группы",
+  "chatGroupJoinRefusedPassword": "{name} отклонила вступление: пароль неверный или не указан.",
+  "chatGroupJoinRefusedFull": "{name} отклонила вступление: группа заполнена.",
+  "chatGroupJoinRefused": "{name} отклонила вступление.",
+  "chatGroupReconnectRefused": "{name} отклонила повторное подключение. История сохранена; повторите попытку с паролем группы."
 }

@@ -123,6 +123,12 @@ class SRu extends S {
   String get errorUnknown => 'Произошла ошибка';
 
   @override
+  String get errorTeardownUnconfirmed => 'Предыдущий сеанс Tox ещё не полностью остановлен. Повторите попытку через минуту или перезапустите приложение.';
+
+  @override
+  String get errorIdentityRecoveryPending => 'Предыдущая личность всё ещё ожидает восстановления. Перезапустите приложение, чтобы повторить попытку, или удалите данные личности, чтобы начать заново.';
+
+  @override
   String get languageTitle => 'Язык';
 
   @override
@@ -793,6 +799,9 @@ class SRu extends S {
 
   @override
   String get accountDeleteButton => 'Удалить';
+
+  @override
+  String get accountRecoveryPendingDiscard => 'Отбросить ожидающую личность и начать заново';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4523,5 +4532,39 @@ class SRu extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'Этого человека больше нет в списке друзей. Добавьте его снова, чтобы отправлять сообщения.';
+
+  @override
+  String get chatAcceptWithPassword => 'Принять с паролем';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return 'Пароль для $name';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'Пароль группы';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name отклонила вступление: пароль неверный или не указан.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name отклонила вступление: группа заполнена.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name отклонила вступление.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name отклонила повторное подключение. История сохранена; повторите попытку с паролем группы.';
   }
 }

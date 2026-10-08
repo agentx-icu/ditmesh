@@ -152,6 +152,14 @@
   "@errorUnknown": {
     "description": "Fallback for any other ChatException code"
   },
+  "errorTeardownUnconfirmed": "The previous Tox session has not fully stopped. Try again in a moment, or restart the app.",
+  "@errorTeardownUnconfirmed": {
+    "description": "ChatException code teardown_unconfirmed: a stopped Tox session may still be writing, so backup/restore/delete/password changes are refused"
+  },
+  "errorIdentityRecoveryPending": "A previous identity is still waiting to be recovered. Restart the app to retry, or delete the identity data to start over.",
+  "@errorIdentityRecoveryPending": {
+    "description": "ChatException code identity_recovery_pending: create() refused because a previous identity from an interrupted restore is still waiting in staging"
+  },
   "languageTitle": "Language",
   "@languageTitle": {
     "description": "Settings tile on the Me page"
@@ -981,6 +989,10 @@
   "accountDeleteButton": "Delete",
   "@accountDeleteButton": {
     "description": "Delete identity dialog: destructive confirm button"
+  },
+  "accountRecoveryPendingDiscard": "Discard the waiting identity and start over",
+  "@accountRecoveryPendingDiscard": {
+    "description": "Create-identity page: button shown when the backend reports identity_recovery_pending; opens the DELETE confirmation and then deletes the waiting staging copy so a new identity can be created"
   },
   "accountRestoreFileChosenSize": "Backup file selected ({bytes} bytes)",
   "@accountRestoreFileChosenSize": {
@@ -6235,6 +6247,63 @@
         "type": "String"
       },
       "tcp": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNotFriend": "This person is no longer in your friend list. Add them again to send messages.",
+  "@errorNotFriend": {
+    "description": "ChatException code not_friend: sending to someone who is not (or no longer) a friend"
+  },
+  "chatAcceptWithPassword": "Accept with password",
+  "@chatAcceptWithPassword": {
+    "description": "Group invite overflow action: accept a password-protected group invite"
+  },
+  "chatGroupPasswordTitle": "Password for {name}",
+  "@chatGroupPasswordTitle": {
+    "description": "Title of the group password dialog; name is the group name or a short chat id",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupPasswordField": "Group password",
+  "@chatGroupPasswordField": {
+    "description": "Label of the password field in the group password dialog"
+  },
+  "chatGroupJoinRefusedPassword": "{name} refused the join: the password is wrong or missing.",
+  "@chatGroupJoinRefusedPassword": {
+    "description": "Snackbar: a group refused our join because of a wrong or missing password",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupJoinRefusedFull": "{name} refused the join: the group is full.",
+  "@chatGroupJoinRefusedFull": {
+    "description": "Snackbar: a group refused our join because it is full",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupJoinRefused": "{name} refused the join.",
+  "@chatGroupJoinRefused": {
+    "description": "Snackbar: a group refused our join for another reason",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupReconnectRefused": "{name} refused to reconnect. Its history is kept; retry with the group's password.",
+  "@chatGroupReconnectRefused": {
+    "description": "Snackbar: a group we already held refused to take us back on reconnect",
+    "placeholders": {
+      "name": {
         "type": "String"
       }
     }

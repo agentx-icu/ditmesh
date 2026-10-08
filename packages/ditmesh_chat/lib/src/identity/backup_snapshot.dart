@@ -56,6 +56,8 @@ final class SnapshotUnstable implements Exception {
 /// manifest.json              private manifest (categories, sizes, counts)
 /// identity.json              identity record
 /// tox_profile.tox            Tox savedata (identity-password encrypted iff set)
+/// groups/bindings.json       group membership: ids, chat ids, kinds, names
+///                            (identity category; absent when no groups)
 /// training/<path>            training files, minus training/chat/{bookmarks,
 ///                            restored_pending}.json
 /// chat/history/<path>        native history, queued rows removed
@@ -67,6 +69,7 @@ final class SnapshotUnstable implements Exception {
 /// ```
 abstract final class BackupSnapshot {
   static const String manifestEntry = 'manifest.json';
+  static const String groupsEntry = 'groups/bindings.json';
   static const String trainingPrefix = 'training/';
   static const String historyPrefix = 'chat/history/';
   static const String conversationsEntry = 'meta/conversations.json';
@@ -88,7 +91,9 @@ abstract final class BackupSnapshot {
   /// may hold it (the archive is then rejected).
   static BackupCategory? categoryOf(String path) {
     if (path == manifestEntry) return BackupCategory.identity;
-    if (path == 'identity.json' || path == 'tox_profile.tox') {
+    if (path == 'identity.json' ||
+        path == 'tox_profile.tox' ||
+        path == groupsEntry) {
       return BackupCategory.identity;
     }
     if (path.startsWith(trainingPrefix)) {

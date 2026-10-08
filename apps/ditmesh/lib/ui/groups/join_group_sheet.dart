@@ -55,6 +55,7 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
   }
 
   Future<void> _submit() async {
+    if (_busy) return;
     setState(() => _error = null);
     if (!(_form.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);

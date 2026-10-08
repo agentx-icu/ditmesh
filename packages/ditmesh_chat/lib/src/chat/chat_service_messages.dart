@@ -20,13 +20,18 @@ mixin _MessageManagement implements ChatService {
   /// never blocks the UI isolate for long.
   static const int _scanChunk = 500;
 
-  /// Every persisted row of [conversationId] (live window plus archive),
-  /// mapped, in no particular order. Scanned in chunks.
+  /// One event-loop turn between scan chunks ([phase]: `map` / `filter`).
+  static Future<void> _yield(String phase) =>
+      Tim2ToxChatService.debugScanYield?.call(phase) ??
+      Future<void>.delayed(Duration.zero);
+
+  /// Every persisted row of [conversationId] (live window plus archive) in
+  /// [svc]'s session, mapped, in no particular order. Scanned in chunks.
   Future<List<ChatMessage>> _allRows(
+    FfiChatService svc,
     String conversationId, {
     MessageSearchCancel? cancel,
   }) async {
-    final svc = _requireService();
     final peer = ConversationIds.peerOf(conversationId);
     final rows = List<t2t.ChatMessage>.of(svc.getHistory(peer));
     final hasArchive = await svc.hasArchivedHistory(peer);
@@ -47,7 +52,7 @@ mixin _MessageManagement implements ChatService {
         out.add(mapper.map(rows[i], conversationId: conversationId));
       }
       if (i % _scanChunk == _scanChunk - 1) {
-        await Future<void>.delayed(Duration.zero);
+        await _yield('map');
         _ensureCurrent(svc);
         if (cancel?.isCancelled ?? false) throw const MessageSearchCancelled();
       }
@@ -65,18 +70,30 @@ mixin _MessageManagement implements ChatService {
     int limit = 20,
     MessageSearchCancel? cancel,
   }) async {
-    final rows = await _allRows(conversationId, cancel: cancel);
+    // The whole search belongs to the session it started in.
+    final svc = _requireService();
+    final rows = await _allRows(svc, conversationId, cancel: cancel);
     // Filter in chunks, yielding and honouring cancellation, so a long
     // history never blocks the UI isolate; only the matches are sorted.
     final hits = <ChatMessage>[];
-    for (var i = 0; i < rows.length; i += 500) {
+    for (var i = 0; i < rows.length; i += _scanChunk) {
       if (cancel?.isCancelled ?? false) throw const MessageSearchCancelled();
-      final end = i + 500 < rows.length ? i + 500 : rows.length;
+      final end = i + _scanChunk < rows.length ? i + _scanChunk : rows.length;
       hits.addAll(rows.sublist(i, end).where(query.matches));
-      await Future<void>.delayed(Duration.zero);
+      await _yield('filter');
+      // A detach or rebind during the yield: no rows of the old session.
+      _ensureCurrent(svc);
     }
     if (cancel?.isCancelled ?? false) throw const MessageSearchCancelled();
-    return MessageOrder.page(hits, query, cursor: cursor, limit: limit);
+    // A peer blocked during a yield must not surface in this page.
+    hits.removeWhere(_hiddenNow);
+    // [hits] already match: paging only orders and cuts them.
+    return MessageOrder.page(
+      hits,
+      const MessageSearchQuery(),
+      cursor: cursor,
+      limit: limit,
+    );
   }
 
   @override
@@ -85,12 +102,13 @@ mixin _MessageManagement implements ChatService {
     String messageId, {
     int before = 25,
     int after = 25,
-  }) async => MessageOrder.around(
-    await _allRows(conversationId),
-    messageId,
-    before: before,
-    after: after,
-  );
+  }) async {
+    final svc = _requireService();
+    final rows = await _allRows(svc, conversationId);
+    _ensureCurrent(svc);
+    rows.removeWhere(_hiddenNow);
+    return MessageOrder.around(rows, messageId, before: before, after: after);
+  }
 
   @override
   bool get supportsSendControl => true;

@@ -1,3 +1,4 @@
+import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +6,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
 import 'account_widgets.dart';
+import 'delete_identity_dialog.dart';
 
 /// Display name + optional password (with strength hint and confirmation).
 /// On success the page pops back to the gate, which is now showing the
@@ -23,6 +25,10 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
   String? _nameError;
   String? _confirmError;
   String? _submitError;
+  // A previous identity from an interrupted restore is still waiting in
+  // staging and the backend refuses to create over it; the only ways out
+  // are a restart (retry) or an explicit, confirmed discard.
+  bool _recoveryPending = false;
   bool _busy = false;
 
   @override
@@ -57,6 +63,31 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
       );
       // The gate (route 0) now renders the backup wizard.
       navigator.popUntil((route) => route.isFirst);
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _submitError = describeChatError(s, e);
+        _recoveryPending =
+            e is ChatException && e.code == 'identity_recovery_pending';
+      });
+    }
+  }
+
+  Future<void> _discardPending() async {
+    final s = context.s;
+    final controller = context.read<StartupController>();
+    if (!await confirmDeleteIdentity(context)) return;
+    if (!mounted) return;
+    setState(() => _busy = true);
+    try {
+      await controller.deleteIdentity();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _submitError = null;
+        _recoveryPending = false;
+      });
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {
@@ -120,6 +151,13 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.error,
               ),
+            ),
+          ],
+          if (_recoveryPending) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: _busy ? null : _discardPending,
+              child: Text(s.accountRecoveryPendingDiscard),
             ),
           ],
           const SizedBox(height: 32),

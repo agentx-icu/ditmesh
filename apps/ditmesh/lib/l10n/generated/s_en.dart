@@ -123,6 +123,12 @@ class SEn extends S {
   String get errorUnknown => 'Something went wrong';
 
   @override
+  String get errorTeardownUnconfirmed => 'The previous Tox session has not fully stopped. Try again in a moment, or restart the app.';
+
+  @override
+  String get errorIdentityRecoveryPending => 'A previous identity is still waiting to be recovered. Restart the app to retry, or delete the identity data to start over.';
+
+  @override
   String get languageTitle => 'Language';
 
   @override
@@ -754,6 +760,9 @@ class SEn extends S {
 
   @override
   String get accountDeleteButton => 'Delete';
+
+  @override
+  String get accountRecoveryPendingDiscard => 'Discard the waiting identity and start over';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4442,5 +4451,39 @@ class SEn extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'This person is no longer in your friend list. Add them again to send messages.';
+
+  @override
+  String get chatAcceptWithPassword => 'Accept with password';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return 'Password for $name';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'Group password';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name refused the join: the password is wrong or missing.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name refused the join: the group is full.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name refused the join.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name refused to reconnect. Its history is kept; retry with the group\'s password.';
   }
 }

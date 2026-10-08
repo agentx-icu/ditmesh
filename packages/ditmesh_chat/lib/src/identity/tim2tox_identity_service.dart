@@ -18,6 +18,7 @@ import 'backup_archive.dart';
 import 'backup_container.dart';
 import 'backup_envelope.dart';
 import 'backup_snapshot.dart';
+import 'group_descriptors.dart';
 import 'identity_paths.dart';
 import 'identity_record.dart';
 import 'password_verifier.dart';
@@ -26,6 +27,8 @@ import 'profile_crypto.dart';
 part 'identity_backup.dart';
 part 'identity_backup_v2.dart';
 part 'identity_profile.dart';
+part 'identity_backup_inventory.dart';
+part 'identity_recovery.dart';
 
 /// [IdentityService] over Tim2Tox. States: `none` (no `tox_profile.tox`),
 /// `locked` (the verifier holds a password or the file is encrypted, and this
@@ -123,6 +126,14 @@ class Tim2ToxIdentityService
     if (!_backupExclusionChecked) {
       _backupExclusionChecked = await _paths.excludeExistingFromBackup();
     }
+    // A restore killed between its two renames left the previous identity
+    // in staging and no root. Serialised with the mutations: a restore in
+    // progress has the same shape for a moment and must not be mistaken.
+    if (!_paths.profileExists) await _runMutation(_recoverInterruptedImport);
+    return _inspect();
+  }
+
+  Future<IdentityState> _inspect() async {
     if (!_paths.profileExists) return IdentityState.none;
     if (_record != null) return IdentityState.ready;
     final record = await IdentityRecord.read(_paths.identityFile);
@@ -143,10 +154,11 @@ class Tim2ToxIdentityService
 
   Future<Identity> _open() async {
     if (_record != null) return _record!.toIdentity();
+    await _recoverInterruptedImport();
     if (!_paths.profileExists) {
       throw const ChatException('no_identity', 'No identity on disk');
     }
-    if (await inspect() == IdentityState.locked) {
+    if (await _inspect() == IdentityState.locked) {
       throw const ChatException('locked', 'Identity requires a password');
     }
     final record = await _loadOrRecoverRecord(password: null);
@@ -160,6 +172,7 @@ class Tim2ToxIdentityService
 
   Future<Identity> _unlock(String password) async {
     if (_record != null) return _record!.toIdentity();
+    await _recoverInterruptedImport();
     if (!_paths.profileExists) {
       throw const ChatException('no_identity', 'No identity on disk');
     }
@@ -312,7 +325,13 @@ class Tim2ToxIdentityService
     } catch (e) {
       _connecting = false;
       _status.add(ConnectionStatus.offline);
-      await _engine.stop();
+      try {
+        await _engine.stop();
+      } on Object catch (stopError, st) {
+        // The start failure is the one to report; the engine's latch keeps
+        // the profile directory locked (see _encryptProfileAtRest).
+        _logger.error('[Identity] stop after failed start', stopError, st);
+      }
       // Never leave a plaintext profile behind after a failed start.
       await _encryptProfileAtRest();
       if (e is ChatException) rethrow;
@@ -329,6 +348,8 @@ class Tim2ToxIdentityService
   Future<void> _disconnectImpl() async {
     if (_started) {
       _started = false;
+      // An unconfirmed native teardown fails the disconnect out loud; the
+      // engine already published the detach, so the status is offline.
       await _engine.stop();
       _status.add(ConnectionStatus.offline);
     }
@@ -344,6 +365,7 @@ class Tim2ToxIdentityService
     try {
       await _prepareForReplacement();
       await _disconnectImpl();
+      _requireTeardownConfirmed();
       Future<void> removeFiles() async {
         if (record != null) await _clearPreferences(record.toxId);
         await _paths.deleteAll();
@@ -448,18 +470,4 @@ class Tim2ToxIdentityService
     }
   }
 
-  /// Encrypts `tox_profile.tox` in place when a session password is held and
-  /// the file is plaintext. No-op otherwise. Atomic rename.
-  Future<void> _encryptProfileAtRest() async {
-    final password = _sessionPassword;
-    if (password == null || password.isEmpty) return;
-    final file = File(_paths.profileFile);
-    if (!await file.exists()) return;
-    final bytes = await file.readAsBytes();
-    if (bytes.isEmpty || _crypto.isEncrypted(bytes)) return;
-    await _writeAtomic(file, _crypto.encrypt(bytes, password));
-  }
-
-  static Future<void> _writeAtomic(File target, Uint8List bytes) =>
-      writeBytesAtomic(target, bytes);
 }

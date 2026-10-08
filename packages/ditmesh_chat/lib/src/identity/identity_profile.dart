@@ -2,6 +2,15 @@ part of 'tim2tox_identity_service.dart';
 
 extension _IdentityProfile on Tim2ToxIdentityService {
   Future<Identity> _create(String displayName, String? password) async {
+    if (!await _recoverInterruptedImport()) {
+      // Installing a new root here would hide the waiting identity for
+      // good (recovery only runs while there is no root). The next start
+      // retries; deleteIdentity() discards it on purpose.
+      throw const ChatException(
+        'identity_recovery_pending',
+        'A previous identity is still waiting to be recovered',
+      );
+    }
     if (_paths.profileExists) {
       throw const ChatException(
         'identity_exists',
@@ -12,6 +21,9 @@ extension _IdentityProfile on Tim2ToxIdentityService {
     if (name.isEmpty) {
       throw const ChatException('invalid_name', 'Display name is empty');
     }
+    // A zombie instance from an earlier unconfirmed teardown could still
+    // write into the very directory the new profile is minted in.
+    _requireTeardownConfirmed();
     String? createdId;
     try {
       await _paths.ensureDirectories();
@@ -51,7 +63,20 @@ extension _IdentityProfile on Tim2ToxIdentityService {
       try {
         if (createdId != null) await _verifier.removePassword(createdId);
       } finally {
-        await _paths.deleteAll();
+        if (_engine.nativeTeardownConfirmed) {
+          // Only the tree this call built. Import staging next to it may
+          // hold the previous identity's only copy; that is deleteIdentity's
+          // call.
+          await _paths.deleteRoot();
+        } else {
+          // The bootstrap instance may still be saving into it; deleting
+          // now would race that write. The saved profile is a valid new
+          // identity, which the next inspect() reports and open() recovers.
+          _logger.error(
+            '[Identity] create failed with the native teardown unconfirmed; '
+            'leaving the new profile tree in place',
+          );
+        }
       }
       rethrow;
     }
@@ -70,6 +95,8 @@ extension _IdentityProfile on Tim2ToxIdentityService {
     final before = await file.readAsBytes();
     Uint8List? replacement;
     if (!_started) {
+      // The offline path rewrites the file itself.
+      _requireTeardownConfirmed();
       final plain = _crypto.isEncrypted(before)
           ? _crypto.decrypt(before, oldPassword ?? _sessionPassword ?? '')
           : before;

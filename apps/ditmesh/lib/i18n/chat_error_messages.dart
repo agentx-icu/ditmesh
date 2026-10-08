@@ -14,6 +14,9 @@ String chatErrorMessage(S s, String code) => switch (code) {
   'group_not_found' => s.errorGroupNotFound,
   'message_too_long' => s.errorMessageTooLong,
   'peer_blocked' => s.errorPeerBlocked,
+  'not_friend' => s.errorNotFriend,
+  'teardown_unconfirmed' => s.errorTeardownUnconfirmed,
+  'identity_recovery_pending' => s.errorIdentityRecoveryPending,
   _ => s.errorUnknown,
 };
 

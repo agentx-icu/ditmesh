@@ -13,6 +13,7 @@ import 'keying_input.dart';
 import 'input_mode.dart';
 import 'input_mode_selector.dart';
 import 'local_message_sends.dart';
+import 'compose_editing.dart';
 import 'morse_pattern_text.dart';
 import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
@@ -326,7 +327,8 @@ class _MessageInputState extends State<MessageInput>
   void _deleteLast() {
     final String current = _text.text;
     if (current.isEmpty) return;
-    final String next = current.substring(0, current.length - 1);
+    // A prosign or unread pattern went in as one token: it goes as one.
+    final String next = withoutLastKeyedUnit(current);
     _text.value = TextEditingValue(
       text: next,
       selection: TextSelection.collapsed(offset: next.length),

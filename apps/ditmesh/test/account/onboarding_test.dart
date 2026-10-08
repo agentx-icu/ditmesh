@@ -76,6 +76,36 @@ void main() {
     expect(find.byType(BackupWizardPage), findsNothing);
   });
 
+  testWidgets(
+    'a pending recovery blocks creation until the user discards it',
+    (tester) async {
+      identity.recoveryPending = true;
+      await pumpApp(tester, identity: identity, backupFiles: files);
+      await _openCreatePage(tester);
+      await _createNamed(tester, 'Ann');
+
+      expect(identity.current, isNull);
+      expect(find.text(en.errorIdentityRecoveryPending), findsOneWidget);
+      expect(find.byType(CreateIdentityPage), findsOneWidget);
+
+      // The discard is the same confirmed, typed deletion as on the Me page.
+      await tapVisible(tester, find.text(en.accountRecoveryPendingDiscard));
+      expect(find.text(en.accountDeleteDialogTitle), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, en.accountDeleteConfirmHint),
+        en.accountDeleteConfirmWord,
+      );
+      await tapVisible(tester, find.text(en.accountDeleteButton));
+      expect(identity.recoveryPending, isFalse);
+      expect(find.text(en.errorIdentityRecoveryPending), findsNothing);
+      expect(find.text(en.accountRecoveryPendingDiscard), findsNothing);
+
+      await tapVisible(tester, find.text(en.accountCreateButton));
+      expect(identity.current?.displayName, 'Ann');
+      expect(find.byType(BackupWizardPage), findsOneWidget);
+    },
+  );
+
   testWidgets('wizard shows the Tox ID QR dialog', (tester) async {
     await pumpApp(tester, identity: identity, backupFiles: files);
     await _openCreatePage(tester);

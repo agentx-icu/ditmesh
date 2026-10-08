@@ -11,6 +11,12 @@ class _GroupsPart {
 
   final ValueStream<List<Group>> groups = ValueStream(const []);
   final ValueStream<List<GroupInvite>> invites = ValueStream(const []);
+  final StreamController<GroupJoinRefusal> refusals =
+      StreamController<GroupJoinRefusal>.broadcast();
+
+  /// Invites declined because their sender was blocked: a refusal of an
+  /// earlier accept of one is not reported.
+  final Set<String> declinedByBlock = {};
   final Map<String, int> _memberCounts = {};
 
   /// After a failed queued invite, the pair is not retried before this.
@@ -24,6 +30,7 @@ class _GroupsPart {
     // Identity-scoped caches: a new identity must not see these.
     _memberCounts.clear();
     _inviteRetryAt.clear();
+    declinedByBlock.clear();
     _flushing = null;
   }
 
@@ -68,6 +75,8 @@ class _GroupsPart {
       a.topic == b.topic;
 
   Future<void> refreshInvites(FfiChatService svc) async {
+    // Never publish a detached session's invites into the next one.
+    if (!_owner._isCurrent(svc)) return;
     final blocking = _owner._blockingPart;
     final next = <GroupInvite>[
       for (final i in svc.getPendingGroupInvites())
@@ -88,17 +97,123 @@ class _GroupsPart {
       a.groupName == b.groupName &&
       a.kind == b.kind;
 
-  void onJoinFailure(GroupJoinFailure f) {
+  /// A refusal from [svc]'s session: the lists are refreshed (best effort;
+  /// the invite of a refused accept is listed again) and the refusal is
+  /// published on [refusals] unless the session ended meanwhile or the
+  /// invite came from a blocked peer.
+  void onJoinFailure(FfiChatService svc, GroupJoinFailure f) {
     _owner._logger.warn(
       '[Chat] group join refused: ${f.groupId} (${f.reason.name})',
     );
-    final svc = _owner._service;
-    if (svc == null) return;
+    // Correlated now: native hands the refused invite back before it
+    // reports the refusal, and a block during the refresh below may drop it.
+    final invite = _inviteOf(svc, f);
     unawaited(
-      refresh(svc).catchError((Object e, StackTrace st) {
-        _owner._logger.error('[Chat] group refresh after join failure', e, st);
+      () async {
+        try {
+          await refresh(svc);
+          await refreshInvites(svc);
+        } catch (e, st) {
+          _owner._logger.error('[Chat] group refresh after join failure', e, st);
+        }
+        if (!_owner._isCurrent(svc) || refusals.isClosed) return;
+        final refusal = await _refusalOf(svc, f, invite);
+        final inviter = invite?.inviterUserId;
+        if (refusal == null ||
+            !_owner._isCurrent(svc) ||
+            refusals.isClosed ||
+            (inviter != null && _owner._blockingPart.isBlocked(inviter))) {
+          return;
+        }
+        refusals.add(refusal);
+      }().catchError((Object e, StackTrace st) {
+        _owner._logger.error('[Chat] group join refusal not reported', e, st);
       }),
     );
+  }
+
+  /// The chat id an NGC invite leads to (its cookie starts with it), the
+  /// way Tim2Tox matches a refused join to the invite it hands back.
+  static String? _inviteChatId(PendingGroupInvite i) =>
+      i.kind == 'group' && i.cookieHex.length >= 64
+          ? i.cookieHex.substring(0, 64).toUpperCase()
+          : null;
+
+  /// The pending invite [f] refused. An invite accepted in an earlier
+  /// session comes back under its own id while the refusal carries none:
+  /// matched by chat id when unambiguous.
+  PendingGroupInvite? _inviteOf(FfiChatService svc, GroupJoinFailure f) {
+    final pending = svc.getPendingGroupInvites();
+    if (f.inviteId.isNotEmpty) {
+      return pending.where((i) => i.id == f.inviteId).firstOrNull;
+    }
+    if (f.chatId.isEmpty || f.established) return null;
+    final chatId = f.chatId.toUpperCase();
+    final matches = pending.where((i) => _inviteChatId(i) == chatId);
+    return matches.length == 1 ? matches.single : null;
+  }
+
+  Future<GroupJoinRefusal?> _refusalOf(
+    FfiChatService svc,
+    GroupJoinFailure f,
+    PendingGroupInvite? invite,
+  ) async {
+    if (declinedByBlock.contains(f.inviteId) ||
+        (invite != null &&
+            _owner._blockingPart.isBlocked(invite.inviterUserId))) {
+      return null;
+    }
+    // An invite refusal whose invite is no longer listed now (declined,
+    // also during the refresh, or never handed back) has no retry: it is
+    // reported without one.
+    final live =
+        invite != null &&
+        svc.getPendingGroupInvites().any((i) => i.id == invite.id);
+    final orphaned = (f.inviteId.isNotEmpty || invite != null) && !live;
+    final chatId = f.chatId.isEmpty || orphaned
+        ? null
+        : f.chatId.toUpperCase();
+    final inviteId = orphaned
+        ? null
+        : f.inviteId.isNotEmpty
+        ? f.inviteId
+        : invite?.id;
+    var name = PeerText.singleLine(invite?.groupName ?? '');
+    if (name.isEmpty && svc.knownGroups.contains(f.groupId)) {
+      final known = await _nameOf(svc, f.groupId);
+      if (known != f.groupId) name = known;
+    }
+    return GroupJoinRefusal(
+      groupId: f.groupId,
+      chatId: chatId,
+      inviteId: inviteId,
+      groupName: name,
+      established: f.established,
+      reason: switch (f.reason) {
+        GroupJoinFailureReason.invalidPassword =>
+          GroupJoinRefusalReason.invalidPassword,
+        GroupJoinFailureReason.groupFull => GroupJoinRefusalReason.groupFull,
+        GroupJoinFailureReason.unknown => GroupJoinRefusalReason.unknown,
+      },
+    );
+  }
+
+  /// Joins a group we hold again by its own id: native resolves the stored
+  /// chat id and rejoins with the new password (a join by chat id would be
+  /// refused as a second binding of the same group).
+  Future<void> rejoin(FfiChatService svc, String groupId, String? password) async {
+    if (!svc.knownGroups.contains(groupId)) {
+      throw const ChatException('group_not_found', 'Not a member of that group');
+    }
+    try {
+      await svc.joinGroup(groupId, password: password);
+    } on GroupAlreadyJoinedException {
+      throw const ChatException('already_joined', 'Already a member of that group');
+    } on StateError catch (e) {
+      throw ChatException('join_failed', e.message);
+    }
+    _owner._ensureCurrent(svc);
+    await refresh(svc);
   }
 
   Future<Group> create(FfiChatService svc, String name, GroupKind kind) async {
@@ -263,5 +378,6 @@ class _GroupsPart {
     _owner._conversationsPart.rebuild(svc);
   }
 
-  Future<void> close() => Future.wait([groups.close(), invites.close()]);
+  Future<void> close() =>
+      Future.wait([groups.close(), invites.close(), refusals.close()]);
 }

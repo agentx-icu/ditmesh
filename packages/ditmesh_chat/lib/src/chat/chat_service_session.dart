@@ -28,7 +28,7 @@ extension _SessionBinding on Tim2ToxChatService {
       svc.pendingGroupInvitesChanged.listen(
         (_) => _groupsPart.refreshInvites(svc),
       ),
-      svc.groupJoinFailures.listen(_groupsPart.onJoinFailure),
+      svc.groupJoinFailures.listen((f) => _groupsPart.onJoinFailure(svc, f)),
     ]);
     _poll = Timer.periodic(_pollInterval, (_) => _tick());
     unawaited(_tick());
@@ -63,6 +63,8 @@ extension _SessionBinding on Tim2ToxChatService {
       await _groupsPart.refreshInvites(svc);
       if (!_isCurrent(svc)) return;
       _conversationsPart.rebuild(svc);
+      // Last: a slow outbox write must not hold up the lists above.
+      await _friendsPart.retryWithdrawals(svc);
     } catch (e, st) {
       _logger.error('[Chat] refresh tick failed', e, st);
     } finally {

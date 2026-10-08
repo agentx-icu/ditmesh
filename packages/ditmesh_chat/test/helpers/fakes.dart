@@ -195,6 +195,22 @@ class FakeChatEngine extends ChatEngine {
   /// The key `createProfile` mints (a 76-hex Tox address).
   String nextToxId = kSelfToxId;
 
+  /// When set, `createProfile` writes the profile and then throws this (a
+  /// native failure after the file landed).
+  Object? createProfileError;
+
+  /// When set, `createProfile` writes the profile, then reports its
+  /// bootstrap instance as not provably stopped (the latch flips to false)
+  /// and throws `teardown_unconfirmed`, like the real engine.
+  bool createProfileUnconfirmed = false;
+
+  /// What [stop] throws after detaching (an unconfirmed native teardown);
+  /// null for the normal, confirmed stop.
+  Object? stopError;
+
+  /// What [nativeTeardownConfirmed] reports.
+  bool teardownConfirmed = true;
+
   @override
   FfiChatService? get service => _service;
 
@@ -232,8 +248,17 @@ class FakeChatEngine extends ChatEngine {
     await File(paths.profileFile).writeAsBytes(
       passphrase == null ? plain : crypto.encrypt(plain, passphrase),
     );
+    final error = createProfileError;
+    if (error != null) throw error;
+    if (createProfileUnconfirmed) {
+      teardownConfirmed = false;
+      throw const ChatException('teardown_unconfirmed', 'fake: quarantined');
+    }
     return nextToxId;
   }
+
+  @override
+  bool get nativeTeardownConfirmed => teardownConfirmed;
 
   @override
   Future<void> start(EngineSessionConfig config) async {
@@ -284,6 +309,8 @@ class FakeChatEngine extends ChatEngine {
     _service = null;
     _sessions.add(null);
     setConnected(false);
+    final error = stopError;
+    if (error != null) throw error;
   }
 
   /// Binds [svc] directly (chat-service tests that skip the identity layer).

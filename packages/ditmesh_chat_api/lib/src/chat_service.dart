@@ -25,7 +25,7 @@ import 'models.dart';
 /// `empty_message`, `invalid_message`, `send_failed`, `self_conversation`,
 /// `invalid_name`, `invalid_chat_id`, `already_joined`, `join_failed`,
 /// `group_not_found`, `invite_failed`, `create_group_failed`,
-/// `leave_failed`, `timeout`, `peer_blocked`.
+/// `leave_failed`, `timeout`, `peer_blocked`, `not_friend`.
 abstract interface class ChatService {
   // ---- Session -------------------------------------------------------------
 
@@ -131,7 +131,10 @@ abstract interface class ChatService {
   /// Send plain text. Returns the local row immediately (status pending or
   /// sending). Throws `message_too_long` when [text] exceeds
   /// [maxMessageBytes] in UTF-8 — the UI shows the remaining budget so this
-  /// should be rare.
+  /// should be rare. A c2c target other than [selfConversationId] must be a
+  /// friend (an outgoing, unanswered request counts): otherwise this throws
+  /// `not_friend`, or `peer_blocked` for a blocked key, and nothing is
+  /// queued.
   Future<ChatMessage> sendText(String conversationId, String text);
 
   /// Tox single-message budget after Tim2Tox's fragment header (1322 bytes).
@@ -198,8 +201,20 @@ abstract interface class ChatService {
   Future<Group> createGroup(String name, {GroupKind kind = GroupKind.group});
 
   /// Join an NGC group by its 64-hex chat id (async on the Tox side; the
-  /// group appears in [groups] once the DHT finds a peer).
+  /// group appears in [groups] once the DHT finds a peer). A wrong password
+  /// or a full group is reported later on [groupJoinRefusals].
   Future<void> joinGroup(String chatId, {String? password});
+
+  /// Joins the group we already hold as [groupId] again, with [password]:
+  /// the retry for an [GroupJoinRefusal.established] refusal. Throws
+  /// `group_not_found` when [groupId] is not in [groups]. A refusal is
+  /// reported on [groupJoinRefusals], as for [joinGroup].
+  Future<void> rejoinGroup(String groupId, {String? password});
+
+  /// Joins the group refused after the call that started them had returned
+  /// (see [GroupJoinRefusal]). Broadcast, not replayed: only refusals of the
+  /// current session, from the moment of listening.
+  Stream<GroupJoinRefusal> get groupJoinRefusals;
 
   Future<void> inviteToGroup(String groupId, String friendPublicKey);
   Future<void> acceptGroupInvite(String inviteId, {String? password});

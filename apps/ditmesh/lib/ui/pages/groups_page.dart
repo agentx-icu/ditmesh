@@ -11,6 +11,7 @@ import '../chat/conversation_route.dart';
 import '../chat/conversation_screen.dart';
 import '../chat/conversation_target.dart';
 import '../groups/create_group_sheet.dart';
+import '../groups/group_join_feedback.dart';
 import '../groups/group_list.dart';
 import '../groups/join_group_sheet.dart';
 import '../shell/shell_router.dart';
@@ -173,9 +174,12 @@ class _GroupsPageState extends State<GroupsPage> {
             embedded: true,
             onClosed: () => setState(() => _selected = null),
           );
-    if (!twoPane) {
-      return singlePaneLayout(list: list, parkedDetail: parked ? detail : null);
-    }
-    return MasterDetail(master: list, detail: detail);
+    // Above both layouts: a refusal is reported whatever the pane shows.
+    return GroupJoinFeedback(
+      service: service,
+      child: twoPane
+          ? MasterDetail(master: list, detail: detail)
+          : singlePaneLayout(list: list, parkedDetail: parked ? detail : null),
+    );
   }
 }

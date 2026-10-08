@@ -11,6 +11,7 @@ import 'replay_stream.dart';
 
 part 'fake_chat_service_blocking.dart';
 part 'fake_chat_service_hooks.dart';
+part 'fake_chat_service_joins.dart';
 part 'fake_chat_service_messages.dart';
 part 'fake_chat_service_rows.dart';
 part 'fake_chat_service_self.dart';
@@ -123,6 +124,7 @@ final class FakeChatService
       ReplaySubject<List<GroupInvite>>(const <GroupInvite>[]);
   final StreamController<ChatMessage> _messageEvents =
       StreamController<ChatMessage>.broadcast();
+  final _FakeJoinState _joins = _FakeJoinState();
 
   bool _disposed = false;
 
@@ -309,6 +311,7 @@ final class FakeChatService
     if (text.trim().isEmpty) {
       throw const ChatException('empty_message', 'Message is empty');
     }
+    _requireFriendTarget(conversationId);
     final Conversation? conversation =
         _conversations[conversationId] ?? _materialize(conversationId);
     if (conversation == null) {
@@ -393,22 +396,15 @@ final class FakeChatService
   }
 
   @override
-  Future<void> joinGroup(String chatId, {String? password}) async {
-    _requireSession();
-    final String id = _requireValidChatId(chatId);
-    if (_groups.values.any((g) => g.chatId == id)) {
-      throw const ChatException('already_joined', 'Already in that group');
-    }
-    _installGroup(
-      Group(
-        id: _nextId('tox'),
-        name: 'Group ${id.substring(0, 8)}',
-        kind: GroupKind.group,
-        chatId: id,
-        memberCount: 1,
-      ),
-    );
-  }
+  Future<void> joinGroup(String chatId, {String? password}) =>
+      _join(chatId, password);
+
+  @override
+  Future<void> rejoinGroup(String groupId, {String? password}) =>
+      _rejoin(groupId, password);
+
+  @override
+  Stream<GroupJoinRefusal> get groupJoinRefusals => _joins.refusals.stream;
 
   @override
   /// Like the backend, an invite to someone not online (or not a friend)
@@ -419,21 +415,8 @@ final class FakeChatService
   }
 
   @override
-  Future<void> acceptGroupInvite(String inviteId, {String? password}) async {
-    _requireSession();
-    await _holdAnswer();
-    final GroupInvite invite = _takeInvite(inviteId);
-    final String id = _nextId('tox');
-    _installGroup(
-      Group(
-        id: id,
-        name: invite.groupName,
-        kind: invite.kind,
-        chatId: invite.kind == GroupKind.group ? fakeChatIdFor(id) : null,
-        memberCount: 2,
-      ),
-    );
-  }
+  Future<void> acceptGroupInvite(String inviteId, {String? password}) =>
+      _accept(inviteId, password);
 
   @override
   Future<void> rejectGroupInvite(String inviteId) async {
@@ -473,6 +456,7 @@ final class FakeChatService
       _sessionChanges.close(),
       for (final ReplaySubject<Object> s in _subjects) s.close(),
       _messageEvents.close(),
+      _joins.close(),
     ]);
   }
 

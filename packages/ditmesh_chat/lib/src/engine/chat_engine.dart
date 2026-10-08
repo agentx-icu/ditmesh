@@ -80,8 +80,19 @@ abstract class ChatEngine {
   /// init → login → self profile → startPolling → group identity sync.
   Future<void> start(EngineSessionConfig config);
 
-  /// Flush + uninit. Safe when already stopped.
+  /// Flush + uninit. Safe when already stopped. Completes with
+  /// `ChatException('teardown_unconfirmed')` when the native teardown did not
+  /// confirm (see [nativeTeardownConfirmed]); every teardown step still runs.
   Future<void> stop();
+
+  /// False after a teardown ([stop], a failed [start], [createProfile]) whose
+  /// native instance could not be confirmed stopped: the dispose threw, or
+  /// Tim2Tox quarantined the instance because a background task outlived
+  /// the drain window. Such a task — the profile-save path included — can
+  /// still write into the profile directory, so nothing may snapshot,
+  /// replace, re-encrypt or delete that directory until a later teardown
+  /// confirms (or the process restarts). True initially.
+  bool get nativeTeardownConfirmed => true;
 
   /// Re-applies the name/status to the running instance, if any.
   Future<void> updateSelfProfile(String displayName, String statusMessage);
@@ -135,10 +146,43 @@ class Tim2ToxEngine extends ChatEngine {
   IdentityScratchFileService? _scratch;
   final ValueStream<FfiChatService?> _sessions = ValueStream(null);
   final ValueStream<bool> _connected = ValueStream(false);
+  // Completion of the last stop(); never fails (start() waits on it).
   Future<void>? _stopping;
+  bool _teardownConfirmed = true;
 
   @override
   FfiChatService? get service => _service;
+
+  @override
+  bool get nativeTeardownConfirmed => _teardownConfirmed;
+
+  /// Disposes [svc] and records whether native ownership provably ended.
+  /// Returns the failure to report (null when confirmed); never throws.
+  Future<ChatException?> _teardown(FfiChatService svc, String what) async {
+    Object? error;
+    try {
+      await svc.dispose();
+    } catch (e, st) {
+      error = e;
+      _logger.error('[Tim2ToxEngine] $what: dispose failed', e, st);
+    }
+    // Tim2Tox publishes this before deciding between uninit and quarantine;
+    // "dispose did not throw" alone does not rule out a live instance.
+    final confirmed = error == null && svc.nativeInstanceStopped == true;
+    _teardownConfirmed = confirmed;
+    if (confirmed) return null;
+    _logger.error(
+      '[Tim2ToxEngine] $what: native teardown unconfirmed '
+      '(stopped=${svc.nativeInstanceStopped}); the profile directory stays '
+      'locked until a later teardown confirms',
+    );
+    return ChatException(
+      'teardown_unconfirmed',
+      error == null
+          ? 'The Tox session did not stop in time'
+          : 'The Tox session failed to stop: $error',
+    );
+  }
 
   @override
   Stream<FfiChatService?> get sessionChanges => _sessions.stream;
@@ -203,12 +247,13 @@ class Tim2ToxEngine extends ChatEngine {
     // No Tox ID yet, so no scope: this instance persists nothing but the
     // savedata and is torn down before the real session opens.
     final svc = _build(paths, '');
+    final String toxId;
     try {
       _stagePassphrase(svc, passphrase);
       await svc.init(profileDirectory: paths.profileDirectory);
       await svc.login(userId: loginAlias, userSig: 'dummy_sig');
-      final toxId = svc.getSelfToxId();
-      if (toxId == null || toxId.isEmpty) {
+      final reported = svc.getSelfToxId();
+      if (reported == null || reported.isEmpty) {
         throw StateError('Tox did not report an address for the new profile');
       }
       await svc.updateSelfProfile(
@@ -216,10 +261,19 @@ class Tim2ToxEngine extends ChatEngine {
         statusMessage: statusMessage,
       );
       svc.saveToxProfileNow();
-      return toxId.toUpperCase();
-    } finally {
-      await svc.dispose();
+      toxId = reported.toUpperCase();
+    } catch (_) {
+      // The original failure is the one to report; the latch still records
+      // an unconfirmed teardown for the caller's cleanup to respect.
+      await _teardown(svc, 'createProfile');
+      rethrow;
     }
+    // The bootstrap instance wrote into paths.profileDirectory; a zombie
+    // save after an unconfirmed teardown would too, so the caller must not
+    // treat the directory as its own yet.
+    final failure = await _teardown(svc, 'createProfile');
+    if (failure != null) throw failure;
+    return toxId;
   }
 
   @override
@@ -257,8 +311,12 @@ class Tim2ToxEngine extends ChatEngine {
       );
     } catch (e, st) {
       _logger.error('[Tim2ToxEngine] start failed', e, st);
-      _callbacks.target = null;
-      await svc.dispose();
+      try {
+        // Accounted like stop(): an unconfirmed teardown here latches too.
+        await _teardown(svc, 'start');
+      } finally {
+        _callbacks.target = null;
+      }
       rethrow;
     }
     _service = svc;
@@ -287,7 +345,18 @@ class Tim2ToxEngine extends ChatEngine {
   @override
   Future<void> stop() {
     final svc = _service;
-    if (svc == null) return _stopping ?? Future<void>.value();
+    if (svc == null) {
+      // Already stopped (or stopping): the caller still gets the truth about
+      // ownership, not the success of a teardown someone else was told failed.
+      return (_stopping ?? Future<void>.value()).then((_) {
+        if (!_teardownConfirmed) {
+          throw const ChatException(
+            'teardown_unconfirmed',
+            'The Tox session did not stop in time',
+          );
+        }
+      });
+    }
     onBootstrapStop?.call();
     _service = null;
     // Synchronous part first so consumers see the detach at once; the
@@ -297,23 +366,23 @@ class Tim2ToxEngine extends ChatEngine {
     _connSub = null;
     _connected.add(false);
     _sessions.force(null);
-    return _stopping = () async {
+    final done = () async {
       // Native teardown first; the callback target stays on this session
       // until it is gone so a friendAddResult that lands during teardown
       // still resolves its completer instead of waiting out the 30 s
       // timeout (start() awaits _stopping before binding a new target).
-      // Every step runs even if an earlier one throws: the session must be
-      // disposed and the target released no matter what.
+      // Every step runs even if an earlier one fails: the session must be
+      // disposed and the target released no matter what. The outcome is
+      // reported at the end, not swallowed.
       try {
         svc.saveToxProfileNow();
         await svc.flushPendingHistory();
       } catch (e, st) {
         _logger.error('[Tim2ToxEngine] stop: save/flush failed', e, st);
       }
+      final ChatException? failure;
       try {
-        await svc.dispose();
-      } catch (e, st) {
-        _logger.error('[Tim2ToxEngine] stop: dispose failed', e, st);
+        failure = await _teardown(svc, 'stop');
       } finally {
         _callbacks.target = null;
       }
@@ -324,7 +393,15 @@ class Tim2ToxEngine extends ChatEngine {
       }
       _scratch = null;
       await cancelled;
+      return failure;
     }();
+    // start() only needs to know the teardown is over; the failure goes to
+    // this caller alone, or a stale error would surface on every later
+    // start() through the retained future.
+    _stopping = done.then((_) {});
+    return done.then((failure) {
+      if (failure != null) throw failure;
+    });
   }
 
   @override
@@ -346,7 +423,9 @@ class Tim2ToxEngine extends ChatEngine {
 
   @override
   Future<void> dispose() async {
-    final stopped = stop();
+    // End of life: an unconfirmed teardown is logged by stop() and nothing
+    // destructive follows, so it does not fail the dispose.
+    final stopped = stop().catchError((Object _) {});
     // stop() published its last events synchronously; the streams can close
     // now. The hook stays installed until the native teardown is over so a
     // result that lands meanwhile still reaches its completer.
