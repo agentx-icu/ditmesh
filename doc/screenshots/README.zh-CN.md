@@ -2,7 +2,7 @@
 
 # DitMesh 真实界面截图
 
-来自真实 Flutter 应用与显式演示数据。macOS、iPhone、iPad、Android 已更新为中英文各 13 个场景；Linux、Windows 暂为前一版 12 场景，等待本次 CI 补齐。现有 152 张图片，产品概念图另存。
+来自真实 Flutter 应用与显式演示数据。六种布局均包含中英文各 13 个场景，共 **156 张图片**，包含欢迎页 C 图标和网络设置；产品概念图另存。
 
 | Scene | macos | ios | ipad | android | linux | windows |
 |---|---|---|---|---|---|---|
@@ -18,8 +18,8 @@
 | translator | [PNG](macos/zh/translator.png) | [PNG](ios/zh/translator.png) | [PNG](ipad/zh/translator.png) | [PNG](android/zh/translator.png) | [PNG](linux/zh/translator.png) | [PNG](windows/zh/translator.png) |
 | listen | [PNG](macos/zh/listen.png) | [PNG](ios/zh/listen.png) | [PNG](ipad/zh/listen.png) | [PNG](android/zh/listen.png) | [PNG](linux/zh/listen.png) | [PNG](windows/zh/listen.png) |
 | me | [PNG](macos/zh/me.png) | [PNG](ios/zh/me.png) | [PNG](ipad/zh/me.png) | [PNG](android/zh/me.png) | [PNG](linux/zh/me.png) | [PNG](windows/zh/me.png) |
-| network_bootstrap | [PNG](macos/zh/network_bootstrap.png) | [PNG](ios/zh/network_bootstrap.png) | [PNG](ipad/zh/network_bootstrap.png) | [PNG](android/zh/network_bootstrap.png) | 等待 CI | 等待 CI |
+| network_bootstrap | [PNG](macos/zh/network_bootstrap.png) | [PNG](ios/zh/network_bootstrap.png) | [PNG](ipad/zh/network_bootstrap.png) | [PNG](android/zh/network_bootstrap.png) | [PNG](linux/zh/network_bootstrap.png) | [PNG](windows/zh/network_bootstrap.png) |
 
-桌面：1280×800；iPhone：1320×2868；iPad：2064×2752；Android：823×1829。本机新版网络页及所选 C 品牌图标已实际编译并捕获；Linux、Windows 新版图片将由同一截图流水线在各自 CI 主机生成。
+桌面：1280×800；iPhone：1320×2868；iPad：2064×2752；Android：823×1829。macOS/iPhone/iPad/Android 已在本机实际编译并捕获。Linux、Windows 来自产品提交 `c8e1fed` 的 [E2E 37732186466](https://github.com/agentx-icu/ditmesh/actions/runs/37732186466) 成功任务，经检查和完整性守卫导入。
 
 [截图流水线](../../tool/screenshots/README.zh-CN.md)

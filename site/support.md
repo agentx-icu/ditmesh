@@ -18,6 +18,12 @@ Open [GitHub issues]({{ site.support_url }}) for help. Issues are public: never 
 
 **Why is a message pending?** Both peers must be reachable. There is no server push or offline relay store. Keep the app running; use connection diagnostics and the send retry/cancel actions when appropriate.
 
+**Bootstrap settings.** Open network settings from the welcome/unlock screen or Me. Automatic mode uses saved/default nodes and refreshes the official Tox catalogue; Manual mode keeps your chosen host, UDP port and public key. Test the currently saved node or a catalogue entry. A successful DHT response confirms that node's UDP reachability; it does not prove TCP relay connectivity or that every chat peer is online.
+
+**Local-network chat.** Start a LAN node on a desktop and share its displayed address, actual UDP port and DHT public key. On another device, enter those details in Manual mode. The node key differs from a friend's Tox ID. Allow Apple's local-network permission when prompted. LAN hosting must be started again after restarting the app.
+
+**Language and appearance.** Me settings offer English, Simplified/Traditional Chinese, Japanese, Korean, German, French, Spanish, Portuguese and Russian, with Classic, Modern, Radio, Paper and Cartoon styles.
+
 **How do I add or block a friend?** Use Chat → contacts to exchange Tox IDs or QR codes. Block from conversations, requests, invites or group members; manage the list under Me → Blocked people.
 
 **Can you recover my identity?** No. Keep an encrypted backup and its passphrase. Restore current DitMesh backups explicitly through the application.

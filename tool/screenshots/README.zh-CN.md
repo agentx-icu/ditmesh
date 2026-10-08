@@ -21,4 +21,4 @@ tool/screenshots/capture.sh --locales en,zh,zh_Hant,ja,ko,de,fr,es,pt,ru --style
 
 常规 Flutter 测试 `test/screenshots/shot_config_test.dart` 覆盖参数解析和实际样式应用；`python3 tool/screenshots/capture_import_test.py` 使用私有 PNG 验证导入和发布边界。实际矩阵导出按需开启（`DITMESH_RENDER_MATRIX=true`、`DITMESH_MATRIX_DIR`、`DITMESH_MATRIX_FONT`，可另设等宽 / 衬线字体路径），常规应用测试不导出视觉资产。
 
-截图要求包含 13 个场景，每个平台 26 张英文 / 简体中文图片；`network_bootstrap` 通过“我”的网络设置入口展示配置好的自动 bootstrap 节点。导入时缺失该页面会保留已有图库并报错。macOS、iPhone、iPad、Android 已更新，Linux、Windows 等待本次 CI 截图导入，实际状态记于图库索引。
+截图要求包含 13 个场景，每个平台 26 张英文 / 简体中文图片；`network_bootstrap` 通过“我”的网络设置入口展示配置好的自动 bootstrap 节点。导入时缺失该页面会保留已有图库并报错。六种布局均已更新，共 156 张标准图库；Linux、Windows 已从成功 CI 任务导入，来源记于图库索引。
