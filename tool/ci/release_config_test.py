@@ -3,6 +3,7 @@
 import hashlib
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -63,6 +64,46 @@ class ReleaseValidationTests(unittest.TestCase):
     def test_missing_build_number_is_rejected(self):
         self.spec.write_text("version: 2.3.4\n")
         self.assertNotEqual(self.run_script("release_version.sh").returncode, 0)
+
+    def test_apple_plugin_cleanup_recovers_from_stale_compiler_cache(self):
+        cmake = shutil.which("cmake")
+        self.assertIsNotNone(cmake, "CMake is required for the native-cache regression")
+        package = self.root / "pub-cache" / "hosted" / "pub.dev" / "flutter_soloud-4.1.7"
+        for platform in ("macos", "ios"):
+            with self.subTest(platform=platform):
+                source = package / platform
+                source.mkdir(parents=True)
+                (source / "CMakeLists.txt").write_text(
+                    "cmake_minimum_required(VERSION 3.16)\nproject(plugin_cache_fixture C)\n"
+                )
+                output = source / "cmake_build" / "fixture"
+
+                def configure():
+                    return subprocess.run([cmake, "-S", str(source), "-B", str(output)],
+                                          capture_output=True, text=True, check=False)
+
+                initial = configure()
+                self.assertEqual(initial.returncode, 0, initial.stderr)
+                cache = output / "CMakeCache.txt"
+                cached = re.sub(r"^CMAKE_C_COMPILER:[^=]+=.*$",
+                                "CMAKE_C_COMPILER:FILEPATH=/removed/Xcode.app/usr/bin/clang",
+                                cache.read_text(), flags=re.MULTILINE)
+                cache.write_text(cached)
+                stale = configure()
+                self.assertNotEqual(stale.returncode, 0)
+                self.assertIn("not a full path to an existing compiler tool", stale.stderr)
+                preserved = package / "other-source.txt"
+                preserved.write_text("keep package sources")
+                result = self.run_script("clean_apple_plugin_cache.sh", platform,
+                                         PUB_CACHE=str(self.root / "pub-cache"))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertFalse(output.exists())
+                self.assertTrue(preserved.exists())
+                self.assertTrue((source / "CMakeLists.txt").exists())
+                recovered = configure()
+                self.assertEqual(recovered.returncode, 0, recovered.stderr)
+        self.assertTrue((package / "macos" / "cmake_build").exists(),
+                        "Cleaning iOS must preserve the other platform's outputs")
 
     def test_complete_set_creates_verifiable_checksums(self):
         suffixes = (

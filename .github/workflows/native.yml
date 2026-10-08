@@ -444,6 +444,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+          # Plugin CMake outputs inside Pub embed runner-specific Xcode paths.
+          pub-cache: false
       - name: Download libtim2tox_ffi.dylib
         uses: actions/download-artifact@v5
         with:
@@ -478,6 +480,7 @@ jobs:
           retention-days: 14
       - name: Build macOS app (release, real Tox backend)
         run: |
+          bash tool/ci/clean_apple_plugin_cache.sh macos
           flutter config --enable-macos-desktop
           cd apps/ditmesh
           flutter build macos --release --dart-define=DITMESH_FAKE_BACKEND=false
@@ -596,6 +599,7 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+          pub-cache: false
       - name: Download libtim2tox_ffi (XCFramework)
         uses: actions/download-artifact@v5
         with:
@@ -614,6 +618,7 @@ jobs:
       # re-sign step sign it), as toxee ships without iOS secrets.
       - name: Build iOS app (release, real Tox backend, no codesign)
         run: |
+          bash tool/ci/clean_apple_plugin_cache.sh ios
           cd apps/ditmesh
           flutter build ios --release --no-codesign --dart-define=DITMESH_FAKE_BACKEND=false
       - name: Package (unsigned .ipa)

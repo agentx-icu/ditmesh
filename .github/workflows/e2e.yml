@@ -38,6 +38,7 @@ jobs:
           flutter-version: '3.41.9'
           channel: 'stable'
           cache: true
+          pub-cache: false
 
       # Same order as analyze.yml: vendor + overlay before pub get.
       - name: Bootstrap vendored dependencies
@@ -46,13 +47,8 @@ jobs:
       - name: Install dependencies
         run: dart pub get --enforce-lockfile
 
-      # flutter_soloud builds its macOS library with CMake *inside the pub
-      # cache* (flutter_soloud-*/macos/cmake_build). flutter-action restores
-      # that cache across runner images, and a CMakeCache configured with an
-      # older Xcode points at compilers that no longer exist ("CMAKE_CXX_COMPILER
-      # ... is not a full path to an existing compiler tool").
       - name: Drop flutter_soloud's cached CMake build
-        run: rm -rf "${PUB_CACHE:-$HOME/.pub-cache}"/hosted/pub.dev/flutter_soloud-*/macos/cmake_build
+        run: bash tool/ci/clean_apple_plugin_cache.sh macos
 
       # No libtim2tox_ffi on the runner: the Podfile warns and the app is
       # UI-only, which is exactly what the fake backend needs. One app launch
