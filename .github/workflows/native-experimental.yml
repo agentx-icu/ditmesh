@@ -93,7 +93,7 @@ jobs:
           # compiles dart_api_dl.c from the SDK headers, so a pin bump must not
           # restore a cache entry built against older headers (the Dart-only
           # arm64 rows read DART_VERSION, the others get Dart via FLUTTER_VERSION).
-          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native-experimental.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh') }}
+          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native-experimental.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/tim2tox-overlays/*.patch') }}
 
       - name: Cache libsodium prefix
         if: steps.cache_native.outputs.cache-hit != 'true' && !startsWith(matrix.target, 'windows')

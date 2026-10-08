@@ -1,0 +1,51 @@
+diff --git a/source/V2TIMGroupManagerImpl.cpp b/source/V2TIMGroupManagerImpl.cpp
+--- a/source/V2TIMGroupManagerImpl.cpp
++++ b/source/V2TIMGroupManagerImpl.cpp
+@@ -1888,2 +1888,3 @@
+         memberInfo.role = v2tim_role;
++        memberInfo.isOnline = err_conn == TOX_ERR_GROUP_PEER_QUERY_OK && peer_conn != TOX_CONNECTION_NONE;
+         // joinTime is in seconds; Tox has no peer join timestamp, use current time so UI does not show 1970-01-01
+@@ -1957,2 +1958,4 @@
+                 }
++                // tox_conference_peer_count enumerates only online peers.
++                confInfo.isOnline = true;
+                 confInfo.joinTime = static_cast<int64_t>(std::time(nullptr));
+@@ -1989,2 +1992,3 @@
+     }
++    selfInfo.isOnline = self_connection != TOX_CONNECTION_NONE && (is_conference_group || is_connected);
+     selfInfo.joinTime = static_cast<int64_t>(std::time(nullptr));
+@@ -2243,2 +2247,4 @@
+                         }
++                        // This enumeration contains only online conference peers.
++                        memberInfo.isOnline = true;
+                         memberInfo.joinTime = static_cast<int64_t>(std::time(nullptr));
+@@ -2302,2 +2308,6 @@
+                 memberInfo.role = v2tim_role;
++                Tox_Err_Group_Is_Connected status_error = TOX_ERR_GROUP_IS_CONNECTED_GROUP_NOT_FOUND;
++                memberInfo.isOnline = tox_self_get_connection_status(tox) != TOX_CONNECTION_NONE &&
++                    tox_manager->isGroupConnected(group_number, &status_error) &&
++                    status_error == TOX_ERR_GROUP_IS_CONNECTED_OK;
+                 memberInfo.joinTime = static_cast<int64_t>(std::time(nullptr));
+@@ -2367,2 +2377,7 @@
+                     memberInfo.role = v2tim_role;
++                    Tox_Err_Group_Peer_Query status_error = TOX_ERR_GROUP_PEER_QUERY_PEER_NOT_FOUND;
++                    const Tox_Connection peer_connection = tox_group_peer_get_connection_status(
++                        tox, group_number, peer_id, &status_error);
++                    memberInfo.isOnline = status_error == TOX_ERR_GROUP_PEER_QUERY_OK &&
++                        peer_connection != TOX_CONNECTION_NONE;
+                     memberInfo.joinTime = static_cast<int64_t>(std::time(nullptr));
+diff --git a/ffi/dart_compat_group.cpp b/ffi/dart_compat_group.cpp
+--- a/ffi/dart_compat_group.cpp
++++ b/ffi/dart_compat_group.cpp
+@@ -1445,3 +1445,4 @@
+                     json << "\"group_member_info_join_time\":" << static_cast<int64_t>(member.joinTime) << ",";
+-                    json << "\"group_member_info_member_role\":" << static_cast<int>(member.role);
++                    json << "\"group_member_info_member_role\":" << static_cast<int>(member.role) << ",";
++                    json << "\"group_member_info_is_online\":" << (member.isOnline ? "true" : "false");
+                     json << "}";
+@@ -1922,3 +1923,4 @@
+                     json << "\"group_member_info_join_time\":" << static_cast<int64_t>(member.joinTime) << ",";
+-                    json << "\"group_member_info_member_role\":" << static_cast<int>(member.role);
++                    json << "\"group_member_info_member_role\":" << static_cast<int>(member.role) << ",";
++                    json << "\"group_member_info_is_online\":" << (member.isOnline ? "true" : "false");
+                     json << "}";

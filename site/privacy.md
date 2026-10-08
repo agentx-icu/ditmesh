@@ -14,7 +14,7 @@ DitMesh is a peer-to-peer Morse chat application on Android, iOS, macOS, Linux a
 
 The app stores your Tox identity, contacts, groups, message history, drafts, bookmarks, practice data, preferences, key bindings and any saved recordings in its private application storage. The identity profile can be protected with a password; message history and practice files are not encrypted at rest. Device access and backups therefore matter. Encrypted exports are saved or shared only when you request them.
 
-Me → Delete identity removes its local account data. Messages already sent remain on recipients' devices. Operating-system backups and copies you previously exported have their own retention rules. DitMesh does not automatically read the separate MorseCQ application's files; moving a source backup requires explicit import.
+Me → Delete identity removes its local account data. Messages already sent remain on recipients' devices. Operating-system backups and copies you previously exported have their own retention rules. DitMesh and MorseCQ keep independent application data.
 
 ## Network data
 

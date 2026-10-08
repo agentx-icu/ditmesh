@@ -56,3 +56,5 @@ tool/test_pyramid.sh --level e2e --device macos
 把测试放到能观察到该行为的最低一层。界面行为 → 控件层。接线或生命周期事实 →
 `test/di`。任何需要插件或真实 `main()` 的 → `integration_test/`；如果是一个场景，
 加进已有的走查而不是新建文件（见 `tool/screenshots/README.zh-CN.md`）。
+
+Linux 与两种 macOS 原生 CI 都要求执行 `python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <原生库路径>`。两个独立原生进程通过 localhost UDP 实际交换消息，重启加密档案、验证持久队列只接收一次，并重入原群。公网 DHT 启动探测通过 `DITMESH_PUBLIC_DHT_SMOKE=true` 按需启用，与必需的本机真实送达检查独立。

@@ -3,7 +3,7 @@
 # DitMesh 文档
 
 - [已批准拆分方案](plans/2026-10-08-chat-migration.zh-CN.md)
-- [MorseCQ → DitMesh 迁移](MIGRATION.zh-CN.md)
+- [两个应用的职责](APP_SPLIT.zh-CN.md)
 - [构建、CI 与打包](operations/BUILD_AND_DEPLOY.zh-CN.md)
 - [发布与商店要求](release/APP_STORE.zh-CN.md)
 - [验证证据](VALIDATION.zh-CN.md)

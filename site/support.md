@@ -20,7 +20,7 @@ Open [GitHub issues]({{ site.support_url }}) for help. Issues are public: never 
 
 **How do I add or block a friend?** Use Chat → contacts to exchange Tox IDs or QR codes. Block from conversations, requests, invites or group members; manage the list under Me → Blocked people.
 
-**Can you recover my identity?** No. Keep an encrypted backup and its passphrase. Import your existing MorseCQ backup explicitly into DitMesh before removing the old chat app.
+**Can you recover my identity?** No. Keep an encrypted backup and its passphrase. Restore current DitMesh backups explicitly through the application.
 
 **Native backend failed to start.** Use a complete release package or rebuild/stage the platform Tim2Tox library. A production error must not be mistaken for a working demonstration chat.
 

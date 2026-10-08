@@ -24,17 +24,6 @@ void main() {
     },
   );
 
-  testWidgets('old guest selection cannot bypass chat identity startup', (
-    tester,
-  ) async {
-    final guest = MemoryGuestStore()..active = true;
-    await pumpApp(tester, identity: freshIdentityService(), guestStore: guest);
-    expect(find.byType(WelcomePage), findsOneWidget);
-    expect(find.byType(AppShell), findsNothing);
-    expect(guest.active, isTrue, reason: 'legacy data stays untouched');
-    expect(guest.controllersOpened, 0);
-  });
-
   testWidgets('encrypted identity has no guest bypass', (tester) async {
     await pumpApp(tester, identity: seededIdentityService(password: 'pw'));
     expect(find.byType(UnlockPage), findsOneWidget);

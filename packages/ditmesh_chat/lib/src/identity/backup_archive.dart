@@ -24,13 +24,8 @@ abstract final class BackupArchive {
     final rawManifest = container.entries[BackupSnapshot.manifestEntry];
     if (rawManifest == null) throw invalid;
     final manifest = BackupSnapshot.decodeJson(rawManifest);
-    // A deliberate import is the migration path from MorseCQ. Both product
-    // formats use the same validated v2 archive; new exports use DitMesh.
     if (manifest is! Map ||
-        !const {
-          'ditmesh-backup',
-          'morsecq-backup',
-        }.contains(manifest['format'])) {
+        manifest['format'] != BackupSnapshot.manifestFormat) {
       throw invalid;
     }
     if (manifest['version'] != BackupContainer.innerVersion) {

@@ -10,7 +10,7 @@
 
 The user approved the independent-app design on 2026-10-08. DitMesh exposes Chat / Groups / Reference / Me. Straight key and iambic paddles work through touch and physical keyboard; the decoded draft stays read-only. Preserve the v1 plain-text Tox wire format for interoperability. Preserve chat-assisted practice where needed by the migrated conversation features. MorseCQ exposes Learn / Reference / Me and includes the existing offline training, DSP, reference and radio tools.
 
-Use `icu.agentx.ditmesh` for DitMesh and retain `icu.agentx.morsecq` for MorseCQ upgrades. Never load another application's identity or data implicitly. Preserve existing MorseCQ guest storage and offer a deliberate, non-destructive import of legacy identity-scoped learning files, without loading Tox.
+Use `icu.agentx.ditmesh` for DitMesh and use `icu.agentx.morsecq` for MorseCQ. Keep independent application data. On 2026-10-08 the user clarified that neither application has been released; historical-version compatibility and old-data migration are unnecessary and removed from the implementation scope. MorseCQ uses a clean local learning profile without Tox.
 
 Platform support is Android, iOS, macOS, Linux and Windows. iOS release packages can be unsigned; Apple signing/notarization and Android store signing require owner credentials. CI must distinguish required targets from experimental architectures. Tags produce a draft GitHub Release with checksums after required builds and tests pass.
 
@@ -37,8 +37,8 @@ Files: root workspace/pubspec and `apps/morsecq/{lib,test,integration_test}`, pl
 1. Add a regression showing first launch enters learning without registration and no chat destination exists; verify the old app fails that expectation.
 2. Replace backend/identity startup with a local learning scope, preferences, training-controller host and lifecycle persistence.
 3. Remove chat/identity API and transport packages, submodule registration, Tencent overlays, FFI build scripts, account/contact/group/chat/notification UI and obsolete tests.
-4. Adapt learning, DSP recording paths, preference persistence and desktop services to local storage; preserve guest training data paths.
-5. Add explicit legacy learning import that copies validated data without deleting source files, handles existing destinations safely and requires no account/password/native library.
+4. Adapt learning, DSP recording paths, preference persistence and desktop services to local storage; use a local learning data directory.
+5. Persist current local learning progress, settings and recordings without any account/password/native library or legacy import flow.
 6. Remove native linking/pods/Android dependencies and unnecessary permissions; keep microphone access for DSP features.
 7. Update source guards, integration walks and screenshots to the offline scenes.
 8. Update bilingual product/build/privacy/support documentation and design references. Run analyzer, gates, relevant regressions and full remaining tests.
@@ -52,7 +52,7 @@ Files: `apps/ditmesh/{lib,test,integration_test,test_driver}`, `packages/ditmesh
 3. Preserve complete contacts, requests, QR, groups/invites/members, history/search/bookmarks, outbox retries/cancel, blocking, backup/restore, notifications and desktop routing.
 4. Keep chat-assisted Morse practice and key profiles intact; hide unrelated standalone training destinations.
 5. Ensure native backend preparation failure is visibly reported and never silently substitutes a demo backend in production.
-6. Audit independent data paths and backup identification. Explicitly document compatible source backup import where supported.
+6. Audit independent data paths and current DitMesh backup identification/restore. No MorseCQ legacy backup compatibility is required.
 7. Adapt launch/integration scenes and assertions for the migrated product. Run analyzer, guards, package/app tests and native smoke tests.
 
 ## Task 4 — Build, packaging and CI (build implementation agent)
@@ -69,7 +69,7 @@ Files: DitMesh platform runners, `tool/{ci,build_*,bootstrap_deps.dart,import_gu
 
 ## Task 5 — Documentation, screenshots and review (coordinator)
 
-1. Rewrite DitMesh English/Chinese README, architecture/migration/build/release docs and public privacy/terms/support pages.
+1. Rewrite DitMesh English/Chinese README, application responsibility/build/release docs and public privacy/terms/support pages.
 2. Update MorseCQ docs after implementation; mark old plans historical and point current product decisions to the split plan.
 3. Capture real app screenshots in English and Chinese on macOS and available iOS/iPad simulators; use CI for unavailable hosts and never relabel old screenshots as current.
 4. Update product design diagrams to match navigation and responsibilities; regenerate raster concepts with imagegen if used.
@@ -81,7 +81,7 @@ Files: DitMesh platform runners, `tool/{ci,build_*,bootstrap_deps.dart,import_gu
 
 - Independent storage, backup metadata and product identifiers.
 - Production-native startup error visibility instead of silent fake-chat fallback.
-- Learning data continuity after removal of account-scoped storage.
+- Current local learning lifecycle durability without account-scoped storage.
 - Required test gates before Release assets can publish.
 - Current screenshot scene validation and bilingual documentation links.
 - Least-required native dependencies and platform permissions in the offline trainer.
@@ -93,3 +93,5 @@ Real network conversations require two reachable Tox peers. Physical-device late
 ## Change log
 
 - 2026-10-08: Created after user approval; records migration boundaries, independent storage, worktree ownership, release gates and local/remote verification.
+
+- 2026-10-08 user clarification: both applications are unreleased. Remove legacy learning/ZIP import and MorseCQ backup compatibility; simplify implementation and first-release documentation.

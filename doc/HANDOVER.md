@@ -6,14 +6,14 @@ The complete Tox Morse chat was migrated from MorseCQ; the offline-learning spli
 
 ## Included follow-up work
 
-Independent product/storage/installer identifiers; explicit production backend failure; compatibility with source encrypted chat backups; preserving MorseCQ local learning files; five-platform build/packaging definitions; test gates before draft Release publication; current bilingual documentation, concept boards and real screenshot scenes.
+Independent product/storage/installer identifiers; explicit production backend failure; current encrypted chat backup/restore; account-free local learning persistence; five-platform build/packaging definitions; test gates before draft Release publication; current bilingual documentation, concept boards and real screenshot scenes.
 
 ## Remaining external checks
 
 - Apple distribution certificate/provisioning/team, iOS signed IPA/store upload, macOS Developer ID signing and notarization.
 - Android release/upload keystore and store account. Keep all credentials out of Git.
 - Physical-device sidetone latency, silent-switch playback, haptics, camera QR, notification tap routing, microphone decoding and background limits.
-- Real direct/group conversations between two reachable Tox peers, offline-to-online queue delivery and restart/rejoin.
+- Cross-device internet/NAT conversations and mobile background behavior. Two real local Tox peers already cover direct/group delivery, durable queued sending and restart/rejoin.
 - Run and inspect Linux/Windows release artifacts on their respective hosts; experimental native ARM architectures do not count as required platform coverage.
 - Network keyed-timing annotations and live keying remain future upstream work; v1 intentionally interoperates using text.
 

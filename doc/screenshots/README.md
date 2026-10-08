@@ -4,21 +4,21 @@
 
 Captured from the real Flutter app with explicit demo data. Each platform includes all twelve scenes in English and Chinese. Product concepts are stored separately.
 
-| Scene | macos | ios |
-|---|---|---|
-| welcome | [PNG](macos/en/welcome.png) | [PNG](ios/en/welcome.png) |
-| create_identity | [PNG](macos/en/create_identity.png) | [PNG](ios/en/create_identity.png) |
-| backup_wizard | [PNG](macos/en/backup_wizard.png) | [PNG](ios/en/backup_wizard.png) |
-| chat_list | [PNG](macos/en/chat_list.png) | [PNG](ios/en/chat_list.png) |
-| conversation | [PNG](macos/en/conversation.png) | [PNG](ios/en/conversation.png) |
-| contacts | [PNG](macos/en/contacts.png) | [PNG](ios/en/contacts.png) |
-| groups | [PNG](macos/en/groups.png) | [PNG](ios/en/groups.png) |
-| group_conversation | [PNG](macos/en/group_conversation.png) | [PNG](ios/en/group_conversation.png) |
-| reference | [PNG](macos/en/reference.png) | [PNG](ios/en/reference.png) |
-| translator | [PNG](macos/en/translator.png) | [PNG](ios/en/translator.png) |
-| listen | [PNG](macos/en/listen.png) | [PNG](ios/en/listen.png) |
-| me | [PNG](macos/en/me.png) | [PNG](ios/en/me.png) |
+| Scene | macos | ios | ipad | android | linux | windows |
+|---|---|---|---|---|---|---|
+| welcome | [PNG](macos/en/welcome.png) | [PNG](ios/en/welcome.png) | [PNG](ipad/en/welcome.png) | [PNG](android/en/welcome.png) | [PNG](linux/en/welcome.png) | [PNG](windows/en/welcome.png) |
+| create_identity | [PNG](macos/en/create_identity.png) | [PNG](ios/en/create_identity.png) | [PNG](ipad/en/create_identity.png) | [PNG](android/en/create_identity.png) | [PNG](linux/en/create_identity.png) | [PNG](windows/en/create_identity.png) |
+| backup_wizard | [PNG](macos/en/backup_wizard.png) | [PNG](ios/en/backup_wizard.png) | [PNG](ipad/en/backup_wizard.png) | [PNG](android/en/backup_wizard.png) | [PNG](linux/en/backup_wizard.png) | [PNG](windows/en/backup_wizard.png) |
+| chat_list | [PNG](macos/en/chat_list.png) | [PNG](ios/en/chat_list.png) | [PNG](ipad/en/chat_list.png) | [PNG](android/en/chat_list.png) | [PNG](linux/en/chat_list.png) | [PNG](windows/en/chat_list.png) |
+| conversation | [PNG](macos/en/conversation.png) | [PNG](ios/en/conversation.png) | [PNG](ipad/en/conversation.png) | [PNG](android/en/conversation.png) | [PNG](linux/en/conversation.png) | [PNG](windows/en/conversation.png) |
+| contacts | [PNG](macos/en/contacts.png) | [PNG](ios/en/contacts.png) | [PNG](ipad/en/contacts.png) | [PNG](android/en/contacts.png) | [PNG](linux/en/contacts.png) | [PNG](windows/en/contacts.png) |
+| groups | [PNG](macos/en/groups.png) | [PNG](ios/en/groups.png) | [PNG](ipad/en/groups.png) | [PNG](android/en/groups.png) | [PNG](linux/en/groups.png) | [PNG](windows/en/groups.png) |
+| group_conversation | [PNG](macos/en/group_conversation.png) | [PNG](ios/en/group_conversation.png) | [PNG](ipad/en/group_conversation.png) | [PNG](android/en/group_conversation.png) | [PNG](linux/en/group_conversation.png) | [PNG](windows/en/group_conversation.png) |
+| reference | [PNG](macos/en/reference.png) | [PNG](ios/en/reference.png) | [PNG](ipad/en/reference.png) | [PNG](android/en/reference.png) | [PNG](linux/en/reference.png) | [PNG](windows/en/reference.png) |
+| translator | [PNG](macos/en/translator.png) | [PNG](ios/en/translator.png) | [PNG](ipad/en/translator.png) | [PNG](android/en/translator.png) | [PNG](linux/en/translator.png) | [PNG](windows/en/translator.png) |
+| listen | [PNG](macos/en/listen.png) | [PNG](ios/en/listen.png) | [PNG](ipad/en/listen.png) | [PNG](android/en/listen.png) | [PNG](linux/en/listen.png) | [PNG](windows/en/listen.png) |
+| me | [PNG](macos/en/me.png) | [PNG](ios/en/me.png) | [PNG](ipad/en/me.png) | [PNG](android/en/me.png) | [PNG](linux/en/me.png) | [PNG](windows/en/me.png) |
 
-iPad and Android capture is in progress. Linux and Windows will be captured by E2E CI from this revision; no old platform captures are reused.
+Desktop:1280×800; iPhone:1320×2868; iPad:2064×2752; Android:823×1829. Linux and Windows frames were verified and imported from [successful E2E CI](https://github.com/agentx-icu/ditmesh/actions/runs/37719469365). The local and CI captures use the same application UI; no old product images are reused.
 
 [Capture pipeline](../../tool/screenshots/README.md)

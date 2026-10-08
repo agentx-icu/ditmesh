@@ -131,54 +131,6 @@ void main() {
         preferences: prefs,
       );
 
-  test(
-    'source MorseCQ backup deliberately restores identity, history and drafts',
-    () async {
-      final legacy = await File('test/fixtures/morsecq_v2.mcqe').readAsBytes();
-      final inner = BackupContainer.decode(
-        BackupEnvelope.open(legacy, 'legacy test passphrase', crypto),
-        inner: true,
-      );
-      final manifest =
-          jsonDecode(utf8.decode(inner.entries[BackupSnapshot.manifestEntry]!))
-              as Map<String, dynamic>;
-      expect(manifest['format'], 'morsecq-backup');
-      final target = IdentityPaths(p.join(tempRoot.path, 'ditmesh-device'));
-      final targetStore = MemoryKeyValueStore();
-      final restored = service(target, kv: targetStore);
-      final preview = await restored.previewEncryptedBackup(
-        legacy,
-        'legacy test passphrase',
-      );
-      expect(preview.toxId, kSelfToxId);
-      await restored.restoreEncryptedBackup(legacy, 'legacy test passphrase');
-      expect(restored.current!.toxId, kSelfToxId);
-      expect(restored.current!.displayName, 'Legacy MorseCQ');
-      expect(
-        File(historyFile(target)).readAsStringSync(),
-        contains('CQ DE LEGACY'),
-      );
-      final meta = ConversationMetaStore(
-        targetStore,
-        accountPrefix: kSelfToxId.substring(0, 16),
-      );
-      expect(meta.draft('c2c_$kPeerKey'), 'DE LEGACY');
-      expect(meta.pinned, contains('c2c_$kPeerKey'));
-      final fresh = await restored.exportEncryptedBackup(request(_all));
-      final written = BackupContainer.decode(
-        BackupEnvelope.open(fresh, 'correct horse', crypto),
-        inner: true,
-      );
-      final freshManifest =
-          jsonDecode(
-                utf8.decode(written.entries[BackupSnapshot.manifestEntry]!),
-              )
-              as Map<String, dynamic>;
-      expect(freshManifest['format'], 'ditmesh-backup');
-      await restored.dispose();
-    },
-  );
-
   test('inventory reports sizes, the outbox and queued invites', () async {
     final svc = await seeded();
     final inv = await svc.backupInventory();

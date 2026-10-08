@@ -37,7 +37,7 @@ void main() {
     expect(resolved, same(native));
   });
 
-  test('DitMesh always enables chat regardless of the legacy build define', () {
+  test('DitMesh enables chat on every platform', () {
     expect(AppFeatures.fromEnvironment.chat, isTrue);
   });
 }

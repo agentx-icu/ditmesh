@@ -4,7 +4,7 @@
 
 **用 Morse Code 聊天。** DitMesh 是基于 [Tox](https://tox.chat) 点对点网络、没有聊天服务器的莫斯电码聊天应用。通过触摸或物理键盘操作直键、双桨，在单聊和群组中发报。不需要手机号、邮箱或中心服务器注册；身份密钥在设备本地生成。
 
-DitMesh 完整承接原 [MorseCQ](https://github.com/agentx-icu/morsecq) 的聊天功能。MorseCQ 成为安装即用的离线学习应用；DitMesh 负责聊天身份、联系人和会话。两者使用独立应用标识及数据目录。
+DitMesh 负责聊天；[MorseCQ](https://github.com/agentx-icu/morsecq) 负责安装即用的离线学习。两者使用独立应用标识和数据目录，均在准备首次发布。
 
 ![DitMesh 桌面与手机产品设计概念图](doc/designs/product-2026-10-08/product-concept.png)
 
@@ -19,14 +19,14 @@ DitMesh 完整承接原 [MorseCQ](https://github.com/agentx-icu/morsecq) 的聊�
 - **群聊**：新建、通过群 ID 加入、邀请、成员管理、重启后重入；群消息使用同一套 Morse 输入。
 - **播放与练习**：接收者自选速度和 Farnsworth 间距，音频/震动/闪光播放、先听后揭晓、纯听模式、抄收练习、保存学习材料和群内练习。
 - **消息管理**：历史搜索、过滤、跳转、书签、取消尚未发送的队列消息、失败重试且不重复创建消息气泡。
-- **身份与备份**：身份密码保护、完整加密导出与恢复预览、选择恢复组件、旧 `.tox` 文件恢复，以及主动导入 MorseCQ 加密备份。
+- **身份与备份**：身份密码保护、完整加密导出与恢复预览、选择恢复组件、`.tox` 身份文件导入及 DitMesh 备份恢复。
 - **隐私与屏蔽**：点对点加密传输、本地通知、屏蔽联系人及社区准则；没有聊天或推送服务器。
 - **参考与电键**：字母、程序信号、Q 简语、译码、中文电报码解读及设备按键配置。
 - **桌面体验**：自适应会话面板、窗口记忆、托盘、未读角标和通知跳转；十种界面语言与多种外观风格。
 
 消息沿用 Tim2Tox 的纯文本线路协议，可与 [toxee](https://github.com/agentx-icu/toxee) 等客户端互通；DitMesh 在本地生成 Morse 播放。真实键控时序和网络实时发报仍需要上游功能。
 
-双方应用都运行且网络可达时才能送达。对方离线时消息保留在本地持久队列；应用关闭后没有服务器推送。真实后端启动失败会明确显示；演示服务仅由显式测试开关启用。
+自动模式使用[官方 Tox 列表](https://nodes.tox.chat/)中的多个引导节点，手动配置保持有效。双方应用都运行且网络可达时才能送达。对方离线时消息保留在本地持久队列；应用关闭后没有服务器推送。真实后端启动失败会明确显示；演示服务仅由显式测试开关启用。
 
 ## 截图
 
@@ -55,7 +55,7 @@ flutter run -d macos
 
 需要演示界面时显式添加 `--dart-define=DITMESH_FAKE_BACKEND=true`。生产构建使用真实后端，必须包含对应平台原生库。
 
-参见[构建与打包](doc/operations/BUILD_AND_DEPLOY.zh-CN.md)、[发布要求](doc/release/APP_STORE.zh-CN.md)、[迁移指南](doc/MIGRATION.zh-CN.md)、[测试金字塔](doc/testing/TEST_PYRAMID.zh-CN.md)。
+参见[构建与打包](doc/operations/BUILD_AND_DEPLOY.zh-CN.md)、[发布要求](doc/release/APP_STORE.zh-CN.md)、[应用职责](doc/APP_SPLIT.zh-CN.md)、[测试金字塔](doc/testing/TEST_PYRAMID.zh-CN.md)。
 
 ## 开发检查
 

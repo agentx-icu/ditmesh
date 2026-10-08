@@ -71,3 +71,5 @@ behaviour → widget. A wiring or lifecycle fact → `test/di`. Anything that
 needs a plugin or the real `main()` → `integration_test/`, and add it to the
 existing walk rather than a new file when it is a scene (see
 `tool/screenshots/README.md`).
+
+The required Linux and both macOS native CI jobs also run `python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>`. Two separate native processes exchange real localhost UDP messages, restart encrypted profiles, drain a durable queue exactly once and rejoin the original group. Public DHT startup is an optional probe (`DITMESH_PUBLIC_DHT_SMOKE=true`); it is independent of the hermetic required delivery gate.

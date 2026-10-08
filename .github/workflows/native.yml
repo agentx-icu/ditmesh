@@ -143,7 +143,7 @@ jobs:
           # compiles dart_api_dl.c from the SDK headers, so a pin bump must not
           # restore a cache entry built against older headers (the Dart-only
           # arm64 rows read DART_VERSION, the others get Dart via FLUTTER_VERSION).
-          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/build_ios_ffi.sh') }}
+          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/build_ios_ffi.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/tim2tox-overlays/*.patch') }}
 
       - name: Cache libsodium prefix
         if: steps.cache_native.outputs.cache-hit != 'true' && !startsWith(matrix.target, 'windows')
@@ -282,6 +282,19 @@ jobs:
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
         run: dart pub get --enforce-lockfile
+      - name: Real UDP peers, encrypted restart and group restoration
+        env:
+          TMPDIR: ${{ runner.temp }}
+          TIM2TOX_FFI_LIB: ${{ github.workspace }}/build/native/linux-x86_64/libtim2tox_ffi.so
+        run: python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library "$TIM2TOX_FFI_LIB"
+      - name: Upload real-peer test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-peer-logs-linux-x86_64
+          path: ${{ runner.temp }}/ditmesh_real_peers_*/**/*.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Build Linux app (release, real Tox backend)
         run: |
           flutter config --enable-linux-desktop
@@ -450,6 +463,19 @@ jobs:
         run: |
           cd packages/ditmesh_chat
           flutter test --tags=needs-native
+      - name: Real UDP peers, encrypted restart and group restoration
+        env:
+          TMPDIR: ${{ runner.temp }}
+          TIM2TOX_FFI_LIB: ${{ github.workspace }}/build/native/macos-${{ matrix.arch }}/libtim2tox_ffi.dylib
+        run: python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library "$TIM2TOX_FFI_LIB"
+      - name: Upload real-peer test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-peer-logs-macos-${{ matrix.arch }}
+          path: ${{ runner.temp }}/ditmesh_real_peers_*/**/*.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Build macOS app (release, real Tox backend)
         run: |
           flutter config --enable-macos-desktop

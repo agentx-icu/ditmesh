@@ -52,3 +52,5 @@ tag 发布等待验证和必要应用构建，核对预期安装包、生成 SHA
 源码/CI iOS IPA 未签名，macOS 未配置所有者凭据时不公证，Android 商店上传需要发布/上传密钥。秘密只放 CI 凭据存储，不进入 Git。见[发布要求](../release/APP_STORE.zh-CN.md)与 [Flutter iOS 部署文档](https://docs.flutter.dev/deployment/ios)。
 
 构建结果记录源码、Tim2Tox SHA、Flutter/Dart 和架构；发布 FFI 用 `assert_no_test_hooks.sh` 检查。校验和不能代替代码签名。缺 FFI 的放行只用于显式演示构建，不能作为可聊天产品发布。
+
+原生构建在源码副本上应用[群状态持久化补丁](../../tool/ci/tim2tox-overlays/README.md)，上游检出保持干净。Linux、两种 macOS 架构的 CI 都运行本机真实 UDP 节点测试；公网 DHT 探测单独按需启用。发布前应核对并更新[官方 Tox 节点列表](https://nodes.tox.chat/)中的内置引导节点。

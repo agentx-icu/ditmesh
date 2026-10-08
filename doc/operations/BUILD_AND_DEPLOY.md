@@ -62,3 +62,5 @@ Source/CI iOS IPA is unsigned; macOS artifacts are not notarized unless owner cr
 ## Reproducibility and diagnostics
 
 Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries. Package checksums do not replace code signing. For deliberate fake UI-only development, use the documented missing-FFI escape plus `DITMESH_FAKE_BACKEND=true`; do not ship such builds as working chat clients.
+
+Native builds apply the [group-persistence overlay](../../tool/ci/tim2tox-overlays/README.md) to a copied source tree. The pinned upstream checkout remains clean. Required Linux and both macOS jobs exercise real local UDP peers; a separate public-DHT smoke probe is opt-in. Refresh the reviewed bundled bootstrap node list against [official Tox node status](https://nodes.tox.chat/) before releases.

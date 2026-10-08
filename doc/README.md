@@ -3,7 +3,7 @@
 # DitMesh documentation
 
 - [Approved split and implementation plan](plans/2026-10-08-chat-migration.md)
-- [MorseCQ → DitMesh migration](MIGRATION.md)
+- [Application responsibilities](APP_SPLIT.md)
 - [Build, CI and packaging](operations/BUILD_AND_DEPLOY.md)
 - [Release and store requirements](release/APP_STORE.md)
 - [Verification evidence](VALIDATION.md)

@@ -4,6 +4,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 
 import '../adapters/bootstrap_adapter.dart';
+import '../adapters/bootstrap_nodes.dart';
 import '../adapters/key_value_store.dart';
 import '../adapters/prefs_adapter.dart';
 import '../adapters/scratch_file_adapter.dart';
@@ -209,6 +210,8 @@ class Tim2ToxEngine extends ChatEngine {
     if (_service != null) return;
     await _stopping;
     await config.paths.ensureDirectories();
+    final bootstrap = BootstrapNodes(_store, logger: _logger);
+    await bootstrap.ensureConfigured();
     final svc = _build(config.paths, config.accountPrefix);
     // Before init: the native session posts friendAddResult and the group
     // notifications through the SDK port from its first tick on.
@@ -247,6 +250,10 @@ class Tim2ToxEngine extends ChatEngine {
     // Polling is what pumps friend presence, inbound messages, file requests
     // and the offline-queue drains; nothing moves before this call.
     await svc.startPolling();
+    await bootstrap.applyAutoNodes(
+      svc.tryBootstrapNode,
+      isCurrent: () => identical(_service, svc),
+    );
     // startPolling schedules this un-awaited; do it once more explicitly so
     // callers can rely on persisted group identities right after connect().
     // It is also the pull-side fallback for the group callbacks that are

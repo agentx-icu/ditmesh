@@ -2,7 +2,7 @@
 
 # DitMesh release and store readiness
 
-DitMesh is the Tox Morse chat app on all five platforms. There is no offline-only DitMesh iOS product: that functionality now belongs to MorseCQ. This checklist documents preparation, not approval or an existing store listing.
+DitMesh is the Tox Morse chat app on all five platforms. MorseCQ is the independent offline trainer. This checklist documents preparation, not approval or an existing store listing.
 
 ## Repository release
 
@@ -10,7 +10,7 @@ DitMesh is the Tox Morse chat app on all five platforms. There is no offline-onl
 - Inspect platform packages, bundled FFI/runtime dependencies, independent DitMesh identifiers and SHA256SUMS.
 - Review the generated draft Release before public publication. Do not label unsigned binaries as signed/notarized.
 - Capture current direct/group/identity/reference screens and verify English/Chinese coverage.
-- Confirm deliberate source-backup restore, offline queue, contacts/groups, blocking and data deletion.
+- Confirm current DitMesh backup restore, offline queue, contacts/groups, blocking and data deletion.
 
 ## Owner credentials and external actions
 
@@ -25,7 +25,7 @@ No credentials are stored in this repository. Generated unsigned iOS packages ne
 
 ## Product/privacy review
 
-Chat input is Morse-only; there is no phone/e-mail registration or developer messaging server. Tox identities and peer networking still exist on iOS. Keep the network encryption declaration consistent with the actual native library; do not reuse the former offline trainer's encryption answers. Complete the relevant store questionnaire against current behavior.
+Chat input is Morse-only; there is no phone/e-mail registration or developer messaging server. Tox identities and peer networking still exist on iOS. Keep the network encryption declaration consistent with the actual native library; Complete the relevant store questionnaire against current behavior.
 
 The app requests camera for QR contacts, microphone for local Morse decoding and local notifications as needed. Public [privacy](../../site/privacy.md), [terms](../../site/terms.md) and [support](../../site/support.md) must match shipped behavior; pages deployment is a separate repository setting/action.
 

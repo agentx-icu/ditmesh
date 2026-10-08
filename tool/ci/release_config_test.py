@@ -11,9 +11,23 @@ import unittest
 from macos_components import configure_components
 
 TOOLS = Path(__file__).resolve().parent
+NATIVE_MANAGER_FIXTURE = (
+    "        tox_options_set_dht_announcements_enabled(opts, tox_options_get_dht_announcements_enabled(options));\n"
+    "    }\n"
+    "    \n"
+    "    if (savedata && savedata_length > 0) {\n"
+    "        tox_options_set_savedata_type(opts, TOX_SAVEDATA_TYPE_TOX_SAVE);\n"
+)
 
 
 class ReleaseValidationTests(unittest.TestCase):
+    def copy_native_group_sources(self, source):
+        upstream = TOOLS.parents[1] / "third_party" / "tim2tox"
+        for relative in ("source/V2TIMGroupManagerImpl.cpp", "ffi/dart_compat_group.cpp"):
+            destination = source / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(upstream / relative, destination)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -99,14 +113,19 @@ class ReleaseValidationTests(unittest.TestCase):
         # disables errexit. Failed downloads must still stop the entire slice.
         scripts = self.root / "tool" / "ci"
         scripts.mkdir(parents=True)
-        for script in ("build_tim2tox.sh", "common.sh"):
+        for script in ("build_tim2tox.sh", "common.sh", "prepare_native_source.py"):
             shutil.copyfile(TOOLS / script, scripts / script)
+        shutil.copytree(TOOLS / "tim2tox-overlays", scripts / "tim2tox-overlays")
         ffi = self.root / "third_party" / "tim2tox" / "ffi"
         ffi.mkdir(parents=True)
         (ffi / "CMakeLists.txt").write_text("# Unused fixture\n")
         toxcore = ffi.parent / "third_party" / "c-toxcore"
         toxcore.mkdir(parents=True)
         (toxcore / "CMakeLists.txt").write_text("# Unused fixture\n")
+        source = ffi.parent / "source"
+        source.mkdir()
+        (source / "ToxManager.cpp").write_text(NATIVE_MANAGER_FIXTURE)
+        self.copy_native_group_sources(ffi.parent)
         flutter = self.root / "flutter"
         headers = flutter / "bin" / "cache" / "dart-sdk" / "include"
         headers.mkdir(parents=True)
@@ -138,6 +157,49 @@ class ReleaseValidationTests(unittest.TestCase):
         self.assertIn("arm64 slice failed", result.stderr)
         self.assertFalse(marker.exists(), result.stderr)
         self.assertFalse(list((self.root / "native").rglob("*.part.*")))
+
+    def test_native_overlay_preserves_upstream_and_rejects_source_drift(self):
+        source = self.root / "tim2tox"
+        manager = source / "source" / "ToxManager.cpp"
+        manager.parent.mkdir(parents=True)
+        original = NATIVE_MANAGER_FIXTURE
+        manager.write_text(original)
+        self.copy_native_group_sources(source)
+        (source / ".git").write_text("gitdir: /unused/upstream\n")
+        destination = self.root / "staged"
+
+        def stage():
+            return subprocess.run(
+                ["python3", str(TOOLS / "prepare_native_source.py"),
+                 str(source), str(destination)],
+                capture_output=True, text=True, check=False,
+            )
+
+        result = stage()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        staged = destination / "source" / "ToxManager.cpp"
+        self.assertIn("tox_options_set_experimental_groups_persistence(opts, true)",
+                      staged.read_text())
+        for overlapping in (source, source / "nested", source.parent):
+            overlap = subprocess.run(
+                ["python3", str(TOOLS / "prepare_native_source.py"),
+                 str(source), str(overlapping)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertNotEqual(overlap.returncode, 0)
+            self.assertIn("upstream", overlap.stderr.lower())
+        self.assertTrue(manager.exists())
+        self.assertEqual(manager.read_text(), original)
+        self.assertFalse((destination / ".git").exists())
+        modified = staged.stat().st_mtime_ns
+        self.assertEqual(stage().returncode, 0)
+        self.assertEqual(staged.stat().st_mtime_ns, modified)
+        manager.write_text("// Upstream initialization changed\n")
+        rejected = stage()
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("patch", rejected.stderr.lower())
+        self.assertIn("tox_options_set_experimental_groups_persistence(opts, true)",
+                      staged.read_text())
 
 
 if __name__ == "__main__":

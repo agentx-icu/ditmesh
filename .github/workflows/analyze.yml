@@ -108,7 +108,9 @@ jobs:
         run: |
           set -euo pipefail
           for dir in packages/* apps/*; do
-            [ -f "$dir/pubspec.yaml" ] && [ -d "$dir/test" ] || continue
+            if [ ! -f "$dir/pubspec.yaml" ] || [ ! -d "$dir/test" ]; then
+              continue
+            fi
             echo "::group::flutter test $dir"
             (cd "$dir" && flutter test --exclude-tags=needs-native)
             echo "::endgroup::"

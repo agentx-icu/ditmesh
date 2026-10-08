@@ -164,6 +164,7 @@ esac
 REPO_ROOT="$(ci_repo_root)"
 APP_DIR="$REPO_ROOT/apps/ditmesh"
 TIM2TOX_DIR="$REPO_ROOT/third_party/tim2tox"
+TIM2TOX_UPSTREAM_DIR="$TIM2TOX_DIR"
 NATIVE_ROOT="${DITMESH_NATIVE_BUILD_ROOT:-$REPO_ROOT/build/native}"
 WORK_ROOT="$NATIVE_ROOT/.work"
 DEPS_ROOT="$NATIVE_ROOT/.deps"
@@ -236,6 +237,15 @@ bootstrap_tim2tox_submodules() {
   fi
   [[ -f "$TIM2TOX_DIR/third_party/c-toxcore/CMakeLists.txt" ]] || \
     ci_die "c-toxcore sources missing under $TIM2TOX_DIR/third_party/c-toxcore"
+  # Native product fixes are applied to a managed source copy. The pinned
+  # submodule and its Dart package remain untouched on every platform.
+  local python staged_source="$NATIVE_ROOT/.sources/$TARGET/tim2tox"
+  if command -v python3 >/dev/null 2>&1; then python=python3
+  elif command -v python >/dev/null 2>&1; then python=python
+  else ci_die "Python 3 is required to prepare the reviewed native overlays"; fi
+  "$python" "$SCRIPT_DIR/prepare_native_source.py" "$TIM2TOX_UPSTREAM_DIR" "$staged_source" ||
+    ci_die "Failed to prepare the DitMesh native source overlays"
+  TIM2TOX_DIR="$staged_source"
 }
 
 download_file_once() {
@@ -453,11 +463,23 @@ verify_artifact() {
   assert_hook_free_artifact "$1" "${2:-}"
 }
 
+prepare_cmake_build_dir() {
+  local build_dir="$1" previous_source
+  if [[ -f "$build_dir/CMakeCache.txt" ]]; then
+    previous_source="$(sed -n 's/^CMAKE_HOME_DIRECTORY:INTERNAL=//p' "$build_dir/CMakeCache.txt")"
+    if [[ "$previous_source" != "$TIM2TOX_DIR" && "$previous_source" != "$(ci_windows_path "$TIM2TOX_DIR")" ]]; then
+      ci_log "Replacing CMake cache configured from a different source tree"
+      ci_reset_dir "$build_dir"
+    fi
+  fi
+  mkdir -p "$build_dir"
+}
+
 configure_and_build() {
   # $1 build dir, $2 log label, rest = extra cmake args (prepended before
   # configure_args). Logs go next to the build dir so failures are inspectable.
   local build_dir="$1" label="$2"; shift 2
-  mkdir -p "$build_dir"
+  prepare_cmake_build_dir "$build_dir"
   ci_log "[$label] configuring tim2tox ($NATIVE_BUILD_TYPE)"
   cmake -S "$TIM2TOX_DIR" -B "$build_dir" "$@" "${configure_args[@]}" \
     >"$build_dir/cmake-configure.log" 2>&1 || {
@@ -734,7 +756,7 @@ build_windows() {
   # CMAKE_BUILD_TYPE is REQUIRED for single-config generators (Ninja): without
   # it the DLL links the DEBUG CRT and fails to load (error 126).
   # VCPKG_TARGET_TRIPLET must be EXPLICIT or the arm64 runners get x64 libs.
-  mkdir -p "$build_dir"
+  prepare_cmake_build_dir "$build_dir"
   ci_log "[$TARGET] configuring tim2tox ($NATIVE_BUILD_TYPE, $vcpkg_triplet)"
   VCPKG_ROOT="$vcpkg_root_win" cmake -S "$source_dir_win" -B "$build_dir_win" \
     "${generator_args[@]}" \
