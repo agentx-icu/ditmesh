@@ -82,7 +82,7 @@ done
 
 GitHub Actions 构建原生库与必要平台应用、生成安装包和校验和。`v*` tag 在验证通过后生成 **GitHub 草稿 Release**。iOS 包未签名；商店签名和 macOS 公证需要所有者凭据。实验性 ARM 架构和真机检查见[交接说明](doc/HANDOVER.zh-CN.md)。
 
-[拆分方案](doc/plans/2026-10-08-chat-migration.zh-CN.md)记录已批准范围；本地与 CI 证据见[验证记录](doc/VALIDATION.zh-CN.md)，README 不代表所有平台已经验证通过。
+[应用职责](doc/APP_SPLIT.zh-CN.md)记录当前拆分；本地与 CI 证据见[验证记录](doc/VALIDATION.zh-CN.md)，README 不代表所有平台已经验证通过。
 
 ## 隐私、支持与许可证
 

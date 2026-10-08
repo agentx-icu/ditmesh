@@ -82,7 +82,7 @@ Only `ditmesh_chat` imports the Tim2Tox/Tencent compatibility adapter. Pure Mors
 
 GitHub Actions builds the native transport and required applications, packages assets and produces checksums. A `v*` tag creates a **draft** GitHub Release after the validation gates. iOS packages are unsigned; store signing and macOS notarization require owner credentials. Experimental ARM architectures and physical-device checks are described in the [handover](doc/HANDOVER.md).
 
-The approved scope and implementation record are in [the split plan](doc/plans/2026-10-08-chat-migration.md). Local and CI evidence is recorded in [validation](doc/VALIDATION.md); do not infer all-platform success from this README.
+Application responsibilities are documented in [the app split](doc/APP_SPLIT.md). Local and CI evidence is recorded in [validation](doc/VALIDATION.md); do not infer all-platform success from this README.
 
 ## Privacy, support and licence
 

@@ -2,7 +2,6 @@
 
 # DitMesh documentation
 
-- [Approved split and implementation plan](plans/2026-10-08-chat-migration.md)
 - [Application responsibilities](APP_SPLIT.md)
 - [Build, CI and packaging](operations/BUILD_AND_DEPLOY.md)
 - [Bootstrap nodes and LAN hosting](operations/NETWORK.md)

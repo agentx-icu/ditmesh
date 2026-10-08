@@ -2,11 +2,11 @@
 
 # DitMesh 交接说明
 
-DitMesh 承接 MorseCQ 的完整 Tox Morse 聊天；MorseCQ 的离线拆分在 `codex/offline-learning` worktree 中实现。范围见[拆分方案](plans/2026-10-08-chat-migration.zh-CN.md)。实际执行结果记于 [VALIDATION.zh-CN.md](VALIDATION.zh-CN.md)，不能继承旧应用的通过结论。
+DitMesh 承接 MorseCQ 的完整 Tox Morse 聊天；MorseCQ 提供独立离线学习。改动已合并到两款应用的 master 分支，当前职责见[应用拆分](APP_SPLIT.zh-CN.md)。实际执行结果记于 [VALIDATION.zh-CN.md](VALIDATION.zh-CN.md)，不能继承旧应用的通过结论。
 
 ## 本次一并处理
 
-产品/存储/安装包标识隔离；生产后端失败提示；当前聊天加密备份与恢复；无账号本地学习持久化；五平台构建与打包；草稿 Release 前测试门禁；中英文文档、产品概念图和真实截图场景。补充范围包括 Toxee 的节点目录、隔离 DHT 探测、手动选择、桌面局域网节点托管和移动网络恢复；十种语言、五种页面风格、可配置截图和视觉矩阵；以及应用、托盘和通知统一采用已选 C 款实心信号塔图标。见[补充方案](plans/2026-10-08-network-appearance-followup.md)及[网络指南](operations/NETWORK.zh-CN.md)。
+产品/存储/安装包标识隔离；生产后端失败提示；当前聊天加密备份与恢复；无账号本地学习持久化；五平台构建与打包；草稿 Release 前测试门禁；中英文文档、产品概念图和真实截图场景。补充范围包括 Toxee 的节点目录、隔离 DHT 探测、手动选择、桌面局域网节点托管和移动网络恢复；十种语言、五种页面风格、可配置截图和视觉矩阵；以及应用、托盘和通知统一采用已选 C 款实心信号塔图标。见[网络指南](operations/NETWORK.zh-CN.md)。
 
 ## 仍需外部条件的检查
 
@@ -17,7 +17,7 @@ DitMesh 承接 MorseCQ 的完整 Tox Morse 聊天；MorseCQ 的离线拆分在 `
 - Linux/Windows 安装包在对应主机上的运行；实验性 ARM 原生构建不等同于必要平台覆盖。
 - 网络键控时序附注和实时键控属于上游后续工作；v1 保留纯文本互通。
 
-创建 tag、发布草稿、合并分支和商店上传属于单独的所有者操作。工作流配置不能代替远程成功证据；实际运行链接与结果以验证记录为准。
+创建 tag、发布草稿和商店上传属于单独的所有者操作。工作流配置不能代替远程成功证据；实际运行链接与结果以验证记录为准。
 
 ## 开发约定
 

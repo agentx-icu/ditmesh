@@ -44,4 +44,4 @@ iPhone、iPad 及 macOS 15 或更新版本需要局域网访问权限。请允�
 
 Android/iOS 网络路径变化及应用回到前台时触发带状态校验的重连；连续变化去抖，重复请求限流，身份会话或模式变化后停止旧任务。消息投递需要双方网络可达；离线消息保留在 DitMesh 的本地持久队列中。
 
-移植来源及技术选择见[实现方案](../plans/2026-10-08-bootstrap-port.zh-CN.md)，真实原生、界面及 CI 证据见[验证记录](../VALIDATION.zh-CN.md)。
+真实原生、界面及 CI 证据见[验证记录](../VALIDATION.zh-CN.md)。

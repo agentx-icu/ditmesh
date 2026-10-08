@@ -1,6 +1,6 @@
 # Contributor guidance
 
-DitMesh is the Morse-only Tox chat application split from MorseCQ. Approved current scope: `doc/plans/2026-10-08-chat-migration.md`. MorseCQ is now the separate offline trainer.
+DitMesh is the Morse-only Tox chat application split from MorseCQ. Current application responsibilities are documented in `doc/APP_SPLIT.md`. MorseCQ is now the separate offline trainer.
 
 - Product name DitMesh; application identifier `icu.agentx.ditmesh`; independent `ditmesh` storage. Do not implicitly read MorseCQ identities or data.
 - Main navigation: Chat / Groups / Reference / Me on Android, iOS, macOS, Linux and Windows. Every platform includes chat; there is no offline-only DitMesh distribution.

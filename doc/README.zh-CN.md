@@ -2,7 +2,6 @@
 
 # DitMesh 文档
 
-- [已批准拆分方案](plans/2026-10-08-chat-migration.zh-CN.md)
 - [两个应用的职责](APP_SPLIT.zh-CN.md)
 - [构建、CI 与打包](operations/BUILD_AND_DEPLOY.zh-CN.md)
 - [引导节点与局域网托管](operations/NETWORK.zh-CN.md)

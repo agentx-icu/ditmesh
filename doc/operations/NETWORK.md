@@ -44,4 +44,4 @@ Stop hosting before closing a node that other devices are using. The settings se
 
 Android/iOS path changes and application resume trigger guarded reconnection. Bursts are debounced, repeated kicks are rate-limited, and work stops when the session or selected mode changes. Both peers must be reachable for chat delivery; offline messages stay in DitMesh's durable local queue.
 
-Source inventory and port decisions are in [the implementation plan](../plans/2026-10-08-bootstrap-port.md); actual native/UI/CI evidence belongs in [validation](../VALIDATION.md).
+Actual native/UI/CI evidence is recorded in [validation](../VALIDATION.md).

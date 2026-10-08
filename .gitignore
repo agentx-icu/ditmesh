@@ -5,6 +5,8 @@ build/
 # release packages from tool/ci/package_artifacts.sh
 /dist/
 /output/
+# Implementation plans are local working notes.
+/doc/plans/
 coverage/
 .flutter-plugins
 .flutter-plugins-dependencies
