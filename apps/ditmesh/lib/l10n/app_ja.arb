@@ -38,6 +38,8 @@
   "errorGroupNotFound": "グループが見つかりません。",
   "errorMessageTooLong": "メッセージが Tox の 1 件あたりの長さ制限を超えています。",
   "errorUnknown": "問題が発生しました",
+  "errorTeardownUnconfirmed": "前回の Tox セッションがまだ完全に停止していません。しばらくしてから再試行するか、アプリを再起動してください。",
+  "errorIdentityRecoveryPending": "前回のアイデンティティがまだ復元待ちです。アプリを再起動して再試行するか、アイデンティティのデータを削除してやり直してください。",
   "languageTitle": "言語",
   "languageSystemDefault": "システムの設定に従う",
   "languageSaveFailed": "言語設定を保存できませんでした。もう一度お試しください。",
@@ -184,6 +186,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "DELETE と入力",
   "accountDeleteButton": "削除",
+  "accountRecoveryPendingDiscard": "復元待ちのアイデンティティを破棄してやり直す",
   "accountRestoreFileChosenSize": "バックアップファイルを選択しました（{bytes} バイト）",
   "chatSearchConversations": "会話を検索",
   "chatNoConversations": "まだ会話がありません",
@@ -1268,5 +1271,13 @@
   "bootstrapSource": "公式公開ノード一覧",
   "bootstrapOnline": "オンライン",
   "bootstrapOffline": "オフライン",
-  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}"
+  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}",
+  "errorNotFriend": "この相手はフレンドリストにいません。メッセージを送るには再度追加してください。",
+  "chatAcceptWithPassword": "パスワードを入力して承諾",
+  "chatGroupPasswordTitle": "{name} のパスワード",
+  "chatGroupPasswordField": "グループのパスワード",
+  "chatGroupJoinRefusedPassword": "{name} への参加が拒否されました。パスワードが違うか、入力されていません。",
+  "chatGroupJoinRefusedFull": "{name} への参加が拒否されました。グループが満員です。",
+  "chatGroupJoinRefused": "{name} への参加が拒否されました。",
+  "chatGroupReconnectRefused": "{name} への再接続が拒否されました。履歴は保持されています。グループのパスワードで再試行してください。"
 }

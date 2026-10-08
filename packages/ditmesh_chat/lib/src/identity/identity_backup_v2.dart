@@ -6,94 +6,16 @@ part of 'tim2tox_identity_service.dart';
 extension _EncryptedBackup on Tim2ToxIdentityService {
   static const int _snapshotAttempts = 3;
 
+  static String _accountPrefix(String toxId) =>
+      toxId.length < 16 ? '' : toxId.substring(0, 16).toUpperCase();
+
   ConversationMetaStore? _metaFor(String toxId) {
     final store = _store;
     if (store == null || toxId.length < 16) return null;
-    return ConversationMetaStore(
-      store,
-      accountPrefix: toxId.substring(0, 16).toUpperCase(),
-    );
+    return ConversationMetaStore(store, accountPrefix: _accountPrefix(toxId));
   }
 
   String get _mediaDirectory => p.join(_paths.root, 'media', 'recordings');
-
-  Future<BackupInventory> _backupInventory() async {
-    final record = _requireRecord();
-    await _persist();
-    final sizes = <BackupCategory, BackupCategorySize>{};
-    void add(BackupCategory c, int bytes) {
-      final was = sizes[c] ?? BackupCategorySize.zero;
-      sizes[c] = BackupCategorySize(
-        items: was.items + 1,
-        bytes: was.bytes + bytes,
-      );
-    }
-
-    add(BackupCategory.identity, await File(_paths.profileFile).length());
-    final queue = await BackupSnapshot.readQueue(_paths);
-    var restoredPending = 0;
-    for (final (rel, file) in await BackupSnapshot.files(
-      _paths.trainingDirectory,
-    )) {
-      if (rel == BackupSnapshot.bookmarksFile) {
-        add(BackupCategory.conversationMeta, await file.length());
-      } else if (rel == BackupSnapshot.restoredPendingFile) {
-        restoredPending = BackupSnapshot.pendingItems(
-          await file.readAsBytes(),
-        ).length;
-      } else {
-        add(BackupCategory.training, await file.length());
-      }
-    }
-    for (final (_, file) in await BackupSnapshot.files(
-      _paths.historyDirectory,
-    )) {
-      add(BackupCategory.chatHistory, await file.length());
-    }
-    final meta = _metaFor(record.toxId);
-    if (meta != null) {
-      final doc = meta.exportPortable();
-      final count =
-          (doc['pinned']! as List).length +
-          (doc['hidden']! as List).length +
-          (doc['drafts']! as Map).length;
-      if (count > 0) {
-        final was = sizes[BackupCategory.conversationMeta];
-        sizes[BackupCategory.conversationMeta] = BackupCategorySize(
-          items: (was?.items ?? 0) + count,
-          bytes: (was?.bytes ?? 0) + BackupSnapshot.encodeJson(doc).length,
-        );
-      }
-    }
-    for (final name in await _referencedMedia()) {
-      final file = File(p.join(_mediaDirectory, name));
-      if (await file.exists()) add(BackupCategory.media, await file.length());
-    }
-    final pending = queue.length + restoredPending;
-    if (pending > 0) {
-      sizes[BackupCategory.pendingMessages] = BackupCategorySize(
-        items: pending,
-        bytes: 0,
-      );
-    }
-    return BackupInventory(
-      sizes: sizes,
-      pendingMessages: pending,
-      queuedInvites: meta?.queuedInvites.length ?? 0,
-      profileHasPassword: _crypto.isEncrypted(
-        await File(_paths.profileFile).readAsBytes(),
-      ),
-    );
-  }
-
-  Future<List<String>> _referencedMedia() async {
-    // Relative to dataDirectory() (the training directory), like the
-    // legacy exporter and the app's own count.
-    final doc = File(p.join(_paths.trainingDirectory, BackupMedia.materialsDoc));
-    return BackupMedia.referenced(
-      await doc.exists() ? await doc.readAsString() : null,
-    ).toList()..sort();
-  }
 
   Future<Uint8List> _exportEncrypted(EncryptedBackupRequest request) async {
     final record = _requireRecord();
@@ -107,6 +29,8 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
     final wasStarted = _started;
     if (wasStarted) await _disconnectImpl();
     try {
+      // A zombie native save would land in the snapshot or right after it.
+      _requireTeardownConfirmed();
       for (var attempt = 1; ; attempt++) {
         try {
           final inner = await _snapshot(record, request);
@@ -173,6 +97,20 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
     }
     add(BackupCategory.identity, 'identity.json', record.encode());
     add(BackupCategory.identity, 'tox_profile.tox', profile);
+    // Group membership lives in preferences, not in the Tox savedata: the
+    // ids, chat ids and kinds Tim2Tox rebinds and rejoins from on start.
+    // Part of the identity (always included), like the friend list is.
+    final store = _store;
+    final groups = store == null
+        ? null
+        : await GroupDescriptors.export(store, _accountPrefix(record.toxId));
+    if (groups != null) {
+      add(
+        BackupCategory.identity,
+        BackupSnapshot.groupsEntry,
+        BackupSnapshot.encodeJson(groups),
+      );
+    }
 
     // Stamped before the queue is copied and parsed, like every other file.
     for (final f in [
@@ -359,6 +297,7 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       backup.entries[BackupSnapshot.pendingEntry],
     );
     final metaDoc = backup.entries[BackupSnapshot.conversationsEntry];
+    final groupsDoc = backup.entries[BackupSnapshot.groupsEntry];
 
     final root = Directory(_paths.root);
     await PosixPermissions.createPrivateDirectory(root.parent.path);
@@ -413,6 +352,7 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       }
       await _prepareForReplacement();
       await _disconnectImpl();
+      _requireTeardownConfirmed();
       final store = _store;
       final before = store == null ? null : KvSnapshot.capture(store);
       await _verifier.replacePassword(
@@ -426,6 +366,14 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
             movedIn = true;
             if (old != null) await _clearPreferences(old.toxId);
             await _clearPreferences(record.toxId);
+            // Before the next connect() reads them (restore runs stopped).
+            if (groupsDoc != null && store != null) {
+              await GroupDescriptors.restore(
+                store,
+                _accountPrefix(record.toxId),
+                BackupSnapshot.decodeJson(groupsDoc),
+              );
+            }
             if (metaDoc != null) {
               await _metaFor(record.toxId)?.importPortable(
                 BackupSnapshot.decodeJson(metaDoc),

@@ -38,6 +38,8 @@
   "errorGroupNotFound": "未找到該群組。",
   "errorMessageTooLong": "訊息超出單條 Tox 訊息的長度上限。",
   "errorUnknown": "出了點問題",
+  "errorTeardownUnconfirmed": "上一個 Tox 工作階段尚未完全停止。請稍後重試，或重新啟動應用程式。",
+  "errorIdentityRecoveryPending": "上一個身分仍在等待復原。請重新啟動應用程式重試，或刪除身分資料後重新開始。",
   "languageTitle": "語言",
   "languageSystemDefault": "跟隨系統",
   "languageSaveFailed": "無法儲存語言設定，請重試。",
@@ -184,6 +186,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "輸入 DELETE",
   "accountDeleteButton": "刪除",
+  "accountRecoveryPendingDiscard": "捨棄等待復原的身分並重新開始",
   "accountRestoreFileChosenSize": "已選擇備份檔案（{bytes} 位元組）",
   "chatSearchConversations": "搜尋對話",
   "chatNoConversations": "還沒有對話",
@@ -1268,5 +1271,13 @@
   "bootstrapSource": "官方公共節點清單",
   "bootstrapOnline": "在線",
   "bootstrapOffline": "離線",
-  "bootstrapProtocolStatus": "UDP：{udp} · TCP：{tcp}"
+  "bootstrapProtocolStatus": "UDP：{udp} · TCP：{tcp}",
+  "errorNotFriend": "對方已不在你的好友名單中。重新加入後才能傳送訊息。",
+  "chatAcceptWithPassword": "使用密碼接受",
+  "chatGroupPasswordTitle": "{name} 的密碼",
+  "chatGroupPasswordField": "群組密碼",
+  "chatGroupJoinRefusedPassword": "{name} 拒絕了加入：密碼錯誤或未填寫。",
+  "chatGroupJoinRefusedFull": "{name} 拒絕了加入：群組已滿。",
+  "chatGroupJoinRefused": "{name} 拒絕了加入。",
+  "chatGroupReconnectRefused": "{name} 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。"
 }

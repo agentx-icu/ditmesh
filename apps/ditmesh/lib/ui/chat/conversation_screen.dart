@@ -88,8 +88,11 @@ class _ConversationScreenState extends State<ConversationScreen>
   @override
   bool _clearing = false;
   bool _following = false;
+
+  /// Rows of the latest page; "load earlier" grows [_historyLimit] by it.
+  static const int _pageSize = 50;
   @override
-  int _historyLimit = 50;
+  int _historyLimit = _pageSize;
   @override
   int _generation = 0;
   @override
@@ -174,12 +177,19 @@ class _ConversationScreenState extends State<ConversationScreen>
   Future<void> _load() async {
     final int generation = _generation;
     _sessionStartedWhileLoading = false;
+    // Every reload starts from the latest page again (its callers drop the
+    // older rows), so "load earlier" is judged against what was asked.
+    const int limit = _pageSize;
     setState(() {
       _loading = true;
       _error = null;
+      _historyLimit = limit;
     });
     try {
-      final List<ChatMessage> history = await _service.loadHistory(_id);
+      final List<ChatMessage> history = await _service.loadHistory(
+        _id,
+        limit: limit,
+      );
       if (!mounted || generation != _generation) return;
       setState(() {
         final events = {for (final m in _messages) m.id: m};
@@ -192,7 +202,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           )
           ..addAll(events.values);
         _loading = false;
-        _hasMore = history.length == _historyLimit;
+        _hasMore = history.length == limit;
       });
       _scrollToEnd();
       _attention.markRead();

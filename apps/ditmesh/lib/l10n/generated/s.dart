@@ -338,6 +338,18 @@ abstract class S {
   /// **'Something went wrong'**
   String get errorUnknown;
 
+  /// ChatException code teardown_unconfirmed: a stopped Tox session may still be writing, so backup/restore/delete/password changes are refused
+  ///
+  /// In en, this message translates to:
+  /// **'The previous Tox session has not fully stopped. Try again in a moment, or restart the app.'**
+  String get errorTeardownUnconfirmed;
+
+  /// ChatException code identity_recovery_pending: create() refused because a previous identity from an interrupted restore is still waiting in staging
+  ///
+  /// In en, this message translates to:
+  /// **'A previous identity is still waiting to be recovered. Restart the app to retry, or delete the identity data to start over.'**
+  String get errorIdentityRecoveryPending;
+
   /// Settings tile on the Me page
   ///
   /// In en, this message translates to:
@@ -1213,6 +1225,12 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Delete'**
   String get accountDeleteButton;
+
+  /// Create-identity page: button shown when the backend reports identity_recovery_pending; opens the DELETE confirmation and then deletes the waiting staging copy so a new identity can be created
+  ///
+  /// In en, this message translates to:
+  /// **'Discard the waiting identity and start over'**
+  String get accountRecoveryPendingDiscard;
 
   /// Restore page: confirmation line under the file picker with the picked file's size
   ///
@@ -7723,6 +7741,54 @@ abstract class S {
   /// In en, this message translates to:
   /// **'UDP: {udp} · TCP: {tcp}'**
   String bootstrapProtocolStatus(String udp, String tcp);
+
+  /// ChatException code not_friend: sending to someone who is not (or no longer) a friend
+  ///
+  /// In en, this message translates to:
+  /// **'This person is no longer in your friend list. Add them again to send messages.'**
+  String get errorNotFriend;
+
+  /// Group invite overflow action: accept a password-protected group invite
+  ///
+  /// In en, this message translates to:
+  /// **'Accept with password'**
+  String get chatAcceptWithPassword;
+
+  /// Title of the group password dialog; name is the group name or a short chat id
+  ///
+  /// In en, this message translates to:
+  /// **'Password for {name}'**
+  String chatGroupPasswordTitle(String name);
+
+  /// Label of the password field in the group password dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Group password'**
+  String get chatGroupPasswordField;
+
+  /// Snackbar: a group refused our join because of a wrong or missing password
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refused the join: the password is wrong or missing.'**
+  String chatGroupJoinRefusedPassword(String name);
+
+  /// Snackbar: a group refused our join because it is full
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refused the join: the group is full.'**
+  String chatGroupJoinRefusedFull(String name);
+
+  /// Snackbar: a group refused our join for another reason
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refused the join.'**
+  String chatGroupJoinRefused(String name);
+
+  /// Snackbar: a group we already held refused to take us back on reconnect
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refused to reconnect. Its history is kept; retry with the group\'s password.'**
+  String chatGroupReconnectRefused(String name);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

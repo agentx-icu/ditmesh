@@ -578,4 +578,53 @@ void main() {
       expect(find.textContaining('HISTORY'), findsNothing);
     },
   );
+
+  testWidgets('a reload after paging still offers earlier history (M6)', (
+    t,
+  ) async {
+    const String gid = 'group_tox_1';
+    final String member = 'C' * 64;
+    final String blocked = 'D' * 64;
+    final h = ChatHarness();
+    h.service.addFakeGroup(
+      const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+    );
+    for (var i = 0; i < 120; i++) {
+      h.service.receiveMessage(gid, 'NET $i', senderId: member);
+    }
+    final service = _HistoryService(h.service);
+    await pumpChat(
+      t,
+      (_) => Provider<ChatService>.value(
+        value: service,
+        child: ConversationScreen(
+          target: ConversationTarget(
+            id: gid,
+            title: 'Net',
+            kind: ConversationKind.group,
+          ),
+        ),
+      ),
+      harness: h,
+    );
+    expect(service.requests.toSet(), {50}, reason: 'latest page only');
+    service.requests.clear();
+    position(t).jumpTo(position(t).minScrollExtent);
+    await t.pumpAndSettle();
+    expect(service.requests, [100]);
+    // An unblock reloads the latest page (the same path as jumping back
+    // from a search result or the session-start retry).
+    await service.blockPeer(blocked);
+    await t.pumpAndSettle();
+    await service.unblockPeer(blocked);
+    await t.pumpAndSettle();
+    expect(service.requests, [100, 50]);
+    position(t).jumpTo(position(t).minScrollExtent);
+    await t.pumpAndSettle();
+    expect(service.requests, [
+      100,
+      50,
+      100,
+    ], reason: '"load earlier" survives the reload');
+  });
 }

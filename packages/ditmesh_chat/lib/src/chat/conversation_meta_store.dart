@@ -17,6 +17,7 @@ class ConversationMetaStore {
   static const _kHidden = 'ditmesh_hidden_conversations';
   static const _kDraftPrefix = 'ditmesh_draft';
   static const _kQueuedInvites = 'ditmesh_queued_group_invites';
+  static const _kWithdrawals = 'ditmesh_pending_withdrawals';
 
   String _scoped(String key) => _prefix.isEmpty ? key : '${key}_$_prefix';
 
@@ -77,6 +78,21 @@ class ConversationMetaStore {
     final s = queuedInvites;
     if (!s.remove('$groupId\t$friendPublicKey')) return Future<void>.value();
     return _setSet(_kQueuedInvites, s);
+  }
+
+  // ---- queued rows a refused send still has to withdraw --------------------
+
+  /// `peer\tmessageId` entries: rows queued for someone no longer a friend
+  /// whose withdrawal could not be persisted yet (retried per session).
+  Set<String> get withdrawals => _set(_kWithdrawals);
+
+  Future<void> addWithdrawal(String peer, String messageId) =>
+      _setSet(_kWithdrawals, withdrawals..add('$peer\t$messageId'));
+
+  Future<void> removeWithdrawal(String entry) {
+    final s = withdrawals;
+    if (!s.remove(entry)) return Future<void>.value();
+    return _setSet(_kWithdrawals, s);
   }
 
   /// Group ids with an invite waiting for [friendPublicKey].

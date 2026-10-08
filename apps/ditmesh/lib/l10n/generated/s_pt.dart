@@ -123,6 +123,12 @@ class SPt extends S {
   String get errorUnknown => 'Ocorreu um erro';
 
   @override
+  String get errorTeardownUnconfirmed => 'A sessão Tox anterior ainda não parou completamente. Tente novamente daqui a pouco ou reinicie a aplicação.';
+
+  @override
+  String get errorIdentityRecoveryPending => 'Uma identidade anterior ainda aguarda recuperação. Reinicie a aplicação para tentar de novo ou elimine os dados da identidade para recomeçar.';
+
+  @override
   String get languageTitle => 'Idioma';
 
   @override
@@ -762,6 +768,9 @@ class SPt extends S {
 
   @override
   String get accountDeleteButton => 'Excluir';
+
+  @override
+  String get accountRecoveryPendingDiscard => 'Descartar a identidade pendente e recomeçar';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4450,5 +4459,39 @@ class SPt extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'Esta pessoa já não está na sua lista de amigos. Adicione-a novamente para enviar mensagens.';
+
+  @override
+  String get chatAcceptWithPassword => 'Aceitar com palavra-passe';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return 'Palavra-passe de $name';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'Palavra-passe do grupo';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name recusou a entrada: a palavra-passe está errada ou em falta.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name recusou a entrada: o grupo está cheio.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name recusou a entrada.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name recusou a nova ligação. O histórico mantém-se; tente novamente com a palavra-passe do grupo.';
   }
 }

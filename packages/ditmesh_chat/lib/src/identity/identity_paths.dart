@@ -129,15 +129,42 @@ class IdentityPaths {
   /// Deletes the whole identity tree, and any import staging directory next
   /// to it (they hold an older copy of this identity). Irreversible.
   Future<void> deleteAll() async {
+    await deleteRoot();
+    for (final stage in await _stages()) {
+      await stage.delete(recursive: true);
+    }
+  }
+
+  /// Deletes [root] only; import staging next to it is left alone.
+  Future<void> deleteRoot() async {
     final dir = Directory(root);
     if (await dir.exists()) await dir.delete(recursive: true);
-    final parent = dir.parent;
-    if (!await parent.exists()) return;
-    await for (final entry in parent.list(followLinks: false)) {
-      if (entry is Directory &&
-          p.basename(entry.path).startsWith(importStagePrefix)) {
-        await entry.delete(recursive: true);
-      }
-    }
+  }
+
+  /// Import staging directories that still hold a previous identity
+  /// (`<stage>/previous/profile/tox_profile.tox`): a restore that died
+  /// between moving the old tree out and the new one in, or whose rollback
+  /// failed, left it there as the only copy.
+  Future<List<Directory>> interruptedImports() async => [
+    for (final stage in await _stages())
+      if (await File(
+        IdentityPaths(previousInStage(stage)).profileFile,
+      ).exists())
+        stage,
+  ];
+
+  /// Where an import keeps the previous identity while it commits.
+  static String previousInStage(Directory stage) =>
+      p.join(stage.path, 'previous');
+
+  Future<List<Directory>> _stages() async {
+    final parent = Directory(root).parent;
+    if (!await parent.exists()) return const [];
+    return [
+      await for (final entry in parent.list(followLinks: false))
+        if (entry is Directory &&
+            p.basename(entry.path).startsWith(importStagePrefix))
+          entry,
+    ];
   }
 }

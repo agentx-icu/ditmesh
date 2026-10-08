@@ -42,10 +42,16 @@ void main() {
     });
     final Completer<void> hold = Completer<void>();
     h.service.holdAnswers = hold;
-    await tester.tap(find.byTooltip(s.chatReject));
+    final String id = h.service.groupInvites.single.inviteId;
+    await tester.tap(find.byKey(ValueKey<String>('invite_menu_$id')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(s.chatReject));
     await tester.pump();
     expect(_button(tester, s.chatAccept).onPressed, isNull);
-    expect(_button(tester, s.chatReject).onPressed, isNull);
+    final PopupMenuButton<String> menu = tester.widget(
+      find.byKey(ValueKey<String>('invite_menu_$id')),
+    );
+    expect(menu.enabled, isFalse);
     hold.complete();
     await tester.pumpAndSettle();
     expect(h.service.groupInvites, isEmpty);

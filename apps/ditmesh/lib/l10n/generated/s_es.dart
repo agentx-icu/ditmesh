@@ -123,6 +123,12 @@ class SEs extends S {
   String get errorUnknown => 'Se ha producido un error';
 
   @override
+  String get errorTeardownUnconfirmed => 'La sesión Tox anterior aún no se ha detenido por completo. Inténtalo de nuevo en un momento o reinicia la aplicación.';
+
+  @override
+  String get errorIdentityRecoveryPending => 'Una identidad anterior sigue esperando a ser recuperada. Reinicia la aplicación para reintentarlo o elimina los datos de identidad para empezar de nuevo.';
+
+  @override
   String get languageTitle => 'Idioma';
 
   @override
@@ -761,6 +767,9 @@ class SEs extends S {
 
   @override
   String get accountDeleteButton => 'Eliminar';
+
+  @override
+  String get accountRecoveryPendingDiscard => 'Descartar la identidad pendiente y empezar de nuevo';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4449,5 +4458,39 @@ class SEs extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'Esta persona ya no está en tu lista de amigos. Vuelve a añadirla para enviarle mensajes.';
+
+  @override
+  String get chatAcceptWithPassword => 'Aceptar con contraseña';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return 'Contraseña de $name';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'Contraseña del grupo';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name rechazó la unión: la contraseña es incorrecta o falta.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name rechazó la unión: el grupo está lleno.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name rechazó la unión.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name rechazó la reconexión. El historial se conserva; reintenta con la contraseña del grupo.';
   }
 }

@@ -15,6 +15,7 @@ void main() {
     expect(chatErrorMessage(en, 'own_id'), en.errorOwnId);
     expect(chatErrorMessage(en, 'group_not_found'), en.errorGroupNotFound);
     expect(chatErrorMessage(en, 'message_too_long'), en.errorMessageTooLong);
+    expect(chatErrorMessage(en, 'not_friend'), en.errorNotFriend);
   });
 
   test('unknown codes fall back to the generic error', () {
@@ -44,6 +45,7 @@ void main() {
       'own_id',
       'group_not_found',
       'message_too_long',
+      'not_friend',
     ];
     for (final Locale locale in S.supportedLocales) {
       final S s = lookupS(locale);

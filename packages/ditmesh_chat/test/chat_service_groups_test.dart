@@ -352,4 +352,179 @@ void main() {
       expect(chat.groups.map((g) => g.id), ['tox_7']);
     });
   });
+
+  group('join refusals (M2)', () {
+    Future<List<GroupJoinRefusal>> collect(
+      Future<void> Function() action,
+    ) async {
+      final events = <GroupJoinRefusal>[];
+      final sub = chat.groupJoinRefusals.listen(events.add);
+      await action();
+      await pumpEventQueue();
+      await sub.cancel();
+      return events;
+    }
+
+    test('a refused join by chat id reaches the contract once', () async {
+      await bind();
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_9',
+          'c' * 64,
+          'invalid_password',
+        ),
+      );
+      final r = events.single;
+      expect(r.groupId, 'tox_9');
+      expect(r.chatId, 'C' * 64);
+      expect(r.inviteId, isNull);
+      expect(r.reason, GroupJoinRefusalReason.invalidPassword);
+      expect(r.established, isFalse);
+    });
+
+    test('an invite refusal carries the invite and its name', () async {
+      await bind();
+      ffi.pendingInvites = [invite('inv_1')];
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_inv_1',
+          '',
+          'peer_limit',
+          inviteId: 'inv_1',
+        ),
+      );
+      expect(events.single.inviteId, 'inv_1');
+      expect(events.single.groupName, 'DX net');
+      expect(events.single.chatId, isNull);
+      expect(events.single.reason, GroupJoinRefusalReason.groupFull);
+      expect(chat.groupInvites.map((i) => i.inviteId), ['inv_1']);
+    });
+
+    test('a restored invite is matched by chat id when the refusal has '
+        'no invite id', () async {
+      await bind();
+      ffi.pendingInvites = [
+        PendingGroupInvite(
+          id: 'inv_old',
+          inviterUserId: 'b' * 64,
+          kind: 'group',
+          groupName: 'Old net',
+          receivedAt: DateTime(2026, 10, 1),
+          cookieHex: '${'d' * 64}00ff',
+        ),
+      ];
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_inv_x',
+          'd' * 64,
+          'invalid_password',
+        ),
+      );
+      expect(events.single.inviteId, 'inv_old');
+      expect(events.single.groupName, 'Old net');
+    });
+
+    test('an established group refusal names the group and keeps it', () async {
+      ffi.sharedNames['tox_7'] = 'Shared';
+      engineService.debugAddKnownGroupForTest('tox_7');
+      await bind();
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_7',
+          'e' * 64,
+          'invalid_password',
+          established: true,
+        ),
+      );
+      expect(events.single.established, isTrue);
+      expect(events.single.groupName, 'Shared');
+      expect(events.single.inviteId, isNull);
+      expect(chat.groups.map((g) => g.id), ['tox_7']);
+    });
+
+    test(
+      'a refusal of an invite from a blocked peer is not surfaced',
+      () async {
+        await bind();
+        await chat.blockPeer('b' * 64);
+        // Native hands the refused invite back after the block.
+        ffi.pendingInvites = [invite('inv_1')];
+        final events = await collect(
+          () => engineService.handleGroupJoinFailed(
+            'tox_inv_1',
+            '',
+            'invalid_password',
+            inviteId: 'inv_1',
+          ),
+        );
+        expect(events, isEmpty);
+      },
+    );
+
+    test('a refusal of an invite declined by a block is not surfaced, even '
+        'once the invite is gone', () async {
+      ffi.pendingInvites = [invite('inv_1')];
+      await bind();
+      await chat.blockPeer('b' * 64);
+      expect(ffi.rejected, ['inv_1']);
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_inv_1',
+          'c' * 64,
+          'invalid_password',
+          inviteId: 'inv_1',
+        ),
+      );
+      expect(events, isEmpty);
+    });
+
+    test('an invite refusal whose invite is gone is reported without a '
+        'retry target', () async {
+      await bind();
+      final events = await collect(
+        () => engineService.handleGroupJoinFailed(
+          'tox_inv_2',
+          'c' * 64,
+          'invalid_password',
+          inviteId: 'inv_2',
+        ),
+      );
+      expect(events.single.inviteId, isNull);
+      expect(events.single.chatId, isNull);
+    });
+
+    test(
+      'a refusal still in flight when the session ends is dropped',
+      () async {
+        await bind();
+        final events = <GroupJoinRefusal>[];
+        final sub = chat.groupJoinRefusals.listen(events.add);
+        final done = engineService.handleGroupJoinFailed(
+          'tox_9',
+          'c' * 64,
+          'invalid_password',
+        );
+        engine.bind(null);
+        await done;
+        await pumpEventQueue();
+        expect(events, isEmpty);
+        await sub.cancel();
+      },
+    );
+
+    test(
+      'rejoinGroup joins a held group by its own id with the password',
+      () async {
+        engineService.debugAddKnownGroupForTest('tox_7');
+        await bind();
+        await chat.rejoinGroup('tox_7', password: 'pw');
+        expect(ffi.passwordJoins, [('tox_7', 'pw')]);
+        expect(chat.groups.map((g) => g.id), ['tox_7']);
+        await expectLater(
+          chat.rejoinGroup('tox_8', password: 'pw'),
+          throwsCode('group_not_found'),
+        );
+      },
+    );
+  });
 }

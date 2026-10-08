@@ -123,6 +123,12 @@ class SFr extends S {
   String get errorUnknown => 'Une erreur est survenue';
 
   @override
+  String get errorTeardownUnconfirmed => 'La session Tox précédente ne s’est pas encore complètement arrêtée. Réessayez dans un instant ou redémarrez l’application.';
+
+  @override
+  String get errorIdentityRecoveryPending => 'Une identité précédente attend encore d’être récupérée. Redémarrez l’application pour réessayer, ou supprimez les données d’identité pour repartir de zéro.';
+
+  @override
   String get languageTitle => 'Langue';
 
   @override
@@ -762,6 +768,9 @@ class SFr extends S {
 
   @override
   String get accountDeleteButton => 'Supprimer';
+
+  @override
+  String get accountRecoveryPendingDiscard => 'Abandonner l’identité en attente et repartir de zéro';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4450,5 +4459,39 @@ class SFr extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP : $udp · TCP : $tcp';
+  }
+
+  @override
+  String get errorNotFriend => 'Cette personne ne figure plus dans votre liste d\'amis. Ajoutez-la à nouveau pour lui envoyer des messages.';
+
+  @override
+  String get chatAcceptWithPassword => 'Accepter avec un mot de passe';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return 'Mot de passe de $name';
+  }
+
+  @override
+  String get chatGroupPasswordField => 'Mot de passe du groupe';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name a refusé l\'adhésion : le mot de passe est incorrect ou manquant.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name a refusé l\'adhésion : le groupe est complet.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name a refusé l\'adhésion.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name a refusé la reconnexion. L\'historique est conservé ; réessayez avec le mot de passe du groupe.';
   }
 }

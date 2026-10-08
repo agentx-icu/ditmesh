@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/di/app_services.dart';
 import 'package:ditmesh/di/fake_backend_factory.dart';
+import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/main.dart';
 import 'package:ditmesh/notifications/notifications.dart';
 import 'package:ditmesh/notifications/testing/fake_badge_api.dart';
@@ -189,5 +190,27 @@ void main() {
     await settle(tester);
     expect(find.byType(GroupInvitesPage), findsOneWidget);
     expect(find.text('Net'), findsOneWidget);
+  });
+
+  testWidgets('a group join refusal is reported while another tab is shown', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final BuildContext shell = tester.element(
+      find.byType(GroupsPage, skipOffstage: false),
+    );
+    final FakeChatService chat =
+        Provider.of<ChatService>(shell, listen: false) as FakeChatService;
+    final S s = S.of(shell);
+    expect(find.byType(GroupsPage), findsNothing, reason: 'chat tab shown');
+    chat.refuseGroupJoin(
+      const GroupJoinRefusal(
+        groupId: 'tox_4',
+        groupName: 'DX',
+        reason: GroupJoinRefusalReason.invalidPassword,
+      ),
+    );
+    await settle(tester);
+    expect(find.text(s.chatGroupJoinRefusedPassword('DX')), findsOneWidget);
   });
 }

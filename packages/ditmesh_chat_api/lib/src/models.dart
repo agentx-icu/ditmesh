@@ -228,6 +228,57 @@ final class GroupInvite {
   final GroupKind kind;
 }
 
+/// Why a group refused our join ([GroupJoinRefusal.reason]).
+enum GroupJoinRefusalReason {
+  /// The group needs a password and ours was missing or wrong.
+  invalidPassword,
+
+  /// The group has reached its member limit.
+  groupFull,
+
+  /// Any other refusal.
+  unknown,
+}
+
+/// A group refused a join after [ChatService.joinGroup],
+/// [ChatService.acceptGroupInvite] or [ChatService.rejoinGroup] had already
+/// returned (the Tox handshake is asynchronous), or refused to take back a
+/// group we held when reconnecting ([established]).
+///
+/// Retrying: an invite refusal ([inviteId]) is retried by accepting that
+/// invite again (it is listed in [ChatService.groupInvites] once more); an
+/// [established] group by [ChatService.rejoinGroup] with [groupId]; any
+/// other join by [ChatService.joinGroup] with [chatId].
+@immutable
+final class GroupJoinRefusal {
+  const GroupJoinRefusal({
+    required this.groupId,
+    required this.reason,
+    this.chatId,
+    this.inviteId,
+    this.groupName = '',
+    this.established = false,
+  });
+
+  /// The group's app-level id; for an invite join only a temporary alias.
+  final String groupId;
+
+  /// 64-hex NGC chat id; null when the transport could not read it.
+  final String? chatId;
+
+  /// The invite the refused join came from; null for a join by chat id.
+  final String? inviteId;
+
+  /// Best-effort display name (the group's or the invite's); may be empty.
+  final String groupName;
+
+  final GroupJoinRefusalReason reason;
+
+  /// A group we already held: it stays in [ChatService.groups] with its
+  /// history.
+  final bool established;
+}
+
 /// Thrown by the services for user-facing failures.
 final class ChatException implements Exception {
   const ChatException(this.code, this.message);

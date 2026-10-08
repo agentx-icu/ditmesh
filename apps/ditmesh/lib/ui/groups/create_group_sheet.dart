@@ -53,6 +53,9 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
   }
 
   Future<void> _submit() async {
+    // One native creation at a time: Enter in the name field while the
+    // first request is pending must not start a second group.
+    if (_busy) return;
     if (!(_form.currentState?.validate() ?? false)) return;
     setState(() {
       _busy = true;
@@ -91,8 +94,9 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
               TextFormField(
                 controller: _name,
                 autofocus: true,
+                readOnly: _busy,
                 textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => unawaited(_submit()),
+                onFieldSubmitted: _busy ? null : (_) => unawaited(_submit()),
                 decoration: InputDecoration(
                   labelText: s.chatGroupName,
                   border: const OutlineInputBorder(),
@@ -114,7 +118,9 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
                   title: Text(s.chatLegacyConference),
                   subtitle: Text(s.chatLegacyConferenceHint),
                   value: _conference,
-                  onChanged: (v) => setState(() => _conference = v),
+                  onChanged: _busy
+                      ? null
+                      : (v) => setState(() => _conference = v),
                 ),
               const SizedBox(height: 8),
               FilledButton.icon(

@@ -136,8 +136,12 @@ class _BlockingPart {
           friends.requests.value.any((r) => r.publicKey == key)) {
         await friends.reject(svc, key);
       }
-      for (final invite in svc.getPendingGroupInvites()) {
-        if (_key(invite.inviterUserId) == key) svc.rejectGroupInvite(invite.id);
+      // A copy: declining edits the pending list.
+      for (final invite in svc.getPendingGroupInvites().toList()) {
+        if (_key(invite.inviterUserId) == key) {
+          svc.rejectGroupInvite(invite.id);
+          _owner._groupsPart.declinedByBlock.add(invite.id);
+        }
       }
       await _republish(svc);
     });

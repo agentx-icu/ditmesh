@@ -46,6 +46,20 @@ extension _FakeSelfConversation on FakeChatService {
     isSelf: true,
   );
 
+  /// Like the backend: a c2c send other than the note to self needs a
+  /// friend (`not_friend`) who is not blocked (`peer_blocked`).
+  void _requireFriendTarget(String conversationId) {
+    if (!conversationId.startsWith('c2c_')) return;
+    final String peer = conversationId.substring(4).toUpperCase();
+    if (peer == _selfKey.toUpperCase()) return;
+    if (_isBlocked(peer)) {
+      throw const ChatException('peer_blocked', 'Unblock them first');
+    }
+    if (!_friends.keys.any((k) => k.toUpperCase() == peer)) {
+      throw const ChatException('not_friend', 'Not in your friend list');
+    }
+  }
+
   /// Whether [id] is the note to self, which `deleteConversation` refuses.
   bool _isSelfConversation(String id) => _selfBound && id == selfConversationId;
 }

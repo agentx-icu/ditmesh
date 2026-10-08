@@ -38,6 +38,8 @@
   "errorGroupNotFound": "Groupe introuvable.",
   "errorMessageTooLong": "Le texte est trop long pour un seul message Tox.",
   "errorUnknown": "Une erreur est survenue",
+  "errorTeardownUnconfirmed": "La session Tox précédente ne s’est pas encore complètement arrêtée. Réessayez dans un instant ou redémarrez l’application.",
+  "errorIdentityRecoveryPending": "Une identité précédente attend encore d’être récupérée. Redémarrez l’application pour réessayer, ou supprimez les données d’identité pour repartir de zéro.",
   "languageTitle": "Langue",
   "languageSystemDefault": "Langue du système",
   "languageSaveFailed": "Impossible d’enregistrer la langue. Réessayez.",
@@ -184,6 +186,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "Saisissez DELETE",
   "accountDeleteButton": "Supprimer",
+  "accountRecoveryPendingDiscard": "Abandonner l’identité en attente et repartir de zéro",
   "accountRestoreFileChosenSize": "Fichier de sauvegarde sélectionné ({bytes} octets)",
   "chatSearchConversations": "Rechercher des conversations",
   "chatNoConversations": "Aucune conversation pour l’instant",
@@ -1268,5 +1271,13 @@
   "bootstrapSource": "Liste officielle des nœuds publics",
   "bootstrapOnline": "En ligne",
   "bootstrapOffline": "Hors ligne",
-  "bootstrapProtocolStatus": "UDP : {udp} · TCP : {tcp}"
+  "bootstrapProtocolStatus": "UDP : {udp} · TCP : {tcp}",
+  "errorNotFriend": "Cette personne ne figure plus dans votre liste d'amis. Ajoutez-la à nouveau pour lui envoyer des messages.",
+  "chatAcceptWithPassword": "Accepter avec un mot de passe",
+  "chatGroupPasswordTitle": "Mot de passe de {name}",
+  "chatGroupPasswordField": "Mot de passe du groupe",
+  "chatGroupJoinRefusedPassword": "{name} a refusé l'adhésion : le mot de passe est incorrect ou manquant.",
+  "chatGroupJoinRefusedFull": "{name} a refusé l'adhésion : le groupe est complet.",
+  "chatGroupJoinRefused": "{name} a refusé l'adhésion.",
+  "chatGroupReconnectRefused": "{name} a refusé la reconnexion. L'historique est conservé ; réessayez avec le mot de passe du groupe."
 }

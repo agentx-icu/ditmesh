@@ -38,6 +38,8 @@
   "errorGroupNotFound": "Gruppe nicht gefunden.",
   "errorMessageTooLong": "Der Text ist zu lang für eine einzelne Tox-Nachricht.",
   "errorUnknown": "Ein Fehler ist aufgetreten",
+  "errorTeardownUnconfirmed": "Die vorherige Tox-Sitzung wurde noch nicht vollständig beendet. Versuche es gleich noch einmal oder starte die App neu.",
+  "errorIdentityRecoveryPending": "Eine frühere Identität wartet noch auf die Wiederherstellung. Starte die App neu, um es erneut zu versuchen, oder lösche die Identitätsdaten, um neu zu beginnen.",
   "languageTitle": "Sprache",
   "languageSystemDefault": "Systemsprache",
   "languageSaveFailed": "Die Spracheinstellung konnte nicht gespeichert werden. Versuche es erneut.",
@@ -184,6 +186,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "DELETE eingeben",
   "accountDeleteButton": "Löschen",
+  "accountRecoveryPendingDiscard": "Wartende Identität verwerfen und neu beginnen",
   "accountRestoreFileChosenSize": "Sicherungsdatei ausgewählt ({bytes} Bytes)",
   "chatSearchConversations": "Gespräche durchsuchen",
   "chatNoConversations": "Noch keine Gespräche",
@@ -1268,5 +1271,13 @@
   "bootstrapSource": "Offizielle öffentliche Knotenliste",
   "bootstrapOnline": "Online",
   "bootstrapOffline": "Offline",
-  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}"
+  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}",
+  "errorNotFriend": "Diese Person ist nicht mehr in deiner Freundesliste. Füge sie erneut hinzu, um Nachrichten zu senden.",
+  "chatAcceptWithPassword": "Mit Passwort annehmen",
+  "chatGroupPasswordTitle": "Passwort für {name}",
+  "chatGroupPasswordField": "Gruppenpasswort",
+  "chatGroupJoinRefusedPassword": "{name} hat den Beitritt abgelehnt: Das Passwort ist falsch oder fehlt.",
+  "chatGroupJoinRefusedFull": "{name} hat den Beitritt abgelehnt: Die Gruppe ist voll.",
+  "chatGroupJoinRefused": "{name} hat den Beitritt abgelehnt.",
+  "chatGroupReconnectRefused": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; versuche es mit dem Gruppenpasswort erneut."
 }

@@ -69,6 +69,7 @@ extension _FakeSession on FakeChatService {
     _hidden.clear();
     _disconnectedGroups.clear();
     _blocked.clear();
+    _joins.passwords.clear();
     outgoingFriendRequests.clear();
     _friendChanges.add(friends);
     _friendRequestChanges.add(friendRequests);

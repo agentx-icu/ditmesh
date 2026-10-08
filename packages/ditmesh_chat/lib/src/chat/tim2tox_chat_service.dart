@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:meta/meta.dart';
 import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/models/send_control_result.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
@@ -23,6 +24,7 @@ part 'chat_service_conversations.dart';
 part 'chat_service_friends.dart';
 part 'chat_service_groups.dart';
 part 'chat_service_messages.dart';
+part 'chat_service_send.dart';
 part 'chat_service_session.dart';
 
 /// [ChatService] over one live `FfiChatService` (Tim2Tox), following the
@@ -79,6 +81,12 @@ class Tim2ToxChatService
   /// are fragmented by Tim2Tox and arrive as separate messages, which the UI
   /// must avoid (plan §5.2).
   static const int toxMessageBudget = 1322;
+
+  /// Test seam: awaited (instead of a plain event-loop turn) at every chunk
+  /// boundary of a history scan, with the phase (`map` or `filter`), so a
+  /// test can change the session or the blacklist inside one phase.
+  @visibleForTesting
+  static Future<void> Function(String phase)? debugScanYield;
 
   final ChatEngine _engine;
   final IdentityService _identity;
@@ -340,37 +348,8 @@ class Tim2ToxChatService
   }
 
   @override
-  Future<ChatMessage> sendText(String conversationId, String text) async {
-    final svc = _requireService();
-    final bytes = utf8.encode(text).length;
-    if (bytes > toxMessageBudget) {
-      throw ChatException(
-        'message_too_long',
-        '$bytes bytes exceeds the $toxMessageBudget-byte Tox message budget',
-      );
-    }
-    if (text.trim().isEmpty) {
-      throw const ChatException('empty_message', 'Message is empty');
-    }
-    final peer = ConversationIds.peerOf(conversationId);
-    final t2t.ChatMessage row;
-    try {
-      row = ConversationIds.isGroup(conversationId)
-          ? await svc.sendGroupTextWithResult(peer, text)
-          : await svc.sendTextWithResult(peer, text);
-    } on ArgumentError catch (e) {
-      throw ChatException('invalid_message', e.message?.toString() ?? '$e');
-    } on StateError catch (e) {
-      throw ChatException('send_failed', e.message);
-    }
-    _ensureCurrent(svc);
-    if (_meta.hidden.contains(conversationId)) {
-      await _meta.unhide(conversationId);
-      _ensureCurrent(svc);
-    }
-    _conversationsPart.rebuild(svc);
-    return _mapper.map(row, conversationId: conversationId);
-  }
+  Future<ChatMessage> sendText(String conversationId, String text) =>
+      _sendText(conversationId, text);
 
   @override
   Future<void> clearHistory(String conversationId) async {
@@ -407,6 +386,13 @@ class Tim2ToxChatService
   @override
   Future<void> joinGroup(String chatId, {String? password}) =>
       _groupsPart.join(_requireService(), chatId, password);
+
+  @override
+  Future<void> rejoinGroup(String groupId, {String? password}) =>
+      _groupsPart.rejoin(_requireService(), groupId, password);
+
+  @override
+  Stream<GroupJoinRefusal> get groupJoinRefusals => _groupsPart.refusals.stream;
 
   @override
   Future<void> inviteToGroup(String groupId, String friendPublicKey) =>

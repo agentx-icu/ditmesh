@@ -4,6 +4,9 @@ extension _IdentityBackup on Tim2ToxIdentityService {
   Future<Uint8List> _exportBackup({bool includeMedia = false}) async {
     final record = _requireRecord();
     await _persist();
+    // A quarantined instance from an earlier stop could still be changing
+    // the tree this reads.
+    _requireTeardownConfirmed();
     var profile = await File(_paths.profileFile).readAsBytes();
     final password = _sessionPassword;
     var encrypted = _crypto.isEncrypted(profile);
@@ -120,6 +123,7 @@ extension _IdentityBackup on Tim2ToxIdentityService {
       }
       await _prepareForReplacement();
       await _disconnectImpl();
+      _requireTeardownConfirmed();
       await _verifier.replacePassword(
         record.toxId,
         encrypted ? password : null,

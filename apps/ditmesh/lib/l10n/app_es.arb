@@ -38,6 +38,8 @@
   "errorGroupNotFound": "No se encontró el grupo.",
   "errorMessageTooLong": "El texto supera el límite de un mensaje de Tox.",
   "errorUnknown": "Se ha producido un error",
+  "errorTeardownUnconfirmed": "La sesión Tox anterior aún no se ha detenido por completo. Inténtalo de nuevo en un momento o reinicia la aplicación.",
+  "errorIdentityRecoveryPending": "Una identidad anterior sigue esperando a ser recuperada. Reinicia la aplicación para reintentarlo o elimina los datos de identidad para empezar de nuevo.",
   "languageTitle": "Idioma",
   "languageSystemDefault": "Predeterminado del sistema",
   "languageSaveFailed": "No se pudo guardar el idioma. Inténtalo de nuevo.",
@@ -184,6 +186,7 @@
   "accountDeleteConfirmWord": "DELETE",
   "accountDeleteConfirmHint": "Escribe DELETE",
   "accountDeleteButton": "Eliminar",
+  "accountRecoveryPendingDiscard": "Descartar la identidad pendiente y empezar de nuevo",
   "accountRestoreFileChosenSize": "Copia seleccionada ({bytes} bytes)",
   "chatSearchConversations": "Buscar conversaciones",
   "chatNoConversations": "Aún no hay conversaciones",
@@ -1268,5 +1271,13 @@
   "bootstrapSource": "Lista oficial de nodos públicos",
   "bootstrapOnline": "En línea",
   "bootstrapOffline": "Sin conexión",
-  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}"
+  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}",
+  "errorNotFriend": "Esta persona ya no está en tu lista de amigos. Vuelve a añadirla para enviarle mensajes.",
+  "chatAcceptWithPassword": "Aceptar con contraseña",
+  "chatGroupPasswordTitle": "Contraseña de {name}",
+  "chatGroupPasswordField": "Contraseña del grupo",
+  "chatGroupJoinRefusedPassword": "{name} rechazó la unión: la contraseña es incorrecta o falta.",
+  "chatGroupJoinRefusedFull": "{name} rechazó la unión: el grupo está lleno.",
+  "chatGroupJoinRefused": "{name} rechazó la unión.",
+  "chatGroupReconnectRefused": "{name} rechazó la reconexión. El historial se conserva; reintenta con la contraseña del grupo."
 }

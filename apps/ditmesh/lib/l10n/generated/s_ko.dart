@@ -123,6 +123,12 @@ class SKo extends S {
   String get errorUnknown => '문제가 발생했습니다';
 
   @override
+  String get errorTeardownUnconfirmed => '이전 Tox 세션이 아직 완전히 종료되지 않았습니다. 잠시 후 다시 시도하거나 앱을 다시 시작하세요.';
+
+  @override
+  String get errorIdentityRecoveryPending => '이전 신원이 아직 복구를 기다리고 있습니다. 앱을 다시 시작해 재시도하거나, 신원 데이터를 삭제하고 처음부터 시작하세요.';
+
+  @override
   String get languageTitle => '언어';
 
   @override
@@ -744,6 +750,9 @@ class SKo extends S {
 
   @override
   String get accountDeleteButton => '삭제';
+
+  @override
+  String get accountRecoveryPendingDiscard => '복구 대기 중인 신원을 버리고 처음부터 시작';
 
   @override
   String accountRestoreFileChosenSize(int bytes) {
@@ -4406,5 +4415,39 @@ class SKo extends S {
   @override
   String bootstrapProtocolStatus(String udp, String tcp) {
     return 'UDP: $udp · TCP: $tcp';
+  }
+
+  @override
+  String get errorNotFriend => '이 사람은 더 이상 친구 목록에 없습니다. 메시지를 보내려면 다시 추가하세요.';
+
+  @override
+  String get chatAcceptWithPassword => '비밀번호로 수락';
+
+  @override
+  String chatGroupPasswordTitle(String name) {
+    return '$name 비밀번호';
+  }
+
+  @override
+  String get chatGroupPasswordField => '그룹 비밀번호';
+
+  @override
+  String chatGroupJoinRefusedPassword(String name) {
+    return '$name 참여가 거부되었습니다. 비밀번호가 틀렸거나 없습니다.';
+  }
+
+  @override
+  String chatGroupJoinRefusedFull(String name) {
+    return '$name 참여가 거부되었습니다. 그룹이 가득 찼습니다.';
+  }
+
+  @override
+  String chatGroupJoinRefused(String name) {
+    return '$name 참여가 거부되었습니다.';
+  }
+
+  @override
+  String chatGroupReconnectRefused(String name) {
+    return '$name 재연결이 거부되었습니다. 기록은 유지됩니다. 그룹 비밀번호로 다시 시도하세요.';
   }
 }
