@@ -586,10 +586,12 @@ jobs:
       - name: Verify 16 KB page alignment of the release APK
         run: |
           set -euo pipefail
-          apk="$(ls apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk)"
+          apk=apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk
+          [[ -f "$apk" ]] || { echo "::error::$apk missing"; exit 1; }
           ndk="${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}"
-          readelf="$(ls "$ndk"/toolchains/llvm/prebuilt/*/bin/llvm-readelf | head -n 1)"
-          zipalign="$(ls "$ANDROID_HOME"/build-tools/*/zipalign | sort -V | tail -n 1)"
+          readelf="$(find "$ndk/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -type f | head -n 1)"
+          zipalign="$(find "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -n 1)"
+          [[ -x "$readelf" && -x "$zipalign" ]] || { echo "::error::llvm-readelf ($readelf) or zipalign ($zipalign) not found"; exit 1; }
           tmp="$(mktemp -d)"
           unzip -q "$apk" 'lib/arm64-v8a/*' 'lib/x86_64/*' -d "$tmp"
           bad=0
