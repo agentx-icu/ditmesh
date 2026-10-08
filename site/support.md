@@ -14,7 +14,7 @@ Open [GitHub issues]({{ site.support_url }}) for help. Issues are public: never 
 
 **Can I type a message?** Chat messages are keyed using a straight key or iambic paddles, by touch or keyboard. The decoded draft is read-only.
 
-**Does iPhone include chat?** Yes, DitMesh includes chat on all five target platforms. Source/CI iOS packages are unsigned and require signing before installation. This does not imply current App Store availability.
+**Does iPhone include chat?** Yes. Direct and group Morse chat are available on iPhone, iPad, Android, macOS, Linux and Windows.
 
 **Why is a message pending?** Both peers must be reachable. There is no server push or offline relay store. Keep the app running; use connection diagnostics and the send retry/cancel actions when appropriate.
 
@@ -28,6 +28,6 @@ Open [GitHub issues]({{ site.support_url }}) for help. Issues are public: never 
 
 **Can you recover my identity?** No. Keep an encrypted backup and its passphrase. Restore current DitMesh backups explicitly through the application.
 
-**Native backend failed to start.** Use a complete release package or rebuild/stage the platform Tim2Tox library. A production error must not be mistaken for a working demonstration chat.
+**The app failed to start.** Reinstall the DitMesh package for your operating system. If the problem continues, include the displayed error when opening a support issue.
 
 **Delete local data.** Use Me → Delete identity or uninstall. Recipient copies and previous exports remain under their owners' control.

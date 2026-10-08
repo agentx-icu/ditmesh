@@ -6,14 +6,11 @@
 `lib/lifecycle/` 跟踪前台/后台并驱动移动端后台策略。两者都只通过 `ditmesh_chat_api` 契约与后端对话，
 只通过两个接口（`LocalNotificationsApi`、`BadgeApi`）与插件对话，`testing/` 下有记录式假实现。
 
-方案引用：`doc/plans/2026-09-30-ditmesh-plan.zh-CN.md` §5.6（移动端后台）和 §7
-（风险：没有 `voip` 模式，iOS 窗口比 toxee 更短）。
-
 ## 插件
 
 | 包 | 版本 | 为什么选它 |
 |---|---|---|
-| `flutter_local_notifications` | `^22.3.1`（Flutter ≥ 3.38.1，Dart ≥ 3.10） | **全部五个**目标平台都有官方背书的联合实现：Android/iOS/macOS 在主包内，`flutter_local_notifications_linux` 8.0.1（D-Bus），`flutter_local_notifications_windows` 3.1.1（通过 FFI 的 WinRT toast）。toxee 仍固定在 17.2.4，早于 Windows 包出现；选 22.x 是为了让 Windows 得到真正的系统 toast 而不是应用内回退。 |
+| `flutter_local_notifications` | `^22.3.1`（Flutter ≥ 3.38.1，Dart ≥ 3.10） | **全部五个**目标平台都有官方背书的联合实现：Android/iOS/macOS 在主包内，`flutter_local_notifications_linux` 8.0.1（D-Bus），`flutter_local_notifications_windows` 3.1.1（通过 FFI 的 WinRT toast）。 |
 | `app_badge_plus` | `^1.3.5`（Flutter ≥ 3.32） | Android / iOS / macOS 角标。没有 Linux 或 Windows 实现；`AppBadgePlusApi.isSupported()` 在那里返回 false，不触碰任何 channel。 |
 
 依据：2026-09-30 读取的 pub.dev 包元数据（`flutter.plugin.platforms` 列出
@@ -193,7 +190,7 @@ center.releaseActiveConversation(owner);
 - Windows：未打包构建能出现 toast；运行中点击打开会话；确认上述 MSIX 限制；声音开关。
 - Linux（GNOME / KDE）：D-Bus 通知、`Open` 操作、声音抑制。
 
-## 测试（文件已编写，本轮未运行）
+## 测试
 
 `test/notifications/`：`notification_center_test.dart`（后台发送文本 + 点划模式；活跃会话打开 → 不发送；
 已静音 → 不发送；角标跟随未读；好友请求 / 群组邀请；点击；权限；收件箱分组；Linux/不支持平台的门控），

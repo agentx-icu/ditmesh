@@ -2,13 +2,13 @@
 
 # DitMesh
 
-**用 Morse Code 聊天。** DitMesh 是基于 [Tox](https://tox.chat) 点对点网络、没有聊天服务器的莫斯电码聊天应用。通过触摸或物理键盘操作直键、双桨，在单聊和群组中发报。不需要手机号、邮箱或中心服务器注册；身份密钥在设备本地生成。
+**用 Morse Code 聊天。** DitMesh 是基于 [Tox](https://tox.chat) 点对点网络、没有聊天服务器的莫尔斯电码聊天应用。通过触摸或物理键盘操作直键、双桨，在单聊和群组中发报。不需要手机号、邮箱或中心服务器注册；身份密钥在设备本地生成。
 
-DitMesh 负责聊天；[MorseCQ](https://github.com/agentx-icu/morsecq) 负责安装即用的离线学习。两者使用独立应用标识和数据目录，均在准备首次发布。
+离线学习和练习 Morse Code，请使用 [MorseCQ](https://github.com/agentx-icu/morsecq)。
 
 ![DitMesh 桌面与手机产品设计概念图](doc/designs/product-2026-10-08/product-concept.png)
 
-*这是产品设计概念图；实际应用截图单独列于下方。*
+*产品设计概念图。*
 
 ## 功能
 
@@ -22,13 +22,13 @@ DitMesh 负责聊天；[MorseCQ](https://github.com/agentx-icu/morsecq) 负责�
 - **身份与备份**：身份密码保护、完整加密导出与恢复预览、选择恢复组件、`.tox` 身份文件导入及 DitMesh 备份恢复。
 - **隐私与屏蔽**：点对点加密传输、本地通知、屏蔽联系人及社区准则；没有聊天或推送服务器。
 - **参考与电键**：字母、程序信号、Q 简语、译码、中文电报码解读及设备按键配置。
-- **网络配置**：官方节点目录、逐节点真实 DHT 探测、自动/手动选择、桌面局域网托管；解锁身份前也可设置网络。见[节点与局域网指南](doc/operations/NETWORK.zh-CN.md)。
-- **外观与语言**：十种界面语言，Classic Brass、Modern Calm、Night Radio、Paper Handbook、Fresh Cartoon 五种风格，明亮/暗色/跟随系统；自动截图及真实字体视觉矩阵覆盖语言和风格。
-- **桌面体验**：自适应会话面板、窗口记忆、托盘、未读角标和通知跳转；各平台统一使用所选 C 信号塔/Morse 图标。
+- **网络配置**：官方节点目录、节点可达性测试、自动/手动选择、桌面局域网托管；解锁身份前也可设置网络。见[节点与局域网指南](doc/operations/NETWORK.zh-CN.md)。
+- **外观与语言**：十种界面语言，Classic Brass、Modern Calm、Night Radio、Paper Handbook、Fresh Cartoon 五种风格，明亮/暗色/跟随系统。
+- **桌面体验**：自适应会话面板、窗口记忆、托盘、未读角标和通知跳转。
 
-消息沿用 Tim2Tox 的纯文本线路协议，可与 [toxee](https://github.com/agentx-icu/toxee) 等客户端互通；DitMesh 在本地生成 Morse 播放。真实键控时序和网络实时发报仍需要上游功能。
+DitMesh 可与 [toxee](https://github.com/agentx-icu/toxee) 等 Tox 客户端互通，接收到的消息按你选择的速度和间距播放。
 
-自动模式立即使用已保存的选择及数字地址备用节点启动，后台刷新[官方 Tox 列表](https://nodes.tox.chat/)；手动配置保持有效。双方应用都运行且网络可达时才能送达。对方离线时消息保留在本地持久队列；应用关闭后没有服务器推送。真实后端启动失败会明确显示；演示服务仅由显式测试开关启用。
+自动模式使用已保存或默认节点，后台刷新[官方 Tox 列表](https://nodes.tox.chat/)；手动配置保持有效。双方应用都运行且网络可达时才能送达。对方离线时消息保留在待发送队列，恢复连接后继续发送。接收消息时请保持应用运行。
 
 ## 截图
 
@@ -37,9 +37,9 @@ DitMesh 负责聊天；[MorseCQ](https://github.com/agentx-icu/morsecq) 负责�
 <td><img src="doc/screenshots/macos/zh/group_conversation.png" alt="DitMesh macOS 群聊"></td>
 </tr></table>
 
-[截图与平台覆盖](doc/screenshots/README.zh-CN.md) · [按语言/风格采集](tool/screenshots/README.zh-CN.md) · [产品设计](doc/designs/product-2026-10-08/README.zh-CN.md) · [所选 C 图标](doc/designs/icon-2026-10-08/README.zh-CN.md)
+[截图与平台覆盖](doc/screenshots/README.zh-CN.md) · [按语言/风格采集](tool/screenshots/README.zh-CN.md) · [产品设计](doc/designs/product-2026-10-08/README.zh-CN.md) · [应用图标](doc/designs/icon-2026-10-08/README.zh-CN.md)
 
-截图来自真实 Flutter 界面与明确标注的演示数据。设计概念图不是构建成功的证据；无法本机运行的平台由 CI 采集，不复用旧应用截图冒充。
+截图展示演示会话。
 
 ## 构建与运行
 
@@ -54,8 +54,6 @@ bash tool/ci/build_tim2tox.sh --target macos-arm64
 cd apps/ditmesh
 flutter run -d macos
 ```
-
-需要演示界面时显式添加 `--dart-define=DITMESH_FAKE_BACKEND=true`。生产构建使用真实后端，必须包含对应平台原生库。
 
 参见[构建与打包](doc/operations/BUILD_AND_DEPLOY.zh-CN.md)、[发布要求](doc/release/APP_STORE.zh-CN.md)、[应用职责](doc/APP_SPLIT.zh-CN.md)、[测试金字塔](doc/testing/TEST_PYRAMID.zh-CN.md)。
 
@@ -75,14 +73,6 @@ for dir in packages/* apps/*; do
   (cd "$dir" && flutter test --exclude-tags=needs-native)
 done
 ```
-
-只有 `ditmesh_chat` 导入 Tim2Tox/Tencent 兼容适配层；纯 Morse 包不依赖 Flutter。项目保留 GPL-3.0 和共享引擎的第三方声明。
-
-## 发布与后续验证
-
-GitHub Actions 构建原生库与必要平台应用、生成安装包和校验和。`v*` tag 在验证通过后生成 **GitHub 草稿 Release**。iOS 包未签名；商店签名和 macOS 公证需要所有者凭据。实验性 ARM 架构和真机检查见[交接说明](doc/HANDOVER.zh-CN.md)。
-
-[应用职责](doc/APP_SPLIT.zh-CN.md)记录当前拆分；本地与 CI 证据见[验证记录](doc/VALIDATION.zh-CN.md)，README 不代表所有平台已经验证通过。
 
 ## 隐私、支持与许可证
 

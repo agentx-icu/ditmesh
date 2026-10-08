@@ -1,18 +1,16 @@
-# DitMesh 信号塔图标候选
+[English](./README.md)
 
-用户要求将当前图标换成「信号塔 + Morse 点划」。以下四个候选沿用深青色与白色，使用可编辑 SVG 几何；所选 C 已用于全部平台资源。
+# DitMesh 信号塔图标
 
-**已选择 C：实心信号塔。** 其他方案保留为设计记录。
+应用图标以深青色和白色组合实心信号塔与 Morse `−··`（D）。大面积轮廓在小尺寸下保持清晰。
 
-![四个图标候选](options.png)
+![图标设计](options.png)
 
-| 方案 | 特点 | 源文件 |
+| 方案 | 造型 | 矢量源文件 |
 |---|---|---|
-| A 信号塔发报 | 经典无线电塔、两组电波与独立点划 | [SVG](option-a.svg) |
-| B 点划电波 | 将点划放进发射信号，更突出 Morse 聊天 | [SVG](option-b.svg) |
-| C 实心信号塔 | 大面积轮廓，点划镂空，适合小尺寸 | [SVG](option-c.svg) |
-| D 无线电徽章 | 圆形徽章结构，适合托盘与标识 | [SVG](option-d.svg) |
+| A | 信号塔、电波与点划 | [SVG](option-a.svg) |
+| B | 点划组成发射信号 | [SVG](option-b.svg) |
+| C — 应用图标 | 实心信号塔与点划镂空 | [SVG](option-c.svg) |
+| D | 圆形无线电徽章 | [SVG](option-d.svg) |
 
-点划采用 `−··`（D）。每项包含 512px PNG 预览，比较图包含 64/32/16px 小尺寸。所选 [SVG 覆盖源](../../../apps/ditmesh/icon/signal_tower_mask.svg)及其 1024px 蒙版供[应用图标生成器](../../../tool/gen_app_icons.dart)与[托盘生成器](../../../tool/gen_tray_icons.dart)共用，生成 57 项资源：iOS 不透明图标、macOS 图标、Android 自适应和单色通知图标、Linux 启动图标、Windows ICO 与托盘变体。
-
-iOS PNG 均不透明；单色托盘与通知图标使用透明度；两个 ICO 均包含声明尺寸。[产品概念图](../product-2026-10-08/README.zh-CN.md)也已改用 C。
+每项包含 512px 预览，比较图也展示 64/32/16px 小尺寸效果。平台资源从[共用蒙版](../../../apps/ditmesh/icon/signal_tower_mask.svg)通过[应用图标生成器](../../../tool/gen_app_icons.dart)和[托盘生成器](../../../tool/gen_tray_icons.dart)生成。

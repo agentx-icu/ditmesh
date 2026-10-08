@@ -168,12 +168,9 @@ go stale. The guard does not follow prose routed through data maps,
 constants or helpers — review those by hand. Tests:
 `test/i18n/ui_literal_guard_test.dart`.
 
-## Migration status
+## Interface string coverage
 
-The migration from the old `*_strings.dart` const classes is complete; the
-classes and `tool/strings_to_arb.dart` are gone. All interface areas use
-`context.s` or receive an `S` instance explicitly, so every shipped
-translation covers these callers automatically:
+Interface areas use `context.s` or receive an `S` instance explicitly:
 
 | Area | ARB prefix | Callers |
 |------|------------|---------|

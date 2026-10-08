@@ -10,7 +10,7 @@ dart run tool/bootstrap_deps.dart
 dart pub get
 ```
 
-The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. It is not a Tencent messaging-server integration. Tim2Tox links c-toxcore and pinned static libsodium; ToxAV is disabled.
+The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. Tim2Tox links c-toxcore and pinned static libsodium; ToxAV is disabled.
 
 macOS application packages require **13.0 or later** on Intel and ARM. This satisfies the bundled Objective-C framework. The packager checks the application minimum against every actual embedded Mach-O architecture before generating ZIP/PKG; a dependency requiring a newer system blocks packaging. The transport library may support a lower system version without lowering the application requirement.
 
@@ -36,7 +36,7 @@ flutter build appbundle --release
 flutter build ios --release --no-codesign
 ```
 
-Consult `--help` for the script's target spelling/options before a new host build. Desktop runner integration finds libraries in `build/native/`; Android stages jniLibs and iOS stages an XCFramework. Required libraries must be present; a complete release cannot silently become a UI demo.
+Consult `--help` for the script's target spelling/options before a new host build. Desktop runner integration finds libraries in `build/native/`; Android stages jniLibs and iOS stages an XCFramework. Stage the required native libraries before building the application.
 
 After the application build, run from the root:
 
@@ -45,7 +45,7 @@ bash tool/ci/package_artifacts.sh --target macos
 # linux, windows, android and ios run on their respective build hosts.
 ```
 
-`./build_all.sh --platform macos --mode release --package` orchestrates native and application builds and writes `dist/macos/ditmesh-1.0.0-macos-arm64.{pkg,zip}`. Installers use DitMesh-specific product identifiers and upgrade identity. Output packages stay in ignored `dist/`, not Git.
+`./build_all.sh --platform macos --mode release --package` orchestrates native and application builds and writes `dist/macos/ditmesh-1.0.0-macos-arm64.{pkg,zip}`. Output packages are written to `dist/`.
 
 ## CI and release
 
@@ -53,16 +53,16 @@ bash tool/ci/package_artifacts.sh --target macos
 - Native builds the required native libraries and application/package jobs. Dart/app/shared-package/pubspec changes trigger build coverage.
 - Linux x86_64, Windows x64, macOS ARM/Intel, Android ARM64/ARMv7/x86_64 and iOS device/simulator transport are supported build targets. Experimental native ARM host jobs are separately opt-in.
 - Tag release waits for validation and required applications. It verifies expected platform packages, generates SHA256SUMS and creates/updates a draft GitHub Release.
-- Screenshots/E2E use the explicitly fake backend and are opt-in. This is deliberate demo data, never production transport validation.
+- Screenshots/E2E use seeded chat data and run on demand. Native integration tests exercise real Tox peers.
 
-GitHub's workflow filter/needs behavior is documented in [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). A workflow definition alone is not a completed remote build; see [the exact verification record](../VALIDATION.md).
+GitHub's workflow filter/needs behavior is documented in [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). Executed results are in the [verification record](../VALIDATION.md).
 
 ## Signing
 
-Source/CI iOS IPA is unsigned; macOS artifacts are not notarized unless owner credentials and a separate signing step are configured. Android store upload requires a release/upload keystore. Keep secrets in CI secret storage and never commit them. See [release requirements](../release/APP_STORE.md) and [Flutter iOS deployment](https://docs.flutter.dev/deployment/ios).
+Configure Apple distribution certificates and provisioning for iOS, Developer ID signing and notarization for macOS, and a release/upload keystore for Android. Store credentials in CI secrets or local signing configuration. See [release requirements](../release/APP_STORE.md) and [Flutter iOS deployment](https://docs.flutter.dev/deployment/ios).
 
 ## Reproducibility and diagnostics
 
-Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries. Package checksums do not replace code signing. For deliberate fake UI-only development, use the documented missing-FFI escape plus `DITMESH_FAKE_BACKEND=true`; do not ship such builds as working chat clients.
+Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries. For UI development with seeded conversations, use `DITMESH_FAKE_BACKEND=true` and the missing-FFI option documented by the build scripts.
 
 Native builds apply the [group-persistence overlay](../../tool/ci/tim2tox-overlays/README.md) to a copied source tree. The pinned upstream checkout remains clean. Required Linux and both macOS jobs exercise real local UDP peers; a separate public-DHT smoke probe is opt-in. Refresh the reviewed bundled bootstrap node list against [official Tox node status](https://nodes.tox.chat/) before releases.

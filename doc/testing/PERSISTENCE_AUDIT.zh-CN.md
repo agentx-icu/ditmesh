@@ -2,11 +2,11 @@
 
 # DitMesh 持久化审计 — 2026-10-08
 
-本清单描述应用拆分后 `codex/chat-migration` 上的 DitMesh 实现。两款产品均未发布，无需旧版本迁移。实际测试数量、原生 CI 链接和平台覆盖限制见 [VALIDATION.zh-CN.md](../VALIDATION.zh-CN.md)。
+本清单记录聊天存储、保存屏障及备份恢复。已执行的检查见 [VALIDATION.zh-CN.md](../VALIDATION.zh-CN.md)。
 
 ## 存储清单
 
-`<support>` 为平台应用支持目录，`<identity>` 为 `<support>/ditmesh/identity`。用户数据不写入安装包或进程当前目录。MorseCQ 使用独立应用标识及离线学习目录。
+`<support>` 为平台应用支持目录，`<identity>` 为 `<support>/ditmesh/identity`。用户数据不写入安装包或进程当前目录。
 
 | 持久化内容 | 生产存储 | 重启与归属 |
 |---|---|---|
@@ -17,7 +17,7 @@
 | 单聊/群聊离线发送队列 | `<identity>/data/offline_message_queue.json` | 重启保留待发送状态；投递及重试沿用消息 ID，避免重复气泡。 |
 | 好友申请、拒绝记录及 Tim2Tox 宿主元数据 | 按账号隔离的 `shared_preferences` | 重连恢复申请和群组信息；删除身份清理其专属键。 |
 | 草稿、置顶/隐藏会话、待处理邀请 | 按账号隔离的 `shared_preferences` | 离线修改持久化；被替换的编辑器不能向新身份写回。 |
-| 抄收练习状态、保存材料与书签 | `<identity>/training/` | 文件存储串行保存不可变快照；与独立 MorseCQ 的离线课程数据分离。 |
+| 抄收练习状态、保存材料与书签 | `<identity>/training/` | 文件存储串行保存不可变快照。 |
 | 可选练习录音 | `<identity>/media/recordings/` | 仅在导出选择后包含被材料引用的录音；未提供文件传输界面。 |
 | 外观 | `<support>/settings.json` 中的 `appearance.preferences` | 风格和明暗一起保存成功后生效；失败保留原选择；新建或损坏记录使用 Modern Calm/跟随系统。 |
 | 语言、播放/输入/解码设置及通知偏好 | `<support>/settings.json` | 暴露 provider 前恢复；失败写入可重试。 |
@@ -39,6 +39,6 @@ DitMesh 加密备份可选择身份、聊天历史、会话元数据、待发送
 
 当前命令及结果见[测试金字塔](TEST_PYRAMID.zh-CN.md)和[验证记录](../VALIDATION.zh-CN.md)。原生测试重建存储并重读偏好，避免只靠进程缓存通过。两个真实 Tox 进程覆盖加密重启、离线队列投递和自动重新入群；桌面 E2E 使用真实平台存储插件。
 
-JSON 备份恢复可处理损坏或不完整文件；跨多个文件与安全存储的身份更新并非文件系统级事务，未逐一验证每个写入点的断电/强杀。Linux 需要可访问的 Secret Service/keyring；Windows 需要安全存储插件使用的 C++ ATL 构建组件。实体设备行为及签名分发仍需外部验证。
+JSON 备份恢复可处理损坏或不完整文件；跨多个文件与安全存储的身份更新并非文件系统级事务，未逐一验证每个写入点的断电/强杀。Linux 需要可访问的 Secret Service/keyring；Windows 需要安全存储插件使用的 C++ ATL 构建组件。
 
 若操作系统无法提供应用支持目录，已有日志提示的内存偏好回退无法跨重启保留设置。生产原生后端失败会显示错误，不会静默改为演示会话。

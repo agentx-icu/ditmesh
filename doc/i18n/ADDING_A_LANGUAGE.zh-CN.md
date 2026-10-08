@@ -10,12 +10,6 @@ DitMesh 通过 Flutter gen-l10n 提供英语（`en`，模板）、简体中文�
 本页说明共享本地化流程与扩展方法。日常字符串工作（添加一个键）和莫尔斯词汇请看
 [`apps/ditmesh/lib/l10n/README.zh-CN.md`](../../apps/ditmesh/lib/l10n/README.zh-CN.md)。
 
-> **状态说明（2026-10-03）。** 下文描述的都是代码的现状：`*_strings.dart` 迁移已完成（界面上不再有
-> 英语 `static const` 文本，一次性的迁移工具已删除），一致性测试覆盖每一个已发布的 ARB，
-> 平台语言清单由漂移测试守护。十种语言都已在 `CFBundleLocalizations`、Android `locale_config.xml`
-> 和 iOS/macOS `<tag>.lproj/InfoPlist.strings` 中声明，`test/i18n/platform_locales_test.dart`
-> 保证这些清单与 ARB 集合完全一致。
-
 ## 1. 本地化是如何工作的
 
 ### 1.1 gen-l10n 与 `S` 类
@@ -172,7 +166,7 @@ gen-l10n 本身**永远不会因缺少翻译而失败**，而是悄悄回退。�
 
 ## 2. 添加语言的逐步操作
 
-示例：尚未发布的意大利语（`it`）。按需替换标签。
+示例：添加意大利语（`it`）。按需替换标签。
 
 ### 第 1 步——创建 ARB
 

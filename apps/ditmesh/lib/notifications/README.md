@@ -9,14 +9,11 @@ the backend only through the `ditmesh_chat_api` contract and to the plugins
 only through two interfaces (`LocalNotificationsApi`, `BadgeApi`) with
 recording fakes under `testing/`.
 
-Plan references: `doc/plans/2026-09-30-ditmesh-plan.zh-CN.md` §5.6 (mobile
-background) and §7 (risk: no `voip` mode, shorter iOS window than toxee).
-
 ## Plugins
 
 | Package | Version | Why this one |
 |---|---|---|
-| `flutter_local_notifications` | `^22.3.1` (Flutter ≥ 3.38.1, Dart ≥ 3.10) | Endorsed federated implementations for **all five** targets: Android/iOS/macOS in the main package, `flutter_local_notifications_linux` 8.0.1 (D-Bus), `flutter_local_notifications_windows` 3.1.1 (WinRT toasts over FFI). toxee still pins 17.2.4, which predates the Windows package; 22.x was chosen so Windows gets real OS toasts instead of an in-app fallback. |
+| `flutter_local_notifications` | `^22.3.1` (Flutter ≥ 3.38.1, Dart ≥ 3.10) | Endorsed federated implementations for **all five** targets: Android/iOS/macOS in the main package, `flutter_local_notifications_linux` 8.0.1 (D-Bus), `flutter_local_notifications_windows` 3.1.1 (WinRT toasts over FFI). |
 | `app_badge_plus` | `^1.3.5` (Flutter ≥ 3.32) | Android / iOS / macOS badge. No Linux or Windows implementation; `AppBadgePlusApi.isSupported()` returns false there without touching a channel. |
 
 Evidence: pub.dev package metadata read on 2026-09-30 (`flutter.plugin.platforms`

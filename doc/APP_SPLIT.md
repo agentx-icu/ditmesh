@@ -1,16 +1,14 @@
 [简体中文](./APP_SPLIT.zh-CN.md)
 
-# Application responsibilities
+# Chat and learning
 
-DitMesh and MorseCQ are independent applications preparing their first release.
+Use DitMesh to chat in Morse code and MorseCQ to learn and practise.
 
-| Application | Product | Identity and storage |
+| Application | Features | Get started |
 |---|---|---|
-| DitMesh | Morse-only direct and group chat over Tox; Chat / Groups / Reference / Me | Local Tox identity, contacts, encrypted backups and conversations; `icu.agentx.ditmesh` |
-| MorseCQ | Account-free offline learning; Learn / Reference / Me | Local learning progress, settings and recordings; `icu.agentx.morsecq` |
+| [DitMesh](../README.md) | Morse-only direct and group chat over Tox | Create a local identity, then add a contact using a Tox ID or QR code. |
+| [MorseCQ](https://github.com/agentx-icu/morsecq) | Offline lessons, guided practice, challenges and reference tools | Open the app and start the first lesson; no account is needed. |
 
-Both reuse the pure Morse engine and keying components. DitMesh also owns the Tim2Tox transport; MorseCQ has no transport, Tox identity or registration dependency. Neither application reads the other's data implicitly.
+DitMesh's encrypted backups can include your identity, conversations and selected practice data. Preview the contents before restoring and protect the backup passphrase. Importing a `.tox` file restores a Tox identity; use a DitMesh backup to restore conversation history.
 
-DitMesh's current encrypted backups support identity, chat components and restore previews. A `.tox` file imports a Tox identity for interoperability; it is not a full chat archive. Protect backup passphrases. MorseCQ persists learning locally without an account.
-
-Source code was ported from MorseCQ revision `3ce9597`. The DitMesh Tim2Tox submodule is pinned to `093730ce346cef186bfd3d71214343b38d6c5ca6`. GPL-3.0 and third-party notices are retained.
+MorseCQ saves learning progress and recordings on your device. Clearing learning data or uninstalling the app can remove these records.

@@ -2,36 +2,37 @@
 
 # Verification record — 2026-10-08
 
-Implementation is on `codex/chat-migration`. Both applications are unreleased; historical compatibility and migration were removed from scope by the user. Product revision `c8e1fed` includes the complete bootstrap/LAN port, ten-language/five-style capture support and selected icon C. Analysis, all three desktop E2E jobs, the visual matrix and all thirteen required native/application/quality jobs passed remotely. Actual package inspection then found a macOS minimum mismatch (declared 10.15, embedded frameworks require up to 13.0). Application metadata is now 13.0 and the packager rejects incompatible dependency floors. Earlier `c8e1fed`/`f849763` assets are explicitly pre-correction candidates; the draft PR records the corrected HEAD checks.
+Verified source revision: `21224e60ddfe03a90db298b1ba82360e0b0d844e`. Toolchain: Flutter 3.41.9 / Dart 3.11.5.
 
-| Check | Executed result |
+## Automated checks
+
+| Check | Result |
 |---|---|
-| Source MorseCQ baseline | Seven package suites passed; app 1253 passed, 1 skipped |
-| DitMesh application | Current full local suite: 1344 passed, 2 opt-in visual exporters skipped; 41 existing onboarding/startup/network tests passed again after the Welcome icon changed |
-| Chat / API packages | Current ordinary suites: chat 269 passed / API 79 passed; native cases are counted separately below |
-| Native integration | Current tagged suite: 11 passed, 1 separate peer-worker skipped; original encryption/rekey, encrypted backups/tamper, persistence and identity/network/offline queue/group cases included |
-| Strict analyzer and source guards | Scoped analyzer and all three guards passed; supplemental chat analyzer passed after historical-feature removal |
-| Workflow and packaging checks | actionlint 1.7.12, ShellCheck 0.11, Bash/Podfile syntax and eight packaging/overlay/cache regressions passed; actionlint also passed with runner ShellCheck 0.10 |
-| Screenshot import safety | 19 regressions passed with private PNG fixtures, including mandatory network scene and locale/style/theme boundaries |
-| Native platform libraries | Current CI built all six hook-free targets: Linux x86_64, Windows x64, macOS ARM64/Intel, Android arm64/armv7/x86_64 and iOS device + ARM64/x86_64 simulator |
-| Real product screenshots | All six layouts: 13 scenes × English/Chinese each passed (**156 frames**), including Welcome C branding and network settings. Four targets compiled/captured locally; Linux/Windows were inspected and imported from current successful CI jobs through the completeness guard. |
-| Real peer transport | Two real Tox processes passed bidirectional DM/NGC, encrypted profile/preferences restart, durable queued DM delivered exactly once, automatic group rejoin and post-restart bidirectional group messages; self/remote presence was online before delivery and offline or removed after disconnect |
-| Native source fixes | Group persistence, member connection reporting and private-probe isolation are applied to a copied pinned source tree; upstream stays clean. New macOS ARM64 library retains all 366 public FFI exports (all 724 defined names unchanged), contains no test hooks/ToxAV, and preserves ordinary LAN port behavior. Positive presence and probe-isolation regressions failed before their fixes and passed afterwards. |
-| Fresh public startup | Current optional public DHT startup passed in 10 seconds with numeric defaults and the rebuilt library; deterministic required CI uses local real peers |
-| Analysis, guards and all package/app tests | [Analysis passed](https://github.com/agentx-icu/ditmesh/actions/runs/37732186441), product revision `c8e1fed`: app 1344 / chat 269 / API 79 / core 92 / DSP 107 / IO 124 / trainer 212 / radio 18 passed; app skips two opt-in exporters; DSP skips two existing first-block noise-floor cases |
-| Desktop E2E CI | [macOS/Linux/Windows UI and screenshots passed](https://github.com/agentx-icu/ditmesh/actions/runs/37732186466), product revision `c8e1fed` |
-| Required platform CI | [All 13 jobs passed](https://github.com/agentx-icu/ditmesh/actions/runs/37732186830): six native targets, six application jobs and quality; all three real-peer gates and Linux/dual-Mac isolated-probe suites passed. Release publication correctly skipped on [draft PR #1](https://github.com/agentx-icu/ditmesh/pull/1). |
-| macOS runtime requirement | Both architectures' actual old packages failed the new gate: declaration 10.15 versus dependency maximum 13.0. Runner and Podfile now require 13.0. Nine regressions cover explicit inspection of all fat slices, legacy commands, malformed/non-macOS metadata and safe file/directory symlinks; packaging checks every embedded Mach-O before ZIP/PKG generation. |
-| Selected icon C | 57 platform/tray resources generated from one SVG coverage source; icon tools analyzed clean; 51 platform PNGs checked for dimensions/channel type, two ICO containers checked for complete size tables. Current actual package payloads verify C branding, application identity, native transport and Apple locale permissions. |
-| Remote appearance matrix | [Visual CI passed](https://github.com/agentx-icu/ditmesh/actions/runs/37732186546); downloaded manifest exactly matches 38 profiles / 76 nontrivial frames, all ten locales and all five styles |
-| Local appearance follow-up | Four screenshot parser/apply tests plus 40 functional Morse DM/group style tests passed; ten locales and five styles rendered with real fonts: 38 profiles / 76 PNGs; 19 screenshot-import regressions passed |
-| Local native bootstrap follow-up | Tagged native suite: 11 passed, 1 separate peer-worker skipped. Seven new tests prove actual LAN sockets and two clients online, preserved instances, startup/probe cancellation, real local response with wrong-key negative, and no child connection broadcasts or live chat-state changes. Copied-source private-probe overlay keeps the signed creator ABI and all 366 public exports; eight packaging/overlay regressions passed. |
-| Apple LAN permissions and node pages | Required-purpose regression failed for both Apple platforms before the fix; 13 native-locale checks and 27 node widget tests passed after adding all twenty localized purpose entries. All 22 plist/string files passed plutil. Auto/Manual saved-node tests, large-text/RTL flows, rollback retries and blocked-start disposal are covered. |
+| [Analyze](https://github.com/agentx-icu/ditmesh/actions/runs/37737114668) | Strict analysis, source guards and package/application tests passed. |
+| Application suite | 1344 passed; 2 opt-in image exporters skipped. |
+| Package suites | Chat 269, API 79, core 92, DSP 107, audio I/O 124, trainer 212 and radio tools 18 passed. DSP has 2 existing skipped first-block noise-floor cases. |
+| [Native and platform builds](https://github.com/agentx-icu/ditmesh/actions/runs/37737115108) | All 13 required jobs passed: six native targets, six application builds and quality checks. |
+| Native integration | 11 passed and 1 separate peer-worker entry skipped on each Linux/macOS target. The standalone two-process tests passed on Linux and both macOS architectures. |
+| Real-peer delivery | Bidirectional direct/group messages, encrypted profile restart, durable queued sending exactly once and automatic group rejoin passed. |
+| Network behavior | LAN sockets and two-client connectivity, node-key validation, cancellation, probe isolation and instance preservation passed. |
+| Packaging regressions | 9 macOS runtime, 8 packaging/overlay/cache and 19 screenshot-import checks passed. |
+| [Desktop E2E](https://github.com/agentx-icu/ditmesh/actions/runs/37737114750) | macOS, Linux and Windows UI navigation, persistence and all 13 screenshot scenes passed in English and Chinese. |
+| [Visual matrix](https://github.com/agentx-icu/ditmesh/actions/runs/37737114693) | 38 profiles / 76 PNGs covering ten languages, five styles, light/dark and phone/desktop layouts. |
 
-Source revision: MorseCQ `3ce9597`. Tim2Tox pin: `093730ce346cef186bfd3d71214343b38d6c5ca6`. Host: Apple Silicon macOS with Xcode 26.4.1, Flutter 3.41.9 and Dart 3.11.5. Current logs are temporary local evidence at `/tmp/ditmesh-bootstrap-final-suite-app.log`, `/tmp/ditmesh-bootstrap-native-complete-final.log`, `/tmp/ditmesh-bootstrap-public-final.log` and `/tmp/ditmesh-bootstrap-real-peers-final.log`. The final real-peer workers each passed in 27 seconds.
+The DSP skips concern unusually quiet first noise blocks that can produce a spurious leading symbol. The opt-in application exporters are exercised by the screenshot and visual workflows.
 
-Native run `37732186830` produced twelve candidate packages. Their collection, payload checks and SHA-256 evidence are recorded in ignored `dist/ci-c8e1fed`. The corrected macOS-minimum HEAD is rebuilt and passes the actual runtime gate in CI before promoting its package set to `dist/release-v1.0.0`; `dist/final-build-evidence.json` binds that set to its exact remote source SHA. The earlier `2317f6d` package proof is retained as a dated baseline. The release verifier requires all twelve platform assets plus SHA256SUMS before updating a draft GitHub Release.
+## Screenshots and packages
 
-Native source downloads use pinned hashes. Direct per-command GitHub access was used when inherited proxy variables failed; global proxy settings were preserved. Fixes include independent installer identifiers, atomic native downloads/error propagation and root-application macOS installer relocation metadata.
+The [gallery](screenshots/README.md) contains **156 frames**: 13 scenes × English/Chinese × macOS/iPhone/iPad/Android/Linux/Windows.
 
-Physical-device behavior and signed distribution/notarization remain separate checks. No release tag, merge or store submission has been performed.
+| Target | Verified packages |
+|---|---|
+| Android | APK and AAB |
+| iOS | IPA |
+| macOS | ARM64 and Intel PKG/ZIP |
+| Linux | x86_64 DEB, RPM and tar.gz |
+| Windows | x64 MSI and ZIP |
+
+All **12 packages** from the platform build were downloaded and checked for complete asset coverage, SHA-256, archive integrity and bundled native libraries. Both macOS architectures passed inspection of every embedded Mach-O against the application minimum of **13.0**. Package checks also covered the signal-tower icon and Apple permission translations for all ten languages.
+
+Commands for reproducing these checks are in the [test guide](testing/TEST_PYRAMID.md), [build guide](operations/BUILD_AND_DEPLOY.md) and [capture guide](../tool/screenshots/README.md).

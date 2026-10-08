@@ -2,11 +2,11 @@
 
 # DitMesh persistence audit — 2026-10-08
 
-This inventory describes the DitMesh implementation on `codex/chat-migration` after the application split. Both products are unreleased; no old-release migration is required. Executed test counts, native run links and platform limitations are recorded in [VALIDATION.md](../VALIDATION.md).
+This inventory documents chat storage, save barriers and backup restoration. Executed checks are recorded in [VALIDATION.md](../VALIDATION.md).
 
 ## Storage inventory
 
-`<support>` is the platform application-support directory. `<identity>` is `<support>/ditmesh/identity`. Installed bundles and the current working directory do not hold user data. MorseCQ has its own application identifier and offline learning directory.
+`<support>` is the platform application-support directory. `<identity>` is `<support>/ditmesh/identity`. Installed bundles and the current working directory do not hold user data.
 
 | Durable content | Production storage | Restart and ownership |
 |---|---|---|
@@ -17,7 +17,7 @@ This inventory describes the DitMesh implementation on `codex/chat-migration` af
 | Offline direct/group outbox | `<identity>/data/offline_message_queue.json` | Restart preserves queued sends and their pending status. Delivery/retry keeps the message identifier rather than creating duplicate bubbles. |
 | Friend requests, rejection records and Tim2Tox host metadata | Account-scoped `shared_preferences` | Requests and group metadata survive reconnect. Identity removal clears its scoped keys. |
 | Drafts, pinned/hidden conversations and queued invitations | Account-scoped `shared_preferences` | Offline edits persist; replaced editors cannot write into a new identity. |
-| Copy-practice state, saved material and bookmarks | `<identity>/training/` | File stores serialize immutable snapshots; settings/materials are separate from the companion app's offline learner. |
+| Copy-practice state, saved material and bookmarks | `<identity>/training/` | File stores serialize immutable snapshots. |
 | Optional recorded practice audio | `<identity>/media/recordings/` | Export includes referenced recordings only when selected. No file-transfer UI is exposed. |
 | Appearance | `appearance.preferences` in `<support>/settings.json` | Style and brightness are saved together before publication. Failure retains the previous visible choice. New/corrupt records use Modern Calm/system mode. |
 | Language, playback/input/decoder settings and notification choices | `<support>/settings.json` | Restored before providers become available; failed writes remain available for retry. |
@@ -39,6 +39,6 @@ DitMesh's encrypted backup supports selected identity, chat history, conversatio
 
 Use [the test pyramid](TEST_PYRAMID.md) and [validation record](../VALIDATION.md) for current commands and results. Native tests reload stores/preferences rather than relying only on a process cache. Two real Tox processes cover encrypted restart, durable queued delivery and automatic group rejoin; desktop E2E exercises actual platform storage plugins.
 
-JSON backup recovery handles malformed/incomplete files. A multi-file identity/secure-store update is not a filesystem-wide transaction; power loss and force-kill at every write boundary are outside the executed coverage. Linux requires an accessible Secret Service/keyring; Windows requires the secure-store plugin's C++ ATL build components. Physical-device behavior and signed distribution remain external checks.
+JSON backup recovery handles malformed/incomplete files. A multi-file identity/secure-store update is not a filesystem-wide transaction; power loss and force-kill at every write boundary are outside the executed coverage. Linux requires an accessible Secret Service/keyring; Windows requires the secure-store plugin's C++ ATL build components.
 
 If the operating system cannot provide an application-support directory, the app's logged in-memory preference fallback cannot persist across restart. Production native-backend failure is surfaced to the user instead of silently starting a demo session.

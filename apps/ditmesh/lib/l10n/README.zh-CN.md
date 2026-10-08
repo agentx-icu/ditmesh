@@ -135,10 +135,9 @@ Text(context.s.statsSessions(count))          // ICU plural
 过期残留。守卫不会追踪经由数据映射、常量或辅助函数传递的文案——这些需人工审查。测试：
 `test/i18n/ui_literal_guard_test.dart`。
 
-## 迁移状态
+## 界面字符串覆盖
 
-从旧的 `*_strings.dart` 常量类到 ARB 的迁移已经完成；这些类和 `tool/strings_to_arb.dart` 都已删除。
-所有界面区域均使用 `context.s`，或显式接收 `S` 实例，因此每种已提供的译文都会自动覆盖这些调用方：
+界面区域使用 `context.s` 或显式接收 `S` 实例：
 
 | 区域 | ARB 前缀 | 调用方 |
 |------|----------|--------|

@@ -1,36 +1,33 @@
 [简体中文](./APP_STORE.zh-CN.md)
 
-# DitMesh release and store readiness
+# DitMesh release and store configuration
 
-DitMesh is the Tox Morse chat app on all five platforms. MorseCQ is the independent offline trainer. This checklist documents preparation, not approval or an existing store listing.
+## Packages and release metadata
 
-## Repository release
+- Match tag/version/build metadata and run the analyzer, tests and platform builds.
+- Inspect bundled native/runtime dependencies and verify SHA256SUMS.
+- Review the generated GitHub draft Release and current English/Chinese screenshots.
+- Check backup restoration, queued sending, contacts, groups, blocking and data deletion.
 
-- Match tag/version/build metadata and run the required analyzer/test/native/application jobs.
-- Inspect platform packages, bundled FFI/runtime dependencies, independent DitMesh identifiers and SHA256SUMS.
-- Review the generated draft Release before public publication. Do not label unsigned binaries as signed/notarized.
-- Capture current direct/group/identity/reference screens and verify English/Chinese coverage.
-- Confirm current DitMesh backup restore, offline queue, contacts/groups, blocking and data deletion.
+## Distribution configuration
 
-## Owner credentials and external actions
-
-| Platform | Owner work |
+| Platform | Configuration |
 |---|---|
-| iOS | App Store Connect app record `icu.agentx.ditmesh`, team, distribution certificate/provisioning, signed archive/IPA and upload |
-| macOS | Developer ID signing, notarization and distribution review |
+| iOS | App Store Connect record, Apple team, distribution certificate, provisioning profile and archive upload |
+| macOS | Developer ID signing and notarization |
 | Android | Release/upload keystore, store account and APK/AAB signing |
-| Windows / Linux | Installer runtime verification and optional publisher signing |
+| Windows / Linux | Installer runtime checks and publisher signing where applicable |
 
-No credentials are stored in this repository. Generated unsigned iOS packages need signing before installation.
+Store signing credentials in CI secrets or local signing configuration.
 
-## Product/privacy review
+## Product and privacy metadata
 
-Chat input is Morse-only; there is no phone/e-mail registration or developer messaging server. Tox identities and peer networking still exist on iOS. Keep the network encryption declaration consistent with the actual native library; Complete the relevant store questionnaire against current behavior.
+Describe Morse-only direct/group chat, Tox identities and peer networking in the store listing. Complete encryption and privacy questionnaires using the application and native library behavior.
 
-The app requests camera for QR contacts, microphone for local Morse decoding and local notifications as needed. Public [privacy](../../site/privacy.md), [terms](../../site/terms.md) and [support](../../site/support.md) must match shipped behavior; pages deployment is a separate repository setting/action.
+Camera access serves QR contacts; microphone access serves local Morse decoding; notifications provide message alerts. Link the public [privacy policy](../../site/privacy.md), [terms](../../site/terms.md) and [support page](../../site/support.md).
 
-Blocking exists, but there is no central service able to remove content from all peers. Store distribution suitability must be evaluated against the current review rules and actual peer-to-peer moderation model; this work does not assert approval.
+Explain contact blocking and peer-to-peer content handling in moderation metadata.
 
-## Physical-device pass
+## Device checks
 
-Check sidetone latency/silent switch, haptics, touch/keyboard controls, scan permission and camera, notification launch routing, group persistence, background restrictions and passphrase/backup file workflows. Simulator screenshots do not replace these checks. See [validation](../VALIDATION.md) for executed results.
+Check sidetone, silent-switch playback, haptics, touch/keyboard controls, camera scanning, notification routing, group persistence, background recovery and backup workflows. Executed automated checks are in the [validation record](../VALIDATION.md).

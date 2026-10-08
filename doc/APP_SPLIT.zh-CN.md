@@ -1,16 +1,14 @@
 [English](./APP_SPLIT.md)
 
-# 两个应用的职责
+# 聊天与学习
 
-DitMesh 和 MorseCQ 是独立应用，均在准备首次发布。
+用 DitMesh 进行电码聊天，用 MorseCQ 学习和练习电码。
 
-| 应用 | 产品 | 身份与存储 |
+| 应用 | 功能 | 开始使用 |
 |---|---|---|
-| DitMesh | Tox Morse 单聊、群聊；聊天 / 群组 / 参考 / 我的 | 本地 Tox 身份、联系人、加密备份、聊天历史；`icu.agentx.ditmesh` |
-| MorseCQ | 无账号离线学习；学习 / 参考 / 我的 | 本地学习进度、设置、录音；`icu.agentx.morsecq` |
+| [DitMesh](../README.zh-CN.md) | 基于 Tox 的 Morse 单聊和群聊 | 创建本地身份，通过 Tox ID 或二维码添加联系人。 |
+| [MorseCQ](https://github.com/agentx-icu/morsecq) | 离线课程、引导练习、挑战和参考工具 | 打开应用即可开始第一课，无需账号。 |
 
-两者复用纯 Morse 引擎和电键组件。DitMesh 负责 Tim2Tox 传输；MorseCQ 不依赖聊天传输、Tox 身份或注册。两个应用不会隐式读取对方数据。
+DitMesh 加密备份可以包含身份、聊天记录及选定的练习数据。恢复前可预览内容，请妥善保管备份口令。导入 `.tox` 文件用于恢复 Tox 身份；恢复聊天记录请使用 DitMesh 备份。
 
-DitMesh 的当前加密备份支持身份、聊天组件和恢复预览。`.tox` 文件用于 Tox 身份互通导入，不是完整聊天档案。需要妥善保管备份口令。MorseCQ 的学习数据无账号本地保存。
-
-源码移植自 MorseCQ `3ce9597`；DitMesh Tim2Tox 子模块固定为 `093730ce346cef186bfd3d71214343b38d6c5ca6`。保留 GPL-3.0 与第三方声明。
+MorseCQ 在设备上保存学习进度和录音。清除学习数据或卸载应用可能删除这些记录。

@@ -12,15 +12,6 @@ This page explains the shared localisation pipeline and how to extend it.
 For daily string work (adding a key) and Morse vocabulary, see
 [`apps/ditmesh/lib/l10n/README.md`](../../apps/ditmesh/lib/l10n/README.md).
 
-> **Status note (2026-10-03).** Everything below describes the code as it
-> is: the `*_strings.dart` migration is finished (no English `static const`
-> UI text remains and the one-off migration tool was deleted), the
-> consistency test covers every shipped ARB, and the platform locale
-> manifests are guarded by a drift test. All ten languages are declared in
-> `CFBundleLocalizations`, the Android `locale_config.xml` and the iOS/macOS
-> `<tag>.lproj/InfoPlist.strings` files, and
-> `test/i18n/platform_locales_test.dart` keeps those lists equal to the ARB set.
-
 ## 1. How localisation works
 
 ### 1.1 gen-l10n and the `S` class
