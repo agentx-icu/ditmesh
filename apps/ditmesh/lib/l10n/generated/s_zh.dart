@@ -578,6 +578,12 @@ class SZh extends S {
   String get accountNotificationsAllowSubtitle => '向系统请求通知权限';
 
   @override
+  String get accountNotificationsBlocked => '已在系统设置中屏蔽';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'DitMesh 的消息通知已在系统设置中关闭。请在系统设置中重新开启。';
+
+  @override
   String get accountNotificationsDenied => 'DitMesh 的通知已在系统设置中关闭。';
 
   @override
@@ -4975,6 +4981,12 @@ class SZhHant extends SZh {
 
   @override
   String get accountNotificationsAllowSubtitle => '向系統請求通知權限';
+
+  @override
+  String get accountNotificationsBlocked => '已在系統設定中封鎖';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'DitMesh 的訊息通知已在系統設定中關閉。請在系統設定中重新開啟。';
 
   @override
   String get accountNotificationsDenied => 'DitMesh 的通知已在系統設定中關閉。';

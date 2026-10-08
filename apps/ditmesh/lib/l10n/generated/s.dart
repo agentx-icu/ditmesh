@@ -878,6 +878,18 @@ abstract class S {
   /// **'Ask the system for permission'**
   String get accountNotificationsAllowSubtitle;
 
+  /// Me page: status line when the user turned the message notification channel off in the Android system settings
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked in system settings'**
+  String get accountNotificationsBlocked;
+
+  /// Me page: explains that the OS drops message notifications until the channel is turned on again in system settings
+  ///
+  /// In en, this message translates to:
+  /// **'Message notifications for DitMesh are turned off in the system settings. Turn them on there to get banners again.'**
+  String get accountNotificationsBlockedSubtitle;
+
   /// Me page: snack bar when the OS denied notification permission
   ///
   /// In en, this message translates to:

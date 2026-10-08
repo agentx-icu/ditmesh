@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "Texto y Morse en los avisos y en la pantalla de bloqueo. Desactivado: solo que llegó un mensaje.",
   "accountNotificationsAllow": "Permitir notificaciones",
   "accountNotificationsAllowSubtitle": "Pedir permiso al sistema",
+  "accountNotificationsBlocked": "Bloqueadas en los ajustes del sistema",
+  "accountNotificationsBlockedSubtitle": "Las notificaciones de mensajes de DitMesh están desactivadas en los ajustes del sistema. Vuelve a activarlas allí.",
   "accountNotificationsDenied": "Las notificaciones de DitMesh están desactivadas en los ajustes del sistema.",
   "accountBackupSaveFile": "Guardar copia de seguridad",
   "accountBackupShareFile": "Compartir copia de seguridad",

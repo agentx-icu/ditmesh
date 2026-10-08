@@ -225,12 +225,16 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
                       ],
               ),
               child: Center(
-                child: Text(
-                  widget.label,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: foreground,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
+                // The button's semantics carry the label; the printed text
+                // must not be announced a second time.
+                child: ExcludeSemantics(
+                  child: Text(
+                    widget.label,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
                   ),
                 ),
               ),

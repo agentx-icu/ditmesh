@@ -7,13 +7,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/di/fake_backend_factory.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
-import 'package:ditmesh/main.dart';
 import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/training/training_controller.dart';
 import 'package:ditmesh/ui/learn/learn_scope.dart';
-import 'package:ditmesh/ui/account/backup_file_gateway.dart';
 import 'package:ditmesh/ui/account/identity_card.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
@@ -21,7 +18,6 @@ import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
 import 'package:ditmesh/ui/reference/reference_screen.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
-import 'package:ditmesh_chat_api/testing.dart';
 
 import '../account/test_app.dart';
 import '../chat/test_support.dart' as chat;
@@ -29,55 +25,7 @@ import '../learn/helpers/fake_playback.dart';
 import '../learn/helpers/l10n.dart';
 import '../learn/helpers/test_controller.dart';
 import '../reference/reference_test_support.dart';
-
-const Size kSmallPhone = Size(320, 568);
-const Size kLandscapePhone = Size(844, 390);
-const Size kLandscapeSmallPhone = Size(667, 375);
-
-/// Sizes the view like a real phone: notch / home-indicator padding that
-/// depends on orientation, an optional soft keyboard and a text scale.
-void setPhone(
-  WidgetTester tester,
-  Size size, {
-  double textScale = 1,
-  double keyboard = 0,
-}) {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1.0;
-  tester.view.padding = _paddingFor(size);
-  tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
-  tester.platformDispatcher.textScaleFactorTestValue = textScale;
-  addTearDown(tester.view.reset);
-  addTearDown(tester.platformDispatcher.clearAllTestValues);
-}
-
-FakeViewPadding _paddingFor(Size size) => size.width > size.height
-    ? const FakeViewPadding(left: 47, right: 47, bottom: 21)
-    : const FakeViewPadding(top: 47, bottom: 34);
-
-Future<void> bootApp(WidgetTester tester) async {
-  final identity = FakeIdentityService.withProfile(
-    identity: Identity(
-      toxId: FakeIdentityService.toxIdForSeed(1),
-      displayName: 'Phone Tester',
-    ),
-    connectDelay: Duration.zero,
-    dataDirectoryPath: freshDataDirectory(),
-  );
-  await tester.pumpWidget(
-    DitmeshApp(
-      backend: FakeBackendFactory(identityService: identity),
-      backupFiles: FakeBackupFileGateway(),
-      localeStore: acceptedTermsStore(),
-    ),
-  );
-  await settle(tester);
-}
-
-Finder navLabel(String label) => find.descendant(
-  of: find.byWidgetPredicate((w) => w is NavigationBar || w is NavigationRail),
-  matching: find.text(label),
-);
+import 'phone_support.dart';
 
 void main() {
   group('shell', () {
@@ -91,13 +39,13 @@ void main() {
       final State before = tester.state(find.byType(ReferenceScreen));
 
       tester.view.physicalSize = kLandscapePhone;
-      tester.view.padding = _paddingFor(kLandscapePhone);
+      tester.view.padding = phonePaddingFor(kLandscapePhone);
       await settle(tester);
       expect(find.byType(NavigationRail), findsOneWidget);
       expect(tester.state(find.byType(ReferenceScreen)), same(before));
 
       tester.view.physicalSize = const Size(390, 844);
-      tester.view.padding = _paddingFor(const Size(390, 844));
+      tester.view.padding = phonePaddingFor(const Size(390, 844));
       await settle(tester);
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(tester.state(find.byType(ReferenceScreen)), same(before));

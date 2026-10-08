@@ -32,6 +32,11 @@
          transfer (dataExtractionRules) would copy that identity off the device
          unattended and clone it onto a second phone. The in-app, encrypted
          .mcqbackup export is the supported way to move an identity. -->
+    <!-- Predictive back: with targetSdk 36, Android 16 routes the back gesture
+         through OnBackInvokedCallback by default; declaring it makes Android
+         13–15 behave the same (system back-to-home animation, no legacy
+         onBackPressed). Flutter receives it through PopScope
+         (ui/learn/drill_session_guard.dart; the app has no WillPopScope). -->
     <application
         android:label="DitMesh"
         android:name="${applicationName}"
@@ -39,6 +44,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:localeConfig="@xml/locale_config">
         <activity
             android:name=".MainActivity"

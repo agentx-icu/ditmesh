@@ -7,6 +7,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/chat_copy_session.dart';
 import '../../../training/training_controller.dart';
+import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
 import '../progress_save_snack.dart';
@@ -202,9 +203,15 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
     );
     // With sound off (or unavailable) the flash fallback is the question.
     final flash = _playback?.flash;
-    return Scaffold(
-      appBar: AppBar(title: Text(s.chatPracticeTitle)),
-      body: flash == null ? body : FlashOverlay(isOn: flash, child: body),
+    // Android back / predictive back mid-copy would drop the typed answer
+    // (and, from group practice, the round's attempt) silently: ask first,
+    // like the receive and send drills.
+    return DrillLeaveGuard(
+      guard: _phase == _Phase.answer && _answer.text.isNotEmpty,
+      child: Scaffold(
+        appBar: AppBar(title: Text(s.chatPracticeTitle)),
+        body: flash == null ? body : FlashOverlay(isOn: flash, child: body),
+      ),
     );
   }
 

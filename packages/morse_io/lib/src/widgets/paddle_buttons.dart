@@ -185,17 +185,29 @@ class _PaddleButtonsState extends State<PaddleButtons>
   Widget build(BuildContext context) {
     final left = _paddle(widget.swapPaddles ? _dah : _dit, !widget.swapPaddles);
     final right = _paddle(widget.swapPaddles ? _dit : _dah, widget.swapPaddles);
+    // Android gesture navigation owns a back-gesture zone on both screen
+    // edges (`systemGestureInsets.left/right`, ~30 dp). A press that starts
+    // there and drifts inward is taken by the system as "back" and the paddle
+    // only sees a cancel, so the pads stay out of those zones. SafeArea does
+    // not remove gesture insets, and the widget cannot know its distance to
+    // the edge, so the inset is applied in full; it is zero where there is no
+    // gesture navigation (iOS, 3-button Android, desktop).
+    final EdgeInsets gestures =
+        MediaQuery.maybeSystemGestureInsetsOf(context) ?? EdgeInsets.zero;
     return Focus(
       focusNode: _focus,
       autofocus: widget.autofocus,
       onKeyEvent: widget.binding == null ? null : _onKey,
       onFocusChange: _onFocusChange,
-      child: Row(
-        children: <Widget>[
-          left,
-          SizedBox(width: widget.gap),
-          right,
-        ],
+      child: Padding(
+        padding: EdgeInsets.only(left: gestures.left, right: gestures.right),
+        child: Row(
+          children: <Widget>[
+            left,
+            SizedBox(width: widget.gap),
+            right,
+          ],
+        ),
       ),
     );
   }
@@ -251,12 +263,16 @@ class _Paddle extends StatelessWidget {
                   ),
             ),
             child: Center(
-              child: Text(
-                label,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: down ? scheme.onPrimary : scheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+              // The button's semantics carry the label; the printed text
+              // must not be announced a second time.
+              child: ExcludeSemantics(
+                child: Text(
+                  label,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: down ? scheme.onPrimary : scheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
             ),

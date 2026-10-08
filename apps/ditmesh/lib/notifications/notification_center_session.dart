@@ -181,4 +181,39 @@ extension _NotificationSession on NotificationCenter {
       _permissionRequest = null;
     }
   }
+
+  // ---- OS channel state ---------------------------------------------------
+
+  Future<void> _refreshBlockedChannels() async {
+    if (!_ready || _disposed) return;
+    final Set<NotificationChannelKind> blocked = await _notifications
+        .blockedChannels();
+    if (_disposed || setEquals(blocked, _blocked.value)) return;
+    _blocked.value = blocked;
+  }
+
+  // ---- Badge -------------------------------------------------------------------
+
+  void _updateBadge(int total) {
+    if (!_platform.supportsBadge || _disposed) return;
+    _badgeWriter.write(total);
+  }
+
+  // ---- Lookups -----------------------------------------------------------------
+
+  Conversation? _conversationFor(String id) {
+    for (final Conversation c in _chat.conversations) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
+
+  String? _friendName(String publicKey) {
+    for (final Friend f in _chat.friends) {
+      if (f.publicKey == publicKey && f.displayName.trim().isNotEmpty) {
+        return f.displayName.trim();
+      }
+    }
+    return null;
+  }
 }

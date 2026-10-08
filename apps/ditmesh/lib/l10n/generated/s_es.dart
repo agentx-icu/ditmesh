@@ -595,6 +595,12 @@ class SEs extends S {
   String get accountNotificationsAllowSubtitle => 'Pedir permiso al sistema';
 
   @override
+  String get accountNotificationsBlocked => 'Bloqueadas en los ajustes del sistema';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'Las notificaciones de mensajes de DitMesh están desactivadas en los ajustes del sistema. Vuelve a activarlas allí.';
+
+  @override
   String get accountNotificationsDenied => 'Las notificaciones de DitMesh están desactivadas en los ajustes del sistema.';
 
   @override

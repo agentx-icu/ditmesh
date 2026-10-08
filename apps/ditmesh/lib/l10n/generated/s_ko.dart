@@ -578,6 +578,12 @@ class SKo extends S {
   String get accountNotificationsAllowSubtitle => '시스템에 알림 권한을 요청합니다';
 
   @override
+  String get accountNotificationsBlocked => '시스템 설정에서 차단됨';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'DitMesh의 메시지 알림이 시스템 설정에서 꺼져 있습니다. 시스템 설정에서 다시 켜 주세요.';
+
+  @override
   String get accountNotificationsDenied => '시스템 설정에서 DitMesh 알림이 꺼져 있습니다.';
 
   @override

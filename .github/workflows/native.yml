@@ -578,6 +578,33 @@ jobs:
           cd apps/ditmesh
           flutter build apk --release --dart-define=DITMESH_FAKE_BACKEND=false
           flutter build appbundle --release --dart-define=DITMESH_FAKE_BACKEND=false
+      # Google Play requires 16 KB page support for every 64-bit library in an
+      # app targeting Android 15+. build_tim2tox.sh gates libtim2tox_ffi.so and
+      # libc++_shared.so at link time; this step checks the libraries Flutter
+      # and the plugins add (libflutter.so, libapp.so, SoLoud, ML Kit, ...) in
+      # the release APK, and the APK's own zip alignment.
+      - name: Verify 16 KB page alignment of the release APK
+        run: |
+          set -euo pipefail
+          apk="$(ls apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk)"
+          ndk="${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}"
+          readelf="$(ls "$ndk"/toolchains/llvm/prebuilt/*/bin/llvm-readelf | head -n 1)"
+          zipalign="$(ls "$ANDROID_HOME"/build-tools/*/zipalign | sort -V | tail -n 1)"
+          tmp="$(mktemp -d)"
+          unzip -q "$apk" 'lib/arm64-v8a/*' 'lib/x86_64/*' -d "$tmp"
+          bad=0
+          while IFS= read -r so; do
+            while read -r align; do
+              if (( align < 0x4000 )); then
+                echo "::error::$so: PT_LOAD alignment $(printf '0x%x' "$align") < 0x4000"
+                bad=1
+              fi
+            done < <("$readelf" -lW "$so" | awk '$1 == "LOAD" { print $NF }')
+          done < <(find "$tmp/lib" -name '*.so' | sort)
+          "$zipalign" -c -P 16 -v 4 "$apk" > "$tmp/zipalign.log" || { cat "$tmp/zipalign.log"; bad=1; }
+          grep -c '\.so' "$tmp/zipalign.log" | xargs -I{} echo "zipalign checked {} library entries"
+          [[ $bad -eq 0 ]] || exit 1
+          echo "every 64-bit library is 16 KB aligned and the APK is zip-aligned for 16 KB"
       - name: Package (.apk, .aab)
         run: bash tool/ci/package_artifacts.sh --target android
       - name: Upload packages

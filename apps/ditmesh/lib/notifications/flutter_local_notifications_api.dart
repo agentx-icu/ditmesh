@@ -388,6 +388,34 @@ final class FlutterLocalNotificationsApi implements LocalNotificationsApi {
     }
   }
 
+  @override
+  Future<Set<NotificationChannelKind>> blockedChannels() async {
+    if (_platform != NotificationPlatform.android) {
+      return const <NotificationChannelKind>{};
+    }
+    try {
+      final AndroidFlutterLocalNotificationsPlugin? impl = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final List<AndroidNotificationChannel>? channels = await impl
+          ?.getNotificationChannels();
+      if (channels == null) return const <NotificationChannelKind>{};
+      return <NotificationChannelKind>{
+        for (final NotificationChannelKind kind
+            in NotificationChannelKind.values)
+          if (channels.any(
+            (AndroidNotificationChannel c) =>
+                c.id == kind.androidId && c.importance == Importance.none,
+          ))
+            kind,
+      };
+    } catch (error, stack) {
+      _report('blockedChannels', error, stack);
+      return const <NotificationChannelKind>{};
+    }
+  }
+
   static void _report(String what, Object error, StackTrace stack) {
     debugPrint('[FlutterLocalNotificationsApi] $what failed: $error\n$stack');
   }

@@ -578,6 +578,12 @@ class SJa extends S {
   String get accountNotificationsAllowSubtitle => 'システムに通知の許可を求めます';
 
   @override
+  String get accountNotificationsBlocked => 'システム設定でブロック中';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'DitMesh のメッセージ通知はシステム設定でオフになっています。システム設定で再度オンにしてください。';
+
+  @override
   String get accountNotificationsDenied => 'DitMesh の通知はシステム設定でオフになっています。';
 
   @override

@@ -20,6 +20,9 @@
 #     captures the shared libsodium the way toxee does.
 #   * Targets are arch-explicit; `linux`/`macos`/`windows` resolve to the host
 #     arch and `ios` to `ios-device`.
+#   * Android libraries are linked 16 KB page-aligned (Google Play requirement
+#     for 64-bit libraries) and every staged .so is checked with readelf; see
+#     ANDROID_PAGE_SIZE_LDFLAGS / assert_android_page_alignment.
 #   * Everything lands under build/native/ (artifacts in build/native/<target>/,
 #     build trees in build/native/.work/, deps in build/native/.deps/), never
 #     inside third_party/ (the submodule is read-only in this repo).
@@ -48,6 +51,17 @@ LIBSODIUM_URL="https://github.com/jedisct1/libsodium/releases/download/${LIBSODI
 MACOS_MIN="${DITMESH_MACOS_MIN:-10.15}"
 IOS_MIN="${DITMESH_IOS_MIN:-14.0}"
 ANDROID_API="${DITMESH_ANDROID_API:-21}"
+# 16 KB page sizes: Google Play requires every 64-bit native library of an app
+# targeting Android 15+ to be 16 KB page-aligned. The flags are passed
+# explicitly so the result does not depend on which NDK a host has: r28+
+# aligns by default, r27 only with ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON,
+# r26 and older never (and their prebuilt libc++_shared.so is 4 KB-aligned,
+# which no flag can fix). CMake appends user CMAKE_SHARED_LINKER_FLAGS after
+# the toolchain's own, so the explicit value wins on every NDK (verified with
+# r26.3, r27.0 and r28.2). assert_android_page_alignment refuses an unaligned
+# result for both libtim2tox_ffi.so and libc++_shared.so.
+ANDROID_PAGE_SIZE=16384
+ANDROID_PAGE_SIZE_LDFLAGS="-Wl,-z,max-page-size=$ANDROID_PAGE_SIZE -Wl,-z,common-page-size=$ANDROID_PAGE_SIZE"
 
 TARGET=""
 MODE="release"
@@ -851,6 +865,100 @@ android_sysroot_triple() {
   esac
 }
 
+# readelf for the staged-artifact checks (--stage-only has no toolchain in
+# hand): the NDK's llvm-readelf when an NDK is discoverable, else
+# llvm-readelf / readelf on PATH. Dies rather than skipping: an unverified
+# library must not be staged into the app.
+android_readelf_tool() {
+  local ndk_path tool candidate
+  if ndk_path="$(find_android_ndk 2>/dev/null)"; then
+    tool="$(android_ndk_toolchain_dir "$ndk_path")/bin/llvm-readelf"
+    if [[ -x "$tool" ]]; then printf '%s\n' "$tool"; return; fi
+  fi
+  for candidate in llvm-readelf readelf; do
+    if command -v "$candidate" >/dev/null 2>&1; then printf '%s\n' "$candidate"; return; fi
+  done
+  ci_die "No readelf found to verify 16 KB page alignment (install an Android NDK, or llvm / binutils on PATH)"
+}
+
+# 16 KB page-size gate for one packaged library (see ANDROID_PAGE_SIZE_LDFLAGS):
+# every PT_LOAD of a 64-bit library must have p_align >= 16 KB, and the
+# GNU_RELRO region, whose end bionic rounds UP to the device page size before
+# mprotect'ing it read-only, must not then cover writable non-RELRO data —
+# neither the rest of its own segment (GNU ld puts .data behind RELRO in one
+# RW segment unless common-page-size says 16 KB) nor a later segment. The end
+# itself need not be 16 KB-aligned: lld leaves RELRO in its own segment with a
+# page gap behind it (the NDK r28 libc++_shared.so ends its RELRO on an 8 KB
+# boundary and is fine). 32-bit ABIs are skipped: 16 KB kernels are 64-bit
+# only. $1 library, $2 readelf (llvm-readelf or GNU readelf; -lW output has
+# the same shape), $3 log label.
+assert_android_page_alignment() {
+  local so="$1" readelf="$2" label="$3"
+  local header phdrs type vaddr memsz rest align bad=0 i
+  local relro_start=-1 relro_end=-1 relro_up seg_start seg_end
+  local -a load_start=() load_end=() load_rw=()
+  local page="$ANDROID_PAGE_SIZE"
+  [[ -f "$so" ]] || ci_die "[$label] $so missing (page-alignment check)"
+  header="$("$readelf" -h "$so" 2>/dev/null)" || ci_die "[$label] $readelf -h failed for $so"
+  if ! grep -q 'ELF64' <<<"$header"; then
+    ci_log "[$label] $(basename "$so"): 32-bit, 16 KB page alignment not required"
+    return 0
+  fi
+  phdrs="$("$readelf" -lW "$so" 2>/dev/null)" || ci_die "[$label] $readelf -lW failed for $so"
+  # Columns: Type Offset VirtAddr PhysAddr FileSiz MemSiz Flg Align; Flg is
+  # "R", "R E", "RW" or "RWE", so Align is read as the last field of the rest.
+  while read -r type _ vaddr _ _ memsz rest; do
+    align="${rest##* }"
+    case "$type" in
+      LOAD)
+        if (( align < page )); then
+          ci_warn "[$label] $(basename "$so"): LOAD segment at $vaddr has p_align $align (< $page)"
+          bad=1
+        fi
+        # Only writable segments can be broken by the RELRO protection below.
+        case "${rest% *}" in *W*) load_rw+=(1) ;; *) load_rw+=(0) ;; esac
+        load_start+=("$(( vaddr ))")
+        load_end+=("$(( vaddr + memsz ))") ;;
+      GNU_RELRO)
+        relro_start=$(( vaddr ))
+        relro_end=$(( vaddr + memsz )) ;;
+    esac
+  done < <(grep -E '^[[:space:]]+(LOAD|GNU_RELRO)[[:space:]]' <<<"$phdrs")
+  if (( ${#load_start[@]} == 0 )); then
+    ci_die "[$label] $(basename "$so"): no LOAD segment parsed from $readelf -lW output"
+  fi
+  if (( relro_start >= 0 )); then
+    # bionic mprotects every page RELRO touches: [relro_start, relro_up) ends
+    # up read-only. Writable data inside that window, whether the rest of
+    # RELRO's own segment or a later segment, would fault on first write;
+    # writable data at or beyond relro_up is untouched, however the segment
+    # is laid out (an aligned RELRO end followed by .data is fine).
+    relro_up=$(( (relro_end + page - 1) / page * page ))
+    for (( i = 0; i < ${#load_start[@]}; i++ )); do
+      seg_start="${load_start[$i]}"; seg_end="${load_end[$i]}"
+      (( load_rw[i] )) || continue
+      if (( seg_start <= relro_start && relro_start < seg_end )); then
+        # The segment holding RELRO: writable data between the RELRO end and
+        # the rounded end (the RW .data of a GNU-ld layout) would be protected.
+        if (( relro_end < relro_up && seg_end > relro_end )); then
+          ci_warn "[$label] $(basename "$so"): RELRO ends at $(printf '0x%x' "$relro_end") and its segment continues to $(printf '0x%x' "$seg_end") inside the $page-byte page that bionic would protect"
+          bad=1
+        fi
+      elif (( seg_start >= relro_end )); then
+        # A later writable segment must not start inside the protected window.
+        if (( seg_start < relro_up )); then
+          ci_warn "[$label] $(basename "$so"): segment at $(printf '0x%x' "$seg_start") shares a $page-byte page with the RELRO end $(printf '0x%x' "$relro_end")"
+          bad=1
+        fi
+      fi
+    done
+  fi
+  if (( bad )); then
+    ci_die "[$label] $(basename "$so") is not 16 KB page-aligned. Rebuild with tool/build_android_ffi.sh (the link flags are fixed there); if the offender is libc++_shared.so, the NDK is older than r27 and must be upgraded."
+  fi
+  ci_log "[$label] $(basename "$so"): 16 KB page alignment OK"
+}
+
 build_android_abi() {
   local abi="$1" ndk_path="$2"
   local target toolchain sysroot prefix build_dir built_lib
@@ -879,6 +987,8 @@ build_android_abi() {
     -DANDROID_ABI="$abi" \
     -DANDROID_PLATFORM="android-$ANDROID_API" \
     -DANDROID_STL=c++_shared \
+    -DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON \
+    -DCMAKE_SHARED_LINKER_FLAGS="$ANDROID_PAGE_SIZE_LDFLAGS" \
     -DCMAKE_PREFIX_PATH="$prefix" \
     -DTIM2TOX_DEP_PREFIX="$prefix" \
     -DCMAKE_FIND_ROOT_PATH="$prefix;$sysroot" \
@@ -900,6 +1010,8 @@ build_android_abi() {
   cp "$stl" "$OUTPUT_DIR/jniLibs/$abi/libc++_shared.so"
   ci_log "[android-$abi] captured $built_lib (+ libc++_shared.so)"
   verify_artifact "$OUTPUT_DIR/jniLibs/$abi/libtim2tox_ffi.so" "$toolchain/bin/llvm-nm" "android-$abi"
+  assert_android_page_alignment "$OUTPUT_DIR/jniLibs/$abi/libtim2tox_ffi.so" "$toolchain/bin/llvm-readelf" "android-$abi"
+  assert_android_page_alignment "$OUTPUT_DIR/jniLibs/$abi/libc++_shared.so" "$toolchain/bin/llvm-readelf" "android-$abi"
 }
 
 build_android() {
@@ -1073,6 +1185,11 @@ if [[ "$STAGE_ONLY" -eq 1 ]]; then
     android)
       while IFS= read -r so; do verify_artifact "$so" "" "android-staged"; done \
         < <(find "$OUTPUT_DIR/jniLibs" -type f -name libtim2tox_ffi.so)
+      # Every library that will be packaged (libtim2tox_ffi.so and the
+      # libc++_shared.so captured next to it) must be 16 KB page-aligned.
+      readelf_tool="$(android_readelf_tool)"
+      while IFS= read -r so; do assert_android_page_alignment "$so" "$readelf_tool" "android-staged"; done \
+        < <(find "$OUTPUT_DIR/jniLibs" -type f -name '*.so')
       stage_android_into_app ;;
     macos)
       verify_artifact "$OUTPUT_DIR/libtim2tox_ffi.dylib" nm "$TARGET"

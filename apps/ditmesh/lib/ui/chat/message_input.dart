@@ -22,87 +22,7 @@ import 'morse_playback_settings.dart';
 /// fixes mistakes before sending.
 export 'input_mode.dart';
 
-// Share write ordering across editors for the same service and conversation.
-// A pending dispose flush must finish before a reopened editor's newer draft.
-final _draftWriters = Expando<Map<String, _DraftWriter>>();
-
-_DraftWriter _writerFor(ChatService service, String id) {
-  final writers = _draftWriters[service] ??= {};
-  return writers.putIfAbsent(
-    id,
-    () => _DraftWriter((writer) {
-      if (identical(writers[id], writer)) writers.remove(id);
-    }),
-  );
-}
-
-class _DraftWriter {
-  _DraftWriter(this._invalidate);
-  final void Function(_DraftWriter) _invalidate;
-  Future<void> _tail = Future<void>.value();
-  Future<void> get settled => _tail;
-  int pending = 0;
-  String latest = '';
-  String savedDraft = '';
-  Object? error;
-  bool valid = true;
-  TextEditingController? _controller;
-  int _editors = 0;
-  StreamSubscription<Identity?>? _identitySub;
-
-  TextEditingController acquire(
-    String initialDraft,
-    IdentityService? identity,
-  ) {
-    if (_editors == 0 && pending == 0 && error == null) {
-      savedDraft = latest = initialDraft;
-    }
-    _editors++;
-    if (_identitySub == null && identity != null) {
-      final key = identity.current?.publicKey;
-      _identitySub = identity.identityChanges.listen((value) {
-        if (value == null || value.publicKey != key) {
-          valid = false;
-          _invalidate(this);
-          unawaited(_identitySub?.cancel());
-          _identitySub = null;
-        }
-      });
-    }
-    return _controller ??= TextEditingController(
-      text: pending > 0 || error != null ? latest : initialDraft,
-    );
-  }
-
-  void _releaseIdleObserver() {
-    if (_editors == 0 && pending == 0 && error == null) {
-      _invalidate(this);
-      unawaited(_identitySub?.cancel());
-      _identitySub = null;
-    }
-  }
-
-  void release() {
-    if (--_editors == 0) {
-      _controller?.dispose();
-      _controller = null;
-      _releaseIdleObserver();
-    }
-  }
-
-  Future<void> save(String draft, Future<void> Function() write) {
-    latest = draft;
-    pending++;
-    return _tail = _tail.then((_) async {
-      try {
-        await write();
-      } finally {
-        pending--;
-        _releaseIdleObserver();
-      }
-    });
-  }
-}
+part 'message_draft_writer.dart';
 
 /// The compose area: mode selector, keying pad, read-only draft field with
 /// live Morse preview and remaining-byte counter, send button. Drafts are
@@ -183,6 +103,23 @@ class _MessageInputState extends State<MessageInput>
     WidgetsBinding.instance.addObserver(this);
   }
 
+  /// False while the composer is leaving the tree (route popped, pane
+  /// collapsed). The keyer commits a half-keyed character on dispose; by
+  /// then the field is inert, so that text goes to the draft directly.
+  bool _live = true;
+
+  @override
+  void deactivate() {
+    _live = false;
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _live = true;
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -210,7 +147,9 @@ class _MessageInputState extends State<MessageInput>
   }
 
   Future<void> _persistDraft() {
-    final String draft = _lastDraft;
+    // A teardown commit by another editor of this conversation, not yet in
+    // the shared controller, outranks this editor's copy of the text.
+    final String draft = _writer.teardownCommit ?? _lastDraft;
     if (!_acceptDrafts || !_writer.valid) return _writer.settled;
     if (_writer.pending > 0 && draft == _writer.latest) return _writer.settled;
     if (_writer.pending == 0 &&
@@ -314,9 +253,41 @@ class _MessageInputState extends State<MessageInput>
   }
 
   void _appendDecoded(String text) {
-    final String current = _text.text;
+    // Another editor of this conversation (the two-pane collapse mounts the
+    // route's composer before the pane's one goes) shares the controller:
+    // a commit must land there, or that editor's next save overwrites it.
+    final bool shared = _writer.editors > 1;
+    final String current = _live || shared ? _text.text : _lastDraft;
     // A word gap right after nothing (or after a space) adds no information.
     if (text == ' ' && (current.isEmpty || current.endsWith(' '))) return;
+    if (!_live) {
+      // Leaving mid-character (Android back / predictive back, the iOS
+      // swipe, the two-pane collapse): the keyer flushed on dispose. The
+      // tree is locked and this field's editable is already detached, so
+      // record the text for the dispose-time draft flush instead of
+      // notifying the controller now.
+      _lastDraft = current + text;
+      _editRevision++;
+      if (shared) {
+        // The other editor shows the shared controller: record the commit
+        // as the canonical draft (its dispose flush, should it leave in this
+        // same frame, persists that instead of its stale text) and hand it
+        // to the controller once the frame is over, unless no editor is
+        // left to show it.
+        final _DraftWriter writer = _writer..teardownCommit = _lastDraft;
+        final TextEditingController controller = _text;
+        scheduleMicrotask(() {
+          final String? commit = writer.teardownCommit;
+          writer.teardownCommit = null;
+          if (commit == null || writer.editors == 0) return;
+          controller.value = TextEditingValue(
+            text: commit,
+            selection: TextSelection.collapsed(offset: commit.length),
+          );
+        });
+      }
+      return;
+    }
     _text.value = TextEditingValue(
       text: current + text,
       selection: TextSelection.collapsed(offset: current.length + text.length),

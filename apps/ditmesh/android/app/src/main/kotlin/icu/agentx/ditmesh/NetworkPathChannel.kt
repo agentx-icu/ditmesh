@@ -5,8 +5,6 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
@@ -19,13 +17,22 @@ import io.flutter.plugin.common.EventChannel
  *
  * Channel: `ditmesh/network_path` (EventChannel). Each event is
  * `{available: Boolean, identity: String?}`; `identity` combines the default
- * network's handle, its transports and its link addresses, so a new default
- * network AND a new address on the same one both change it. Dart only compares
- * identities for equality and ignores the first snapshot.
+ * network's handle, its transports, its link addresses and whether Android has
+ * validated Internet on it, so a new default network, a new address on the
+ * same one and a captive-portal login (same network and addresses, validation
+ * flips) all change it. Signal strength is deliberately NOT part of it:
+ * `onCapabilitiesChanged` fires on every signal-strength step and such a burst
+ * must stay one identity. Dart only compares identities for equality and
+ * ignores the first snapshot.
  *
- * Uses `registerDefaultNetworkCallback` (API 24+). API 23 (minSdk) has no
- * default-network callback: there every INTERNET-network event re-reads
- * `activeNetwork` (the default network) and reports that instead.
+ * `available` means "a default network exists" (Android's notion), not
+ * "validated Internet": behind a captive portal the path is available but
+ * unvalidated. Dart still kicks on such a path (cheap, bounded) and kicks
+ * again when validation arrives, because the identity changes then.
+ *
+ * Uses `registerDefaultNetworkCallback`, available since API 24, which is the
+ * app's minSdk (`flutter.minSdkVersion` resolves to 24 on Flutter 3.41); there
+ * is no older code path.
  */
 class NetworkPathChannel(
     private val context: Context,
@@ -54,10 +61,6 @@ class NetworkPathChannel(
         sink = events
         lastSent = null
         val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            listenApi23(cm, ticket)
-            return
-        }
         val cb =
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) =
@@ -114,47 +117,6 @@ class NetworkPathChannel(
         }
     }
 
-    /** API 23: follow `activeNetwork` on every INTERNET-network change. */
-    private fun listenApi23(cm: ConnectivityManager, ticket: Long) {
-        val refresh = {
-            post(ticket) {
-                val network = cm.activeNetwork
-                defaultNetwork = network
-                capabilities = network?.let { cm.getNetworkCapabilities(it) }
-                linkProperties = network?.let { cm.getLinkProperties(it) }
-                emit()
-            }
-        }
-        val cb =
-            object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) = refresh()
-
-                override fun onLost(network: Network) = refresh()
-
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities,
-                ) = refresh()
-
-                override fun onLinkPropertiesChanged(
-                    network: Network,
-                    lp: LinkProperties,
-                ) = refresh()
-            }
-        try {
-            val request =
-                NetworkRequest
-                    .Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .build()
-            cm.registerNetworkCallback(request, cb)
-            callback = cb
-            refresh()
-        } catch (e: RuntimeException) {
-            callback = null
-        }
-    }
-
     override fun onCancel(arguments: Any?) {
         generation++
         sink = null
@@ -185,11 +147,17 @@ class NetworkPathChannel(
         }
     }
 
+    /**
+     * `handle|transports|addresses|validation`. Only equality matters to Dart.
+     * Nothing here reads the signal strength or any other capability that
+     * changes without the path changing.
+     */
     private fun identity(): String? {
         val network = defaultNetwork ?: return null
+        val caps = capabilities
         val transports =
-            capabilities?.let { caps ->
-                TRANSPORTS.filter { (id, _) -> caps.hasTransport(id) }.joinToString("+") { it.second }
+            caps?.let { c ->
+                TRANSPORTS.filter { (id, _) -> c.hasTransport(id) }.joinToString("+") { it.second }
             } ?: "?"
         val addresses =
             linkProperties
@@ -197,7 +165,16 @@ class NetworkPathChannel(
                 ?.map { it.address.hostAddress ?: "" }
                 ?.sorted()
                 ?.joinToString(",") ?: ""
-        return "$network|$transports|$addresses"
+        // A captive portal keeps the network handle and addresses across the
+        // login; the validation flip is the only observable change, and it is
+        // the moment the earlier (portal-blocked) bootstrap needs repeating.
+        val validation =
+            if (caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true) {
+                "validated"
+            } else {
+                "unvalidated"
+            }
+        return "$network|$transports|$addresses|$validation"
     }
 
     private fun emit() {

@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "Texte et Morse dans les bannières et sur l'écran verrouillé. Désactivé : seulement l'arrivée d'un message.",
   "accountNotificationsAllow": "Autoriser les notifications",
   "accountNotificationsAllowSubtitle": "Demander l'autorisation au système",
+  "accountNotificationsBlocked": "Bloquées dans les réglages système",
+  "accountNotificationsBlockedSubtitle": "Les notifications de messages de DitMesh sont désactivées dans les réglages système. Réactivez-les à cet endroit.",
   "accountNotificationsDenied": "Les notifications de DitMesh sont désactivées dans les réglages du système.",
   "accountBackupSaveFile": "Enregistrer le fichier de sauvegarde",
   "accountBackupShareFile": "Partager le fichier de sauvegarde",

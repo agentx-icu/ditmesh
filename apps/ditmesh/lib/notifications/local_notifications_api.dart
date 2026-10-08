@@ -90,6 +90,12 @@ abstract interface class LocalNotificationsApi {
   /// or an earlier run). Empty where the platform cannot tell.
   Future<List<String>> activePayloads();
 
+  /// Channels the user has turned off in the OS settings (Android: channel
+  /// importance `none`), read WITHOUT prompting. The OS then drops every
+  /// post to that channel while [isPermissionGranted] stays true. Empty
+  /// where channels do not exist or cannot be read.
+  Future<Set<NotificationChannelKind>> blockedChannels();
+
   /// Re-applies language-dependent OS metadata after a language change:
   /// on Android the channel names/descriptions shown in Settings (Android
   /// freezes importance and sound at creation but takes a new name on

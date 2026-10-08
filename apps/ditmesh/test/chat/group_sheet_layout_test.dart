@@ -72,7 +72,7 @@ void main() {
       const Size(390, 844),
       const Size(900, 800),
     ]) {
-      for (final double scale in <double>[1, 1.8]) {
+      for (final double scale in <double>[1, 1.8, 3]) {
         final String dimensions =
             '${size.width.toInt()} ${locale.languageCode} $scale';
         testWidgets(

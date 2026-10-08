@@ -595,6 +595,12 @@ class SDe extends S {
   String get accountNotificationsAllowSubtitle => 'Das System um Erlaubnis bitten';
 
   @override
+  String get accountNotificationsBlocked => 'In den Systemeinstellungen blockiert';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'Nachrichtenbenachrichtigungen von DitMesh sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort wieder ein.';
+
+  @override
   String get accountNotificationsDenied => 'Benachrichtigungen für DitMesh sind in den Systemeinstellungen ausgeschaltet.';
 
   @override

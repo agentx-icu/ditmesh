@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../i18n/l10n_extension.dart';
+import 'local_notifications_api.dart';
 import 'notification_center.dart';
 import 'notification_prefs.dart';
 
 /// The Me page's notification settings: the master switch, whether banners
 /// (and the lock screen) show the message itself, and — where the OS asks
-/// first — a way to grant the permission from the foreground.
+/// first — a way to grant the permission from the foreground. When the user
+/// has turned the message channel off in the Android settings the switch
+/// keeps showing their in-app preference and a status line says why no
+/// banner arrives.
 ///
 /// "Message content" drives both [NotificationPrefs.showText] and
 /// [NotificationPrefs.showPattern]: a Morse pattern reveals the text as well,
@@ -61,6 +65,18 @@ class NotificationSettingsSection extends StatelessWidget {
             title: Text(s.accountNotificationsAllow),
             subtitle: Text(s.accountNotificationsAllowSubtitle),
             onTap: () => unawaited(_allow(context, center)),
+          ),
+        if (center != null)
+          ValueListenableBuilder<Set<NotificationChannelKind>>(
+            valueListenable: center.blockedChannels,
+            builder: (context, blocked, _) =>
+                blocked.contains(NotificationChannelKind.messages)
+                ? ListTile(
+                    leading: const Icon(Icons.notifications_off_outlined),
+                    title: Text(s.accountNotificationsBlocked),
+                    subtitle: Text(s.accountNotificationsBlockedSubtitle),
+                  )
+                : const SizedBox.shrink(),
           ),
       ],
     );

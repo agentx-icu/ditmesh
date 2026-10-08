@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "Текст и морзе в баннерах и на экране блокировки. Выключено: только сам факт сообщения.",
   "accountNotificationsAllow": "Разрешить уведомления",
   "accountNotificationsAllowSubtitle": "Запросить разрешение у системы",
+  "accountNotificationsBlocked": "Заблокированы в настройках системы",
+  "accountNotificationsBlockedSubtitle": "Уведомления о сообщениях DitMesh отключены в настройках системы. Включите их там снова.",
   "accountNotificationsDenied": "Уведомления DitMesh выключены в системных настройках.",
   "accountBackupSaveFile": "Сохранить резервную копию",
   "accountBackupShareFile": "Поделиться резервной копией",

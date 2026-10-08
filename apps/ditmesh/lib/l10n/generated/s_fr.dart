@@ -596,6 +596,12 @@ class SFr extends S {
   String get accountNotificationsAllowSubtitle => 'Demander l\'autorisation au système';
 
   @override
+  String get accountNotificationsBlocked => 'Bloquées dans les réglages système';
+
+  @override
+  String get accountNotificationsBlockedSubtitle => 'Les notifications de messages de DitMesh sont désactivées dans les réglages système. Réactivez-les à cet endroit.';
+
+  @override
   String get accountNotificationsDenied => 'Les notifications de DitMesh sont désactivées dans les réglages du système.';
 
   @override

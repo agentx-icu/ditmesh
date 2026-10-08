@@ -107,7 +107,16 @@ val ditmeshAllowMissingFfi: Boolean =
 
 android {
     namespace = "icu.agentx.ditmesh"
-    compileSdk = flutter.compileSdkVersion
+    // SDK levels are pinned here rather than taken from the Flutter Gradle
+    // plugin, so a Flutter upgrade cannot move them silently. Raise all three
+    // together and update doc/release/APP_STORE.md; test/platform/
+    // mobile_platform_config_test.dart pins the values. targetSdk 36 is what
+    // Play requires for new apps and updates since 2026-08-31 (Flutter 3.41.9
+    // defaults to the same three values).
+    compileSdk = 36
+    // Flutter's NDK (28.2 on 3.41.9) links plugin C/C++ 16 KB page-aligned by
+    // default; libtim2tox_ffi.so is linked and checked by
+    // tool/ci/build_tim2tox.sh. Never pin this below r28.
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -125,10 +134,10 @@ android {
     defaultConfig {
         // Stable identity, independent from the MorseCQ learning app.
         applicationId = "icu.agentx.ditmesh"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // minSdk 24: Flutter 3.41's floor and the level NetworkPathChannel's
+        // registerDefaultNetworkCallback needs. targetSdk 36: see compileSdk.
+        minSdk = 24
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 

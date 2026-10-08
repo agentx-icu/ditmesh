@@ -128,6 +128,8 @@
   "accountNotificationsContentSubtitle": "在橫幅和鎖定畫面上顯示文字和摩斯碼。關閉後只提示收到了訊息。",
   "accountNotificationsAllow": "允許通知",
   "accountNotificationsAllowSubtitle": "向系統請求通知權限",
+  "accountNotificationsBlocked": "已在系統設定中封鎖",
+  "accountNotificationsBlockedSubtitle": "DitMesh 的訊息通知已在系統設定中關閉。請在系統設定中重新開啟。",
   "accountNotificationsDenied": "DitMesh 的通知已在系統設定中關閉。",
   "accountBackupSaveFile": "儲存備份檔案",
   "accountBackupShareFile": "分享備份檔案",

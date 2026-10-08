@@ -173,6 +173,24 @@ void main() {
       expect(clock.pendingTimers, 0);
     });
 
+    test('initial detached asks for nothing; detached after paused asks '
+        'for no second task', () async {
+      // `detached` is the binding's seed state on iOS and Android before the
+      // first real lifecycle message, and is delivered again after `paused`
+      // at engine teardown.
+      final AppLifecycleCoordinator c = build(NotificationPlatform.ios);
+      c.didChangeAppLifecycleState(AppLifecycleState.detached);
+      await pumpEventQueue();
+      expect(tasks.begins, 0);
+
+      c.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      c.didChangeAppLifecycleState(AppLifecycleState.paused);
+      c.didChangeAppLifecycleState(AppLifecycleState.detached);
+      await pumpEventQueue();
+      expect(tasks.begins, 1);
+      expect(tasks.open, hasLength(1));
+    });
+
     test('dispose ends an outstanding task', () async {
       final AppLifecycleCoordinator c = AppLifecycleCoordinator(
         identity: identity,

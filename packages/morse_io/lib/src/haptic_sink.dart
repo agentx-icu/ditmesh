@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
+import 'app_foreground.dart';
 import 'sink.dart';
 
 /// The haptic primitives [HapticSink] relies on. Injected so tests never
@@ -61,16 +62,31 @@ final class FlutterHapticApi implements HapticApi {
 ///
 /// Platform gating uses [defaultTargetPlatform] unless [platformOverride] is
 /// given (tests, or an app that wants to force the choice).
+///
+/// Mobile lifecycle: a `MorsePlayer` keeps running its timeline after the
+/// app leaves the foreground (Android never suspends the isolate), and the
+/// vibrator, unlike the sidetone, works with the screen locked. So while
+/// [AppForeground] reports background a running pulse is cancelled and
+/// key-downs are ignored; a message tapped before the phone went into a
+/// pocket must not keep buzzing there.
+///
+/// Platform-channel failures never surface on the keying hot path: a probe
+/// that throws means "impacts only", and a `vibrate` / `cancel` / impact
+/// that fails, synchronously or not, is dropped.
 final class HapticSink implements MorseSink {
   HapticSink({
     HapticApi? api,
+    AppForeground? foreground,
     TargetPlatform? platformOverride,
     this.preferContinuous = true,
     this.maxPulse = const Duration(seconds: 3),
   })  : _api = api ?? const FlutterHapticApi(),
+        _foreground =
+            foreground ?? BindingAppForeground(platformOverride: platformOverride),
         _platformOverride = platformOverride;
 
   final HapticApi _api;
+  final AppForeground _foreground;
   final TargetPlatform? _platformOverride;
 
   /// Use start/cancel vibration when the device supports it.
@@ -81,6 +97,8 @@ final class HapticSink implements MorseSink {
 
   bool _continuous = false;
   bool _isOn = false;
+  bool _background = false;
+  void Function()? _stopListening;
 
   TargetPlatform get _platform => _platformOverride ?? defaultTargetPlatform;
 
@@ -96,19 +114,29 @@ final class HapticSink implements MorseSink {
     if (!isEnabled) {
       return;
     }
-    _continuous = preferContinuous && await _api.supportsContinuousVibration();
+    _stopListening ??= _foreground.listen(_onForegroundChanged);
+    _background = !_foreground.isForeground;
+    var continuous = false;
+    if (preferContinuous) {
+      try {
+        continuous = await _api.supportsContinuousVibration();
+      } on Object {
+        // A capability question: a channel that cannot answer means "no".
+      }
+    }
+    _continuous = continuous;
   }
 
   @override
   void on() {
-    if (!isEnabled || _isOn) {
+    if (!isEnabled || _isOn || _background) {
       return;
     }
     _isOn = true;
     if (_continuous) {
-      unawaited(_swallow(_api.vibrate(maxPulse)));
+      _fire(() => _api.vibrate(maxPulse));
     } else {
-      unawaited(_swallow(_api.heavyImpact()));
+      _fire(_api.heavyImpact);
     }
   }
 
@@ -119,16 +147,27 @@ final class HapticSink implements MorseSink {
     }
     _isOn = false;
     if (_continuous) {
-      unawaited(_swallow(_api.cancel()));
+      _fire(_api.cancel);
+    }
+  }
+
+  void _onForegroundChanged(bool foreground) {
+    _background = !foreground;
+    if (_background) {
+      off();
     }
   }
 
   @override
   Future<void> dispose() async {
     off();
+    _stopListening?.call();
+    _stopListening = null;
   }
 
-  /// Platform-channel failures must never surface on the keying hot path.
-  static Future<void> _swallow(Future<void> future) =>
-      future.catchError((Object _) {});
+  /// Platform-channel failures, synchronous or asynchronous, must never
+  /// surface on the keying hot path.
+  static void _fire(Future<void> Function() call) {
+    unawaited(Future<void>.sync(call).catchError((Object _) {}));
+  }
 }

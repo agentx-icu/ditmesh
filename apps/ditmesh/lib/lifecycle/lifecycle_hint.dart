@@ -1,7 +1,8 @@
 /// Coarse app-lifecycle events the UI may react to (toasts, chips, logging).
 /// Emitted by `AppLifecycleCoordinator.hints`.
 enum LifecycleHint {
-  /// The app left the foreground (paused / hidden / detached).
+  /// The app left the foreground (paused / hidden; `detached` only after a
+  /// foreground period, never the engine's seed state at launch).
   background,
 
   /// The app has been in the background longer than the platform's expected
