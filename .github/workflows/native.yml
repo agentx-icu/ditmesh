@@ -588,8 +588,17 @@ jobs:
           set -euo pipefail
           apk=apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk
           [[ -f "$apk" ]] || { echo "::error::$apk missing"; exit 1; }
+          # This job has no NDK step of its own: take the NDK the image
+          # exports, else any NDK under the SDK, else the host's readelf
+          # (GNU readelf -lW prints the same columns).
           ndk="${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}"
-          readelf="$(find "$ndk/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -type f | head -n 1)"
+          readelf=""
+          for dir in ${ndk:+"$ndk"} "$ANDROID_HOME"/ndk/*; do
+            [[ -d "$dir/toolchains/llvm/prebuilt" ]] || continue
+            readelf="$(find "$dir/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -type f | head -n 1)"
+            [[ -n "$readelf" ]] && break
+          done
+          [[ -n "$readelf" ]] || readelf="$(command -v llvm-readelf || command -v readelf || true)"
           zipalign="$(find "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -n 1)"
           [[ -x "$readelf" && -x "$zipalign" ]] || { echo "::error::llvm-readelf ($readelf) or zipalign ($zipalign) not found"; exit 1; }
           tmp="$(mktemp -d)"
