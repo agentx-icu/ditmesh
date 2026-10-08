@@ -43,7 +43,7 @@ Captures come from the real Flutter UI with explicitly seeded demo data. Product
 
 ## Build and run
 
-Pinned toolchain: **Flutter 3.41.9 / Dart 3.11.5**. Android, iOS, macOS, Linux and Windows are supported; browser chat is not supported by the native Tox transport.
+Pinned toolchain: **Flutter 3.41.9 / Dart 3.11.5**. Android, iOS, macOS **13.0 or later** (Intel/ARM), Linux and Windows are supported; browser chat is not supported by the native Tox transport.
 
 ```bash
 git clone --recurse-submodules https://github.com/agentx-icu/ditmesh.git

@@ -1,6 +1,6 @@
-# ditmesh: macOS 10.15 is the runtime floor (tim2tox_ffi is built with
-# -mmacosx-version-min=10.15; matches MACOSX_DEPLOYMENT_TARGET in Runner.xcodeproj).
-platform :osx, '10.15'
+# The bundled objective_c framework requires macOS 13.0. The application
+# must satisfy every embedded dependency; the FFI library can have a lower floor.
+platform :osx, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

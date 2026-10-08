@@ -43,7 +43,7 @@ DitMesh 负责聊天；[MorseCQ](https://github.com/agentx-icu/morsecq) 负责�
 
 ## 构建与运行
 
-固定工具链：**Flutter 3.41.9 / Dart 3.11.5**。支持 Android、iOS、macOS、Linux、Windows；原生 Tox 传输不支持浏览器聊天。
+固定工具链：**Flutter 3.41.9 / Dart 3.11.5**。支持 Android、iOS、macOS **13.0 及以上**（Intel/ARM）、Linux、Windows；原生 Tox 传输不支持浏览器聊天。
 
 ```bash
 git clone --recurse-submodules https://github.com/agentx-icu/ditmesh.git

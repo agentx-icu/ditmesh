@@ -126,6 +126,8 @@ package_macos() {
   lipo "$app/Contents/Frameworks/libtim2tox_ffi.dylib" -verify_arch "$ARCH"
   check_apple_metadata "$app/Contents/Info.plist"
 
+  python3 "$SCRIPT_DIR/macos_runtime.py" "$app"
+
   # ditto keeps the bundle's symlinks, modes and signature intact.
   ditto -c -k --sequesterRsrc --keepParent "$app" "$DIST_DIR/$BASE-macos-$ARCH.zip"
 

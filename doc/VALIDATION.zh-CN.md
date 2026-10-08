@@ -2,7 +2,7 @@
 
 # 验证记录 — 2026-10-08
 
-实现位于 `codex/chat-migration`。两款应用均未发布，用户已明确移除历史兼容与数据迁移范围。产品提交 `c8e1fed` 包含完整引导节点/局域网移植、十语言/五风格截图支持及所选 C 图标。远程分析、三个桌面 E2E、视觉矩阵及十三个必需原生/应用/质量任务全部通过。随后图库/文档提交保留相同产品代码，草稿 PR 展示最新 HEAD 检查。
+实现位于 `codex/chat-migration`。两款应用均未发布，用户已明确移除历史兼容与数据迁移范围。产品提交 `c8e1fed` 包含完整引导节点/局域网移植、十语言/五风格截图支持及所选 C 图标。远程分析、三个桌面 E2E、视觉矩阵及十三个必需原生/应用/质量任务全部通过。实际安装包检查随后发现 macOS 最低版本不符：声明 10.15，内嵌依赖最高要求 13.0。应用元数据现已统一为 13.0，打包器会拒绝要求更高系统的依赖。`c8e1fed`/`f849763` 产物明确标记为修正前候选，草稿 PR 展示修正后 HEAD 检查。
 
 | 检查 | 已执行结果 |
 |---|---|
@@ -21,6 +21,7 @@
 | 分析、守卫与全部包/应用测试 | [分析 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37732186441)，产品提交 `c8e1fed`：应用 1344 / 聊天 269 / API 79 / core 92 / DSP 107 / IO 124 / trainer 212 / radio 18 通过；应用跳过两项按需导出；DSP 跳过两项已有首块噪声基线限制用例 |
 | 桌面 E2E CI | [macOS/Linux/Windows 界面与截图 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37732186466)，产品提交 `c8e1fed` |
 | 必需平台 CI | [13 项全部通过](https://github.com/agentx-icu/ditmesh/actions/runs/37732186830)：六个原生目标、六个应用任务及质量门禁；三个真实节点通信门禁及 Linux/两个 Mac 的探测隔离套件均通过。[草稿 PR #1](https://github.com/agentx-icu/ditmesh/pull/1) 正确跳过发布。 |
+| macOS 运行要求 | 两个架构的实际旧包均被新守卫拒绝：声明 10.15，依赖最高要求 13.0。Runner 和 Podfile 现统一 13.0。九项回归覆盖显式检查全部 fat 架构、旧 load command、错误平台/元数据及安全文件/目录链接；生成 ZIP/PKG 前逐个检查内嵌 Mach-O。 |
 | 所选 C 图标 | 同一 SVG 覆盖源生成 57 项平台/托盘资源；生成器分析零问题；51 个平台 PNG 的尺寸/通道类型及两个 ICO 的完整尺寸表通过检查；本次真实安装包内的 C 品牌、应用标识、原生传输及 Apple 本地化权限均已核对。 |
 | 远程外观矩阵 | [视觉 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37732186546)；下载的 manifest 与 38 个配置 / 76 张非空图片完全一致，十种语言和五种风格齐全 |
 | 本地外观新增验证 | 四项截图解析/应用测试及 40 项 Morse 单聊/群聊风格功能测试通过；真实字体渲染十种语言和五种风格，共 38 配置/76 张 PNG；19 项截图导入回归通过 |
@@ -29,7 +30,7 @@
 
 来源 MorseCQ `3ce9597`；Tim2Tox 固定为 `093730ce346cef186bfd3d71214343b38d6c5ca6`。本机：Apple Silicon macOS、Xcode 26.4.1、Flutter 3.41.9、Dart 3.11.5。当前临时日志为 `/tmp/ditmesh-bootstrap-final-suite-app.log`、`/tmp/ditmesh-bootstrap-native-complete-final.log`、`/tmp/ditmesh-bootstrap-public-final.log` 及 `/tmp/ditmesh-bootstrap-real-peers-final.log`；最后两个真实节点进程均在 27 秒通过。
 
-Native `37732186830` 生成了本次全部十二个产品安装包；收集、内容检查及 SHA-256 证据记录于忽略的 `dist/ci-c8e1fed`。最终文档 HEAD 在 CI 重新构建后，其产物再放入 `dist/release-v1.0.0`；`dist/final-build-evidence.json` 绑定对应远端完整提交。之前的 `2317f6d` 产物证据保留为有日期的基线。Release 门禁要求十二个平台资产及 SHA256SUMS 完整，才更新 GitHub 草稿 Release。
+Native `37732186830` 生成了十二个候选安装包；收集、内容检查及 SHA-256 证据记录于忽略的 `dist/ci-c8e1fed`。修正 macOS 最低版本的 HEAD 在 CI 重新构建并通过实际运行版本守卫后，其产物再放入 `dist/release-v1.0.0`；`dist/final-build-evidence.json` 绑定对应远端完整提交。之前的 `2317f6d` 产物证据保留为有日期的基线。Release 门禁要求十二个平台资产及 SHA256SUMS 完整，才更新 GitHub 草稿 Release。
 
 原生源码下载有固定摘要；代理失效时只对单条 GitHub 命令停用继承代理，不修改全局设置。已补充独立安装器标识、下载原子替换/错误传播、macOS 主应用安装路径与禁止 relocation 的修复。
 
