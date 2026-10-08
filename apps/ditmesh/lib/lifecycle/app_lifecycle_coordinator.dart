@@ -22,8 +22,8 @@ import 'lifecycle_hint.dart';
 ///   called (the contract guarantees idempotency) so a node that is not
 ///   running (a failed start, a teardown) comes back without the user
 ///   tapping the connection chip. A node that is still running is left to
-///   toxcore, which re-pings its known DHT nodes once it is thawed; the
-///   Tim2Tox backend does not re-bootstrap it here.
+///   toxcore. AppServices additionally asks the network facade to refresh
+///   bootstrap nodes when the resumed session is disconnected.
 /// - [onBackground] lets the app orchestrator flush the optional durable
 ///   identity capability, compose drafts, learning data and app settings.
 /// - For the length of that budget a [BackgroundTaskApi] task is held (iOS

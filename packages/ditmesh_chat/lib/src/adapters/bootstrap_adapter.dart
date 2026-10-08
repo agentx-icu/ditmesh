@@ -9,16 +9,21 @@ import 'key_value_store.dart';
 /// infrastructure, not account state. Same keys as toxee's
 /// `BootstrapNodesAdapter` so the two apps behave identically here.
 class Tim2ToxBootstrapAdapter implements BootstrapService {
-  Tim2ToxBootstrapAdapter(this._store);
+  Tim2ToxBootstrapAdapter(this._store, {this.resolveHost});
 
   final KeyValueStore _store;
+  final Future<String?> Function(String)? resolveHost;
 
   static const _kHost = 'current_bootstrap_host';
   static const _kPort = 'current_bootstrap_port';
   static const _kPubkey = 'current_bootstrap_pubkey';
 
   @override
-  Future<String?> getBootstrapHost() async => _store.getString(_kHost);
+  Future<String?> getBootstrapHost() async {
+    final host = _store.getString(_kHost);
+    if (host == null || resolveHost == null) return host;
+    return resolveHost!(host);
+  }
 
   @override
   Future<int?> getBootstrapPort() async => _store.getInt(_kPort);

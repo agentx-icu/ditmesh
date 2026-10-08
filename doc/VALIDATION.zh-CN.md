@@ -2,31 +2,36 @@
 
 # 验证记录 — 2026-10-08
 
-实现位于 `codex/chat-migration`。两款应用均未发布，用户已明确移除历史兼容与数据迁移范围。以下记录已执行的验证，并明确区分最终原生修复前的构建；最终远程平台 CI 随修复后执行。
+实现位于 `codex/chat-migration`。两款应用均未发布，用户已明确移除历史兼容与数据迁移范围。拆分基线 `2317f6d` 已通过远程分析、桌面 E2E 和全部必需原生/应用构建。新增完整引导节点/局域网移植、外观截图支持及所选 C 图标已通过本地验证；当前产品截图及新一轮远程结果会在完成后列入下表。
 
 | 检查 | 已执行结果 |
 |---|---|
 | 原 MorseCQ 基线 | 七个包测试通过；应用 1253 通过、1 跳过 |
-| DitMesh 应用 | 早前完整运行 1259 通过、1 跳过；随后删除一项历史兼容回归，最终完整运行由 CI 检查 |
-| 聊天 / API 包 | 最终聊天 236 通过、4 跳过 / API 79 通过；备份/容器/.tox 检查 39 通过，默认聊天/身份检查 33 通过；七项数值节点/选择策略测试全部通过 |
-| 原生集成 | 四套 needs-native 测试通过：加密/换密、备份/篡改、持久化、身份/网络/离线队列/群组冒烟 |
+| DitMesh 应用 | 当前本机完整套件 1344 项通过、2 项按需视觉导出跳过；欢迎页图标更新后，41 项已有引导/启动/网络测试再次通过 |
+| 聊天 / API 包 | 当前普通套件：聊天 269 项通过 / API 79 项通过；原生用例在下面单独计数 |
+| 原生集成 | 当前原生标签套件 11 项通过、1 项独立节点进程入口跳过；包含原有加密/换密、备份/篡改、持久化、身份/网络/离线队列/群组用例 |
 | 严格分析与源码守卫 | 指定目录分析与三项守卫通过 |
-| CI 和打包检查 | actionlint 1.7.12、ShellCheck 0.11、Bash/Podfile 语法、六项打包/补丁回归通过，ShellCheck 0.10/0.11 两版本均通过 |
-| 截图导入安全 | 12 项回归通过，使用独立 PNG 测试数据 |
+| CI 和打包检查 | actionlint 1.7.12、ShellCheck 0.11、Bash/Podfile 语法、八项打包/补丁/缓存回归通过，ShellCheck 0.10/0.11 两版本均通过 |
+| 截图导入安全 | 19 项回归通过，使用独立 PNG 测试数据，包含必需网络场景及语言/风格/主题边界 |
 | 原生平台库 | macOS ARM64、Android 三 ABI、iOS 真机与 ARM64/x86_64 模拟器的无测试钩子原生库构建通过 |
 | 首轮 macOS ARM64 包 | 最终原生修复前，真实后端 Release 应用、PKG、ZIP 通过；签名完整性、安装路径与禁止 relocation 已检查 |
 | 首轮 Android 包 | 最终原生修复前，真实后端 APK/AAB 通过；三 ABI 原生库及运行库已检查；本机包使用调试签名 |
 | 首轮 iOS 包 | 最终原生修复前，真实后端未签名 Release 应用/IPA 通过；应用标识、版本、原生隐私清单已检查 |
-| 真实截图 | macOS、iPhone、iPad、Android、Linux、Windows 各 12 场景 × 中英文通过，共 144 张 |
+| 真实截图 | 当前 macOS、iPhone、iPad、Android 各 13 场景 × 中英文通过，共 104 张，含欢迎页 C 图标及网络设置；Swift/Kotlin 实际编译通过。Linux/Windows 暂保留此前 48 张，等待本次 CI 导入。 |
 | 真实节点传输 | 两个真实 Tox 进程完成双向单聊/群聊、加密身份/偏好重启、队列消息只接收一次、群组自动重入与重启后双向群消息；送达前自身/远端成员在线，断开后远端离线或移除，均通过 |
-| 原生源码修复 | 群持久化与成员连接状态补丁仅应用于固定源码副本，上游子模块干净、366 个公开 FFI 导出不变；旧库在线状态回归失败，修复后的库通过 |
-| 全新身份公网启动 | 数值默认节点的可选公网 DHT 探测 10 秒通过；必需 CI 使用两个本机真实节点保证确定性 |
-| 桌面 E2E CI | [macOS/Linux/Windows 界面与截图 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37719469365) |
-| 远程 CI | [草稿 PR #1](https://github.com/agentx-icu/ditmesh/pull/1) 执行 Native/Analyze/E2E；首轮六个原生目标与 Linux/Windows/Android/iOS 应用包通过；脚本检查已修复，必需网络 CI 改为两个本机真实 UDP 节点；最终 CI 待执行 |
+| 原生源码修复 | 群持久化、成员连接状态及私有探测隔离补丁仅应用于源码副本，上游干净。新 macOS ARM64 库保留 366 个公开 FFI 导出（全部 724 个已定义符号一致），无测试钩子/ToxAV，普通局域网端口行为不变；在线状态及探测隔离正向回归先失败，修复后通过。 |
+| 全新身份公网启动 | 使用数值默认节点及新编译库的当前可选公网启动 10 秒通过；必需 CI 使用两个本机真实节点保证确定性 |
+| 分析、守卫与全部包/应用测试 | [分析 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37724455049)，拆分基线 `2317f6d` |
+| 桌面 E2E CI | [macOS/Linux/Windows 界面与截图 CI 通过](https://github.com/agentx-icu/ditmesh/actions/runs/37724455062)，拆分基线 `2317f6d` |
+| 必需平台 CI | [13 项全部通过](https://github.com/agentx-icu/ditmesh/actions/runs/37724455301)：六个原生目标、六个应用任务及质量门禁；三个真实节点通信门禁均通过。[草稿 PR #1](https://github.com/agentx-icu/ditmesh/pull/1) 正确跳过发布。 |
+| 所选 C 图标 | 同一 SVG 覆盖源生成 57 项平台/托盘资源；生成器分析零问题；51 个平台 PNG 的尺寸/通道类型及两个 ICO 的完整尺寸表通过检查 |
+| 本地外观新增验证 | 四项截图解析/应用测试及 40 项 Morse 单聊/群聊风格功能测试通过；真实字体渲染十种语言和五种风格，共 38 配置/76 张 PNG；19 项截图导入回归通过 |
+| 本地原生引导节点新增验证 | 原生标签套件 11 项通过、1 项独立节点进程入口跳过。七项新增测试覆盖真实局域网端口、两个客户端上线、实例保持、启动/探测取消、真实本地回应及错误公钥负例，并证明子探测没有广播连接事件或改变聊天连接状态。私有探测补丁仅应用于源码副本，有符号创建接口及 366 个公开导出不变；八项打包/补丁回归通过。 |
+| Apple 局域网权限与节点页面 | 新权限用途回归先在两个 Apple 平台失败；补全二十项本地化说明后，13 项原生语言检查及 27 项节点界面测试通过。22 个 plist/strings 文件通过 plutil。自动/手动模式的当前节点测试、大字号/RTL、回滚重试及阻塞启动期间退出均已覆盖。 |
 
-来源 MorseCQ `3ce9597`；Tim2Tox 固定为 `093730ce346cef186bfd3d71214343b38d6c5ca6`。本机：Apple Silicon macOS、Xcode 26.4.1、Flutter 3.41.9、Dart 3.11.5。临时日志为 `/tmp/ditmesh-source-baseline.log`、`/tmp/ditmesh-chat-final-full-tests.log`。
+来源 MorseCQ `3ce9597`；Tim2Tox 固定为 `093730ce346cef186bfd3d71214343b38d6c5ca6`。本机：Apple Silicon macOS、Xcode 26.4.1、Flutter 3.41.9、Dart 3.11.5。当前临时日志为 `/tmp/ditmesh-bootstrap-final-suite-app.log`、`/tmp/ditmesh-bootstrap-native-complete-final.log`、`/tmp/ditmesh-bootstrap-public-final.log` 及 `/tmp/ditmesh-bootstrap-real-peers-final.log`；最后两个真实节点进程均在 27 秒通过。
 
-最终群持久化/引导节点修复前，忽略的 `dist/` 中已生成过：macOS PKG 25,876,884 字节、ZIP 26,109,945 字节；Android APK 107,613,474 字节、AAB 73,469,570 字节；iOS 未签名 IPA 12,820,577 字节。Release 门禁要求十二个平台资产及 SHA256SUMS 完整，才更新 GitHub 草稿 Release。
+拆分基线 `2317f6d` 的全部十二个安装包已从对应 CI 下载至忽略的 `dist/release-v1.0.0`，资产验证器及独立 SHA-256 检查通过。`dist/final-build-evidence.json` 将产物绑定至远端提交，并明确标记其先于新增节点、外观和图标工作。Release 门禁要求十二个平台资产及 SHA256SUMS 完整，才更新 GitHub 草稿 Release。
 
 原生源码下载有固定摘要；代理失效时只对单条 GitHub 命令停用继承代理，不修改全局设置。已补充独立安装器标识、下载原子替换/错误传播、macOS 主应用安装路径与禁止 relocation 的修复。
 

@@ -30,7 +30,7 @@ import 'backup_exclusion.dart';
 /// [backupExclusion]. The parent, not [root], because [root] itself is
 /// replaced by a rename on restore and deleted on reset, which would drop a
 /// flag set on it; restore staging (`.ditmesh-import-*`) lives there too.
-/// Nothing but the identity tree lives in that directory.
+/// The independent network/probe profiles also live under this parent.
 class IdentityPaths {
   const IdentityPaths(
     this.root, {

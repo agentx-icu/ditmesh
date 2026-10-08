@@ -3,6 +3,8 @@
 #
 #   tool/screenshots/capture.sh [--platforms macos,ios,ipad,android,linux,windows]
 #                               [--locales en,zh] [--device <flutter device id>]
+#                               [--style classic|modern|radio|paper|cartoon|all]
+#                               [--theme light|dark|system]
 #                               [--out <dir>] [--keep] [--help]
 #                               [--from <completed CI screenshot root>]
 #
@@ -23,10 +25,12 @@
 #                simulator itself, and verify rejects any other frame size
 #                and any frame with an alpha channel.
 #                Every platform captures the complete DitMesh chat app.
-#   --locales    comma list of en, zh (default: both). A subset is captured
-#                and verified but NOT published into the committed gallery
-#                (that must always hold every locale); pass --out to publish
-#                a partial set somewhere else.
+#   --locales    canonical comma list: en,zh,zh_Hant,ja,ko,de,fr,es,pt,ru.
+#                Default en,zh; custom language sets require --out.
+#   --style      classic|modern|radio|paper|cartoon|all (default modern).
+#                all creates one profile folder per style under --out.
+#   --theme      light|dark|system (default light).
+#                Custom style/theme requires --out outside the gallery.
 #   --device     use this Flutter device id instead of auto-picking one
 #                (single platform only; the id must belong to that platform)
 #   --out        publish root (default: doc/screenshots)
@@ -47,6 +51,8 @@ APP_DIR="$REPO_ROOT/apps/ditmesh"
 ALL_LOCALES="en,zh"
 PLATFORMS="macos"
 LOCALES="$ALL_LOCALES"
+STYLE="${DITMESH_SHOT_STYLE-modern}"
+THEME="${DITMESH_SHOT_THEME-light}"
 DEVICE=""
 OUT="$REPO_ROOT/doc/screenshots"
 OUT_SET=0
@@ -56,8 +62,12 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --platforms) PLATFORMS="${2:-}"; shift 2 ;;
     --platforms=*) PLATFORMS="${1#*=}"; shift ;;
-    --locales) LOCALES="${2:-}"; shift 2 ;;
+    --locales) [[ $# -ge 2 ]] || { echo '--locales requires a value' >&2; exit 64; }; LOCALES="${2:-}"; shift 2 ;;
     --locales=*) LOCALES="${1#*=}"; shift ;;
+    --style) [[ $# -ge 2 ]] || { echo '--style requires a value' >&2; exit 64; }; STYLE="${2-}"; shift 2 ;;
+    --style=*) STYLE="${1#*=}"; shift ;;
+    --theme) [[ $# -ge 2 ]] || { echo '--theme requires a value' >&2; exit 64; }; THEME="${2-}"; shift 2 ;;
+    --theme=*) THEME="${1#*=}"; shift ;;
     --device) DEVICE="${2:-}"; shift 2 ;;
     --device=*) DEVICE="${1#*=}"; shift ;;
     --out) OUT="${2:-}"; OUT_SET=1; shift 2 ;;
@@ -78,7 +88,7 @@ step() { echo -e "${CYAN}==>${NC} $*"; }
 
 # Must match kScenes in apps/ditmesh/integration_test/support/scene_walk.dart.
 CHAT_SCENES=(welcome create_identity backup_wizard chat_list conversation contacts
-             groups group_conversation reference translator listen me)
+             groups group_conversation reference translator listen me network_bootstrap)
 SCENES=("${CHAT_SCENES[@]}")
 # DitMesh includes chat on every platform, including iPhone and iPad.
 variant_for() { echo chat; }
@@ -94,15 +104,58 @@ for p in "${SELECTED[@]}"; do
   case "$p" in macos|ios|ipad|android|linux|windows) ;;
     *) err "unknown platform: '$p' (macos|ios|ipad|android|linux|windows)"; exit 64 ;; esac
 done
+LOCALES="${LOCALES// /}"
+[[ "$LOCALES" != *, && "$LOCALES" != ,* && "$LOCALES" != *,,* ]] \
+  || { err "empty locale in --locales"; exit 64; }
+seen=","
 for l in "${SELECTED_LOCALES[@]}"; do
-  case "$l" in en|zh) ;; *) err "unknown locale: '$l' (en|zh)"; exit 64 ;; esac
+  case "$l" in en|zh|zh_Hant|ja|ko|de|fr|es|pt|ru) ;;
+    *) err "unknown locale: '$l' (en,zh,zh_Hant,ja,ko,de,fr,es,pt,ru)"; exit 64 ;; esac
+  [[ "$seen" != *",$l,"* ]] || { err "duplicate locale: '$l'"; exit 64; }
+  seen+="$l,"
 done
+case "$STYLE" in classic|modern|radio|paper|cartoon|all) ;;
+  *) err "unknown style: '$STYLE' (classic|modern|radio|paper|cartoon|all)"; exit 64 ;; esac
+case "$THEME" in light|dark|system) ;;
+  *) err "unknown theme: '$THEME' (light|dark|system)"; exit 64 ;; esac
 [[ -n "$DEVICE" && ${#SELECTED[@]} -gt 1 ]] && { err "--device applies to a single platform"; exit 64; }
 [[ -n "$FROM" && -n "$DEVICE" ]] && { err "--from cannot be combined with --device"; exit 64; }
-PARTIAL_LOCALES=0
-[[ "$LOCALES" != "$ALL_LOCALES" ]] && PARTIAL_LOCALES=1
-if [[ "$PARTIAL_LOCALES" == "1" && "$OUT_SET" == "0" ]]; then
-  warn "locales '$LOCALES' is a subset: frames are verified but NOT published into $OUT (pass --out to publish a partial set elsewhere)"
+if [[ "$LOCALES" != "$ALL_LOCALES" || "$STYLE" != modern || "$THEME" != light ]]; then
+  [[ "$OUT_SET" == 1 ]] || { err "custom locale/style/theme requires explicit --out"; exit 64; }
+  profile_out="$OUT"; profile_gallery="$REPO_ROOT/doc/screenshots"
+  if command -v cygpath >/dev/null 2>&1; then
+    profile_out="$(cygpath -m "$profile_out")"
+    profile_gallery="$(cygpath -m "$profile_gallery")"
+  fi
+  python3 - "$profile_out" "$profile_gallery" <<'PROFILE' || exit 64
+import os, sys
+
+def canonical(path):
+    value = os.path.normcase(os.path.realpath(path))
+    return value.casefold() if sys.platform == "darwin" else value
+
+output, gallery = map(canonical, sys.argv[1:])
+try:
+    protected = os.path.commonpath([output, gallery]) == gallery
+except ValueError:  # Different Windows drives cannot be the gallery.
+    protected = False
+if protected:
+    print("custom captures cannot overwrite the canonical gallery", file=sys.stderr)
+    sys.exit(64)
+PROFILE
+fi
+[[ -n "$OUT" ]] || { err "--out must not be empty"; exit 64; }
+if [[ "$STYLE" == all ]]; then
+  matrix_staging="${DITMESH_SHOT_STAGING:-}"
+  for style in classic modern radio paper cartoon; do
+    args=(--platforms "$PLATFORMS" --locales "$LOCALES" --style "$style" --theme "$THEME" --out "$OUT/$style")
+    [[ -z "$DEVICE" ]] || args+=(--device "$DEVICE")
+    [[ -z "$FROM" ]] || args+=(--from "$FROM/$style")
+    [[ "$KEEP" != 1 ]] || args+=(--keep)
+    env DITMESH_SHOT_STAGING="${matrix_staging:+$matrix_staging/$style}" \
+      bash "${BASH_SOURCE[0]}" "${args[@]}"
+  done
+  exit 0
 fi
 
 # ── staging: a fresh temp dir unless DITMESH_SHOT_STAGING names one; kept on
@@ -303,7 +356,7 @@ publish() {  # <platform>
     rm -rf "$dst" || return 1
     mv "$tmp" "$dst" || { err "publish: could not move $tmp into place"; return 1; }
     # Post-condition on the result, not on the exit codes above.
-    local n; n="$(ls "$dst"/*.png 2>/dev/null | wc -l)"; n="${n// /}"
+    local n; n="$(find "$dst" -maxdepth 1 -type f -name '*.png' | wc -l)"; n="${n// /}"
     [[ "$n" == "${#SCENES[@]}" ]] || { err "publish: $dst holds $n frames, expected ${#SCENES[@]}"; return 1; }
   done
   info "published $platform → $OUT/$platform/{${LOCALES}}/"
@@ -342,17 +395,13 @@ capture_platform() {  # <platform>
       --dart-define=DITMESH_SHOT_LOCALES="$LOCALES" \
       ${DITMESH_SHOT_WINDOW:+--dart-define=DITMESH_SHOT_WINDOW="$DITMESH_SHOT_WINDOW"} \
       ${DITMESH_SHOT_PIXEL_RATIO:+--dart-define=DITMESH_SHOT_PIXEL_RATIO="$DITMESH_SHOT_PIXEL_RATIO"} \
-      ${DITMESH_SHOT_THEME:+--dart-define=DITMESH_SHOT_THEME="$DITMESH_SHOT_THEME"}) \
+      --dart-define=DITMESH_SHOT_STYLE="$STYLE" \
+      --dart-define=DITMESH_SHOT_THEME="$THEME") \
       || { err "$platform: flutter drive failed"; return 1; }
   else
     step "$platform from completed CI capture $STAGING"
   fi
   verify "$platform" || return 1
-  if [[ "$PARTIAL_LOCALES" == "1" && "$OUT_SET" == "0" ]]; then
-    info "$platform: verified $LOCALES; not published (partial locale set) — frames in $STAGING/$platform"
-    KEEP=1
-    return 0
-  fi
   publish "$platform"
 }
 

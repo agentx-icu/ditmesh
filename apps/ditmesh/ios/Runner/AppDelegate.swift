@@ -1,9 +1,12 @@
 import Flutter
 import UIKit
 import UserNotifications
+import Network
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private let networkPath = DitmeshNetworkPathChannel()
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -19,6 +22,7 @@ import UserNotifications
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     let messenger = engineBridge.applicationRegistrar.messenger()
+    networkPath.register(binaryMessenger: messenger)
     registerBackgroundTaskChannel(messenger)
     registerBackupExclusionChannel(messenger)
   }
@@ -113,5 +117,101 @@ import UserNotifications
   private func endBackgroundTask(_ token: Int) {
     guard let id = backgroundTasks.removeValue(forKey: token) else { return }
     UIApplication.shared.endBackgroundTask(id)
+  }
+}
+
+// Reports the current mobile network path to the bootstrap policy.
+final class DitmeshNetworkPathChannel: NSObject, FlutterStreamHandler {
+  private let queue = DispatchQueue(label: "ditmesh.network_path")
+  private var channel: FlutterEventChannel?
+  private var generation = 0
+  private var monitor: NWPathMonitor?
+  private var sink: FlutterEventSink?
+  private var lastSent: (Bool, String?)?
+
+  func register(binaryMessenger: FlutterBinaryMessenger) {
+    _ = onCancel(withArguments: nil)
+    channel?.setStreamHandler(nil)
+    let channel = FlutterEventChannel(name: "ditmesh/network_path", binaryMessenger: binaryMessenger)
+    channel.setStreamHandler(self)
+    self.channel = channel
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    _ = onCancel(withArguments: nil)
+    let ticket = generation
+    sink = events
+    lastSent = nil
+    let monitor = NWPathMonitor()
+    monitor.pathUpdateHandler = { [weak self] path in
+      let available = path.status == .satisfied
+      let identity = available ? DitmeshNetworkPathChannel.identity(of: path) : nil
+      DispatchQueue.main.async { [weak self] in
+        guard let self, self.generation == ticket else { return }
+        self.emit(available: available, identity: identity)
+      }
+    }
+    monitor.start(queue: queue)
+    self.monitor = monitor
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    generation += 1
+    monitor?.pathUpdateHandler = nil
+    monitor?.cancel()
+    monitor = nil
+    sink = nil
+    return nil
+  }
+
+  deinit { monitor?.cancel() }
+
+  private func emit(available: Bool, identity: String?) {
+    guard let sink else { return }
+    if let last = lastSent, last.0 == available, last.1 == identity { return }
+    lastSent = (available, identity)
+    sink(["available": available, "identity": identity.map { $0 as Any } ?? NSNull()])
+  }
+
+  /// What the default path is USING: the interface types it routes over
+  /// (`usesInterfaceType`, not merely the available list), the interfaces of
+  /// those types with their current addresses, and the path's gateways — so a
+  /// Wi-Fi <-> cellular handover, a new address, or a new router all change it.
+  private static func identity(of path: NWPath) -> String {
+    let kinds: [NWInterface.InterfaceType] = [.wifi, .cellular, .wiredEthernet, .other]
+    let used = kinds.filter { path.usesInterfaceType($0) }
+    let interfaces = path.availableInterfaces
+      .filter { iface in used.contains(iface.type) }
+      .map { "\($0.name)=\(addresses(of: $0.name).joined(separator: ","))" }
+      .sorted()
+    let gateways = path.gateways.map { "\($0)" }.sorted()
+    return "\(used.map { "\($0)" }.joined(separator: "+"))|"
+      + "\(interfaces.joined(separator: ";"))|\(gateways.joined(separator: ","))"
+  }
+
+  /// Sorted numeric addresses (IPv4 + IPv6) currently on [name].
+  private static func addresses(of name: String) -> [String] {
+    var result: [String] = []
+    var head: UnsafeMutablePointer<ifaddrs>?
+    guard getifaddrs(&head) == 0, let first = head else { return result }
+    defer { freeifaddrs(head) }
+    var cursor: UnsafeMutablePointer<ifaddrs>? = first
+    while let entry = cursor {
+      defer { cursor = entry.pointee.ifa_next }
+      guard String(cString: entry.pointee.ifa_name) == name,
+        let addr = entry.pointee.ifa_addr
+      else { continue }
+      let family = Int32(addr.pointee.sa_family)
+      guard family == AF_INET || family == AF_INET6 else { continue }
+      var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+      let len = socklen_t(family == AF_INET ? MemoryLayout<sockaddr_in>.size : MemoryLayout<sockaddr_in6>.size)
+      if getnameinfo(addr, len, &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
+        result.append(String(cString: host))
+      }
+    }
+    return result.sorted()
   }
 }

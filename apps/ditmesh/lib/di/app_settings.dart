@@ -17,11 +17,6 @@ const int kTermsVersion = 2;
 class AppSettings extends ChangeNotifier {
   AppSettings({required this.backendLabel, KeyValueStore? store})
     : _store = store ?? InMemoryKeyValueStore() {
-    // Preserve the theme used before style and mode shared one record.
-    _themeMode = ThemeMode.values.firstWhere(
-      (value) => value.name == _store.getString('app.theme'),
-      orElse: () => ThemeMode.system,
-    );
     _acceptedTerms = int.tryParse(_store.getString(termsKey) ?? '') ?? 0;
     final saved = _store.getString(storageKey);
     if (saved == null) return;

@@ -2,7 +2,7 @@
 
 # DitMesh real UI captures
 
-Captured from the real Flutter app with explicit demo data. Each platform includes all twelve scenes in English and Chinese. Product concepts are stored separately.
+Captured from the real Flutter app with explicit demo data. macOS, iPhone, iPad and Android now have 13 scenes in English and Chinese. Linux and Windows retain the preceding 12-scene baseline until the current CI captures are imported. The gallery currently has 152 frames; product concepts are stored separately.
 
 | Scene | macos | ios | ipad | android | linux | windows |
 |---|---|---|---|---|---|---|
@@ -18,7 +18,8 @@ Captured from the real Flutter app with explicit demo data. Each platform includ
 | translator | [PNG](macos/en/translator.png) | [PNG](ios/en/translator.png) | [PNG](ipad/en/translator.png) | [PNG](android/en/translator.png) | [PNG](linux/en/translator.png) | [PNG](windows/en/translator.png) |
 | listen | [PNG](macos/en/listen.png) | [PNG](ios/en/listen.png) | [PNG](ipad/en/listen.png) | [PNG](android/en/listen.png) | [PNG](linux/en/listen.png) | [PNG](windows/en/listen.png) |
 | me | [PNG](macos/en/me.png) | [PNG](ios/en/me.png) | [PNG](ipad/en/me.png) | [PNG](android/en/me.png) | [PNG](linux/en/me.png) | [PNG](windows/en/me.png) |
+| network_bootstrap | [PNG](macos/en/network_bootstrap.png) | [PNG](ios/en/network_bootstrap.png) | [PNG](ipad/en/network_bootstrap.png) | [PNG](android/en/network_bootstrap.png) | Pending CI | Pending CI |
 
-Desktop:1280×800; iPhone:1320×2868; iPad:2064×2752; Android:823×1829. Linux and Windows frames were verified and imported from [successful E2E CI](https://github.com/agentx-icu/ditmesh/actions/runs/37719469365). The local and CI captures use the same application UI; no old product images are reused.
+Desktop:1280×800; iPhone:1320×2868; iPad:2064×2752; Android:823×1829. The current local captures compiled the network pages and selected C branding. Linux and Windows will capture the same application UI on their CI hosts.
 
 [Capture pipeline](../../tool/screenshots/README.md)

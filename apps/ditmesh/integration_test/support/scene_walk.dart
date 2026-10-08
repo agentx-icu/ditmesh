@@ -19,12 +19,14 @@ import 'package:ditmesh/ui/chat/message_bubble.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/groups/group_list.dart';
 import 'package:ditmesh/ui/listen/listen_screen.dart';
+import 'package:ditmesh/ui/network/bootstrap_page.dart';
 import 'package:ditmesh/ui/pages/me_page.dart';
 import 'package:ditmesh/ui/pages/reference_page.dart';
 import 'package:ditmesh/ui/reference/morse_pattern_text.dart';
 import 'package:ditmesh/ui/reference/text_to_morse_view.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
+import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import 'seed_data.dart';
@@ -45,6 +47,7 @@ const List<String> kScenes = <String>[
   'translator',
   'listen',
   'me',
+  'network_bootstrap',
 ];
 
 /// Index into [kShellDestinations].
@@ -143,25 +146,26 @@ Future<void> walkOnboarding(
   WidgetTester tester,
   ShotHarness shots,
   S s,
-  SeedCopy copy,
-) async {
+  SeedCopy copy, {
+  required String locale,
+}) async {
   await settle(tester, extra: const Duration(milliseconds: 300));
   await shots.applyTheme(tester);
   expectScreen(WelcomePage);
   expect(find.text(s.accountCreateIdentity), findsOneWidget);
-  await shots.capture(tester, copy.locale, 'welcome');
+  await shots.capture(tester, locale, 'welcome');
 
   await tapText(tester, s.accountCreateIdentity);
   expectScreen(CreateIdentityPage);
   await tester.enterText(find.byType(TextField).first, copy.heroName);
   await settle(tester);
   expect(find.text(copy.heroName), findsOneWidget);
-  await shots.capture(tester, copy.locale, 'create_identity');
+  await shots.capture(tester, locale, 'create_identity');
 
   await tapText(tester, s.accountCreateButton);
   expectScreen(BackupWizardPage);
   expect(find.text(s.accountBackupContinue), findsOneWidget);
-  await shots.capture(tester, copy.locale, 'backup_wizard');
+  await shots.capture(tester, locale, 'backup_wizard');
 }
 
 /// Every shell scene, from the seeded identity.
@@ -169,9 +173,9 @@ Future<void> walkShell(
   WidgetTester tester,
   ShotHarness shots,
   S s,
-  SeededBackend seed,
-) async {
-  final locale = seed.copy.locale;
+  SeededBackend seed, {
+  required String locale,
+}) async {
   await settle(tester, extra: const Duration(milliseconds: 500));
   await shots.applyTheme(tester);
   if (find.byType(AppShell).evaluate().isEmpty) {
@@ -231,6 +235,27 @@ Future<void> walkShell(
   expectScreen(MePage);
   expect(find.text(copy.heroName), findsWidgets);
   await shots.capture(tester, locale, 'me');
+
+  await tapHittable(
+    tester,
+    find.byKey(const ValueKey('me-network-bootstrap')),
+    'network settings',
+  );
+  expectScreen(BootstrapPage);
+  expect(find.text(s.bootstrapServiceUnavailable), findsNothing);
+  final network = tester
+      .element(find.byType(BootstrapPage))
+      .read<NetworkBootstrapService?>()!;
+  final current = network.configuration.current!;
+  expect(
+    find.byWidgetPredicate(
+      (widget) => widget is SelectableText && widget.data == current.endpoint,
+    ),
+    findsOneWidget,
+    reason: 'configured automatic bootstrap endpoint',
+  );
+  expect(find.byKey(const ValueKey('bootstrap-open-nodes')), findsOneWidget);
+  await shots.capture(tester, locale, 'network_bootstrap');
 }
 
 /// Reference: the handbook, the translator and Listen. The chat app exposes these as secondary Morse tools.

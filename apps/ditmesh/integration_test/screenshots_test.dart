@@ -34,7 +34,7 @@ void main() {
   for (final locale in shotLocales()) {
     testWidgets('screenshots [$locale]', (tester) async {
       final copy = seedCopyFor(locale);
-      final S s = lookupS(Locale(locale));
+      final S s = lookupS(parseShotLocale(locale));
       final scratch = await Directory.systemTemp.createTemp('ditmesh_shots_');
       addTearDown(() => scratch.delete(recursive: true));
       // The seeded identity has accepted the community guidelines (the
@@ -63,16 +63,19 @@ void main() {
         ),
       );
       await shots.prepareWindow(tester);
-      await walkOnboarding(tester, shots, s, copy);
+      await walkOnboarding(tester, shots, s, copy, locale: locale);
 
       // 2. Established identity with demo data: every shell scene.
       final seed = await buildSeed(copy, dataDir: '${scratch.path}/seeded');
+      final network = FakeNetworkBootstrapService(supportsLan: isDesktopHost);
+      await network.selectNode(network.catalogue.nodes.first);
       await tester.pumpWidget(
         shots.wrap(
           DitmeshApp(
             key: ValueKey<String>('shell-$locale'),
             backend: FakeBackendFactory(
               identityService: seed.identity,
+              networkBootstrapService: network,
               chatService: (_) => seed.chat,
             ),
             backupFiles: FakeBackupFileGateway(),
@@ -80,7 +83,7 @@ void main() {
           ),
         ),
       );
-      await walkShell(tester, shots, s, seed);
+      await walkShell(tester, shots, s, seed, locale: locale);
 
       final mine = shots.captured.where((n) => n.contains('/$locale/'));
       expect(mine.length, kScenes.length, reason: 'all scenes captured');

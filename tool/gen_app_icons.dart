@@ -2,9 +2,8 @@
 //
 //   dart run tool/gen_app_icons.dart            (from the repository root)
 //
-// The drawing: "DM" in Morse — `−··` over `−−` — white on the same
-// dark-teal tile as the tray icons (tool/gen_tray_icons.dart), so the
-// launcher, the tray and the notification small icon read as one family.
+// The selected solid signal tower with Morse `−··` cutouts uses one
+// checked-in SVG/coverage source, shared with tool/gen_tray_icons.dart.
 //
 // Output:
 //   apps/ditmesh/icon/app_icon_1024.png                 master (square, opaque;
@@ -45,6 +44,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
+
+import 'icon_glyph.dart';
 
 const String _app = 'apps/ditmesh';
 const String _iosSet = '$_app/ios/Runner/Assets.xcassets/AppIcon.appiconset';
@@ -222,13 +223,13 @@ List<_IconEntry> _appIconSet(String dir) {
 }
 
 /// The icon at [size]: the tile (rounded on transparent, or full-bleed
-/// square) with the Morse for "DM" centred on it.
+/// square) with the signal tower centred on it.
 img.Image _icon(int size, {required bool rounded}) {
   // Drawn opaque (RGB) first. Square icons stay RGB: App Store Connect
   // rejects an alpha channel in the 1024 marketing icon.
   final opaque = img.Image(width: size, height: size);
   img.fill(opaque, color: _tile);
-  _morseRows(opaque, size, const ['-..', '--']); // D, M
+  drawTowerOnTile(opaque, _white);
   if (!rounded) return opaque;
 
   // Rounded: the tile shape as an anti-aliased coverage mask moved into the
@@ -255,9 +256,9 @@ img.Image _icon(int size, {required bool rounded}) {
 
 /// Adaptive-icon foreground (also the themed-icon monochrome layer): the
 /// glyph on a transparent canvas, scaled so it sits inside the 66/108 safe
-/// zone (launchers mask the outer 21 dp on every side) at the same 64 % of
+/// zone (launchers mask the outer 21 dp on every side) at the same proportions
 /// that zone the tiles use.
-img.Image _adaptiveForeground(int size) => _whiteGlyph(size, 0.64 * 66 / 108);
+img.Image _adaptiveForeground(int size) => _whiteGlyph(size, 66 / 108);
 
 /// macOS app icon: the rounded tile drawn on Apple's icon grid — an 824 px
 /// tile centred on the 1024 px canvas (100 px transparent margin), scaled
@@ -282,85 +283,28 @@ img.Image _macIcon(int size) {
   return image;
 }
 
-/// Android notification small icon: the "DM" glyph in white on a transparent
+/// Android notification small icon: the tower in white on a transparent
 /// 24 dp canvas, filling the 20 dp live area (2 dp padding per side).
-img.Image _statusIcon(int size) => _whiteGlyph(size, 20 / 24);
+img.Image _statusIcon(int size) => _whiteCoverage(fittedTowerMask(size));
 
-/// The "DM" glyph as white with anti-aliased alpha on a transparent canvas.
+/// The tower as white with anti-aliased alpha on a transparent canvas.
 /// Drawn as a white-on-black coverage mask first and the mask moved into the
 /// alpha channel: drawing straight onto transparent pixels blends the edges
 /// towards black at full opacity, which leaves grey specks on the launcher
 /// tile and hard edges in the status bar.
-img.Image _whiteGlyph(int size, double widthFraction) {
-  final mask = img.Image(width: size, height: size);
-  img.fill(mask, color: img.ColorRgb8(0, 0, 0));
-  _morseRows(mask, size, const ['-..', '--'], widthFraction: widthFraction);
-  final image = img.Image(width: size, height: size, numChannels: 4);
+img.Image _whiteGlyph(int size, double scale) =>
+    _whiteCoverage(towerMask(size, scale: scale));
+
+img.Image _whiteCoverage(img.Image mask) {
+  final image = img.Image(
+    width: mask.width,
+    height: mask.height,
+    numChannels: 4,
+  );
   for (final pixel in mask) {
     image.setPixelRgba(pixel.x, pixel.y, 255, 255, 255, pixel.r);
   }
   return image;
-}
-
-/// Draws [rows] of Morse (`.` dot, `-` dash) centred on the canvas. Dot and
-/// dash follow the 1:3 PARIS ratio with a one-unit gap, the same geometry
-/// the app's pattern widget uses, scaled so the widest row spans
-/// [widthFraction] of the canvas.
-void _morseRows(
-  img.Image image,
-  int size,
-  List<String> rows, {
-  double widthFraction = 0.64,
-}) {
-  // Units per row: dot = 1, dash = 3, gap = 1 between elements.
-  int rowUnits(String row) {
-    var units = 0;
-    for (var i = 0; i < row.length; i++) {
-      units += row[i] == '-' ? 3 : 1;
-      if (i < row.length - 1) units += 1;
-    }
-    return units;
-  }
-
-  final widest = rows.map(rowUnits).reduce((a, b) => a > b ? a : b);
-  // The glyph block takes [widthFraction] of the width (~64 % on the tiles);
-  // the stroke is one unit tall.
-  final unit = size * widthFraction / widest;
-  final stroke = (unit * 1.05).clamp(1.0, size.toDouble());
-  final rowGap = unit * 2.2;
-  final blockHeight = rows.length * stroke + (rows.length - 1) * rowGap;
-  var y = (size - blockHeight) / 2;
-
-  for (final row in rows) {
-    final rowWidth = rowUnits(row) * unit;
-    var x = (size - rowWidth) / 2;
-    final centerY = y + stroke / 2;
-    for (var i = 0; i < row.length; i++) {
-      final isDash = row[i] == '-';
-      final length = (isDash ? 3 : 1) * unit;
-      if (isDash) {
-        img.fillRect(
-          image,
-          x1: x.round(),
-          y1: (centerY - stroke / 2).round(),
-          x2: (x + length).round() - 1,
-          y2: (centerY + stroke / 2).round() - 1,
-          color: _white,
-          radius: (stroke / 2).round(),
-        );
-      } else {
-        img.fillCircle(
-          image,
-          x: (x + length / 2).round(),
-          y: centerY.round(),
-          radius: (stroke / 2).round().clamp(1, size),
-          color: _white,
-        );
-      }
-      x += length + unit;
-    }
-    y += stroke + rowGap;
-  }
 }
 
 void _writeText(String path, String text) {

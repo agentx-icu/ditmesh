@@ -8,6 +8,7 @@ import '../adapters/bootstrap_nodes.dart';
 import '../adapters/key_value_store.dart';
 import '../adapters/prefs_adapter.dart';
 import '../adapters/scratch_file_adapter.dart';
+import '../bootstrap/host_resolver.dart';
 import '../identity/identity_paths.dart';
 import '../logging/chat_logger.dart';
 import '../native/native_library.dart';
@@ -110,6 +111,8 @@ class Tim2ToxEngine extends ChatEngine {
     required KeyValueStore store,
     required ChatLogger logger,
     String? libraryPathOverride,
+    this.onBootstrapStart,
+    this.onBootstrapStop,
   }) : _store = store,
        _logger = logger,
        _libraryPathOverride = libraryPathOverride;
@@ -121,6 +124,8 @@ class Tim2ToxEngine extends ChatEngine {
   final KeyValueStore _store;
   final ChatLogger _logger;
   final String? _libraryPathOverride;
+  final Future<void> Function()? onBootstrapStart;
+  final void Function()? onBootstrapStop;
 
   /// ditmesh's owner of the SDK's process-global custom-callback hook.
   late final NativeCustomCallbacks _callbacks = NativeCustomCallbacks(_logger);
@@ -148,13 +153,25 @@ class Tim2ToxEngine extends ChatEngine {
     NativeLibrarySetup.ensure(libraryPathOverride: _libraryPathOverride);
     final scratch = IdentityScratchFileService(paths.scratchDirectory);
     _scratch = scratch;
+    final resolver = BootstrapHostResolver();
+    final resolved = <String, Future<String?>>{};
+    Future<String?> numericHost(String host) =>
+        resolved.putIfAbsent(host, () async {
+          final addresses = await resolver.addresses(host);
+          return addresses.isEmpty ? null : addresses.first;
+        });
     return DitmeshFfiChatService(
       preferencesService: Tim2ToxPreferencesAdapter(
         _store,
         accountPrefix: accountPrefix,
+        resolveBootstrapHost: numericHost,
+        persistBootstrapSelection: false,
       ),
       loggerService: Tim2ToxLoggerAdapter(_logger),
-      bootstrapService: Tim2ToxBootstrapAdapter(_store),
+      bootstrapService: Tim2ToxBootstrapAdapter(
+        _store,
+        resolveHost: numericHost,
+      ),
       historyDirectory: paths.historyDirectory,
       queueFilePath: paths.offlineQueueFile,
       fileRecvPath: paths.fileRecvDirectory,
@@ -250,10 +267,14 @@ class Tim2ToxEngine extends ChatEngine {
     // Polling is what pumps friend presence, inbound messages, file requests
     // and the offline-queue drains; nothing moves before this call.
     await svc.startPolling();
-    await bootstrap.applyAutoNodes(
-      svc.tryBootstrapNode,
-      isCurrent: () => identical(_service, svc),
-    );
+    if (onBootstrapStart != null) {
+      await onBootstrapStart!();
+    } else {
+      await bootstrap.applyAutoNodes(
+        svc.tryBootstrapNode,
+        isCurrent: () => identical(_service, svc),
+      );
+    }
     // startPolling schedules this un-awaited; do it once more explicitly so
     // callers can rely on persisted group identities right after connect().
     // It is also the pull-side fallback for the group callbacks that are
@@ -267,6 +288,7 @@ class Tim2ToxEngine extends ChatEngine {
   Future<void> stop() {
     final svc = _service;
     if (svc == null) return _stopping ?? Future<void>.value();
+    onBootstrapStop?.call();
     _service = null;
     // Synchronous part first so consumers see the detach at once; the
     // cancel future is the root-zone one (never resumes under FakeAsync)

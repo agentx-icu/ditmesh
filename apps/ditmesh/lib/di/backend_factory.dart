@@ -27,6 +27,9 @@ abstract class BackendFactory {
   /// needs nothing; the real backend builds its Tox node here. Idempotent.
   Future<void> prepare() async {}
 
+  /// Optional network configuration capability, available before an identity exists.
+  NetworkBootstrapService? createNetworkBootstrapService() => null;
+
   IdentityService createIdentityService();
 
   /// The chat façade. Receives the identity service because the real backend

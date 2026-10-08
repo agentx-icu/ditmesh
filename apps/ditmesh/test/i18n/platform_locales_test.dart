@@ -135,6 +135,15 @@ void main() {
 
   for (final String platform in <String>['ios', 'macos']) {
     group(platform, () {
+      test('LAN connections declare their local network purpose', () {
+        expect(
+          _usageDescriptions(platform)['NSLocalNetworkUsageDescription'],
+          isNotNull,
+          reason:
+              '$platform LAN bootstrap needs a local network purpose string',
+        );
+      });
+
       test('CFBundleLocalizations equals the ARB set', () {
         expect(_bundleLocalizations(platform), equals(arbTags));
       });

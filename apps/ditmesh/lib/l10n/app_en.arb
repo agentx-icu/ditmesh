@@ -1574,7 +1574,11 @@
   "toolsBandsRegionLabel": "Region {number}",
   "@toolsBandsRegionLabel": {
     "description": "IARU region segment label",
-    "placeholders": {"number": {"type": "int"}}
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
   },
   "toolsBandsRegionHelp": "1: Europe, Africa, Middle East - 2: the Americas - 3: Asia-Pacific",
   "@toolsBandsRegionHelp": {
@@ -1583,7 +1587,11 @@
   "toolsBandsInBand": "In the {band} amateur band",
   "@toolsBandsInBand": {
     "description": "Result when the frequency is inside a band",
-    "placeholders": {"band": {"type": "String"}}
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
   },
   "toolsBandsOutOfBand": "Outside the amateur bands",
   "@toolsBandsOutOfBand": {
@@ -1612,7 +1620,11 @@
   "toolsBandsQrp": "QRP CW {frequency}",
   "@toolsBandsQrp": {
     "description": "QRP calling frequency in the band table",
-    "placeholders": {"frequency": {"type": "String"}}
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      }
+    }
   },
   "toolsBandsDisclaimer": "ITU allocations. Your licence and national band plan may be narrower.",
   "@toolsBandsDisclaimer": {
@@ -6038,5 +6050,193 @@
   },
   "@backendStartupFailedBody": {
     "description": "Actionable native backend startup failure explanation"
+  },
+  "bootstrapTitle": "Network and bootstrap",
+  "@bootstrapTitle": {
+    "description": "Tox bootstrap network settings: Title"
+  },
+  "bootstrapDescription": "Choose the public nodes used to join the Tox network.",
+  "@bootstrapDescription": {
+    "description": "Tox bootstrap network settings: Description"
+  },
+  "bootstrapModeAuto": "Automatic",
+  "@bootstrapModeAuto": {
+    "description": "Tox bootstrap network settings: ModeAuto"
+  },
+  "bootstrapModeManual": "Manual",
+  "@bootstrapModeManual": {
+    "description": "Tox bootstrap network settings: ModeManual"
+  },
+  "bootstrapModeLan": "LAN host",
+  "@bootstrapModeLan": {
+    "description": "Tox bootstrap network settings: ModeLan"
+  },
+  "bootstrapAutoDescription": "Start with built-in nodes and refresh the official list in the background.",
+  "@bootstrapAutoDescription": {
+    "description": "Tox bootstrap network settings: AutoDescription"
+  },
+  "bootstrapManualDescription": "Use only your chosen node. You can enter a LAN node here.",
+  "@bootstrapManualDescription": {
+    "description": "Tox bootstrap network settings: ManualDescription"
+  },
+  "bootstrapLanDescription": "Run a local UDP/DHT node on this desktop for other LAN devices.",
+  "@bootstrapLanDescription": {
+    "description": "Tox bootstrap network settings: LanDescription"
+  },
+  "bootstrapCurrentNode": "Current node",
+  "@bootstrapCurrentNode": {
+    "description": "Tox bootstrap network settings: CurrentNode"
+  },
+  "bootstrapHost": "Host or IP address",
+  "@bootstrapHost": {
+    "description": "Tox bootstrap network settings: Host"
+  },
+  "bootstrapPort": "UDP port",
+  "@bootstrapPort": {
+    "description": "Tox bootstrap network settings: Port"
+  },
+  "bootstrapPublicKey": "DHT public key",
+  "@bootstrapPublicKey": {
+    "description": "Tox bootstrap network settings: PublicKey"
+  },
+  "bootstrapTestNode": "Test node",
+  "@bootstrapTestNode": {
+    "description": "Tox bootstrap network settings: TestNode"
+  },
+  "bootstrapSaveNode": "Use tested node",
+  "@bootstrapSaveNode": {
+    "description": "Tox bootstrap network settings: SaveNode"
+  },
+  "bootstrapChooseNode": "Choose public node",
+  "@bootstrapChooseNode": {
+    "description": "Tox bootstrap network settings: ChooseNode"
+  },
+  "bootstrapReachable": "DHT response received",
+  "@bootstrapReachable": {
+    "description": "Tox bootstrap network settings: Reachable"
+  },
+  "bootstrapUnreachable": "No DHT response",
+  "@bootstrapUnreachable": {
+    "description": "Tox bootstrap network settings: Unreachable"
+  },
+  "bootstrapInvalid": "Invalid host, port or public key",
+  "@bootstrapInvalid": {
+    "description": "Tox bootstrap network settings: Invalid"
+  },
+  "bootstrapUdpUnavailable": "A UDP probe could not run on this device. TCP connectivity is not tested.",
+  "@bootstrapUdpUnavailable": {
+    "description": "Tox bootstrap network settings: UdpUnavailable"
+  },
+  "bootstrapProbeUnavailable": "The probe could not start. This says nothing about node reachability.",
+  "@bootstrapProbeUnavailable": {
+    "description": "Tox bootstrap network settings: ProbeUnavailable"
+  },
+  "bootstrapFallback": "Showing built-in fallback nodes; the official list could not be loaded.",
+  "@bootstrapFallback": {
+    "description": "Tox bootstrap network settings: Fallback"
+  },
+  "bootstrapMaintainer": "Maintainer",
+  "@bootstrapMaintainer": {
+    "description": "Tox bootstrap network settings: Maintainer"
+  },
+  "bootstrapLocation": "Location",
+  "@bootstrapLocation": {
+    "description": "Tox bootstrap network settings: Location"
+  },
+  "bootstrapLastPing": "Last public check",
+  "@bootstrapLastPing": {
+    "description": "Tox bootstrap network settings: LastPing"
+  },
+  "bootstrapSwitchTitle": "Switch bootstrap node",
+  "@bootstrapSwitchTitle": {
+    "description": "Tox bootstrap network settings: SwitchTitle"
+  },
+  "bootstrapSwitchQuestion": "Use this node?",
+  "@bootstrapSwitchQuestion": {
+    "description": "Tox bootstrap network settings: SwitchQuestion"
+  },
+  "bootstrapNotTestedWarning": "This node has not been tested on your device.",
+  "@bootstrapNotTestedWarning": {
+    "description": "Tox bootstrap network settings: NotTestedWarning"
+  },
+  "bootstrapFailedWarning": "This node did not answer a UDP probe. You can still select it.",
+  "@bootstrapFailedWarning": {
+    "description": "Tox bootstrap network settings: FailedWarning"
+  },
+  "bootstrapInconclusiveWarning": "The probe was inconclusive. TCP connectivity is not tested.",
+  "@bootstrapInconclusiveWarning": {
+    "description": "Tox bootstrap network settings: InconclusiveWarning"
+  },
+  "bootstrapSwitchConfirm": "Use node",
+  "@bootstrapSwitchConfirm": {
+    "description": "Tox bootstrap network settings: SwitchConfirm"
+  },
+  "bootstrapRefresh": "Refresh list",
+  "@bootstrapRefresh": {
+    "description": "Tox bootstrap network settings: Refresh"
+  },
+  "bootstrapStartLan": "Start LAN node",
+  "@bootstrapStartLan": {
+    "description": "Tox bootstrap network settings: StartLan"
+  },
+  "bootstrapStopLan": "Stop LAN node",
+  "@bootstrapStopLan": {
+    "description": "Tox bootstrap network settings: StopLan"
+  },
+  "bootstrapLanStopped": "LAN node is stopped",
+  "@bootstrapLanStopped": {
+    "description": "Tox bootstrap network settings: LanStopped"
+  },
+  "bootstrapLanRunning": "LAN node is running",
+  "@bootstrapLanRunning": {
+    "description": "Tox bootstrap network settings: LanRunning"
+  },
+  "bootstrapLanKeyChanges": "The DHT key changes when the node restarts. Share the current full key.",
+  "@bootstrapLanKeyChanges": {
+    "description": "Tox bootstrap network settings: LanKeyChanges"
+  },
+  "bootstrapLanFirewallHint": "Other devices must reach this UDP port through your local firewall.",
+  "@bootstrapLanFirewallHint": {
+    "description": "Tox bootstrap network settings: LanFirewallHint"
+  },
+  "bootstrapCopyNode": "Copy node details",
+  "@bootstrapCopyNode": {
+    "description": "Tox bootstrap network settings: CopyNode"
+  },
+  "bootstrapShareNode": "Share node details",
+  "@bootstrapShareNode": {
+    "description": "Tox bootstrap network settings: ShareNode"
+  },
+  "bootstrapOperationFailed": "The network setting could not be applied.",
+  "@bootstrapOperationFailed": {
+    "description": "Tox bootstrap network settings: OperationFailed"
+  },
+  "bootstrapServiceUnavailable": "Network settings are unavailable for this backend.",
+  "@bootstrapServiceUnavailable": {
+    "description": "Tox bootstrap network settings: ServiceUnavailable"
+  },
+  "bootstrapSource": "Official public node list",
+  "@bootstrapSource": {
+    "description": "Tox bootstrap network settings: Source"
+  },
+  "bootstrapOnline": "Online",
+  "bootstrapOffline": "Offline",
+  "bootstrapProtocolStatus": "UDP: {udp} · TCP: {tcp}",
+  "@bootstrapOnline": {
+    "description": "Node online status from the public catalogue."
+  },
+  "@bootstrapOffline": {
+    "description": "Node offline status from the public catalogue."
+  },
+  "@bootstrapProtocolStatus": {
+    "description": "Catalogue transport availability, not a live connectivity probe.",
+    "placeholders": {
+      "udp": {
+        "type": "String"
+      },
+      "tcp": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -34,22 +34,86 @@ class CaptureImportTest(unittest.TestCase):
         self.output = self.root / "output"
         # Private valid PNG fixtures keep importer tests independent of the
         # capture gallery and the host's ability to run a desktop application.
-        scenes = ("welcome", "create_identity", "backup_wizard", "chat_list",
+        scenes = self.scenes = ("welcome", "create_identity", "backup_wizard", "chat_list",
                   "conversation", "contacts", "groups", "group_conversation",
-                  "reference", "translator", "listen", "me")
+                  "reference", "translator", "listen", "me", "network_bootstrap")
         for locale in ("en", "zh"):
-            folder = self.source / "macos" / locale
-            folder.mkdir(parents=True)
-            for scene in scenes:
-                rng = random.Random(f"{locale}/{scene}")
-                raw = b"".join(b"\x00" + rng.randbytes(96 * 3) for _ in range(96))
-                def chunk(kind, data):
-                    return (struct.pack(">I", len(data)) + kind + data
-                            + struct.pack(">I", zlib.crc32(kind + data)))
-                png = (b"\x89PNG\r\n\x1a\n"
-                       + chunk(b"IHDR", struct.pack(">IIBBBBB", 96, 96, 8, 2, 0, 0, 0))
-                       + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
-                (folder / f"{scene}.png").write_bytes(png)
+            self.add_locale(locale)
+
+    def add_locale(self, locale):
+        folder = self.source / "macos" / locale
+        folder.mkdir(parents=True, exist_ok=True)
+        for scene in self.scenes:
+            rng = random.Random(f"{locale}/{scene}")
+            raw = b"".join(b"\x00" + rng.randbytes(96 * 3) for _ in range(96))
+            def chunk(kind, data):
+                return (struct.pack(">I", len(data)) + kind + data
+                        + struct.pack(">I", zlib.crc32(kind + data)))
+            png = (b"\x89PNG\r\n\x1a\n"
+                   + chunk(b"IHDR", struct.pack(">IIBBBBB", 96, 96, 8, 2, 0, 0, 0))
+                   + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+            (folder / f"{scene}.png").write_bytes(png)
+
+    def test_all_ten_canonical_locales_publish_to_explicit_output(self):
+        locales = ("en", "zh", "zh_Hant", "ja", "ko", "de", "fr", "es", "pt", "ru")
+        for locale in locales[2:]:
+            self.add_locale(locale)
+        before = snapshot(self.source)
+        self.run_import(extra=("--locales", ",".join(locales)))
+        self.assertEqual(snapshot(self.output), before)
+        self.assertEqual(snapshot(self.source), before)
+
+    def test_each_style_and_brightness_can_publish_to_explicit_output(self):
+        before = snapshot(self.source)
+        for style in ("classic", "modern", "radio", "paper", "cartoon"):
+            for theme in ("light", "dark", "system"):
+                with self.subTest(style=style, theme=theme):
+                    output = self.root / f"{style}-{theme}"
+                    self.run_import(output=output, extra=("--style", style, "--theme", theme))
+                    self.assertEqual(snapshot(output), before)
+        self.assertEqual(snapshot(self.source), before)
+
+    def test_all_styles_keep_separate_profile_folders(self):
+        matrix = self.root / "matrix"
+        for style in ("classic", "modern", "radio", "paper", "cartoon"):
+            shutil.copytree(self.source, matrix / style)
+        before = snapshot(matrix)
+        self.run_import(source=matrix, extra=("--style", "all"))
+        self.assertEqual(snapshot(self.output), before)
+        self.assertEqual(snapshot(matrix), before)
+
+    def test_custom_profile_requires_explicit_output(self):
+        for args in (("--locales", "en"), ("--style", "radio"),
+                     ("--style", "all"), ("--theme", "dark")):
+            with self.subTest(args=args):
+                result = subprocess.run(["bash", str(SCRIPT), "--from", str(self.source), *args],
+                                        cwd=REPO, text=True, capture_output=True, timeout=30)
+                self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+                self.assertIn("explicit --out", result.stderr)
+        self.assertFalse(self.output.exists())
+
+    def test_custom_profile_cannot_overwrite_canonical_gallery(self):
+        result = subprocess.run(["bash", str(SCRIPT), "--from", str(self.source),
+                                 "--style", "radio", "--out", str(REPO / "doc/screenshots")],
+                                cwd=REPO, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+        self.assertIn("canonical gallery", result.stderr)
+
+    def test_invalid_locale_style_theme_and_environment_do_not_publish(self):
+        for args in (("--locales", "en,en"), ("--locales", "en,"),
+                     ("--locales", "unknown"), ("--style", "unknown"),
+                     ("--style", ""), ("--theme", "unknown"), ("--theme", "")):
+            with self.subTest(args=args):
+                self.run_import(extra=args, expected=64)
+        for knob in ("DITMESH_SHOT_STYLE", "DITMESH_SHOT_THEME"):
+            for value in ("unknown", ""):
+                with self.subTest(knob=knob, value=value):
+                    result = subprocess.run(["bash", str(SCRIPT), "--from", str(self.source),
+                                             "--out", str(self.output)], cwd=REPO,
+                                            env={**os.environ, knob: value},
+                                            text=True, capture_output=True, timeout=30)
+                    self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+        self.assertFalse(self.output.exists())
 
     def run_import(self, *, source=None, output=None, extra=(), expected=0):
         result = subprocess.run(
@@ -71,8 +135,14 @@ class CaptureImportTest(unittest.TestCase):
         result = self.run_import()
         self.assertEqual(snapshot(self.output), before)
         self.assertEqual(snapshot(self.source), before)
-        self.assertEqual(len(before), 24)
+        self.assertEqual(len(before), 26)
         self.assertIn("from completed CI capture", result.stdout)
+
+    def test_missing_network_settings_keeps_previous_gallery(self):
+        before = self.protect_destination()
+        (self.source / "macos/en/network_bootstrap.png").unlink()
+        self.run_import(expected=1)
+        self.assertEqual(snapshot(self.output), before)
 
     def test_missing_frame_keeps_previous_gallery(self):
         before = self.protect_destination()
@@ -116,7 +186,7 @@ class CaptureImportTest(unittest.TestCase):
         before = snapshot(self.source), snapshot(self.output)
         self.run_import(expected=64)
         self.assertEqual((snapshot(self.source), snapshot(self.output)), before)
-        self.assertEqual(len(list(seed.glob("*.png"))), 12)
+        self.assertEqual(len(list(seed.glob("*.png"))), 13)
 
     def test_source_platform_symlink_is_rejected(self):
         linked = self.root / "linked-platform"
@@ -140,13 +210,13 @@ class CaptureImportTest(unittest.TestCase):
     def test_partial_locale_can_publish_only_to_explicit_output(self):
         before = snapshot(self.source)
         self.run_import(extra=("--locales", "en"))
-        self.assertEqual(len(list(self.output.rglob("*.png"))), 12)
+        self.assertEqual(len(list(self.output.rglob("*.png"))), 13)
         self.assertFalse((self.output / "macos/zh").exists())
         self.assertEqual(snapshot(self.source), before)
 
     def test_invalid_import_arguments_do_not_publish(self):
         commands = (
-            ("--from",), ("--from=",),
+            ("--from",), ("--from=",), ("--style",), ("--theme",), ("--locales",),
             ("--from", str(self.root / "missing")),
             ("--from", str(self.source), "--device", "macos"),
         )

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
 
@@ -9,13 +10,22 @@ import 'backend_factory.dart';
 final class FakeBackendFactory extends BackendFactory {
   FakeBackendFactory({
     FakeIdentityService? identityService,
+    NetworkBootstrapService? networkBootstrapService,
     ChatService Function(IdentityService identity)? chatService,
     String label = 'In-memory fake (no network)',
   }) : _identityService = identityService,
        _chatService = chatService,
+       _network =
+           networkBootstrapService ??
+           FakeNetworkBootstrapService(
+             supportsLan:
+                 defaultTargetPlatform != TargetPlatform.android &&
+                 defaultTargetPlatform != TargetPlatform.iOS,
+           ),
        _label = label;
 
   final String _label;
+  final NetworkBootstrapService _network;
 
   final FakeIdentityService? _identityService;
   final ChatService Function(IdentityService identity)? _chatService;
@@ -25,6 +35,9 @@ final class FakeBackendFactory extends BackendFactory {
 
   @override
   bool get isAvailable => true;
+
+  @override
+  NetworkBootstrapService createNetworkBootstrapService() => _network;
 
   @override
   IdentityService createIdentityService() =>
@@ -48,6 +61,7 @@ final class FakeBackendFactory extends BackendFactory {
     // future that FakeAsync never resumes.
     await Future.wait(<Future<void>>[
       chat.dispose(),
+      _network.dispose(),
       if (identity is FakeIdentityService) identity.dispose(),
     ]);
   }

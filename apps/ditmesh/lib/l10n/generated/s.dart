@@ -7441,6 +7441,276 @@ abstract class S {
   /// In en, this message translates to:
   /// **'DitMesh could not start the Tox network backend. Check that the native libraries are installed, then retry.'**
   String get backendStartupFailedBody;
+
+  /// Tox bootstrap network settings: Title
+  ///
+  /// In en, this message translates to:
+  /// **'Network and bootstrap'**
+  String get bootstrapTitle;
+
+  /// Tox bootstrap network settings: Description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the public nodes used to join the Tox network.'**
+  String get bootstrapDescription;
+
+  /// Tox bootstrap network settings: ModeAuto
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get bootstrapModeAuto;
+
+  /// Tox bootstrap network settings: ModeManual
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get bootstrapModeManual;
+
+  /// Tox bootstrap network settings: ModeLan
+  ///
+  /// In en, this message translates to:
+  /// **'LAN host'**
+  String get bootstrapModeLan;
+
+  /// Tox bootstrap network settings: AutoDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Start with built-in nodes and refresh the official list in the background.'**
+  String get bootstrapAutoDescription;
+
+  /// Tox bootstrap network settings: ManualDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Use only your chosen node. You can enter a LAN node here.'**
+  String get bootstrapManualDescription;
+
+  /// Tox bootstrap network settings: LanDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Run a local UDP/DHT node on this desktop for other LAN devices.'**
+  String get bootstrapLanDescription;
+
+  /// Tox bootstrap network settings: CurrentNode
+  ///
+  /// In en, this message translates to:
+  /// **'Current node'**
+  String get bootstrapCurrentNode;
+
+  /// Tox bootstrap network settings: Host
+  ///
+  /// In en, this message translates to:
+  /// **'Host or IP address'**
+  String get bootstrapHost;
+
+  /// Tox bootstrap network settings: Port
+  ///
+  /// In en, this message translates to:
+  /// **'UDP port'**
+  String get bootstrapPort;
+
+  /// Tox bootstrap network settings: PublicKey
+  ///
+  /// In en, this message translates to:
+  /// **'DHT public key'**
+  String get bootstrapPublicKey;
+
+  /// Tox bootstrap network settings: TestNode
+  ///
+  /// In en, this message translates to:
+  /// **'Test node'**
+  String get bootstrapTestNode;
+
+  /// Tox bootstrap network settings: SaveNode
+  ///
+  /// In en, this message translates to:
+  /// **'Use tested node'**
+  String get bootstrapSaveNode;
+
+  /// Tox bootstrap network settings: ChooseNode
+  ///
+  /// In en, this message translates to:
+  /// **'Choose public node'**
+  String get bootstrapChooseNode;
+
+  /// Tox bootstrap network settings: Reachable
+  ///
+  /// In en, this message translates to:
+  /// **'DHT response received'**
+  String get bootstrapReachable;
+
+  /// Tox bootstrap network settings: Unreachable
+  ///
+  /// In en, this message translates to:
+  /// **'No DHT response'**
+  String get bootstrapUnreachable;
+
+  /// Tox bootstrap network settings: Invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid host, port or public key'**
+  String get bootstrapInvalid;
+
+  /// Tox bootstrap network settings: UdpUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'A UDP probe could not run on this device. TCP connectivity is not tested.'**
+  String get bootstrapUdpUnavailable;
+
+  /// Tox bootstrap network settings: ProbeUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'The probe could not start. This says nothing about node reachability.'**
+  String get bootstrapProbeUnavailable;
+
+  /// Tox bootstrap network settings: Fallback
+  ///
+  /// In en, this message translates to:
+  /// **'Showing built-in fallback nodes; the official list could not be loaded.'**
+  String get bootstrapFallback;
+
+  /// Tox bootstrap network settings: Maintainer
+  ///
+  /// In en, this message translates to:
+  /// **'Maintainer'**
+  String get bootstrapMaintainer;
+
+  /// Tox bootstrap network settings: Location
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get bootstrapLocation;
+
+  /// Tox bootstrap network settings: LastPing
+  ///
+  /// In en, this message translates to:
+  /// **'Last public check'**
+  String get bootstrapLastPing;
+
+  /// Tox bootstrap network settings: SwitchTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Switch bootstrap node'**
+  String get bootstrapSwitchTitle;
+
+  /// Tox bootstrap network settings: SwitchQuestion
+  ///
+  /// In en, this message translates to:
+  /// **'Use this node?'**
+  String get bootstrapSwitchQuestion;
+
+  /// Tox bootstrap network settings: NotTestedWarning
+  ///
+  /// In en, this message translates to:
+  /// **'This node has not been tested on your device.'**
+  String get bootstrapNotTestedWarning;
+
+  /// Tox bootstrap network settings: FailedWarning
+  ///
+  /// In en, this message translates to:
+  /// **'This node did not answer a UDP probe. You can still select it.'**
+  String get bootstrapFailedWarning;
+
+  /// Tox bootstrap network settings: InconclusiveWarning
+  ///
+  /// In en, this message translates to:
+  /// **'The probe was inconclusive. TCP connectivity is not tested.'**
+  String get bootstrapInconclusiveWarning;
+
+  /// Tox bootstrap network settings: SwitchConfirm
+  ///
+  /// In en, this message translates to:
+  /// **'Use node'**
+  String get bootstrapSwitchConfirm;
+
+  /// Tox bootstrap network settings: Refresh
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh list'**
+  String get bootstrapRefresh;
+
+  /// Tox bootstrap network settings: StartLan
+  ///
+  /// In en, this message translates to:
+  /// **'Start LAN node'**
+  String get bootstrapStartLan;
+
+  /// Tox bootstrap network settings: StopLan
+  ///
+  /// In en, this message translates to:
+  /// **'Stop LAN node'**
+  String get bootstrapStopLan;
+
+  /// Tox bootstrap network settings: LanStopped
+  ///
+  /// In en, this message translates to:
+  /// **'LAN node is stopped'**
+  String get bootstrapLanStopped;
+
+  /// Tox bootstrap network settings: LanRunning
+  ///
+  /// In en, this message translates to:
+  /// **'LAN node is running'**
+  String get bootstrapLanRunning;
+
+  /// Tox bootstrap network settings: LanKeyChanges
+  ///
+  /// In en, this message translates to:
+  /// **'The DHT key changes when the node restarts. Share the current full key.'**
+  String get bootstrapLanKeyChanges;
+
+  /// Tox bootstrap network settings: LanFirewallHint
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices must reach this UDP port through your local firewall.'**
+  String get bootstrapLanFirewallHint;
+
+  /// Tox bootstrap network settings: CopyNode
+  ///
+  /// In en, this message translates to:
+  /// **'Copy node details'**
+  String get bootstrapCopyNode;
+
+  /// Tox bootstrap network settings: ShareNode
+  ///
+  /// In en, this message translates to:
+  /// **'Share node details'**
+  String get bootstrapShareNode;
+
+  /// Tox bootstrap network settings: OperationFailed
+  ///
+  /// In en, this message translates to:
+  /// **'The network setting could not be applied.'**
+  String get bootstrapOperationFailed;
+
+  /// Tox bootstrap network settings: ServiceUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'Network settings are unavailable for this backend.'**
+  String get bootstrapServiceUnavailable;
+
+  /// Tox bootstrap network settings: Source
+  ///
+  /// In en, this message translates to:
+  /// **'Official public node list'**
+  String get bootstrapSource;
+
+  /// Node online status from the public catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get bootstrapOnline;
+
+  /// Node offline status from the public catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get bootstrapOffline;
+
+  /// Catalogue transport availability, not a live connectivity probe.
+  ///
+  /// In en, this message translates to:
+  /// **'UDP: {udp} · TCP: {tcp}'**
+  String bootstrapProtocolStatus(String udp, String tcp);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

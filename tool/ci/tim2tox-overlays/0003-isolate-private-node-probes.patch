@@ -1,0 +1,34 @@
+diff --git a/ffi/tim2tox_ffi.cpp b/ffi/tim2tox_ffi.cpp
+--- a/ffi/tim2tox_ffi.cpp
++++ b/ffi/tim2tox_ffi.cpp
+@@ -1568,12 +1568,15 @@
+ // every time the user's own session already holds it in this process.
+ int64_t tim2tox_ffi_create_bootstrap_instance(const char* init_path, int udp_start_port) {
+     TestInstanceOptions options;
+-    options.local_discovery_enabled = 1;
++    // DitMesh reserves signed -1 for a private probe: no LAN discovery and
++    // no process-wide chat listeners, while keeping the existing creator ABI.
++    const bool private_probe = udp_start_port == -1;
++    options.local_discovery_enabled = private_probe ? 0 : 1;
+     options.ipv6_enabled = 1;
+     if (udp_start_port > 0 && udp_start_port <= 65535) {
+         options.udp_start_port = udp_start_port;
+         options.udp_end_port = static_cast<int>(std::min<long>(static_cast<long>(udp_start_port) + 100, 65535));
+-    } else if (udp_start_port != 0) {
++    } else if (udp_start_port != 0 && !private_probe) {
+         V2TIM_LOG(kWarning, "[ffi] create_bootstrap_instance: ignoring out-of-range udp_start_port={} (want 0 or 1..65535)", udp_start_port);
+     }
+     return CreateManagedInstance(init_path, options, /*headless=*/true, "create_bootstrap_instance");
+diff --git a/ffi/tim2tox_ffi.h b/ffi/tim2tox_ffi.h
+--- a/ffi/tim2tox_ffi.h
++++ b/ffi/tim2tox_ffi.h
+@@ -40,6 +40,9 @@
+ // init_path: profile path for the node's savedata
+ // udp_start_port: preferred UDP port (binds the first free port in
+ //                 [udp_start_port, udp_start_port + 100]); 0 = toxcore default
++// DitMesh overlay: signed -1 creates a private DHT probe with local discovery
++// disabled and the default UDP range. It remains headless, so no process-wide
++// SDK/message listeners or listener replay can emit chat connection events.
+ // Returns: instance handle on success, 0 on failure. Destroy with
+ // tim2tox_ffi_destroy_test_instance.
+ int64_t tim2tox_ffi_create_bootstrap_instance(const char* init_path, int udp_start_port);

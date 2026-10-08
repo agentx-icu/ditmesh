@@ -24,7 +24,8 @@ NATIVE_MANAGER_FIXTURE = (
 class ReleaseValidationTests(unittest.TestCase):
     def copy_native_group_sources(self, source):
         upstream = TOOLS.parents[1] / "third_party" / "tim2tox"
-        for relative in ("source/V2TIMGroupManagerImpl.cpp", "ffi/dart_compat_group.cpp"):
+        for relative in ("source/V2TIMGroupManagerImpl.cpp", "ffi/dart_compat_group.cpp",
+                         "ffi/tim2tox_ffi.cpp", "ffi/tim2tox_ffi.h"):
             destination = source / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(upstream / relative, destination)
@@ -241,6 +242,57 @@ class ReleaseValidationTests(unittest.TestCase):
         self.assertIn("patch", rejected.stderr.lower())
         self.assertIn("tox_options_set_experimental_groups_persistence(opts, true)",
                       staged.read_text())
+
+    def test_native_private_probe_is_headless_without_discovery_and_preserves_lan(self):
+        compiler = shutil.which("c++")
+        self.assertIsNotNone(compiler, "A C++ compiler is required for the native-option regression")
+        source = self.root / "tim2tox"
+        manager = source / "source" / "ToxManager.cpp"
+        manager.parent.mkdir(parents=True)
+        manager.write_text(NATIVE_MANAGER_FIXTURE)
+        self.copy_native_group_sources(source)
+        original = (source / "ffi" / "tim2tox_ffi.cpp").read_bytes()
+        destination = self.root / "staged"
+        staged = subprocess.run(
+            ["python3", str(TOOLS / "prepare_native_source.py"), str(source), str(destination)],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(staged.returncode, 0, staged.stderr)
+        patched = (destination / "ffi" / "tim2tox_ffi.cpp").read_text()
+        start = patched.index("int64_t tim2tox_ffi_create_bootstrap_instance(")
+        stop = patched.index("// Per-instance UDP bind range", start)
+        function = patched[start:stop]
+        fixture = self.root / "bootstrap_options.cpp"
+        fixture.write_text(
+            "#include <algorithm>\n#include <cstdint>\n#include <iostream>\n#include <type_traits>\n"
+            "#define V2TIM_LOG(...) ((void)0)\n"
+            "struct TestInstanceOptions { int local_discovery_enabled; int ipv6_enabled; "
+            "int udp_start_port = 0; int udp_end_port = 0; };\n"
+            "TestInstanceOptions captured; bool captured_headless;\n"
+            "int64_t CreateManagedInstance(const char*, const TestInstanceOptions& options, "
+            "bool headless, const char*) { captured = options; captured_headless = headless; return 7; }\n"
+            + function +
+            "static_assert(std::is_same<decltype(&tim2tox_ffi_create_bootstrap_instance), "
+            "int64_t (*)(const char*, int)>::value, \"Existing signed creator ABI must remain unchanged\");\n"
+            "int main() { for (int port : {-1, 0, 33445, 65535, -2, 65536}) { "
+            "std::cout << tim2tox_ffi_create_bootstrap_instance(\"/private/profile\", port) << ' ' "
+            "<< captured_headless << ' ' << captured.local_discovery_enabled << ' ' "
+            "<< captured.ipv6_enabled << ' ' << captured.udp_start_port << ' ' "
+            "<< captured.udp_end_port << '\\n'; } }\n"
+        )
+        executable = self.root / "bootstrap_options"
+        compiled = subprocess.run([compiler, "-std=c++11", str(fixture), "-o", str(executable)],
+                                  capture_output=True, text=True, check=False)
+        self.assertEqual(compiled.returncode, 0, compiled.stderr)
+        result = subprocess.run([str(executable)], capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [
+            "7 1 0 1 0 0",  # Private probe: no discovery or chat listeners.
+            "7 1 1 1 0 0",  # Existing default LAN semantics.
+            "7 1 1 1 33445 33545", "7 1 1 1 65535 65535",
+            "7 1 1 1 0 0", "7 1 1 1 0 0",  # Other invalid ports still fall back.
+        ])
+        self.assertEqual((source / "ffi" / "tim2tox_ffi.cpp").read_bytes(), original)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
 import 'account_widgets.dart';
+import '../network/bootstrap_page.dart';
 import 'restore_backup_page.dart';
 
 /// Password prompt for an encrypted profile. The password is never persisted;
@@ -93,6 +94,12 @@ class _UnlockPageState extends State<UnlockPage> {
               ),
             ),
             child: Text(s.accountUnlockRestoreInstead),
+          ),
+          TextButton.icon(
+            key: const ValueKey('onboarding-network-bootstrap'),
+            onPressed: () => BootstrapPage.open(context),
+            icon: const Icon(Icons.hub_outlined),
+            label: Text(s.bootstrapTitle),
           ),
           const SizedBox(height: 8),
         ],

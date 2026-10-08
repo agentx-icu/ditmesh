@@ -2,7 +2,7 @@
 //
 //   dart run tool/gen_tray_icons.dart            (from the repository root)
 //
-// Output (all rendered from the same "· −" glyph):
+// Output (all rendered from the selected solid signal-tower/Morse glyph):
 //   tray_template_{16,22,32}.png  macOS template: black glyph on transparent,
 //                                 AppKit tints it for light/dark menu bars.
 //   tray_icon_{16,22,32}.png      Linux (AppIndicator): white glyph on a
@@ -23,6 +23,8 @@
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
+
+import 'icon_glyph.dart';
 
 const List<int> _sizes = [16, 22, 32];
 // What LoadImage(..., SM_CXSMICON) asks for at 100/125/150/200/250/300 %.
@@ -58,19 +60,11 @@ void main(List<String> args) {
   );
 }
 
-/// The "· −" glyph (a dot then a dash, Morse for "A" without the letter
-/// spacing) centred on a [size]×[size] canvas: black on transparent for the
-/// macOS [template], otherwise white on a rounded dark-teal tile.
-///
-/// Shapes are drawn opaque and their anti-aliased coverage moved into the
-/// alpha channel: drawing straight onto transparent pixels blends the edges
-/// towards black at full opacity (a dark, jagged rim on the tile).
+/// The tower mask is black/transparent on macOS, white/teal elsewhere.
 img.Image _glyph(int size, {required bool template}) {
   final image = img.Image(width: size, height: size, numChannels: 4);
   if (template) {
-    final mask = img.Image(width: size, height: size);
-    img.fill(mask, color: _black);
-    _drawGlyph(mask, size, _white);
+    final mask = towerMask(size, scale: 1.2);
     for (final pixel in mask) {
       image.setPixelRgba(pixel.x, pixel.y, 0, 0, 0, pixel.r);
     }
@@ -78,7 +72,7 @@ img.Image _glyph(int size, {required bool template}) {
   }
   final opaque = img.Image(width: size, height: size);
   img.fill(opaque, color: _tile);
-  _drawGlyph(opaque, size, _white);
+  drawTowerOnTile(opaque, _white);
   final shape = img.Image(width: size, height: size);
   img.fill(shape, color: _black);
   img.fillRect(
@@ -95,35 +89,6 @@ img.Image _glyph(int size, {required bool template}) {
     image.setPixelRgba(pixel.x, pixel.y, pixel.r, pixel.g, pixel.b, coverage);
   }
   return image;
-}
-
-/// Draws the dot and the dash in [color] onto [image].
-void _drawGlyph(img.Image image, int size, img.Color color) {
-  final centerY = size ~/ 2;
-  // Stroke weight: 2 px at 16, 3 px at 22, 4 px at 32.
-  final stroke = (size / 8).round().clamp(2, 6);
-  final half = stroke ~/ 2;
-  final inset = (size * 0.16).round();
-
-  // Dot: a filled circle at the left.
-  final dotRadius = (stroke * 0.75).round().clamp(1, size);
-  final dotX = inset + dotRadius;
-  img.fillCircle(image, x: dotX, y: centerY, radius: dotRadius, color: color);
-
-  // Dash: a rounded bar filling the rest of the width.
-  final dashX1 = dotX + dotRadius + (size * 0.12).round();
-  final dashX2 = size - 1 - inset;
-  if (dashX2 > dashX1) {
-    img.fillRect(
-      image,
-      x1: dashX1,
-      y1: centerY - half,
-      x2: dashX2,
-      y2: centerY - half + stroke - 1,
-      color: color,
-      radius: half,
-    );
-  }
 }
 
 void _write(String path, List<int> bytes) {

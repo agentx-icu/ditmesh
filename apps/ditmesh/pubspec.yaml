@@ -59,6 +59,8 @@ dev_dependencies:
   flutter_driver:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Deterministic debounce/cooldown coverage for mobile network handover.
+  fake_async: ^1.3.3
   # Native persistence tests force an uncached read of backend preferences.
   shared_preferences: ^2.2.2
   # test/moderation/: a fake UrlLauncherPlatform records the site links
@@ -74,3 +76,4 @@ flutter:
   generate: true
   assets:
     - assets/tray/
+    - icon/app_icon_1024.png

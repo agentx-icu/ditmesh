@@ -42,6 +42,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DitMesh uses the local network to connect to Tox peers and bootstrap nodes on your network.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>DitMesh uses the camera only to scan a friend's Tox ID QR code.</string>
 	<key>NSMicrophoneUsageDescription</key>

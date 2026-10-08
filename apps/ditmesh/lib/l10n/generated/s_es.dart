@@ -4307,4 +4307,141 @@ class SEs extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh no pudo iniciar el servicio de red Tox. Comprueba que las bibliotecas nativas estén instaladas y vuelve a intentarlo.';
+
+  @override
+  String get bootstrapTitle => 'Red y nodos de arranque';
+
+  @override
+  String get bootstrapDescription => 'Elige los nodos públicos para entrar en la red Tox.';
+
+  @override
+  String get bootstrapModeAuto => 'Automático';
+
+  @override
+  String get bootstrapModeManual => 'Manual';
+
+  @override
+  String get bootstrapModeLan => 'Servidor LAN';
+
+  @override
+  String get bootstrapAutoDescription => 'Iniciar con nodos integrados y actualizar la lista oficial en segundo plano.';
+
+  @override
+  String get bootstrapManualDescription => 'Usar solo el nodo elegido. También puedes introducir un nodo LAN aquí.';
+
+  @override
+  String get bootstrapLanDescription => 'Ejecutar un nodo UDP/DHT local en este ordenador para otros dispositivos LAN.';
+
+  @override
+  String get bootstrapCurrentNode => 'Nodo actual';
+
+  @override
+  String get bootstrapHost => 'Host o dirección IP';
+
+  @override
+  String get bootstrapPort => 'Puerto UDP';
+
+  @override
+  String get bootstrapPublicKey => 'Clave pública DHT';
+
+  @override
+  String get bootstrapTestNode => 'Probar nodo';
+
+  @override
+  String get bootstrapSaveNode => 'Usar nodo probado';
+
+  @override
+  String get bootstrapChooseNode => 'Elegir nodo público';
+
+  @override
+  String get bootstrapReachable => 'Respuesta DHT recibida';
+
+  @override
+  String get bootstrapUnreachable => 'Sin respuesta DHT';
+
+  @override
+  String get bootstrapInvalid => 'Host, puerto o clave pública no válidos';
+
+  @override
+  String get bootstrapUdpUnavailable => 'Este dispositivo no puede realizar la prueba UDP. No se ha probado TCP.';
+
+  @override
+  String get bootstrapProbeUnavailable => 'No se pudo iniciar la prueba. Esto no indica si el nodo es accesible.';
+
+  @override
+  String get bootstrapFallback => 'No se pudo cargar la lista oficial. Se muestran los nodos de reserva integrados.';
+
+  @override
+  String get bootstrapMaintainer => 'Responsable';
+
+  @override
+  String get bootstrapLocation => 'Ubicación';
+
+  @override
+  String get bootstrapLastPing => 'Última comprobación pública';
+
+  @override
+  String get bootstrapSwitchTitle => 'Cambiar nodo de arranque';
+
+  @override
+  String get bootstrapSwitchQuestion => '¿Usar este nodo?';
+
+  @override
+  String get bootstrapNotTestedWarning => 'Este nodo aún no se ha probado en tu dispositivo.';
+
+  @override
+  String get bootstrapFailedWarning => 'Este nodo no respondió a la prueba UDP. Puedes elegirlo de todos modos.';
+
+  @override
+  String get bootstrapInconclusiveWarning => 'La prueba no fue concluyente. No se ha probado TCP.';
+
+  @override
+  String get bootstrapSwitchConfirm => 'Usar nodo';
+
+  @override
+  String get bootstrapRefresh => 'Actualizar lista';
+
+  @override
+  String get bootstrapStartLan => 'Iniciar nodo LAN';
+
+  @override
+  String get bootstrapStopLan => 'Detener nodo LAN';
+
+  @override
+  String get bootstrapLanStopped => 'Nodo LAN detenido';
+
+  @override
+  String get bootstrapLanRunning => 'Nodo LAN activo';
+
+  @override
+  String get bootstrapLanKeyChanges => 'La clave DHT cambia al reiniciar el nodo. Comparte la clave completa actual.';
+
+  @override
+  String get bootstrapLanFirewallHint => 'Otros dispositivos deben poder acceder a este puerto UDP a través del cortafuegos local.';
+
+  @override
+  String get bootstrapCopyNode => 'Copiar datos del nodo';
+
+  @override
+  String get bootstrapShareNode => 'Compartir datos del nodo';
+
+  @override
+  String get bootstrapOperationFailed => 'No se pudo aplicar la configuración de red.';
+
+  @override
+  String get bootstrapServiceUnavailable => 'La configuración de red no está disponible para este motor.';
+
+  @override
+  String get bootstrapSource => 'Lista oficial de nodos públicos';
+
+  @override
+  String get bootstrapOnline => 'En línea';
+
+  @override
+  String get bootstrapOffline => 'Sin conexión';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }

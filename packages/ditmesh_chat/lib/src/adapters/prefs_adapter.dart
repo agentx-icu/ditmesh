@@ -23,11 +23,17 @@ class Tim2ToxPreferencesAdapter
         DraftPreferencesService,
         GroupIdentityPreferencesService,
         AccountScopedPreferencesService {
-  Tim2ToxPreferencesAdapter(this._store, {required String accountPrefix})
-    : _accountPrefix = accountPrefix;
+  Tim2ToxPreferencesAdapter(
+    this._store, {
+    required String accountPrefix,
+    this.resolveBootstrapHost,
+    this.persistBootstrapSelection = true,
+  }) : _accountPrefix = accountPrefix;
 
   final KeyValueStore _store;
   final String _accountPrefix;
+  final Future<String?> Function(String)? resolveBootstrapHost;
+  final bool persistBootstrapSelection;
 
   static const _kGroups = 'groups_list';
   static const _kQuitGroups = 'quit_groups_list';
@@ -313,8 +319,12 @@ class Tim2ToxPreferencesAdapter
     final host = _store.getString(_kBootstrapHost);
     final pubkey = _store.getString(_kBootstrapPubkey) ?? '';
     if (host == null || host.isEmpty || pubkey.isEmpty) return null;
+    final numericHost = resolveBootstrapHost == null
+        ? host
+        : await resolveBootstrapHost!(host);
+    if (numericHost == null) return null;
     return (
-      host: host,
+      host: numericHost,
       port: _store.getInt(_kBootstrapPort) ?? 33445,
       pubkey: pubkey,
     );
@@ -326,6 +336,7 @@ class Tim2ToxPreferencesAdapter
     int port,
     String pubkey,
   ) async {
+    if (!persistBootstrapSelection) return;
     await _store.setString(_kBootstrapHost, host);
     await _store.setInt(_kBootstrapPort, port);
     await _store.setString(_kBootstrapPubkey, pubkey);

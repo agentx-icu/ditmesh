@@ -4264,4 +4264,141 @@ class SJa extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh は Tox ネットワークのバックエンドを起動できませんでした。ネイティブライブラリがインストールされていることを確認し、再試行してください。';
+
+  @override
+  String get bootstrapTitle => 'ネットワークとブートストラップ';
+
+  @override
+  String get bootstrapDescription => 'Tox ネットワークに参加するための公開ノードを選択します。';
+
+  @override
+  String get bootstrapModeAuto => '自動';
+
+  @override
+  String get bootstrapModeManual => '手動';
+
+  @override
+  String get bootstrapModeLan => 'LAN ホスト';
+
+  @override
+  String get bootstrapAutoDescription => '内蔵ノードから開始し、公式一覧をバックグラウンドで更新します。';
+
+  @override
+  String get bootstrapManualDescription => '選択したノードのみ使用します。LAN ノードも入力できます。';
+
+  @override
+  String get bootstrapLanDescription => 'このデスクトップで他の LAN 端末用の UDP/DHT ノードを実行します。';
+
+  @override
+  String get bootstrapCurrentNode => '現在のノード';
+
+  @override
+  String get bootstrapHost => 'ホスト名または IP アドレス';
+
+  @override
+  String get bootstrapPort => 'UDP ポート';
+
+  @override
+  String get bootstrapPublicKey => 'DHT 公開鍵';
+
+  @override
+  String get bootstrapTestNode => 'ノードをテスト';
+
+  @override
+  String get bootstrapSaveNode => 'テスト済みノードを使用';
+
+  @override
+  String get bootstrapChooseNode => '公開ノードを選択';
+
+  @override
+  String get bootstrapReachable => 'DHT 応答を受信';
+
+  @override
+  String get bootstrapUnreachable => 'DHT 応答なし';
+
+  @override
+  String get bootstrapInvalid => 'ホスト、ポート、公開鍵が無効です';
+
+  @override
+  String get bootstrapUdpUnavailable => 'この端末では UDP 検査を実行できません。TCP 接続は未検査です。';
+
+  @override
+  String get bootstrapProbeUnavailable => '検査を開始できませんでした。ノードの到達性は不明です。';
+
+  @override
+  String get bootstrapFallback => '公式一覧を読み込めないため、内蔵の予備ノードを表示しています。';
+
+  @override
+  String get bootstrapMaintainer => '管理者';
+
+  @override
+  String get bootstrapLocation => '所在地';
+
+  @override
+  String get bootstrapLastPing => '最終公開チェック';
+
+  @override
+  String get bootstrapSwitchTitle => 'ブートストラップノードを変更';
+
+  @override
+  String get bootstrapSwitchQuestion => 'このノードを使用しますか？';
+
+  @override
+  String get bootstrapNotTestedWarning => 'この端末ではまだテストしていないノードです。';
+
+  @override
+  String get bootstrapFailedWarning => 'UDP 検査に応答しませんでしたが、このノードを選択できます。';
+
+  @override
+  String get bootstrapInconclusiveWarning => '検査結果は不明です。TCP 接続は未検査です。';
+
+  @override
+  String get bootstrapSwitchConfirm => 'ノードを使用';
+
+  @override
+  String get bootstrapRefresh => '一覧を更新';
+
+  @override
+  String get bootstrapStartLan => 'LAN ノードを開始';
+
+  @override
+  String get bootstrapStopLan => 'LAN ノードを停止';
+
+  @override
+  String get bootstrapLanStopped => 'LAN ノード停止中';
+
+  @override
+  String get bootstrapLanRunning => 'LAN ノード実行中';
+
+  @override
+  String get bootstrapLanKeyChanges => '再起動すると DHT 鍵が変わります。現在の公開鍵全体を共有してください。';
+
+  @override
+  String get bootstrapLanFirewallHint => '他の端末からローカルのファイアウォール経由でこの UDP ポートに到達できる必要があります。';
+
+  @override
+  String get bootstrapCopyNode => 'ノード情報をコピー';
+
+  @override
+  String get bootstrapShareNode => 'ノード情報を共有';
+
+  @override
+  String get bootstrapOperationFailed => 'ネットワーク設定を適用できませんでした。';
+
+  @override
+  String get bootstrapServiceUnavailable => 'このバックエンドではネットワーク設定を利用できません。';
+
+  @override
+  String get bootstrapSource => '公式公開ノード一覧';
+
+  @override
+  String get bootstrapOnline => 'オンライン';
+
+  @override
+  String get bootstrapOffline => 'オフライン';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }

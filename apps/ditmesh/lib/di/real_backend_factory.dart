@@ -47,6 +47,9 @@ final class RealBackendFactory extends BackendFactory {
   }
 
   @override
+  NetworkBootstrapService createNetworkBootstrapService() => _ready.bootstrap;
+
+  @override
   IdentityService createIdentityService() => _ready.identity;
 
   @override

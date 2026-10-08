@@ -8,3 +8,6 @@
 
 /* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
 "NSMicrophoneUsageDescription" = "DitMesh 僅使用麥克風解碼你在附近播放或拍發的摩斯電碼。";
+
+/* Connecting to local Tox peers and bootstrap nodes. */
+"NSLocalNetworkUsageDescription" = "DitMesh 使用區域網路連線至同一網路上的 Tox 使用者與引導節點。";

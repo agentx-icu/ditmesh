@@ -4264,6 +4264,143 @@ class SZh extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh 无法启动 Tox 网络后端。请确认原生库已安装，然后重试。';
+
+  @override
+  String get bootstrapTitle => '网络与引导节点';
+
+  @override
+  String get bootstrapDescription => '选择加入 Tox 网络所使用的公共节点。';
+
+  @override
+  String get bootstrapModeAuto => '自动';
+
+  @override
+  String get bootstrapModeManual => '手动';
+
+  @override
+  String get bootstrapModeLan => 'LAN 托管';
+
+  @override
+  String get bootstrapAutoDescription => '先使用内置节点，再在后台刷新官方列表。';
+
+  @override
+  String get bootstrapManualDescription => '只使用你选择的节点，也可在此填写局域网节点。';
+
+  @override
+  String get bootstrapLanDescription => '在此桌面设备上运行本地 UDP/DHT 节点，供其他局域网设备使用。';
+
+  @override
+  String get bootstrapCurrentNode => '当前节点';
+
+  @override
+  String get bootstrapHost => '主机名或 IP 地址';
+
+  @override
+  String get bootstrapPort => 'UDP 端口';
+
+  @override
+  String get bootstrapPublicKey => 'DHT 公钥';
+
+  @override
+  String get bootstrapTestNode => '测试节点';
+
+  @override
+  String get bootstrapSaveNode => '使用已测试节点';
+
+  @override
+  String get bootstrapChooseNode => '选择公共节点';
+
+  @override
+  String get bootstrapReachable => '已收到 DHT 响应';
+
+  @override
+  String get bootstrapUnreachable => '未收到 DHT 响应';
+
+  @override
+  String get bootstrapInvalid => '主机、端口或公钥无效';
+
+  @override
+  String get bootstrapUdpUnavailable => '此设备无法进行 UDP 探测，未测试 TCP 连通性。';
+
+  @override
+  String get bootstrapProbeUnavailable => '探测无法启动，这不能说明节点是否可达。';
+
+  @override
+  String get bootstrapFallback => '无法加载官方列表，正在显示内置备用节点。';
+
+  @override
+  String get bootstrapMaintainer => '维护者';
+
+  @override
+  String get bootstrapLocation => '位置';
+
+  @override
+  String get bootstrapLastPing => '最近公共检查';
+
+  @override
+  String get bootstrapSwitchTitle => '切换引导节点';
+
+  @override
+  String get bootstrapSwitchQuestion => '使用此节点？';
+
+  @override
+  String get bootstrapNotTestedWarning => '此节点尚未在你的设备上测试。';
+
+  @override
+  String get bootstrapFailedWarning => '此节点未响应 UDP 探测，你仍然可以选择它。';
+
+  @override
+  String get bootstrapInconclusiveWarning => '探测没有明确结论，未测试 TCP 连通性。';
+
+  @override
+  String get bootstrapSwitchConfirm => '使用节点';
+
+  @override
+  String get bootstrapRefresh => '刷新列表';
+
+  @override
+  String get bootstrapStartLan => '启动 LAN 节点';
+
+  @override
+  String get bootstrapStopLan => '停止 LAN 节点';
+
+  @override
+  String get bootstrapLanStopped => 'LAN 节点已停止';
+
+  @override
+  String get bootstrapLanRunning => 'LAN 节点正在运行';
+
+  @override
+  String get bootstrapLanKeyChanges => '节点重启后 DHT 公钥会变化，请分享当前完整公钥。';
+
+  @override
+  String get bootstrapLanFirewallHint => '其他设备需要通过本地防火墙访问此 UDP 端口。';
+
+  @override
+  String get bootstrapCopyNode => '复制节点信息';
+
+  @override
+  String get bootstrapShareNode => '分享节点信息';
+
+  @override
+  String get bootstrapOperationFailed => '无法应用此网络设置。';
+
+  @override
+  String get bootstrapServiceUnavailable => '此后端无法使用网络设置。';
+
+  @override
+  String get bootstrapSource => '官方公共节点列表';
+
+  @override
+  String get bootstrapOnline => '在线';
+
+  @override
+  String get bootstrapOffline => '离线';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP：$udp · TCP：$tcp';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -8526,4 +8663,141 @@ class SZhHant extends SZh {
 
   @override
   String get backendStartupFailedBody => 'DitMesh 無法啟動 Tox 網路後端。請確認原生函式庫已安裝，然後重試。';
+
+  @override
+  String get bootstrapTitle => '網路與引導節點';
+
+  @override
+  String get bootstrapDescription => '選擇加入 Tox 網路所使用的公共節點。';
+
+  @override
+  String get bootstrapModeAuto => '自動';
+
+  @override
+  String get bootstrapModeManual => '手動';
+
+  @override
+  String get bootstrapModeLan => 'LAN 託管';
+
+  @override
+  String get bootstrapAutoDescription => '先使用內建節點，再於背景更新官方清單。';
+
+  @override
+  String get bootstrapManualDescription => '只使用你選擇的節點，也可在此填寫區域網路節點。';
+
+  @override
+  String get bootstrapLanDescription => '在此桌面裝置上執行本地 UDP/DHT 節點，供其他區域網路裝置使用。';
+
+  @override
+  String get bootstrapCurrentNode => '目前節點';
+
+  @override
+  String get bootstrapHost => '主機名稱或 IP 位址';
+
+  @override
+  String get bootstrapPort => 'UDP 連接埠';
+
+  @override
+  String get bootstrapPublicKey => 'DHT 公開金鑰';
+
+  @override
+  String get bootstrapTestNode => '測試節點';
+
+  @override
+  String get bootstrapSaveNode => '使用已測試節點';
+
+  @override
+  String get bootstrapChooseNode => '選擇公共節點';
+
+  @override
+  String get bootstrapReachable => '已收到 DHT 回應';
+
+  @override
+  String get bootstrapUnreachable => '未收到 DHT 回應';
+
+  @override
+  String get bootstrapInvalid => '主機、連接埠或公開金鑰無效';
+
+  @override
+  String get bootstrapUdpUnavailable => '此裝置無法進行 UDP 探測，尚未測試 TCP 連線。';
+
+  @override
+  String get bootstrapProbeUnavailable => '探測無法啟動，這不能說明節點是否可達。';
+
+  @override
+  String get bootstrapFallback => '無法載入官方清單，正在顯示內建備用節點。';
+
+  @override
+  String get bootstrapMaintainer => '維護者';
+
+  @override
+  String get bootstrapLocation => '位置';
+
+  @override
+  String get bootstrapLastPing => '最近公共檢查';
+
+  @override
+  String get bootstrapSwitchTitle => '切換引導節點';
+
+  @override
+  String get bootstrapSwitchQuestion => '使用此節點？';
+
+  @override
+  String get bootstrapNotTestedWarning => '此節點尚未在你的裝置上測試。';
+
+  @override
+  String get bootstrapFailedWarning => '此節點未回應 UDP 探測，你仍然可以選擇它。';
+
+  @override
+  String get bootstrapInconclusiveWarning => '探測沒有明確結論，尚未測試 TCP 連線。';
+
+  @override
+  String get bootstrapSwitchConfirm => '使用節點';
+
+  @override
+  String get bootstrapRefresh => '更新清單';
+
+  @override
+  String get bootstrapStartLan => '啟動 LAN 節點';
+
+  @override
+  String get bootstrapStopLan => '停止 LAN 節點';
+
+  @override
+  String get bootstrapLanStopped => 'LAN 節點已停止';
+
+  @override
+  String get bootstrapLanRunning => 'LAN 節點正在執行';
+
+  @override
+  String get bootstrapLanKeyChanges => '節點重新啟動後 DHT 公開金鑰會變更，請分享目前完整金鑰。';
+
+  @override
+  String get bootstrapLanFirewallHint => '其他裝置需要透過本地防火牆存取此 UDP 連接埠。';
+
+  @override
+  String get bootstrapCopyNode => '複製節點資訊';
+
+  @override
+  String get bootstrapShareNode => '分享節點資訊';
+
+  @override
+  String get bootstrapOperationFailed => '無法套用此網路設定。';
+
+  @override
+  String get bootstrapServiceUnavailable => '此後端無法使用網路設定。';
+
+  @override
+  String get bootstrapSource => '官方公共節點清單';
+
+  @override
+  String get bootstrapOnline => '在線';
+
+  @override
+  String get bootstrapOffline => '離線';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP：$udp · TCP：$tcp';
+  }
 }

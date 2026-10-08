@@ -25,6 +25,7 @@ dependencies:
   tencent_cloud_chat_sdk: any
   crypto: ^3.0.3
   ffi: ^2.1.0
+  http: ^1.6.0
   # 11.x: its Windows plugin depends on win32 ^6, the same major apps/ditmesh's
   # share_plus needs; 9.x/10.x pin win32 ^5 and make the workspace unsolvable.
   flutter_secure_storage: ^11.0.0

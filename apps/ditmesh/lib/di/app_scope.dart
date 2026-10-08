@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import '../i18n/locale_controller.dart';
 import '../keying/key_profiles.dart';
 import '../lifecycle/app_lifecycle_coordinator.dart';
 import '../lifecycle/background_task_api.dart';
+import '../lifecycle/network_change_rebootstrapper.dart';
 import '../notifications/connection_banner_policy.dart';
 import '../notifications/notification_center.dart';
 import '../notifications/notification_prefs.dart';
@@ -47,6 +49,7 @@ class AppScope extends StatefulWidget {
     this.notificationApis,
     this.desktopShell,
     this.backgroundTasks,
+    this.networkSnapshots,
     this.features = AppFeatures.fromEnvironment,
   });
 
@@ -77,11 +80,16 @@ class AppScope extends StatefulWidget {
   /// durability flush runs); null means none (tests).
   final BackgroundTaskApi? backgroundTasks;
 
+  /// Explicit platform stream from main; tests leave platform channels untouched.
+  final Stream<NetworkPathSnapshot>? networkSnapshots;
+
   @override
   State<AppScope> createState() => _AppScopeState();
 }
 
 class _AppScopeState extends State<AppScope> {
+  late final NetworkBootstrapService? _network = widget.factory
+      .createNetworkBootstrapService();
   late final IdentityService _identity = widget.factory.createIdentityService();
   late final ChatService _chat = widget.factory.createChatService(_identity);
   late final KeyValueStore _store =
@@ -109,6 +117,8 @@ class _AppScopeState extends State<AppScope> {
     notificationPrefs: _preferences.notifications,
     onBackground: _flushSettings,
     backgroundTasks: widget.backgroundTasks,
+    networkBootstrap: _network,
+    networkSnapshots: widget.networkSnapshots,
     // The startup controller owns connect(): its error is the chip's too.
     reconnect: () async {
       await _startup.reconnect();
@@ -172,6 +182,7 @@ class _AppScopeState extends State<AppScope> {
       providers: [
         Provider<AppFeatures>.value(value: widget.features),
         Provider<IdentityService>.value(value: _identity),
+        Provider<NetworkBootstrapService?>.value(value: _network),
         Provider<ChatService>.value(value: _chat),
         Provider<BackupFileGateway>.value(value: _backupFiles),
         Provider<AppPreferences>.value(value: _preferences),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../i18n/l10n_extension.dart';
 import 'account_widgets.dart';
+import '../network/bootstrap_page.dart';
 import 'create_identity_page.dart';
 import 'restore_backup_page.dart';
 
@@ -18,7 +19,15 @@ class WelcomePage extends StatelessWidget {
       body: AccountPageBody(
         children: [
           const SizedBox(height: 32),
-          Icon(Icons.radio, size: 64, color: theme.colorScheme.primary),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'icon/app_icon_1024.png',
+              width: 64,
+              height: 64,
+              excludeFromSemantics: true,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             s.appName,
@@ -61,6 +70,12 @@ class WelcomePage extends StatelessWidget {
             ),
             icon: const Icon(Icons.restore),
             label: Text(s.accountRestoreFromBackup),
+          ),
+          TextButton.icon(
+            key: const ValueKey('onboarding-network-bootstrap'),
+            onPressed: () => BootstrapPage.open(context),
+            icon: const Icon(Icons.hub_outlined),
+            label: Text(s.bootstrapTitle),
           ),
           const SizedBox(height: 16),
         ],

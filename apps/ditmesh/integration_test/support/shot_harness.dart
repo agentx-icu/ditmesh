@@ -13,6 +13,7 @@
 //   DITMESH_SHOT_PIXEL_RATIO  capture scale; default 1.0 on desktop, the native dpr on iOS
 //                             (App Store sizes), min(dpr, 2) on Android
 //   DITMESH_SHOT_WINDOW       desktop window size `WxH`, default 1280x800
+//   DITMESH_SHOT_STYLE        classic | modern (default) | radio | paper | cartoon
 //   DITMESH_SHOT_THEME        light (default) | dark | system
 import 'dart:convert';
 import 'dart:io';
@@ -26,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:integration_test/integration_test.dart';
 import 'package:ditmesh/di/app_settings.dart';
+import 'package:ditmesh/i18n/locale_resolution.dart';
 import 'package:ditmesh/ui/appearance/ui_style.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -47,6 +49,11 @@ const String _themeDefine = String.fromEnvironment(
   defaultValue: 'light',
 );
 
+const String _styleDefine = String.fromEnvironment(
+  'DITMESH_SHOT_STYLE',
+  defaultValue: 'modern',
+);
+
 /// Key under `binding.reportData` holding the captured frames.
 const String kShotReportKey = 'ditmeshScreenshots';
 
@@ -64,11 +71,65 @@ String shotPlatform() {
   return 'unknown';
 }
 
-List<String> shotLocales() => _localesDefine
-    .split(',')
-    .map((l) => l.trim())
-    .where((l) => l.isNotEmpty)
-    .toList(growable: false);
+const kShotLocales = [
+  'en',
+  'zh',
+  'zh_Hant',
+  'ja',
+  'ko',
+  'de',
+  'fr',
+  'es',
+  'pt',
+  'ru',
+];
+
+List<String> shotLocales() => parseShotLocales(_localesDefine);
+
+List<String> parseShotLocales(String define) {
+  final tags = define
+      .split(',')
+      .map((tag) => tag.trim())
+      .toList(growable: false);
+  if (tags.any((tag) => !kShotLocales.contains(tag)) ||
+      tags.toSet().length != tags.length) {
+    throw ArgumentError.value(
+      define,
+      'DITMESH_SHOT_LOCALES',
+      'expected distinct canonical locale tags',
+    );
+  }
+  return tags;
+}
+
+Locale parseShotLocale(String tag) {
+  if (!kShotLocales.contains(tag)) {
+    throw ArgumentError.value(
+      tag,
+      'DITMESH_SHOT_LOCALES',
+      'unsupported locale',
+    );
+  }
+  return parseLocaleTag(tag)!;
+}
+
+UiStyle parseShotStyle(String define) => UiStyle.values.firstWhere(
+  (style) => style.name == define,
+  orElse: () => throw ArgumentError.value(
+    define,
+    'DITMESH_SHOT_STYLE',
+    'unsupported style',
+  ),
+);
+
+Future<void> applyShotAppearance(
+  AppSettings settings, {
+  required String style,
+  required String theme,
+}) => settings.applyAppearance(
+  style: parseShotStyle(style),
+  themeMode: parseShotTheme(theme),
+);
 
 /// Largest window edge [desktopWindowSize] accepts, in logical pixels.
 const double kMaxWindowEdge = 8192;
@@ -229,13 +290,16 @@ class ShotHarness {
     return false;
   }
 
-  /// Pins Modern Calm and brightness for consistent product screenshots.
+  /// Applies the requested style and brightness before capturing.
   Future<void> applyTheme(WidgetTester tester) async {
-    final mode = parseShotTheme(_themeDefine);
     final settings = tester
         .element(find.byType(MaterialApp))
         .read<AppSettings>();
-    await settings.applyAppearance(style: UiStyle.modern, themeMode: mode);
+    await applyShotAppearance(
+      settings,
+      style: _styleDefine,
+      theme: _themeDefine,
+    );
     await settle(tester);
   }
 

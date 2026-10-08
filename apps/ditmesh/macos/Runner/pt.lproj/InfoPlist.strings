@@ -8,3 +8,6 @@
 
 /* Shown when DitMesh first asks for the microphone (decoding Morse from audio). */
 "NSMicrophoneUsageDescription" = "O DitMesh usa o microfone apenas para decodificar o código Morse que você reproduz ou transmite por perto.";
+
+/* Connecting to local Tox peers and bootstrap nodes. */
+"NSLocalNetworkUsageDescription" = "DitMesh usa a rede local para se conectar a usuários Tox e nós de inicialização na sua rede.";

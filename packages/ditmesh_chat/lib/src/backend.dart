@@ -10,6 +10,9 @@ import 'identity/secure_store.dart';
 import 'identity/tim2tox_identity_service.dart';
 import 'logging/chat_logger.dart';
 import 'native/native_library.dart';
+import 'bootstrap/network_bootstrap_service.dart';
+import 'bootstrap/tim2tox_bootstrap_runtime.dart';
+import 'package:path/path.dart' as p;
 
 /// Builds the Tim2Tox-backed [IdentityService] + [ChatService] pair that
 /// share one engine (one `FfiChatService` per connected session).
@@ -29,6 +32,7 @@ class DitmeshChatBackend {
   DitmeshChatBackend._({
     required this.identity,
     required this.chat,
+    required this.bootstrap,
     required ChatEngine engine,
     required Tim2ToxIdentityService identityImpl,
   }) : _engine = engine,
@@ -36,6 +40,7 @@ class DitmeshChatBackend {
 
   final IdentityService identity;
   final ChatService chat;
+  final NetworkBootstrapService bootstrap;
   final ChatEngine _engine;
   final Tim2ToxIdentityService _identityImpl;
 
@@ -66,13 +71,26 @@ class DitmeshChatBackend {
     final resolvedPaths =
         paths ?? await IdentityPaths.forApplicationSupport(logger: logger);
     final kv = store ?? await SharedPreferencesStore.open();
+    late Tim2ToxNetworkBootstrapService bootstrap;
     final eng =
         engine ??
         Tim2ToxEngine(
           store: kv,
           logger: logger,
           libraryPathOverride: nativeLibraryPathOverride,
+          onBootstrapStart: () => bootstrap.sessionStarted(),
+          onBootstrapStop: () => bootstrap.sessionStopped(),
         );
+    bootstrap = Tim2ToxNetworkBootstrapService(
+      store: kv,
+      logger: logger,
+      runtime: Tim2ToxBootstrapRuntime(
+        session: () => eng.service,
+        profileRoot: p.join(p.dirname(resolvedPaths.root), 'network'),
+        logger: logger,
+      ),
+    );
+    await bootstrap.initialize();
     final identity = Tim2ToxIdentityService(
       paths: resolvedPaths,
       engine: eng,
@@ -91,6 +109,7 @@ class DitmeshChatBackend {
     return DitmeshChatBackend._(
       identity: identity,
       chat: chat,
+      bootstrap: bootstrap,
       engine: eng,
       identityImpl: identity,
     );
@@ -99,6 +118,7 @@ class DitmeshChatBackend {
   /// Stops networking (re-encrypting the profile if needed) and releases
   /// every stream. The backend cannot be reused afterwards.
   Future<void> dispose() async {
+    await bootstrap.dispose();
     await chat.dispose();
     await identity.disconnect();
     await _identityImpl.dispose();

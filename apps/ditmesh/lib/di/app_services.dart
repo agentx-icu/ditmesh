@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../desktop/desktop_shell_controller.dart';
@@ -8,6 +9,8 @@ import '../i18n/locale_controller.dart';
 import '../i18n/strings_resolver.dart';
 import '../lifecycle/app_lifecycle_coordinator.dart';
 import '../lifecycle/background_task_api.dart';
+import '../lifecycle/lifecycle_hint.dart';
+import '../lifecycle/network_change_rebootstrapper.dart';
 import '../notifications/badge_api.dart';
 import '../notifications/connection_banner_policy.dart';
 import '../notifications/local_notifications_api.dart';
@@ -46,6 +49,8 @@ final class AppServices {
     BackgroundTaskApi? backgroundTasks,
     Future<Object?> Function()? reconnect,
     this.desktopShell,
+    this.networkBootstrap,
+    this.networkSnapshots,
     this.chatEnabled = true,
   }) : lifecycle = AppLifecycleCoordinator(
          identity: identity,
@@ -106,6 +111,11 @@ final class AppServices {
 
   StreamSubscription<List<Conversation>>? _unreadSub;
   bool _started = false;
+  bool _disposed = false;
+  final NetworkBootstrapService? networkBootstrap;
+  final Stream<NetworkPathSnapshot>? networkSnapshots;
+  NetworkChangeReBootstrapper? _networkWatcher;
+  StreamSubscription<LifecycleHint>? _bootstrapLifecycle;
 
   /// Idempotent. Safe to call before the identity exists: every piece reacts
   /// to streams, nothing here blocks on the network.
@@ -115,6 +125,29 @@ final class AppServices {
     // Before attach(): a launch straight into the background emits its
     // `background` hint synchronously, and diagnostics must see it.
     if (chatEnabled) diagnostics.start();
+    final bootstrap = networkBootstrap;
+    if (bootstrap != null) {
+      _bootstrapLifecycle = lifecycle.hints.listen((hint) {
+        if (hint != LifecycleHint.foreground || _disposed) return;
+        unawaited(
+          bootstrap
+              .rebootstrap(
+                onlyIfDisconnected: true,
+                isCurrent: () => !_disposed,
+              )
+              .catchError((Object error) {
+                debugPrint('[NetworkBootstrap] resume: $error');
+              }),
+        );
+      });
+      final snapshots = networkSnapshots;
+      if (snapshots != null) {
+        _networkWatcher = NetworkChangeReBootstrapper(
+          snapshots: snapshots,
+          kick: (live) => bootstrap.rebootstrap(isCurrent: live),
+        )..start();
+      }
+    }
     lifecycle.attach();
     if (chatEnabled) banner.start();
     final center = notifications;
@@ -169,6 +202,7 @@ final class AppServices {
   /// microtask hops as `a` takes, and the widget tree would already be gone
   /// (`flutter test` flags exactly that as a pending timer).
   Future<void> dispose() async {
+    _disposed = true;
     // The scope disposes its LocaleController right after calling us and
     // the resolver must have let go of it by then.
     strings.removeListener(_onStringsChanged);
@@ -176,6 +210,8 @@ final class AppServices {
     desktopShell?.removeBeforeQuitListener(_beforeQuit);
     final pending = <Future<void>>[
       ?_unreadSub?.cancel(),
+      ?_bootstrapLifecycle?.cancel(),
+      ?_networkWatcher?.dispose(),
       ?notifications?.dispose(),
       banner.dispose(),
       lifecycle.dispose(),

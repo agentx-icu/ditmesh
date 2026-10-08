@@ -282,6 +282,12 @@ jobs:
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
         run: dart pub get --enforce-lockfile
+      - name: Native encryption, persistence and isolated bootstrap tests
+        env:
+          TIM2TOX_FFI_LIB: ${{ github.workspace }}/build/native/linux-x86_64/libtim2tox_ffi.so
+        run: |
+          cd packages/ditmesh_chat
+          flutter test --no-pub --tags=needs-native --concurrency=1
       - name: Real UDP peers, encrypted restart and group restoration
         env:
           TMPDIR: ${{ runner.temp }}
@@ -459,12 +465,12 @@ jobs:
       # vendors it from there) and touches the Podfile so pod install re-runs.
       - name: Stage libtim2tox_ffi.dylib into the app
         run: bash tool/ci/build_tim2tox.sh --target macos-${{ matrix.arch }} --stage-only
-      - name: Native encryption, backup and persistence tests
+      - name: Native encryption, backup, persistence and isolated bootstrap tests
         env:
           TIM2TOX_FFI_LIB: ${{ github.workspace }}/build/native/macos-${{ matrix.arch }}/libtim2tox_ffi.dylib
         run: |
           cd packages/ditmesh_chat
-          flutter test --tags=needs-native
+          flutter test --no-pub --tags=needs-native --concurrency=1
       - name: Real UDP peers, encrypted restart and group restoration
         env:
           TMPDIR: ${{ runner.temp }}

@@ -4387,4 +4387,141 @@ class SRu extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh не удалось запустить сетевую службу Tox. Проверьте, что нативные библиотеки установлены, и повторите попытку.';
+
+  @override
+  String get bootstrapTitle => 'Сеть и узлы начальной загрузки';
+
+  @override
+  String get bootstrapDescription => 'Выберите публичные узлы для подключения к сети Tox.';
+
+  @override
+  String get bootstrapModeAuto => 'Автоматически';
+
+  @override
+  String get bootstrapModeManual => 'Вручную';
+
+  @override
+  String get bootstrapModeLan => 'Узел LAN';
+
+  @override
+  String get bootstrapAutoDescription => 'Начать со встроенных узлов и обновлять официальный список в фоне.';
+
+  @override
+  String get bootstrapManualDescription => 'Использовать только выбранный узел. Здесь можно ввести узел локальной сети.';
+
+  @override
+  String get bootstrapLanDescription => 'Запустить локальный узел UDP/DHT на этом компьютере для других устройств LAN.';
+
+  @override
+  String get bootstrapCurrentNode => 'Текущий узел';
+
+  @override
+  String get bootstrapHost => 'Хост или IP-адрес';
+
+  @override
+  String get bootstrapPort => 'Порт UDP';
+
+  @override
+  String get bootstrapPublicKey => 'Открытый ключ DHT';
+
+  @override
+  String get bootstrapTestNode => 'Проверить узел';
+
+  @override
+  String get bootstrapSaveNode => 'Использовать проверенный узел';
+
+  @override
+  String get bootstrapChooseNode => 'Выбрать публичный узел';
+
+  @override
+  String get bootstrapReachable => 'Получен ответ DHT';
+
+  @override
+  String get bootstrapUnreachable => 'Нет ответа DHT';
+
+  @override
+  String get bootstrapInvalid => 'Недопустимый хост, порт или открытый ключ';
+
+  @override
+  String get bootstrapUdpUnavailable => 'Устройство не смогло выполнить проверку UDP. Соединение TCP не проверялось.';
+
+  @override
+  String get bootstrapProbeUnavailable => 'Не удалось запустить проверку. Доступность узла неизвестна.';
+
+  @override
+  String get bootstrapFallback => 'Не удалось загрузить официальный список. Показаны встроенные резервные узлы.';
+
+  @override
+  String get bootstrapMaintainer => 'Администратор';
+
+  @override
+  String get bootstrapLocation => 'Расположение';
+
+  @override
+  String get bootstrapLastPing => 'Последняя публичная проверка';
+
+  @override
+  String get bootstrapSwitchTitle => 'Сменить узел начальной загрузки';
+
+  @override
+  String get bootstrapSwitchQuestion => 'Использовать этот узел?';
+
+  @override
+  String get bootstrapNotTestedWarning => 'Этот узел ещё не проверялся на вашем устройстве.';
+
+  @override
+  String get bootstrapFailedWarning => 'Узел не ответил на проверку UDP. Вы всё равно можете выбрать его.';
+
+  @override
+  String get bootstrapInconclusiveWarning => 'Проверка не дала определённого результата. Соединение TCP не проверялось.';
+
+  @override
+  String get bootstrapSwitchConfirm => 'Использовать узел';
+
+  @override
+  String get bootstrapRefresh => 'Обновить список';
+
+  @override
+  String get bootstrapStartLan => 'Запустить узел LAN';
+
+  @override
+  String get bootstrapStopLan => 'Остановить узел LAN';
+
+  @override
+  String get bootstrapLanStopped => 'Узел LAN остановлен';
+
+  @override
+  String get bootstrapLanRunning => 'Узел LAN работает';
+
+  @override
+  String get bootstrapLanKeyChanges => 'Ключ DHT меняется при перезапуске. Поделитесь полным текущим ключом.';
+
+  @override
+  String get bootstrapLanFirewallHint => 'Другие устройства должны иметь доступ к этому порту UDP через локальный брандмауэр.';
+
+  @override
+  String get bootstrapCopyNode => 'Копировать данные узла';
+
+  @override
+  String get bootstrapShareNode => 'Поделиться данными узла';
+
+  @override
+  String get bootstrapOperationFailed => 'Не удалось применить настройку сети.';
+
+  @override
+  String get bootstrapServiceUnavailable => 'Настройки сети недоступны для этого движка.';
+
+  @override
+  String get bootstrapSource => 'Официальный список публичных узлов';
+
+  @override
+  String get bootstrapOnline => 'В сети';
+
+  @override
+  String get bootstrapOffline => 'Не в сети';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }

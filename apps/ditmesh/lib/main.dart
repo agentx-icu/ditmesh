@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -20,6 +21,7 @@ import 'i18n/key_value_store.dart';
 import 'i18n/l10n_extension.dart';
 import 'i18n/locale_controller.dart';
 import 'lifecycle/background_task_api.dart';
+import 'lifecycle/network_change_rebootstrapper.dart';
 import 'notifications/app_badge_plus_api.dart';
 import 'notifications/flutter_local_notifications_api.dart';
 import 'startup/startup_gate.dart';
@@ -65,6 +67,7 @@ Future<void> main() async {
           badge: AppBadgePlusApi(),
         ),
         backgroundTasks: BackgroundTaskApi.forPlatform(),
+        networkSnapshots: NetworkChangeReBootstrapper.platformSnapshots(),
       ),
     ),
   );
@@ -98,6 +101,7 @@ class DitmeshApp extends StatelessWidget {
     this.desktopShell,
     this.notifications,
     this.backgroundTasks,
+    this.networkSnapshots,
     this.features = AppFeatures.fromEnvironment,
   });
 
@@ -123,6 +127,7 @@ class DitmeshApp extends StatelessWidget {
 
   /// OS background-task bridge (iOS); null in tests.
   final BackgroundTaskApi? backgroundTasks;
+  final Stream<NetworkPathSnapshot>? networkSnapshots;
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +139,7 @@ class DitmeshApp extends StatelessWidget {
       desktopShell: desktopShell,
       notificationApis: notifications,
       backgroundTasks: backgroundTasks,
+      networkSnapshots: networkSnapshots,
       features: features,
       child: Builder(
         builder: (context) {

@@ -4306,4 +4306,141 @@ class SEn extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh could not start the Tox network backend. Check that the native libraries are installed, then retry.';
+
+  @override
+  String get bootstrapTitle => 'Network and bootstrap';
+
+  @override
+  String get bootstrapDescription => 'Choose the public nodes used to join the Tox network.';
+
+  @override
+  String get bootstrapModeAuto => 'Automatic';
+
+  @override
+  String get bootstrapModeManual => 'Manual';
+
+  @override
+  String get bootstrapModeLan => 'LAN host';
+
+  @override
+  String get bootstrapAutoDescription => 'Start with built-in nodes and refresh the official list in the background.';
+
+  @override
+  String get bootstrapManualDescription => 'Use only your chosen node. You can enter a LAN node here.';
+
+  @override
+  String get bootstrapLanDescription => 'Run a local UDP/DHT node on this desktop for other LAN devices.';
+
+  @override
+  String get bootstrapCurrentNode => 'Current node';
+
+  @override
+  String get bootstrapHost => 'Host or IP address';
+
+  @override
+  String get bootstrapPort => 'UDP port';
+
+  @override
+  String get bootstrapPublicKey => 'DHT public key';
+
+  @override
+  String get bootstrapTestNode => 'Test node';
+
+  @override
+  String get bootstrapSaveNode => 'Use tested node';
+
+  @override
+  String get bootstrapChooseNode => 'Choose public node';
+
+  @override
+  String get bootstrapReachable => 'DHT response received';
+
+  @override
+  String get bootstrapUnreachable => 'No DHT response';
+
+  @override
+  String get bootstrapInvalid => 'Invalid host, port or public key';
+
+  @override
+  String get bootstrapUdpUnavailable => 'A UDP probe could not run on this device. TCP connectivity is not tested.';
+
+  @override
+  String get bootstrapProbeUnavailable => 'The probe could not start. This says nothing about node reachability.';
+
+  @override
+  String get bootstrapFallback => 'Showing built-in fallback nodes; the official list could not be loaded.';
+
+  @override
+  String get bootstrapMaintainer => 'Maintainer';
+
+  @override
+  String get bootstrapLocation => 'Location';
+
+  @override
+  String get bootstrapLastPing => 'Last public check';
+
+  @override
+  String get bootstrapSwitchTitle => 'Switch bootstrap node';
+
+  @override
+  String get bootstrapSwitchQuestion => 'Use this node?';
+
+  @override
+  String get bootstrapNotTestedWarning => 'This node has not been tested on your device.';
+
+  @override
+  String get bootstrapFailedWarning => 'This node did not answer a UDP probe. You can still select it.';
+
+  @override
+  String get bootstrapInconclusiveWarning => 'The probe was inconclusive. TCP connectivity is not tested.';
+
+  @override
+  String get bootstrapSwitchConfirm => 'Use node';
+
+  @override
+  String get bootstrapRefresh => 'Refresh list';
+
+  @override
+  String get bootstrapStartLan => 'Start LAN node';
+
+  @override
+  String get bootstrapStopLan => 'Stop LAN node';
+
+  @override
+  String get bootstrapLanStopped => 'LAN node is stopped';
+
+  @override
+  String get bootstrapLanRunning => 'LAN node is running';
+
+  @override
+  String get bootstrapLanKeyChanges => 'The DHT key changes when the node restarts. Share the current full key.';
+
+  @override
+  String get bootstrapLanFirewallHint => 'Other devices must reach this UDP port through your local firewall.';
+
+  @override
+  String get bootstrapCopyNode => 'Copy node details';
+
+  @override
+  String get bootstrapShareNode => 'Share node details';
+
+  @override
+  String get bootstrapOperationFailed => 'The network setting could not be applied.';
+
+  @override
+  String get bootstrapServiceUnavailable => 'Network settings are unavailable for this backend.';
+
+  @override
+  String get bootstrapSource => 'Official public node list';
+
+  @override
+  String get bootstrapOnline => 'Online';
+
+  @override
+  String get bootstrapOffline => 'Offline';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }

@@ -18,3 +18,4 @@ export 'src/models.dart';
 export 'src/outbox.dart';
 export 'src/peer_text.dart';
 export 'src/tox_address.dart';
+export 'src/network_bootstrap.dart';

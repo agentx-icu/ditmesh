@@ -6,7 +6,7 @@ The complete Tox Morse chat was migrated from MorseCQ; the offline-learning spli
 
 ## Included follow-up work
 
-Independent product/storage/installer identifiers; explicit production backend failure; current encrypted chat backup/restore; account-free local learning persistence; five-platform build/packaging definitions; test gates before draft Release publication; current bilingual documentation, concept boards and real screenshot scenes.
+Independent product/storage/installer identifiers; explicit production backend failure; current encrypted chat backup/restore; account-free local learning persistence; five-platform builds and packaging; test gates before draft Release publication; bilingual documentation, concept boards and real screenshot scenes. The follow-up adds Toxee's node catalogue, isolated DHT probes, manual selection, desktop LAN hosting and mobile network recovery; ten languages, five visual styles, configurable captures and a bounded visual matrix; and the selected C solid signal-tower icon across application, tray and notification resources. See the [follow-up plan](plans/2026-10-08-network-appearance-followup.md) and [network guide](operations/NETWORK.md).
 
 ## Remaining external checks
 

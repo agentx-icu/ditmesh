@@ -4,7 +4,7 @@
 
 ![Desktop and mobile concept](product-concept.png)
 
-Generated with the built-in image_gen tool on 2026-10-08. This is an illustrative product concept, not an application screenshot. The complete reproducible prompt is in [prompt.json](./prompt.json).
+Generated with the built-in image_gen tool on 2026-10-08 and updated with the selected solid signal-tower icon C. This is an illustrative product concept, not an application screenshot. The original and edit prompts are in [prompt.json](./prompt.json).
 
 Current navigation and product boundary: Chat / Groups / Reference / Me; Morse-only touch and keyboard composing.
 

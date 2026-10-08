@@ -4308,4 +4308,141 @@ class SFr extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh n’a pas pu démarrer le service réseau Tox. Vérifiez que les bibliothèques natives sont installées, puis réessayez.';
+
+  @override
+  String get bootstrapTitle => 'Réseau et amorçage';
+
+  @override
+  String get bootstrapDescription => 'Choisissez les nœuds publics pour rejoindre le réseau Tox.';
+
+  @override
+  String get bootstrapModeAuto => 'Automatique';
+
+  @override
+  String get bootstrapModeManual => 'Manuel';
+
+  @override
+  String get bootstrapModeLan => 'Hôte LAN';
+
+  @override
+  String get bootstrapAutoDescription => 'Démarrer avec les nœuds intégrés et actualiser la liste officielle en arrière-plan.';
+
+  @override
+  String get bootstrapManualDescription => 'Utiliser uniquement le nœud choisi. Vous pouvez aussi saisir un nœud LAN ici.';
+
+  @override
+  String get bootstrapLanDescription => 'Exécuter un nœud UDP/DHT local sur cet ordinateur pour les autres appareils du LAN.';
+
+  @override
+  String get bootstrapCurrentNode => 'Nœud actuel';
+
+  @override
+  String get bootstrapHost => 'Hôte ou adresse IP';
+
+  @override
+  String get bootstrapPort => 'Port UDP';
+
+  @override
+  String get bootstrapPublicKey => 'Clé publique DHT';
+
+  @override
+  String get bootstrapTestNode => 'Tester le nœud';
+
+  @override
+  String get bootstrapSaveNode => 'Utiliser le nœud testé';
+
+  @override
+  String get bootstrapChooseNode => 'Choisir un nœud public';
+
+  @override
+  String get bootstrapReachable => 'Réponse DHT reçue';
+
+  @override
+  String get bootstrapUnreachable => 'Aucune réponse DHT';
+
+  @override
+  String get bootstrapInvalid => 'Hôte, port ou clé publique invalide';
+
+  @override
+  String get bootstrapUdpUnavailable => 'Cet appareil ne peut pas effectuer le test UDP. La connexion TCP n’a pas été testée.';
+
+  @override
+  String get bootstrapProbeUnavailable => 'Le test n’a pas pu démarrer. Cela ne renseigne pas sur l’accessibilité du nœud.';
+
+  @override
+  String get bootstrapFallback => 'La liste officielle n’a pas pu être chargée. Affichage des nœuds de secours intégrés.';
+
+  @override
+  String get bootstrapMaintainer => 'Responsable';
+
+  @override
+  String get bootstrapLocation => 'Emplacement';
+
+  @override
+  String get bootstrapLastPing => 'Dernière vérification publique';
+
+  @override
+  String get bootstrapSwitchTitle => 'Changer de nœud d’amorçage';
+
+  @override
+  String get bootstrapSwitchQuestion => 'Utiliser ce nœud ?';
+
+  @override
+  String get bootstrapNotTestedWarning => 'Ce nœud n’a pas encore été testé sur votre appareil.';
+
+  @override
+  String get bootstrapFailedWarning => 'Ce nœud n’a pas répondu au test UDP. Vous pouvez tout de même le choisir.';
+
+  @override
+  String get bootstrapInconclusiveWarning => 'Le test n’est pas concluant. La connexion TCP n’a pas été testée.';
+
+  @override
+  String get bootstrapSwitchConfirm => 'Utiliser le nœud';
+
+  @override
+  String get bootstrapRefresh => 'Actualiser la liste';
+
+  @override
+  String get bootstrapStartLan => 'Démarrer le nœud LAN';
+
+  @override
+  String get bootstrapStopLan => 'Arrêter le nœud LAN';
+
+  @override
+  String get bootstrapLanStopped => 'Nœud LAN arrêté';
+
+  @override
+  String get bootstrapLanRunning => 'Nœud LAN en cours';
+
+  @override
+  String get bootstrapLanKeyChanges => 'La clé DHT change au redémarrage. Partagez la clé complète actuelle.';
+
+  @override
+  String get bootstrapLanFirewallHint => 'Les autres appareils doivent pouvoir accéder à ce port UDP via le pare-feu local.';
+
+  @override
+  String get bootstrapCopyNode => 'Copier les détails du nœud';
+
+  @override
+  String get bootstrapShareNode => 'Partager les détails du nœud';
+
+  @override
+  String get bootstrapOperationFailed => 'Le paramètre réseau n’a pas pu être appliqué.';
+
+  @override
+  String get bootstrapServiceUnavailable => 'Les réglages réseau sont indisponibles pour ce moteur.';
+
+  @override
+  String get bootstrapSource => 'Liste officielle des nœuds publics';
+
+  @override
+  String get bootstrapOnline => 'En ligne';
+
+  @override
+  String get bootstrapOffline => 'Hors ligne';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP : $udp · TCP : $tcp';
+  }
 }

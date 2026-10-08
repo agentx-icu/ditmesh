@@ -4307,4 +4307,141 @@ class SDe extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh konnte das Tox-Netzwerk-Backend nicht starten. Prüfe, ob die nativen Bibliotheken installiert sind, und versuche es erneut.';
+
+  @override
+  String get bootstrapTitle => 'Netzwerk und Bootstrap';
+
+  @override
+  String get bootstrapDescription => 'Wähle die öffentlichen Knoten für den Zugang zum Tox-Netzwerk.';
+
+  @override
+  String get bootstrapModeAuto => 'Automatisch';
+
+  @override
+  String get bootstrapModeManual => 'Manuell';
+
+  @override
+  String get bootstrapModeLan => 'LAN-Host';
+
+  @override
+  String get bootstrapAutoDescription => 'Mit integrierten Knoten starten und die offizielle Liste im Hintergrund aktualisieren.';
+
+  @override
+  String get bootstrapManualDescription => 'Nur den gewählten Knoten verwenden. Hier kannst du auch einen LAN-Knoten eingeben.';
+
+  @override
+  String get bootstrapLanDescription => 'Auf diesem Desktop einen lokalen UDP/DHT-Knoten für andere LAN-Geräte betreiben.';
+
+  @override
+  String get bootstrapCurrentNode => 'Aktueller Knoten';
+
+  @override
+  String get bootstrapHost => 'Host oder IP-Adresse';
+
+  @override
+  String get bootstrapPort => 'UDP-Port';
+
+  @override
+  String get bootstrapPublicKey => 'Öffentlicher DHT-Schlüssel';
+
+  @override
+  String get bootstrapTestNode => 'Knoten testen';
+
+  @override
+  String get bootstrapSaveNode => 'Getesteten Knoten verwenden';
+
+  @override
+  String get bootstrapChooseNode => 'Öffentlichen Knoten wählen';
+
+  @override
+  String get bootstrapReachable => 'DHT-Antwort empfangen';
+
+  @override
+  String get bootstrapUnreachable => 'Keine DHT-Antwort';
+
+  @override
+  String get bootstrapInvalid => 'Host, Port oder öffentlicher Schlüssel ungültig';
+
+  @override
+  String get bootstrapUdpUnavailable => 'Dieses Gerät konnte keine UDP-Prüfung ausführen. TCP wurde nicht getestet.';
+
+  @override
+  String get bootstrapProbeUnavailable => 'Die Prüfung konnte nicht starten. Die Erreichbarkeit des Knotens ist unbekannt.';
+
+  @override
+  String get bootstrapFallback => 'Die offizielle Liste konnte nicht geladen werden. Integrierte Ersatzknoten werden angezeigt.';
+
+  @override
+  String get bootstrapMaintainer => 'Betreiber';
+
+  @override
+  String get bootstrapLocation => 'Standort';
+
+  @override
+  String get bootstrapLastPing => 'Letzte öffentliche Prüfung';
+
+  @override
+  String get bootstrapSwitchTitle => 'Bootstrap-Knoten wechseln';
+
+  @override
+  String get bootstrapSwitchQuestion => 'Diesen Knoten verwenden?';
+
+  @override
+  String get bootstrapNotTestedWarning => 'Dieser Knoten wurde auf deinem Gerät noch nicht getestet.';
+
+  @override
+  String get bootstrapFailedWarning => 'Dieser Knoten hat auf die UDP-Prüfung nicht geantwortet. Er kann dennoch gewählt werden.';
+
+  @override
+  String get bootstrapInconclusiveWarning => 'Die Prüfung war nicht eindeutig. TCP wurde nicht getestet.';
+
+  @override
+  String get bootstrapSwitchConfirm => 'Knoten verwenden';
+
+  @override
+  String get bootstrapRefresh => 'Liste aktualisieren';
+
+  @override
+  String get bootstrapStartLan => 'LAN-Knoten starten';
+
+  @override
+  String get bootstrapStopLan => 'LAN-Knoten stoppen';
+
+  @override
+  String get bootstrapLanStopped => 'LAN-Knoten gestoppt';
+
+  @override
+  String get bootstrapLanRunning => 'LAN-Knoten läuft';
+
+  @override
+  String get bootstrapLanKeyChanges => 'Der DHT-Schlüssel ändert sich beim Neustart. Teile den aktuellen vollständigen Schlüssel.';
+
+  @override
+  String get bootstrapLanFirewallHint => 'Andere Geräte müssen diesen UDP-Port durch die lokale Firewall erreichen können.';
+
+  @override
+  String get bootstrapCopyNode => 'Knotendaten kopieren';
+
+  @override
+  String get bootstrapShareNode => 'Knotendaten teilen';
+
+  @override
+  String get bootstrapOperationFailed => 'Die Netzwerkeinstellung konnte nicht angewendet werden.';
+
+  @override
+  String get bootstrapServiceUnavailable => 'Für dieses Backend sind keine Netzwerkeinstellungen verfügbar.';
+
+  @override
+  String get bootstrapSource => 'Offizielle öffentliche Knotenliste';
+
+  @override
+  String get bootstrapOnline => 'Online';
+
+  @override
+  String get bootstrapOffline => 'Offline';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }

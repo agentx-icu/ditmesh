@@ -4264,4 +4264,141 @@ class SKo extends S {
 
   @override
   String get backendStartupFailedBody => 'DitMesh가 Tox 네트워크 백엔드를 시작하지 못했습니다. 네이티브 라이브러리가 설치되어 있는지 확인한 후 다시 시도하세요.';
+
+  @override
+  String get bootstrapTitle => '네트워크 및 부트스트랩';
+
+  @override
+  String get bootstrapDescription => 'Tox 네트워크에 참여할 공개 노드를 선택합니다.';
+
+  @override
+  String get bootstrapModeAuto => '자동';
+
+  @override
+  String get bootstrapModeManual => '수동';
+
+  @override
+  String get bootstrapModeLan => 'LAN 호스트';
+
+  @override
+  String get bootstrapAutoDescription => '내장 노드로 시작하고 공식 목록을 백그라운드에서 갱신합니다.';
+
+  @override
+  String get bootstrapManualDescription => '선택한 노드만 사용합니다. LAN 노드도 입력할 수 있습니다.';
+
+  @override
+  String get bootstrapLanDescription => '이 데스크톱에서 다른 LAN 장치용 로컬 UDP/DHT 노드를 실행합니다.';
+
+  @override
+  String get bootstrapCurrentNode => '현재 노드';
+
+  @override
+  String get bootstrapHost => '호스트 또는 IP 주소';
+
+  @override
+  String get bootstrapPort => 'UDP 포트';
+
+  @override
+  String get bootstrapPublicKey => 'DHT 공개 키';
+
+  @override
+  String get bootstrapTestNode => '노드 테스트';
+
+  @override
+  String get bootstrapSaveNode => '테스트한 노드 사용';
+
+  @override
+  String get bootstrapChooseNode => '공개 노드 선택';
+
+  @override
+  String get bootstrapReachable => 'DHT 응답 수신';
+
+  @override
+  String get bootstrapUnreachable => 'DHT 응답 없음';
+
+  @override
+  String get bootstrapInvalid => '호스트, 포트 또는 공개 키가 올바르지 않습니다';
+
+  @override
+  String get bootstrapUdpUnavailable => '이 장치에서 UDP 검사를 실행할 수 없습니다. TCP 연결은 검사하지 않았습니다.';
+
+  @override
+  String get bootstrapProbeUnavailable => '검사를 시작할 수 없습니다. 노드 도달 여부는 알 수 없습니다.';
+
+  @override
+  String get bootstrapFallback => '공식 목록을 불러올 수 없어 내장 예비 노드를 표시합니다.';
+
+  @override
+  String get bootstrapMaintainer => '관리자';
+
+  @override
+  String get bootstrapLocation => '위치';
+
+  @override
+  String get bootstrapLastPing => '최근 공개 검사';
+
+  @override
+  String get bootstrapSwitchTitle => '부트스트랩 노드 변경';
+
+  @override
+  String get bootstrapSwitchQuestion => '이 노드를 사용하시겠습니까?';
+
+  @override
+  String get bootstrapNotTestedWarning => '이 장치에서 아직 테스트하지 않은 노드입니다.';
+
+  @override
+  String get bootstrapFailedWarning => 'UDP 검사에 응답하지 않았지만 이 노드를 선택할 수 있습니다.';
+
+  @override
+  String get bootstrapInconclusiveWarning => '검사 결과가 불확실합니다. TCP 연결은 검사하지 않았습니다.';
+
+  @override
+  String get bootstrapSwitchConfirm => '노드 사용';
+
+  @override
+  String get bootstrapRefresh => '목록 새로고침';
+
+  @override
+  String get bootstrapStartLan => 'LAN 노드 시작';
+
+  @override
+  String get bootstrapStopLan => 'LAN 노드 중지';
+
+  @override
+  String get bootstrapLanStopped => 'LAN 노드 중지됨';
+
+  @override
+  String get bootstrapLanRunning => 'LAN 노드 실행 중';
+
+  @override
+  String get bootstrapLanKeyChanges => '노드를 재시작하면 DHT 키가 바뀝니다. 현재 공개 키 전체를 공유하세요.';
+
+  @override
+  String get bootstrapLanFirewallHint => '다른 장치가 로컬 방화벽을 통해 이 UDP 포트에 접근할 수 있어야 합니다.';
+
+  @override
+  String get bootstrapCopyNode => '노드 정보 복사';
+
+  @override
+  String get bootstrapShareNode => '노드 정보 공유';
+
+  @override
+  String get bootstrapOperationFailed => '네트워크 설정을 적용하지 못했습니다.';
+
+  @override
+  String get bootstrapServiceUnavailable => '이 백엔드에서는 네트워크 설정을 사용할 수 없습니다.';
+
+  @override
+  String get bootstrapSource => '공식 공개 노드 목록';
+
+  @override
+  String get bootstrapOnline => '온라인';
+
+  @override
+  String get bootstrapOffline => '오프라인';
+
+  @override
+  String bootstrapProtocolStatus(String udp, String tcp) {
+    return 'UDP: $udp · TCP: $tcp';
+  }
 }
