@@ -4494,4 +4494,20 @@ class SPt extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name recusou a nova ligação. O histórico mantém-se; tente novamente com a palavra-passe do grupo.';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Ações para $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'Não foi possível guardar o rascunho. Mantenha este ecrã aberto ou envie-o agora.';
+
+  @override
+  String get chatSearchClearDates => 'Limpar intervalo de datas';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name recusou a nova ligação. O histórico mantém-se; pode tentar novamente.';
+  }
 }

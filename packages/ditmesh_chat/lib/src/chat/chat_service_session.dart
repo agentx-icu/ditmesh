@@ -26,7 +26,11 @@ extension _SessionBinding on Tim2ToxChatService {
         ),
       ),
       svc.pendingGroupInvitesChanged.listen(
-        (_) => _groupsPart.refreshInvites(svc),
+        (_) => unawaited(
+          _groupsPart.refreshInvites(svc).catchError((Object e, StackTrace st) {
+            _logger.error('[Chat] invite refresh after a change failed', e, st);
+          }),
+        ),
       ),
       svc.groupJoinFailures.listen((f) => _groupsPart.onJoinFailure(svc, f)),
     ]);

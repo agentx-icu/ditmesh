@@ -1279,5 +1279,9 @@
   "chatGroupJoinRefusedPassword": "{name} への参加が拒否されました。パスワードが違うか、入力されていません。",
   "chatGroupJoinRefusedFull": "{name} への参加が拒否されました。グループが満員です。",
   "chatGroupJoinRefused": "{name} への参加が拒否されました。",
-  "chatGroupReconnectRefused": "{name} への再接続が拒否されました。履歴は保持されています。グループのパスワードで再試行してください。"
+  "chatGroupReconnectRefused": "{name} への再接続が拒否されました。履歴は保持されています。グループのパスワードで再試行してください。",
+  "chatConversationActions": "{name} の操作",
+  "chatDraftSaveFailed": "下書きを保存できませんでした。この画面を開いたままにするか、今すぐ送信してください。",
+  "chatSearchClearDates": "期間をクリア",
+  "chatGroupReconnectFailed": "{name} への再接続が拒否されました。履歴は保持されています。再試行できます。"
 }

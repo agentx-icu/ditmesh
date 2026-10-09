@@ -115,8 +115,12 @@ abstract interface class ChatService {
 
   // ---- Messages ------------------------------------------------------------
 
-  /// Persisted history for a conversation, oldest first. [before] pages
-  /// backwards; null = latest page.
+  /// Persisted history for a conversation, oldest first: the newest [limit]
+  /// rows, or with [before] the newest [limit] rows strictly older than that
+  /// instant. [before] is a coarse time filter, not a paging cursor: rows
+  /// sharing the boundary timestamp are excluded, so paging by the oldest
+  /// row's timestamp can skip rows. Page by id with [loadAround] (or by
+  /// growing [limit]) instead.
   Future<List<ChatMessage>> loadHistory(
     String conversationId, {
     int limit = 50,

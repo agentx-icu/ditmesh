@@ -1279,5 +1279,9 @@
   "chatGroupJoinRefusedPassword": "{name} rechazó la unión: la contraseña es incorrecta o falta.",
   "chatGroupJoinRefusedFull": "{name} rechazó la unión: el grupo está lleno.",
   "chatGroupJoinRefused": "{name} rechazó la unión.",
-  "chatGroupReconnectRefused": "{name} rechazó la reconexión. El historial se conserva; reintenta con la contraseña del grupo."
+  "chatGroupReconnectRefused": "{name} rechazó la reconexión. El historial se conserva; reintenta con la contraseña del grupo.",
+  "chatConversationActions": "Acciones para {name}",
+  "chatDraftSaveFailed": "No se pudo guardar el borrador. Mantén esta pantalla abierta o envíalo ahora.",
+  "chatSearchClearDates": "Quitar el intervalo de fechas",
+  "chatGroupReconnectFailed": "{name} rechazó la reconexión. El historial se conserva; puedes reintentarlo."
 }

@@ -172,8 +172,24 @@ class _MessageInputState extends State<MessageInput>
         _writer.savedDraft = draft;
         _writer.error = null;
       } on Object catch (error) {
+        // Judged here, inside the serialised save: one notice per failure
+        // streak, however many saves were queued behind it. Only a storage
+        // failure is reported: a ChatException is the service refusing
+        // (not connected, conversation gone), which the screen reports.
+        final bool firstFailure = _writer.error == null;
         _writer.error = error;
         debugPrint('[MessageInput] draft save failed: $error');
+        if (firstFailure &&
+            error is! ChatException &&
+            mounted &&
+            Scaffold.maybeOf(context) != null &&
+            _live &&
+            _acceptDrafts &&
+            _writer.valid &&
+            (_identity == null ||
+                _identity?.current?.publicKey == _identityKey)) {
+          showSnack(context, context.s.chatDraftSaveFailed);
+        }
       }
     });
   }

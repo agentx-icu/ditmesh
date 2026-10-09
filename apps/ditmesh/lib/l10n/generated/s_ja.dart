@@ -4450,4 +4450,20 @@ class SJa extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name への再接続が拒否されました。履歴は保持されています。グループのパスワードで再試行してください。';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return '$name の操作';
+  }
+
+  @override
+  String get chatDraftSaveFailed => '下書きを保存できませんでした。この画面を開いたままにするか、今すぐ送信してください。';
+
+  @override
+  String get chatSearchClearDates => '期間をクリア';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name への再接続が拒否されました。履歴は保持されています。再試行できます。';
+  }
 }

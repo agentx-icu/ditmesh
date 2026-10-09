@@ -1279,5 +1279,9 @@
   "chatGroupJoinRefusedPassword": "{name} 拒絕了加入：密碼錯誤或未填寫。",
   "chatGroupJoinRefusedFull": "{name} 拒絕了加入：群組已滿。",
   "chatGroupJoinRefused": "{name} 拒絕了加入。",
-  "chatGroupReconnectRefused": "{name} 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。"
+  "chatGroupReconnectRefused": "{name} 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。",
+  "chatConversationActions": "{name} 的操作",
+  "chatDraftSaveFailed": "草稿未能儲存。請保持此畫面開啟，或立即傳送。",
+  "chatSearchClearDates": "清除日期範圍",
+  "chatGroupReconnectFailed": "{name} 拒絕了重新連線。歷史紀錄已保留；可以重試。"
 }

@@ -117,7 +117,10 @@ class ConversationMetaStore {
 
   /// The portable part of this identity's metadata (backup, F10): pins,
   /// hidden conversations and drafts. Queued group invites are left out on
-  /// purpose: a restored identity never replays them.
+  /// purpose: a restored identity never replays them. So are [withdrawals]:
+  /// a restore never rebuilds the outbox they act on; instead the backup
+  /// leaves the rows they name out of its review items
+  /// (`BackupSnapshot.withoutWithdrawn`).
   Map<String, Object?> exportPortable() => {
     'pinned': pinned.toList()..sort(),
     'hidden': hidden.toList()..sort(),

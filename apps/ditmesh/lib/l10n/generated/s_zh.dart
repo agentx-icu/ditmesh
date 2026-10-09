@@ -4450,6 +4450,22 @@ class SZh extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name 拒绝了重新连接。历史记录已保留；请使用群组密码重试。';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return '$name 的操作';
+  }
+
+  @override
+  String get chatDraftSaveFailed => '草稿未能保存。请保持此页面打开，或立即发送。';
+
+  @override
+  String get chatSearchClearDates => '清除日期范围';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name 拒绝了重新连接。历史记录已保留；可以重试。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -8897,5 +8913,21 @@ class SZhHant extends SZh {
   @override
   String chatGroupReconnectRefused(String name) {
     return '$name 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。';
+  }
+
+  @override
+  String chatConversationActions(String name) {
+    return '$name 的操作';
+  }
+
+  @override
+  String get chatDraftSaveFailed => '草稿未能儲存。請保持此畫面開啟，或立即傳送。';
+
+  @override
+  String get chatSearchClearDates => '清除日期範圍';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name 拒絕了重新連線。歷史紀錄已保留；可以重試。';
   }
 }

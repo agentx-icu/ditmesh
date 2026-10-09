@@ -4573,4 +4573,20 @@ class SRu extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name отклонила повторное подключение. История сохранена; повторите попытку с паролем группы.';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Действия для $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'Не удалось сохранить черновик. Не закрывайте этот экран или отправьте сообщение сейчас.';
+
+  @override
+  String get chatSearchClearDates => 'Сбросить период';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name отклонила повторное подключение. История сохранена; можно повторить попытку.';
+  }
 }

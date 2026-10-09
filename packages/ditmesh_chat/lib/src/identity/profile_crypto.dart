@@ -36,24 +36,40 @@ abstract interface class ProfileCrypto {
 ///
 /// Buffer ownership: every returned `Uint8List` is a Dart copy made before
 /// the native buffer is freed (an `asTypedList` view over freed memory was a
-/// real toxee bug). The passphrase buffer is zeroed before release.
+/// real toxee bug). Every native buffer (passphrase, plaintext savedata
+/// with the Tox secret key, ciphertext) is zeroed before release, on
+/// success and failure alike. The Dart-heap copies are the GC's and cannot
+/// be wiped reliably.
 class Tim2ToxProfileCrypto implements ProfileCrypto {
-  Tim2ToxProfileCrypto({Tim2ToxFfi? ffi}) : _ffiOverride = ffi;
+  Tim2ToxProfileCrypto({Tim2ToxFfi? ffi, ffi.Allocator? allocator})
+    : _ffiOverride = ffi,
+      _allocator = allocator ?? pkgffi.malloc;
 
   final Tim2ToxFfi? _ffiOverride;
+  final ffi.Allocator _allocator;
   Tim2ToxFfi get _ffi => _ffiOverride ?? Tim2ToxFfi.open();
+
+  ffi.Pointer<ffi.Uint8> _alloc(int length) =>
+      _allocator<ffi.Uint8>(length < 1 ? 1 : length);
+
+  /// Zeroes [length] bytes of [ptr], then frees it.
+  void _wipeAndFree(ffi.Pointer<ffi.Uint8> ptr, int length) {
+    if (length > 0) ptr.asTypedList(length).fillRange(0, length, 0);
+    _allocator.free(ptr);
+  }
 
   @override
   bool isEncrypted(Uint8List data) {
     if (data.length < toxPassEncryptionExtraLength) return false;
-    final ptr = pkgffi.malloc<ffi.Uint8>(toxPassEncryptionExtraLength);
+    // The head of a plaintext savedata is copied too: wiped like the rest.
+    final ptr = _alloc(toxPassEncryptionExtraLength);
     try {
       ptr
           .asTypedList(toxPassEncryptionExtraLength)
           .setAll(0, data.sublist(0, toxPassEncryptionExtraLength));
       return _ffi.isDataEncryptedNative(ptr, toxPassEncryptionExtraLength) == 1;
     } finally {
-      pkgffi.malloc.free(ptr);
+      _wipeAndFree(ptr, toxPassEncryptionExtraLength);
     }
   }
 
@@ -105,8 +121,9 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
 
   @override
   String extractPublicKey(Uint8List plaintext) {
-    final profilePtr = pkgffi.malloc<ffi.Uint8>(plaintext.length);
-    final idBuf = pkgffi.malloc<ffi.Int8>(128);
+    final profilePtr = _alloc(plaintext.length);
+    final idRaw = _alloc(128);
+    final idBuf = idRaw.cast<ffi.Int8>();
     try {
       profilePtr.asTypedList(plaintext.length).setAll(0, plaintext);
       final n = _ffi.extractToxIdFromProfileNative(
@@ -125,14 +142,14 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
       }
       return idBuf.cast<pkgffi.Utf8>().toDartString(length: n).toUpperCase();
     } finally {
-      pkgffi.malloc.free(profilePtr);
-      pkgffi.malloc.free(idBuf);
+      _wipeAndFree(profilePtr, plaintext.length);
+      _wipeAndFree(idRaw, 128);
     }
   }
 
   /// Allocates input / passphrase / output buffers, runs [body] (which returns
   /// the number of output bytes written), and copies the output out before
-  /// freeing everything. The passphrase buffer is wiped first.
+  /// wiping and freeing every buffer.
   Uint8List _withBuffers(
     Uint8List input,
     String password,
@@ -145,19 +162,19 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
     ) body,
   ) {
     final pw = utf8.encode(password);
-    final inPtr = pkgffi.malloc<ffi.Uint8>(input.length);
-    final pwPtr = pkgffi.malloc<ffi.Uint8>(pw.isEmpty ? 1 : pw.length);
-    final outPtr = pkgffi.malloc<ffi.Uint8>(outLen);
+    final inPtr = _alloc(input.length);
+    final pwPtr = _alloc(pw.length);
+    final outPtr = _alloc(outLen);
     try {
       inPtr.asTypedList(input.length).setAll(0, input);
       if (pw.isNotEmpty) pwPtr.asTypedList(pw.length).setAll(0, pw);
       final n = body(inPtr, pwPtr, pw.length, outPtr);
       return Uint8List.fromList(outPtr.asTypedList(n));
     } finally {
-      if (pw.isNotEmpty) pwPtr.asTypedList(pw.length).fillRange(0, pw.length, 0);
-      pkgffi.malloc.free(inPtr);
-      pkgffi.malloc.free(pwPtr);
-      pkgffi.malloc.free(outPtr);
+      pw.fillRange(0, pw.length, 0);
+      _wipeAndFree(inPtr, input.length);
+      _wipeAndFree(pwPtr, pw.length);
+      _wipeAndFree(outPtr, outLen);
     }
   }
 }
