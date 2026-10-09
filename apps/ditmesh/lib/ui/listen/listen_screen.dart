@@ -6,6 +6,9 @@ import 'package:morse_io/morse_io.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../fill_or_scroll_view.dart';
+import '../responsive.dart';
 import 'listen_controller.dart';
 import 'listen_preferences.dart';
 import 'listen_settings.dart';
@@ -165,7 +168,7 @@ class _ListenScreenState extends State<ListenScreen>
     final S s = context.s;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.listenTitle),
+        title: AppBarTitle(s.listenTitle),
         actions: <Widget>[
           IconButton(
             key: const ValueKey('listen-open-workbench'),
@@ -189,8 +192,10 @@ class _ListenScreenState extends State<ListenScreen>
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            // Banner, meter, tone panel and stats are fixed; on a landscape
+            // phone, a split-screen half or at large text they leave the
+            // decoded text no room, so the page scrolls instead.
+            child: FillOrScrollView(
               children: <Widget>[
                 ListenStatusBanner(
                   controller: _controller,
@@ -201,7 +206,8 @@ class _ListenScreenState extends State<ListenScreen>
                   child: ListenLevelMeter(meter: _controller.meter),
                 ),
                 ListenFrequencyPanel(controller: _controller),
-                Expanded(
+                FlexFloor(
+                  height: 160,
                   child: ListenDecodedText(
                     text: _controller.text,
                     isListening: listening,
@@ -220,7 +226,10 @@ class _ListenScreenState extends State<ListenScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: busy ? null : _toggle,
         icon: Icon(listening ? Icons.stop : Icons.mic),
-        label: Text(listening ? s.listenStop : s.listenStart),
+        label: Text(
+          listening ? s.listenStop : s.listenStart,
+          textScaler: edgeLabelTextScaler(context),
+        ),
       ),
     );
   }

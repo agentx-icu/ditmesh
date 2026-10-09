@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 import 'password_strength.dart';
 
 /// Narrow, centred, scrollable column used by every onboarding page so phones
@@ -86,7 +87,7 @@ class _PasswordFieldState extends State<PasswordField> {
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
       decoration: InputDecoration(
-        labelText: widget.label,
+        label: FieldLabel(widget.label),
         errorText: widget.errorText,
         helperText: strength == PasswordStrength.empty
             ? null

@@ -7,6 +7,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/chat_copy_session.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
 import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
@@ -209,7 +210,7 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
     return DrillLeaveGuard(
       guard: _phase == _Phase.answer && _answer.text.isNotEmpty,
       child: Scaffold(
-        appBar: AppBar(title: Text(s.chatPracticeTitle)),
+        appBar: AppBar(title: AppBarTitle(s.chatPracticeTitle)),
         body: flash == null ? body : FlashOverlay(isOn: flash, child: body),
       ),
     );
@@ -307,6 +308,8 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
           keyboardType: isTouchPlatform ? TextInputType.none : null,
           decoration: InputDecoration(
             hintText: s.learnAnswerHint,
+            // Wraps rather than being cut, as in the receive drill.
+            hintMaxLines: 3,
             border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => unawaited(_submit()),

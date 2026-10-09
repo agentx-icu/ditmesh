@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
+import '../responsive.dart';
 import 'morse_pattern_text.dart';
-import 'reference_layout.dart';
 import 'reference_playback_controller.dart';
 
 /// Tap to key: a straight key (touch, or Space on a keyboard) feeding a
@@ -194,7 +194,7 @@ class _TapToKeyViewState extends State<TapToKeyView> {
         ],
       );
     }
-    return ReferenceMinHeight(
+    return MinHeightScrollView(
       minHeight: 440,
       child: Column(
         children: <Widget>[

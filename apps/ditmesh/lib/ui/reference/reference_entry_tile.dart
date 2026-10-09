@@ -94,6 +94,7 @@ Future<void> showReferenceMnemonic(BuildContext context, ReferenceEntry entry) {
       final String? meaning = entry.meaning(locale);
       final int? position = entry.position;
       return AlertDialog(
+        scrollable: true,
         title: Text(entry.label, style: theme.textTheme.displaySmall),
         content: Column(
           mainAxisSize: MainAxisSize.min,

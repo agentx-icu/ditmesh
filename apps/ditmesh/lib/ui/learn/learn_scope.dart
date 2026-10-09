@@ -12,6 +12,7 @@ import '../../training/training_controller_host.dart';
 import '../../training/training_doc_store.dart';
 import '../../training/training_controller.dart';
 import '../../training/training_settings_store.dart';
+import '../common/app_bar_title.dart';
 import 'learn_playback.dart';
 import 'learning_unavailable.dart';
 
@@ -239,7 +240,7 @@ class _Placeholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: AppBarTitle(title)),
       // Scrolls instead of overflowing on a small phone with large text;
       // centred whenever it fits.
       body: LayoutBuilder(

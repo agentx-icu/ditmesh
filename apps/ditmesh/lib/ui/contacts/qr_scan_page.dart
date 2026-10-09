@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
 import 'tox_id.dart';
 
 /// Full-screen camera scanner that pops with the first valid Tox ID it sees.
@@ -53,7 +54,7 @@ class _QrScanPageState extends State<QrScanPage> {
   Widget build(BuildContext context) {
     final S s = context.s;
     return Scaffold(
-      appBar: AppBar(title: Text(s.chatScanQrTitle)),
+      appBar: AppBar(title: AppBarTitle(s.chatScanQrTitle)),
       body: Stack(
         fit: StackFit.expand,
         children: [

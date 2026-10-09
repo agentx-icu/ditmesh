@@ -38,6 +38,7 @@ class _DeleteIdentityDialogState extends State<DeleteIdentityDialog> {
     final theme = Theme.of(context);
     final confirmed = _confirmed(s);
     return AlertDialog(
+      scrollable: true,
       icon: Icon(Icons.delete_forever, color: theme.colorScheme.error),
       title: Text(s.accountDeleteDialogTitle),
       content: Column(
@@ -57,6 +58,7 @@ class _DeleteIdentityDialogState extends State<DeleteIdentityDialog> {
             },
             decoration: InputDecoration(
               hintText: s.accountDeleteConfirmHint,
+              hintMaxLines: 2,
               border: const OutlineInputBorder(),
             ),
           ),

@@ -11,6 +11,11 @@ String conversationTitleText(S s, ConversationTarget target) =>
 
 /// Title plus a live subtitle: online/offline for a friend, member count for
 /// a group, "saved on this device only" for the note to self.
+/// Text scale the two-line conversation title (name over status) stops at:
+/// at the AppBar's own 1.34 the two lines are ~58 px, taller than the 56 px
+/// toolbar, and the name ran into the status bar.
+const double kConversationTitleMaxTextScale = 1.2;
+
 class ConversationTitle extends StatelessWidget {
   const ConversationTitle({
     super.key,
@@ -94,17 +99,20 @@ class ConversationTitle extends StatelessWidget {
               );
             },
           );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          conversationTitleText(s, target),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle,
-      ],
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: kConversationTitleMaxTextScale,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            conversationTitleText(s, target),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle,
+        ],
+      ),
     );
   }
 }

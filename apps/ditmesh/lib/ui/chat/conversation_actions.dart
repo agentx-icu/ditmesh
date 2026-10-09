@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
-import '../responsive.dart';
 import 'chat_layout.dart';
 import 'conversation_header.dart';
 import 'conversation_target.dart';
@@ -85,7 +84,10 @@ int inlineConversationActions(
       style: theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge,
     ),
     textDirection: Directionality.of(context),
-    textScaler: appBarTitleTextScaler(media.textScaler),
+    // As ConversationTitle draws it.
+    textScaler: media.textScaler.clamp(
+      maxScaleFactor: kConversationTitleMaxTextScale,
+    ),
     maxLines: 1,
   )..layout();
   final double titleWidth = painter.width;

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 
 /// Set, change or remove the profile password. When the identity already has
@@ -90,7 +91,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ? s.accountChangePassword
         : s.accountSetPassword;
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: AppBarTitle(title)),
       body: AccountPageBody(
         children: [
           if (widget.hasPassword) ...[

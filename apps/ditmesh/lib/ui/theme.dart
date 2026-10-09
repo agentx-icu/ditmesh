@@ -2,9 +2,23 @@ import 'package:flutter/material.dart';
 
 import 'appearance/style_tokens.dart';
 import 'appearance/ui_style.dart';
+import 'safe_sides_page_transitions.dart';
 
 /// Telegraph-brass amber: the colour of a polished straight key.
 const Color kDitmeshSeedColor = Color(0xFFB8860B);
+
+/// Dialogs stop at the Material 3 maximum width: an `AlertDialog` sizes to
+/// its content, and one with a text field grew across a whole desktop window.
+const DialogThemeData kDialogTheme = DialogThemeData(
+  constraints: BoxConstraints(minWidth: 280, maxWidth: 560),
+);
+
+/// Helpers and errors under a field wrap instead of ending in an ellipsis
+/// ("Tox ID must be exactly 76 hex characters" on a 320 px phone, German at
+/// large text). Not hints: a wrapping hint grows a one-line field or search
+/// bar, so long hints are handled where they are set. Labels scale down
+/// (`FieldLabel`), as Material keeps a floating label on one line.
+const int kFieldTextMaxLines = 3;
 
 /// App-wide Material 3 themes; Modern Calm is the default appearance.
 abstract final class DitmeshTheme {
@@ -24,6 +38,12 @@ abstract final class DitmeshTheme {
       useMaterial3: true,
       colorScheme: scheme,
       extensions: [_tokens(style, scheme)],
+      pageTransitionsTheme: kSafeSidesPageTransitions,
+      dialogTheme: kDialogTheme,
+      inputDecorationTheme: const InputDecorationThemeData(
+        helperMaxLines: kFieldTextMaxLines,
+        errorMaxLines: kFieldTextMaxLines,
+      ),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       navigationBarTheme: NavigationBarThemeData(
         indicatorColor: scheme.primaryContainer,
@@ -128,6 +148,8 @@ abstract final class DitmeshTheme {
       scaffoldBackgroundColor: Color(canvas),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       extensions: [tokens],
+      pageTransitionsTheme: kSafeSidesPageTransitions,
+      dialogTheme: kDialogTheme,
       cardTheme: CardThemeData(
         color: Color(surface),
         surfaceTintColor: Colors.transparent,
@@ -177,6 +199,8 @@ abstract final class DitmeshTheme {
         labelType: NavigationRailLabelType.all,
       ),
       inputDecorationTheme: InputDecorationTheme(
+        helperMaxLines: kFieldTextMaxLines,
+        errorMaxLines: kFieldTextMaxLines,
         filled: true,
         fillColor: Color(surface),
         border: OutlineInputBorder(

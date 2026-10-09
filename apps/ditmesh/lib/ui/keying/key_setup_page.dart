@@ -10,6 +10,9 @@ import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
 import '../../training/training_controller_host.dart';
 import '../../training/training_settings.dart';
+import '../common/app_bar_title.dart';
+import '../common/field_label.dart';
+import '../responsive.dart';
 import 'key_test_area.dart';
 
 /// Keys and external keyers (F12): the device's key profiles, which one is
@@ -40,65 +43,70 @@ class KeySetupPage extends StatelessWidget {
     final profiles = context.watch<KeyProfiles>();
     final active = profiles.active;
     return Scaffold(
-      appBar: AppBar(title: Text(s.keysTitle)),
+      appBar: AppBar(title: AppBarTitle(s.keysTitle)),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('keys-new'),
         onPressed: () => _edit(context, null),
         icon: const Icon(Icons.add),
-        label: Text(s.keysNewProfile),
+        label: Text(
+          s.keysNewProfile,
+          textScaler: edgeLabelTextScaler(context),
+        ),
       ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(s.keysIntro),
-            ),
-            const SizedBox(height: 8),
-            RadioGroup<String>(
-              groupValue: active.id,
-              onChanged: (id) async {
-                if (id == null) return;
-                final host = Provider.of<TrainingControllerHost?>(
-                  context,
-                  listen: false,
-                );
-                await profiles.select(id);
-                await syncLearnKeyerMode(host, profiles.active.keyerMode);
-              },
-              child: Column(
-                children: [
-                  RadioListTile<String>(
-                    key: const Key('keys-profile-default'),
-                    value: KeyProfile.defaults.id,
-                    title: Text(s.keysStandardProfile),
-                    subtitle: Text(keyLabels(KeyProfile.defaults.effectiveKeys)),
-                  ),
-                  for (final p in profiles.saved)
+      body: ReadableBody(
+        child: SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(s.keysIntro),
+              ),
+              const SizedBox(height: 8),
+              RadioGroup<String>(
+                groupValue: active.id,
+                onChanged: (id) async {
+                  if (id == null) return;
+                  final host = Provider.of<TrainingControllerHost?>(
+                    context,
+                    listen: false,
+                  );
+                  await profiles.select(id);
+                  await syncLearnKeyerMode(host, profiles.active.keyerMode);
+                },
+                child: Column(
+                  children: [
                     RadioListTile<String>(
-                      key: Key('keys-profile-${p.id}'),
-                      value: p.id,
-                      title: Text(p.name.isEmpty ? s.keysUnnamed : p.name),
-                      subtitle: Text(keyLabels(p.effectiveKeys)),
-                      secondary: IconButton(
-                        tooltip: s.keysEdit,
-                        icon: const Icon(Icons.edit_outlined),
-                        onPressed: () => _edit(context, p),
-                      ),
+                      key: const Key('keys-profile-default'),
+                      value: KeyProfile.defaults.id,
+                      title: Text(s.keysStandardProfile),
+                      subtitle: Text(keyLabels(KeyProfile.defaults.effectiveKeys)),
                     ),
-                ],
+                    for (final p in profiles.saved)
+                      RadioListTile<String>(
+                        key: Key('keys-profile-${p.id}'),
+                        value: p.id,
+                        title: Text(p.name.isEmpty ? s.keysUnnamed : p.name),
+                        subtitle: Text(keyLabels(p.effectiveKeys)),
+                        secondary: IconButton(
+                          tooltip: s.keysEdit,
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _edit(context, p),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                s.keysLimitations,
-                style: Theme.of(context).textTheme.bodySmall,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  s.keysLimitations,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -235,7 +243,7 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
         .any((p) => p.id == widget.profile.id);
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.keysEditTitle),
+        title: AppBarTitle(s.keysEditTitle),
         actions: [
           if (exists)
             IconButton(
@@ -245,96 +253,98 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
             ),
         ],
       ),
-      body: Focus(
-        focusNode: _captureFocus,
-        onKeyEvent: _onCaptureKey,
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextField(
-                key: const Key('keys-name'),
-                controller: _name,
-                decoration: InputDecoration(
-                  labelText: s.keysName,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              for (final a in KeyerAction.values)
-                ListTile(
-                  key: Key('keys-capture-${a.name}'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(_actionLabel(s, a)),
-                  subtitle: Text(
-                    _capturing == a
-                        ? s.keysPressKey
-                        : _keysOf(a).isEmpty
-                        ? s.keysNone
-                        : keyLabels(_keysOf(a)),
-                  ),
-                  trailing: TextButton(
-                    onPressed: () => _startCapture(a),
-                    child: Text(s.keysSet),
+      body: ReadableBody(
+        child: Focus(
+          focusNode: _captureFocus,
+          onKeyEvent: _onCaptureKey,
+          child: SafeArea(
+            top: false,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                TextField(
+                  key: const Key('keys-name'),
+                  controller: _name,
+                  decoration: InputDecoration(
+                    label: FieldLabel(s.keysName),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
-              if (_error case final String e)
-                Text(
-                  e,
-                  key: const Key('keys-error'),
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-              SwitchListTile(
-                key: const Key('keys-swap'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.keysSwapPaddles),
-                value: _draft.swapPaddles,
-                onChanged: (v) => setState(() => _draft = _draft.copyWith(swapPaddles: v)),
-              ),
-              Text(s.keysKeyerMode, style: theme.textTheme.titleSmall),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final m in KeyerMode.values)
-                    ChoiceChip(
-                      key: Key('keys-mode-${m.name}'),
-                      label: Text(switch (m) {
-                        KeyerMode.straight => s.keysActionStraight,
-                        KeyerMode.iambicA => s.keysIambicA,
-                        KeyerMode.iambicB => s.keysIambicB,
-                      }),
-                      selected: _draft.keyerMode == m,
-                      onSelected: (_) => setState(() => _draft = _draft.copyWith(keyerMode: m)),
+                const SizedBox(height: 8),
+                for (final a in KeyerAction.values)
+                  ListTile(
+                    key: Key('keys-capture-${a.name}'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(_actionLabel(s, a)),
+                    subtitle: Text(
+                      _capturing == a
+                          ? s.keysPressKey
+                          : _keysOf(a).isEmpty
+                          ? s.keysNone
+                          : keyLabels(_keysOf(a)),
                     ),
-                ],
-              ),
-              SwitchListTile(
-                key: const Key('keys-adapter'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.keysAdapterKeyer),
-                subtitle: Text(s.keysAdapterKeyerHint),
-                value: _draft.adapterKeyer,
-                onChanged: (v) => setState(() => _draft = _draft.copyWith(adapterKeyer: v)),
-              ),
-              SwitchListTile(
-                key: const Key('keys-sidetone'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.keysAppSidetone),
-                subtitle: Text(s.keysAppSidetoneHint),
-                value: _draft.appSidetone,
-                onChanged: (v) => setState(() => _draft = _draft.copyWith(appSidetone: v)),
-              ),
-              const SizedBox(height: 8),
-              KeyTestArea(profile: _draft, sink: widget.testSink),
-              const SizedBox(height: 16),
-              FilledButton(
-                key: const Key('keys-save'),
-                onPressed: _save,
-                child: Text(s.actionSave),
-              ),
-            ],
+                    trailing: TextButton(
+                      onPressed: () => _startCapture(a),
+                      child: Text(s.keysSet),
+                    ),
+                  ),
+                if (_error case final String e)
+                  Text(
+                    e,
+                    key: const Key('keys-error'),
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                SwitchListTile(
+                  key: const Key('keys-swap'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(s.keysSwapPaddles),
+                  value: _draft.swapPaddles,
+                  onChanged: (v) => setState(() => _draft = _draft.copyWith(swapPaddles: v)),
+                ),
+                Text(s.keysKeyerMode, style: theme.textTheme.titleSmall),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final m in KeyerMode.values)
+                      ChoiceChip(
+                        key: Key('keys-mode-${m.name}'),
+                        label: Text(switch (m) {
+                          KeyerMode.straight => s.keysActionStraight,
+                          KeyerMode.iambicA => s.keysIambicA,
+                          KeyerMode.iambicB => s.keysIambicB,
+                        }),
+                        selected: _draft.keyerMode == m,
+                        onSelected: (_) => setState(() => _draft = _draft.copyWith(keyerMode: m)),
+                      ),
+                  ],
+                ),
+                SwitchListTile(
+                  key: const Key('keys-adapter'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(s.keysAdapterKeyer),
+                  subtitle: Text(s.keysAdapterKeyerHint),
+                  value: _draft.adapterKeyer,
+                  onChanged: (v) => setState(() => _draft = _draft.copyWith(adapterKeyer: v)),
+                ),
+                SwitchListTile(
+                  key: const Key('keys-sidetone'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(s.keysAppSidetone),
+                  subtitle: Text(s.keysAppSidetoneHint),
+                  value: _draft.appSidetone,
+                  onChanged: (v) => setState(() => _draft = _draft.copyWith(appSidetone: v)),
+                ),
+                const SizedBox(height: 8),
+                KeyTestArea(profile: _draft, sink: widget.testSink),
+                const SizedBox(height: 16),
+                FilledButton(
+                  key: const Key('keys-save'),
+                  onPressed: _save,
+                  child: Text(s.actionSave),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -8,8 +8,10 @@ import '../../i18n/l10n_extension.dart';
 import '../../i18n/language_settings_tile.dart';
 import '../../startup/startup_controller.dart';
 import '../appearance/appearance_page.dart';
+import '../common/app_bar_title.dart';
 import '../moderation/site_links.dart';
 import '../pages/offline_me_page.dart';
+import '../responsive.dart';
 
 StartupController? _startup(BuildContext context, {bool listen = true}) {
   try {
@@ -120,46 +122,48 @@ class IdentityRequiredGate extends StatelessWidget {
     final theme = Theme.of(context);
     final controller = context.read<StartupController>();
     return Scaffold(
-      appBar: AppBar(title: Text(isMe ? s.navMe : s.guestIdentityTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: <Widget>[
-          Icon(
-            Icons.forum_outlined,
-            size: 56,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            s.guestIdentityBody,
-            style: theme.textTheme.bodyLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            key: const ValueKey('guest-get-identity'),
-            onPressed: () => unawaited(controller.leaveGuest()),
-            icon: const Icon(Icons.person_add_alt_1),
-            label: Text(s.guestGetIdentity),
-          ),
-          if (isMe) ...<Widget>[
+      appBar: AppBar(title: AppBarTitle(isMe ? s.navMe : s.guestIdentityTitle)),
+      body: ReadableBody(
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: <Widget>[
+            Icon(
+              Icons.forum_outlined,
+              size: 56,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              s.guestIdentityBody,
+              style: theme.textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
-            const LanguageSettingsTile(),
-            ListTile(
-              leading: const Icon(Icons.palette_outlined),
-              title: Text(s.appearanceTitle),
-              onTap: () => AppearancePage.open(context),
+            FilledButton.icon(
+              key: const ValueKey('guest-get-identity'),
+              onPressed: () => unawaited(controller.leaveGuest()),
+              icon: const Icon(Icons.person_add_alt_1),
+              label: Text(s.guestGetIdentity),
             ),
-            const SiteLinksSection(),
-            ListTile(
-              key: const ValueKey('guest-clear'),
-              leading: const Icon(Icons.delete_outline),
-              title: Text(s.guestClearData),
-              subtitle: Text(s.guestClearDataBody),
-              onTap: () => unawaited(_clear(context, controller)),
-            ),
+            if (isMe) ...<Widget>[
+              const SizedBox(height: 24),
+              const LanguageSettingsTile(),
+              ListTile(
+                leading: const Icon(Icons.palette_outlined),
+                title: Text(s.appearanceTitle),
+                onTap: () => AppearancePage.open(context),
+              ),
+              const SiteLinksSection(),
+              ListTile(
+                key: const ValueKey('guest-clear'),
+                leading: const Icon(Icons.delete_outline),
+                title: Text(s.guestClearData),
+                subtitle: Text(s.guestClearDataBody),
+                onTap: () => unawaited(_clear(context, controller)),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -172,6 +176,7 @@ class IdentityRequiredGate extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(s.guestClearData),
         content: Text(s.guestClearDataBody),
         actions: <Widget>[

@@ -10,6 +10,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
 import '../../startup/startup_controller.dart';
+import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_file_gateway.dart';
 import 'encrypted_backup_page.dart';
@@ -137,6 +138,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(s.restoreXConfirmTitle),
         content: Text(s.restoreXConfirmBody),
         actions: [
@@ -266,7 +268,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
     final hasCurrent = context.read<IdentityService>().current != null;
     final bytes = _bytes;
     return Scaffold(
-      appBar: AppBar(title: Text(s.accountRestoreTitle)),
+      appBar: AppBar(title: AppBarTitle(s.accountRestoreTitle)),
       body: AccountPageBody(
         children: [
           Text(s.accountRestoreBody, style: theme.textTheme.bodyMedium),

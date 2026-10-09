@@ -9,6 +9,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/telegraph_sessions.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
 import '../../telegraph/telegraph_labels.dart';
 import '../drill_session_guard.dart';
 
@@ -138,7 +139,7 @@ class _TelegraphRecallScreenState extends State<TelegraphRecallScreen> {
               _code.text.isNotEmpty),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(s.telegraphRecallTitle),
+          title: AppBarTitle(s.telegraphRecallTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
             child: LinearProgressIndicator(

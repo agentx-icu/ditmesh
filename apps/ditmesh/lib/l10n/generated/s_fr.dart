@@ -1381,7 +1381,7 @@ class SFr extends S {
   String get learnReviewTitle => 'Révision';
 
   @override
-  String get learnListen => 'Écoutez…';
+  String get learnListen => 'Lecture en cours';
 
   @override
   String get learnReady => 'Prêt';
@@ -3115,7 +3115,10 @@ class SFr extends S {
   String get materialsTitleField => 'Titre';
 
   @override
-  String get materialsTagsField => 'Étiquettes (séparées par des virgules)';
+  String get materialsTagsField => 'Étiquettes';
+
+  @override
+  String get materialsTagsHelper => 'Séparez les étiquettes par des virgules';
 
   @override
   String get materialsTextField => 'Texte';

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../common/fitting_hint.dart';
 import '../listen/listen_screen.dart';
+import '../responsive.dart';
 import '../tools/radio_tools_screen.dart';
 import 'playback_settings_sheet.dart';
 import 'reference_catalog.dart';
@@ -106,7 +109,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
   AppBar _appBar(BuildContext context) {
     final S s = context.s;
     return AppBar(
-      title: Text(s.referenceReferenceTitle),
+      title: AppBarTitle(s.referenceReferenceTitle),
       actions: <Widget>[
         IconButton(
           tooltip: s.listenTitle,
@@ -155,23 +158,32 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
 
   Widget _searchField(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-    child: TextField(
-      key: ReferenceScreen.searchFieldKey,
-      controller: _search,
-      onChanged: _onQueryChanged,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: context.s.referenceSearchHint,
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _query.isEmpty
-            ? null
-            : IconButton(
-                tooltip: context.s.referenceClearSearch,
-                icon: const Icon(Icons.close),
-                onPressed: _clearQuery,
-              ),
-        border: const OutlineInputBorder(),
-        isDense: true,
+    child: LayoutBuilder(
+      builder: (context, constraints) => TextField(
+        key: ReferenceScreen.searchFieldKey,
+        controller: _search,
+        onChanged: _onQueryChanged,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          // The descriptive hint when it fits two lines, else "Search".
+          hintText: fittingHint(
+            context,
+            context.s.referenceSearchHint,
+            width: constraints.maxWidth - 2 * kMinInteractiveDimension - 24,
+            maxLines: 2,
+          ),
+          hintMaxLines: 2,
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: context.s.referenceClearSearch,
+                  icon: const Icon(Icons.close),
+                  onPressed: _clearQuery,
+                ),
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
       ),
     ),
   );
@@ -237,15 +249,19 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
             ),
             const VerticalDivider(width: 1),
             Expanded(
-              child: Column(
-                children: <Widget>[
-                  _searchField(context),
-                  Expanded(
-                    child: _query.isEmpty
-                        ? ReferenceSectionView(section: _selected)
-                        : ReferenceSearchResults(query: _query),
-                  ),
-                ],
+              child: ReadableBody(
+                maxWidth: 960,
+                alignment: AlignmentDirectional.topStart,
+                child: Column(
+                  children: <Widget>[
+                    _searchField(context),
+                    Expanded(
+                      child: _query.isEmpty
+                          ? ReferenceSectionView(section: _selected)
+                          : ReferenceSearchResults(query: _query),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

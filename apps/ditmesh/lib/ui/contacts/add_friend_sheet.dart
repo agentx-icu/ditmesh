@@ -6,6 +6,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../chat/chat_layout.dart';
+import '../common/field_label.dart';
 import 'qr_scan_page.dart';
 import 'tox_id.dart';
 
@@ -147,7 +148,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
                 enableSuggestions: false,
                 style: const TextStyle(fontFamily: 'monospace'),
                 decoration: InputDecoration(
-                  labelText: s.chatToxIdLabel,
+                  label: FieldLabel(s.chatToxIdLabel),
                   border: const OutlineInputBorder(),
                   errorText: serverError,
                   // No suffixIcon on purpose. With a Tooltip in this slot the
@@ -190,7 +191,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
               TextFormField(
                 controller: _message,
                 decoration: InputDecoration(
-                  labelText: s.chatRequestMessage,
+                  label: FieldLabel(s.chatRequestMessage),
                   border: const OutlineInputBorder(),
                 ),
                 maxLength: 200,

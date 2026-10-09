@@ -10,6 +10,7 @@ import '../account/account_routes.dart';
 import '../account/account_widgets.dart';
 import '../appearance/appearance_page.dart';
 import '../chat/chat_layout.dart';
+import '../common/app_bar_title.dart';
 import '../keying/key_setup_page.dart';
 import '../moderation/site_links.dart';
 
@@ -50,7 +51,7 @@ class OfflineMePage extends StatelessWidget {
       ),
     );
     return Scaffold(
-      appBar: AppBar(title: Text(s.navMe)),
+      appBar: AppBar(title: AppBarTitle(s.navMe)),
       body: AccountPageBody(
         maxWidth: 640,
         children: [

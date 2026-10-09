@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
+import '../common/app_bar_title.dart';
+import '../common/field_label.dart';
 import 'account_widgets.dart';
 import 'delete_identity_dialog.dart';
 
@@ -102,7 +104,7 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
     final s = context.s;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(s.accountCreateTitle)),
+      appBar: AppBar(title: AppBarTitle(s.accountCreateTitle)),
       body: AccountPageBody(
         children: [
           Text(s.accountCreateBody, style: theme.textTheme.bodyMedium),
@@ -113,7 +115,7 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
             textInputAction: TextInputAction.next,
             maxLength: 64,
             decoration: InputDecoration(
-              labelText: s.accountDisplayName,
+              label: FieldLabel(s.accountDisplayName),
               hintText: s.accountDisplayNameHint,
               errorText: _nameError,
               border: const OutlineInputBorder(),

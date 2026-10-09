@@ -1363,7 +1363,7 @@ class SZh extends S {
   String get learnReviewTitle => '复习';
 
   @override
-  String get learnListen => '请听...';
+  String get learnListen => '正在播放';
 
   @override
   String get learnReady => '就绪';
@@ -3087,7 +3087,10 @@ class SZh extends S {
   String get materialsTitleField => '标题';
 
   @override
-  String get materialsTagsField => '标签（用逗号分隔）';
+  String get materialsTagsField => '标签';
+
+  @override
+  String get materialsTagsHelper => '多个标签用逗号分隔';
 
   @override
   String get materialsTextField => '文本';
@@ -5972,7 +5975,7 @@ class SZhHant extends SZh {
   String get learnReviewTitle => '複習';
 
   @override
-  String get learnListen => '請聽...';
+  String get learnListen => '正在播放';
 
   @override
   String get learnReady => '就緒';
@@ -7696,7 +7699,10 @@ class SZhHant extends SZh {
   String get materialsTitleField => '標題';
 
   @override
-  String get materialsTagsField => '標籤（以逗號分隔）';
+  String get materialsTagsField => '標籤';
+
+  @override
+  String get materialsTagsHelper => '多個標籤以逗號分隔';
 
   @override
   String get materialsTextField => '文字';

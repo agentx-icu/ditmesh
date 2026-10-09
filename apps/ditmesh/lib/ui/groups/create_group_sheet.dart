@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 
 /// Create a group. Kind is fixed to NGC; an "advanced" expander exposes the
 /// legacy conference switch for interop with old clients (plan §5.4).
@@ -98,7 +99,7 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: _busy ? null : (_) => unawaited(_submit()),
                 decoration: InputDecoration(
-                  labelText: s.chatGroupName,
+                  label: FieldLabel(s.chatGroupName),
                   border: const OutlineInputBorder(),
                   errorText: error == null ? null : describeChatError(s, error),
                 ),

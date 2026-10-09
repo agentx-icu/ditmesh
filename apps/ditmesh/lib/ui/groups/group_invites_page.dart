@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../responsive.dart';
 import 'group_invites_inbox.dart';
 
 /// The pending group invites on a page of their own: what a tapped invite
@@ -18,7 +20,9 @@ class GroupInvitesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.s.navGroups)),
-    body: ListView(children: [GroupInvitesInbox(service: service)]),
+    appBar: AppBar(title: AppBarTitle(context.s.navGroups)),
+    body: ReadableBody(
+      child: ListView(children: [GroupInvitesInbox(service: service)]),
+    ),
   );
 }

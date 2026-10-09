@@ -11,6 +11,7 @@ import '../diagnostics/connection_diagnostics_page.dart';
 import '../groups/group_members_sheet.dart';
 import '../groups/practice/group_practice_page.dart';
 import '../moderation/block_actions.dart';
+import '../responsive.dart';
 import 'chat_layout.dart';
 import 'conversation_actions.dart';
 import 'conversation_attention.dart';
@@ -400,28 +401,33 @@ class _ConversationScreenState extends State<ConversationScreen>
       ),
       // Landscape phones (~320-430 px tall) and large text make the keyed
       // composer taller than the body; cap it and let it scroll instead.
-      body: LayoutBuilder(
-        builder: (context, box) => Column(
-          children: [
-            if (conference) const ConferenceNote(),
-            Expanded(child: _buildList(settings)),
-            ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: box.maxHeight * 0.75),
-              child: SingleChildScrollView(
-                child: ChangeNotifierProvider<MorsePlaybackSettings>.value(
-                  value: settings,
-                  child: MessageInput(
-                    key: ValueKey<String>('input_$_id'),
-                    service: _service,
-                    conversationId: _id,
-                    playback: _playback,
-                    initialDraft: _draft(),
-                    onSent: (_) => _showLatest(),
+      // On a wide monitor the timeline and the key pad stop at a width a
+      // reader (and a keying hand) can span.
+      body: ReadableBody(
+        maxWidth: 960,
+        child: LayoutBuilder(
+          builder: (context, box) => Column(
+            children: [
+              if (conference) const ConferenceNote(),
+              Expanded(child: _buildList(settings)),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: box.maxHeight * 0.75),
+                child: SingleChildScrollView(
+                  child: ChangeNotifierProvider<MorsePlaybackSettings>.value(
+                    value: settings,
+                    child: MessageInput(
+                      key: ValueKey<String>('input_$_id'),
+                      service: _service,
+                      conversationId: _id,
+                      playback: _playback,
+                      initialDraft: _draft(),
+                      onSent: (_) => _showLatest(),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

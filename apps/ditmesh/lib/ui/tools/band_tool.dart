@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:radio_tools/radio_tools.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 import 'tool_page.dart';
 
 /// Frequency -> amateur band (per IARU region), wavelength and wire-antenna
@@ -63,7 +64,7 @@ class _BandToolState extends State<BandTool> {
               ),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                labelText: s.toolsBandsFrequency,
+                label: FieldLabel(s.toolsBandsFrequency),
                 hintText: '7.030',
                 errorText: _invalid ? s.toolsBandsInvalidFrequency : null,
                 border: const OutlineInputBorder(),

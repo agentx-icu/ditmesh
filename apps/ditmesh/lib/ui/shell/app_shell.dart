@@ -188,6 +188,26 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
+  /// Bottom-bar labels stay on one line: clamped like the AppBar title, and
+  /// further down when a translation is still wider than its quarter.
+  double _barLabelScale(BuildContext context) {
+    final MediaQueryData media = MediaQuery.of(context);
+    final ThemeData theme = Theme.of(context);
+    final double slot =
+        (media.size.width - media.padding.horizontal) / _destinations.length;
+    return fitLabelsTextScale(
+      context,
+      labels: [for (final d in _destinations) d.label(context.s)],
+      style:
+          (theme.navigationBarTheme.labelTextStyle?.resolve(const {
+                    WidgetState.selected,
+                  }) ??
+                  theme.textTheme.labelMedium)
+              ?.copyWith(fontWeight: FontWeight.w600),
+      width: slot - 8,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -213,41 +233,62 @@ class _AppShellState extends State<AppShell> {
     switch (layout) {
       case LayoutClass.compact:
         return Scaffold(
-          body: body,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _select,
-            destinations: [
-              for (final d in _destinations)
-                NavigationDestination(
-                  icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon),
-                  label: d.label(s),
-                ),
-            ],
+          // Sideways insets (a phone in landscape below the 600 px
+          // breakpoint, a notched tablet) are the pages' to keep clear of.
+          body: SafeArea(top: false, bottom: false, child: body),
+          bottomNavigationBar: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: _barLabelScale(context),
+            child: NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: _select,
+              destinations: [
+                for (final d in _destinations)
+                  NavigationDestination(
+                    icon: Icon(d.icon),
+                    selectedIcon: Icon(d.selectedIcon),
+                    label: d.label(s),
+                  ),
+              ],
+            ),
           ),
         );
       case LayoutClass.expanded:
         return Scaffold(
           body: Row(
             children: [
-              NavigationRail(
-                // A phone in landscape is ~320-430 px tall: four labelled
-                // destinations overflow there at large text scales.
-                scrollable: true,
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: _select,
-                destinations: [
-                  for (final d in _destinations)
-                    NavigationRailDestination(
-                      icon: Icon(d.icon),
-                      selectedIcon: Icon(d.selectedIcon),
-                      label: Text(d.label(s)),
-                    ),
-                ],
+              MediaQuery.withClampedTextScaling(
+                maxScaleFactor: kBarLabelMaxTextScale,
+                child: NavigationRail(
+                  // A phone in landscape is ~320-430 px tall: four labelled
+                  // destinations overflow there at large text scales.
+                  scrollable: true,
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: _select,
+                  destinations: [
+                    for (final d in _destinations)
+                      NavigationRailDestination(
+                        icon: Icon(d.icon),
+                        selectedIcon: Icon(d.selectedIcon),
+                        label: Text(d.label(s)),
+                      ),
+                  ],
+                ),
               ),
               const VerticalDivider(thickness: 1, width: 1),
-              Expanded(child: body),
+              // The rail already keeps clear of a leading notch; the pages
+              // keep clear of the trailing one and must not inset again.
+              // Read below the Scaffold (a Builder): the shell's own context
+              // still has the keyboard inset the Scaffold body has consumed.
+              Expanded(
+                child: Builder(
+                  builder: (inner) => MediaQuery.removePadding(
+                    context: inner,
+                    removeLeft: Directionality.of(inner) == TextDirection.ltr,
+                    removeRight: Directionality.of(inner) == TextDirection.rtl,
+                    child: SafeArea(top: false, bottom: false, child: body),
+                  ),
+                ),
+              ),
             ],
           ),
         );

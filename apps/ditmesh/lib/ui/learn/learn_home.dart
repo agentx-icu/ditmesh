@@ -4,6 +4,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../training/qso_practice.dart';
 import '../../training/training_controller.dart';
+import '../common/app_bar_title.dart';
 import '../stats/stats_screen.dart';
 import '../appearance/appearance_page.dart';
 import '../appearance/style_tokens.dart';
@@ -106,7 +107,7 @@ class LearnHome extends StatelessWidget {
     final s = context.s;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.navLearn),
+        title: AppBarTitle(s.navLearn),
         actions: <Widget>[
           IconButton(
             tooltip: s.appearanceTitle,

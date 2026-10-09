@@ -31,4 +31,6 @@ python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FF
 
 视觉工作流渲染 38 个配置、76 张 PNG，覆盖十种语言、五种风格、浅深色及手机/桌面布局。捕获命令见[截图指南](../../tool/screenshots/README.zh-CN.md)。
 
+Layout 工作流在每次推送到 `master` 及每个 pull request 时分四个分片运行 `apps/ditmesh/test/layout/layout_crawl_test.dart`：以截图演示数据启动应用，从外壳的四个标签页和训练主页出发，逐一点开所有可达的界面、对话框和底部面板。覆盖 17 种窗口配置：小屏与常规手机（竖屏、横屏、横屏弹出键盘、2 倍字号、德语、俄语）、Android 分屏半屏、iPad 分屏 1/3、平板横竖屏，以及从 360 x 640 最小窗口到 3440 px 超宽屏的桌面窗口，设备像素比 1 到 3（含 1.25、1.5、2.625）。任何溢出或约束错误、落在刘海 / 状态栏 / 主屏指示条下的文字、被截断的界面文字（应用栏标题、输入框提示 / 标签、按钮 / 标签页文字）、宽于 1100 px 的列表行 / 输入框 / 按钮都会失败。它使用 Noto 字体测量（测试字体的方块字形会让拉丁文字宽得多）。本地运行请传入 `--dart-define=DITMESH_LAYOUT_CRAWL=true`，需要真实文字宽度时再传 `--dart-define=DITMESH_MATRIX_FONT=<字体>`；`DITMESH_CRAWL_ONLY=<配置,...>` 可缩小范围，`DITMESH_CRAWL_OUT=<目录>` 为每个配置写出问题清单。未传 `DITMESH_LAYOUT_CRAWL` 时该测试跳过。它发现的每个缺陷各有一个快速用例，在 `test/layout/layout_regressions_test.dart` 中随 widget 测试运行。
+
 回归测试放在能观察行为的最低层级：界面行为用控件测试，生命周期及接线用服务集成，传输用原生测试，插件用平台端到端。最新数量和 CI 链接见[验证记录](../VALIDATION.zh-CN.md)，存储行为见[持久化审计](PERSISTENCE_AUDIT.zh-CN.md)。

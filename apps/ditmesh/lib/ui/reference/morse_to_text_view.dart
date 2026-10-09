@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
+import '../responsive.dart';
 import 'morse_keypad.dart';
 import 'pattern_decoder.dart';
-import 'reference_layout.dart';
 
 /// Morse → Text: the user types `.` / `-` / space / `/` (or taps the
 /// keypad) and the decoded text follows. Unknown patterns render as
@@ -124,8 +125,15 @@ class _MorseToTextViewState extends State<MorseToTextView> {
               FilteringTextInputFormatter.allow(MorseToTextView.allowedInput),
             ],
             decoration: InputDecoration(
-              labelText: s.referencePatternInputLabel,
+              label: FieldLabel(s.referencePatternInputLabel),
               hintText: s.referencePatternInputHint,
+              // Instructions in body text, not the large monospace input
+              // style, and free to grow the field: German at 2x on a 320 px
+              // phone needs nine lines of it.
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              hintMaxLines: 12,
               border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
@@ -194,7 +202,7 @@ class _MorseToTextViewState extends State<MorseToTextView> {
         ],
       );
     }
-    return ReferenceMinHeight(
+    return MinHeightScrollView(
       minHeight: 460,
       child: Column(
         children: <Widget>[
