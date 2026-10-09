@@ -263,13 +263,13 @@ abstract class S {
   /// Outgoing message waiting for the peer to come online
   ///
   /// In en, this message translates to:
-  /// **'Queued — peer is offline'**
+  /// **'Queued on this device'**
   String get messageStatusPending;
 
   /// Explains why a message can stay queued (P2P, no store-and-forward server)
   ///
   /// In en, this message translates to:
-  /// **'Tox has no server: the message is delivered when the peer comes online.'**
+  /// **'The message is saved locally. It will send when both apps are running and their networks can connect.'**
   String get messageStatusPendingDetail;
 
   /// Chat: tooltip/semantics of the status icon on an outgoing message that is being sent
@@ -7789,6 +7789,288 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{name} refused to reconnect. Its history is kept; retry with the group\'s password.'**
   String chatGroupReconnectRefused(String name);
+
+  /// Chat interface: firstChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first Morse chat'**
+  String get firstChatTitle;
+
+  /// Chat interface: firstChatStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get firstChatStart;
+
+  /// Chat interface: firstChatDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss guide'**
+  String get firstChatDismiss;
+
+  /// Chat interface: firstChatKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Key CQ to yourself'**
+  String get firstChatKeyTitle;
+
+  /// Chat interface: firstChatKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the key to send CQ. A short press makes a dot and a longer press makes a dash. Your decoded draft stays read-only.'**
+  String get firstChatKeyBody;
+
+  /// Chat interface: firstChatSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Try in my self chat'**
+  String get firstChatSelf;
+
+  /// Chat interface: firstChatListenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Listen and correct'**
+  String get firstChatListenTitle;
+
+  /// Chat interface: firstChatListenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Before sending, use Preview to hear the draft and Backspace to remove a mistake. After sending, tap Play on your message. Self-chat messages stay on this device.'**
+  String get firstChatListenBody;
+
+  /// Chat interface: firstChatFriendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Chat with a friend'**
+  String get firstChatFriendTitle;
+
+  /// Chat interface: firstChatFriendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Contacts, add your friend by QR code or Tox ID, and wait for the friend request to be accepted.'**
+  String get firstChatFriendBody;
+
+  /// Chat interface: firstChatFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a friend'**
+  String get firstChatFriend;
+
+  /// Chat interface: firstChatOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both apps running and connected for messages to reach your friend.'**
+  String get firstChatOnline;
+
+  /// Chat interface: pendingMessagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending and failed messages'**
+  String get pendingMessagesTitle;
+
+  /// Chat interface: pendingMessagesExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued messages stay on this device until both apps are connected. You can cancel a queued message or retry a confirmed failure.'**
+  String get pendingMessagesExplanation;
+
+  /// Chat interface: pendingMessagesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending or failed messages'**
+  String get pendingMessagesEmpty;
+
+  /// Chat interface: deliveryDetailsTitle. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery details'**
+  String get deliveryDetailsTitle;
+
+  /// Chat interface: deliveryLocalTitle. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved locally'**
+  String get deliveryLocalTitle;
+
+  /// Chat interface: deliveryLocalDetail. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'This self-chat message is saved on this device.'**
+  String get deliveryLocalDetail;
+
+  /// Chat interface: deliverySentDetail. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Your app handed the message to transport. Waiting for the recipient to confirm receipt.'**
+  String get deliverySentDetail;
+
+  /// Chat interface: deliveryPeerTitle. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient received'**
+  String get deliveryPeerTitle;
+
+  /// Chat interface: deliveryPeerDetail. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipient confirmed receipt. This does not indicate that they read or listened to it.'**
+  String get deliveryPeerDetail;
+
+  /// Chat interface: deliveryGroupTitle. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Received by a group member'**
+  String get deliveryGroupTitle;
+
+  /// Chat interface: deliveryGroupDetail. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one group member confirmed receipt. Other members may still be offline.'**
+  String get deliveryGroupDetail;
+
+  /// Chat interface: deliveryLocalOffline. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is not connected yet.'**
+  String get deliveryLocalOffline;
+
+  /// Chat interface: deliveryPeerOffline. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friend is offline.'**
+  String get deliveryPeerOffline;
+
+  /// Chat interface: deliveryGroupWaiting. Keep delivery, reading and listening confirmation distinct.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a connection to the group.'**
+  String get deliveryGroupWaiting;
+
+  /// Chat interface: chatPreviewDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview draft'**
+  String get chatPreviewDraft;
+
+  /// Chat interface: chatStopPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop preview'**
+  String get chatStopPreview;
+
+  /// Message playback control: chatMessagePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Message playback'**
+  String get chatMessagePlayback;
+
+  /// Message playback control: chatOriginalRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Original keying rhythm'**
+  String get chatOriginalRhythm;
+
+  /// Message playback control: chatListenerRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Your listening speed'**
+  String get chatListenerRhythm;
+
+  /// Message playback control: chatOriginalAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded marks and gaps are available.'**
+  String get chatOriginalAvailable;
+
+  /// Message playback control: chatOriginalUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original rhythm unavailable; plays at your listening speed.'**
+  String get chatOriginalUnavailable;
+
+  /// Message playback control: chatOriginalPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing original rhythm'**
+  String get chatOriginalPlaying;
+
+  /// Message playback control: chatListenerPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing at your listening speed'**
+  String get chatListenerPlaying;
+
+  /// Message playback control: chatPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get chatPause;
+
+  /// Message playback control: chatResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get chatResume;
+
+  /// Message playback control: chatPreviousWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous word'**
+  String get chatPreviousWord;
+
+  /// Message playback control: chatNextWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Next word'**
+  String get chatNextWord;
+
+  /// Message playback control: chatWordNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Word {number}'**
+  String chatWordNumber(int number);
+
+  /// Message playback control: chatRangeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'First word'**
+  String get chatRangeStart;
+
+  /// Message playback control: chatRangeEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Last word'**
+  String get chatRangeEnd;
+
+  /// Message playback control: chatRepeatRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay selected words'**
+  String get chatRepeatRange;
+
+  /// Message playback control: chatLoopRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop selected words'**
+  String get chatLoopRange;
+
+  /// Message playback control: chatPlaybackProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback progress'**
+  String get chatPlaybackProgress;
+
+  /// Message playback control: chatWordProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Word {current} of {total}'**
+  String chatWordProgress(int current, int total);
+
+  /// Message playback control: chatOriginalPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Use original rhythm when a matching recording is available.'**
+  String get chatOriginalPreference;
 
   /// Tooltip and accessible name of a conversation row's overflow menu button; name is the conversation title
   ///

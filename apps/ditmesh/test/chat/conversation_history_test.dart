@@ -77,10 +77,16 @@ class _HistoryService implements ChatService {
   Future<void> setDraft(String id, String draft) =>
       delegate.setDraft(id, draft);
   @override
-  Future<ChatMessage> sendText(String id, String text) async {
-    final row = createBeforeSendGate ? await delegate.sendText(id, text) : null;
+  Future<ChatMessage> sendText(
+    String id,
+    String text, {
+    KeyedRecording? recording,
+  }) async {
+    final row = createBeforeSendGate
+        ? await delegate.sendText(id, text, recording: recording)
+        : null;
     await sendGate?.future;
-    return row ?? await delegate.sendText(id, text);
+    return row ?? await delegate.sendText(id, text, recording: recording);
   }
 
   @override

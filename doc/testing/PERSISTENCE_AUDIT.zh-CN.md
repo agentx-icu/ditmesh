@@ -1,6 +1,6 @@
 [English](./PERSISTENCE_AUDIT.md)
 
-# DitMesh 持久化审计 — 2026-10-08
+# DitMesh 持久化审计 — 2026-10-09
 
 本清单记录聊天存储、保存屏障及备份恢复。已执行的检查见 [VALIDATION.zh-CN.md](../VALIDATION.zh-CN.md)。
 
@@ -14,6 +14,7 @@
 | 昵称、状态、Tox ID、密码标志 | `<identity>/identity.json` 与原生自身资料 | 原子替换记录、串行修改身份；损坏记录不会导致启动检查崩溃。 |
 | 密码校验信息 | 按身份分键的 `flutter_secure_storage` | 平台 Keychain/Keystore/桌面安全存储；资料或密码操作失败回滚；普通偏好不保存密码。 |
 | 消息、已读状态与未读数 | `<identity>/data/chat_history/` | 延迟保存有显式 flush 屏障；从历史重建未读状态。 |
+| 可选原始拍发时序 | 历史及权威发送队列中的消息元数据 | 校验后的按下/间隔跨历史重载、队列重启及选中的加密历史/待发送备份保留；晚到元数据补充原消息。 |
 | 单聊/群聊离线发送队列 | `<identity>/data/offline_message_queue.json` | 重启保留待发送状态；投递及重试沿用消息 ID，避免重复气泡。 |
 | 好友申请、拒绝记录及 Tim2Tox 宿主元数据 | 按账号隔离的 `shared_preferences` | 重连恢复申请和群组信息；删除身份清理其专属键。 |
 | 草稿、置顶/隐藏会话、待处理邀请 | 按账号隔离的 `shared_preferences` | 离线修改持久化；被替换的编辑器不能向新身份写回。 |
@@ -22,6 +23,8 @@
 | 外观 | `<support>/settings.json` 中的 `appearance.preferences` | 风格和明暗一起保存成功后生效；失败保留原选择；新建或损坏记录使用 Modern Calm/跟随系统。 |
 | 语言、播放/输入/解码设置及通知偏好 | `<support>/settings.json` | 暴露 provider 前恢复；失败写入可重试。 |
 | 屏蔽通知的会话 | `settings.json` 中的 `notifications.muted.<完整公钥>` | 按身份隔离；仅在删除/替换成功后清除旧列表。 |
+| 首次聊天引导的关闭状态 | `settings.json` 中的 `chat.guide.<完整公钥>` | 按身份隔离，可从聊天重新打开；失败写入可重试，晚到加载不能覆盖新的本地选择。 |
+| 会话听音偏好 | `settings.json` 中的 `chat.conversations.<完整公钥>` | 每个会话保留速度/间距/音调、原始来源偏好和循环词段；身份替换解除旧模型关联，新会话以全局偏好为初始值。 |
 | 窗口位置/尺寸/最大化、关闭至托盘及托盘声音 | `settings.json` 中的桌面键 | 恢复时校验显示器范围；保存失败回退界面模型。 |
 | 公共 Bootstrap 配置 | 全局 `shared_preferences` | 独立于身份删除/替换；启动使用当前配置；局域网与探测实例使用独立私有资料目录。 |
 

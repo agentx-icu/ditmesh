@@ -17,6 +17,8 @@ import 'friend_request_store.dart';
 import 'group_bindings.dart';
 import 'history_page.dart';
 import 'message_mapper.dart';
+import 'recording_metadata.dart';
+import '../engine/rhythm_protocol.dart';
 import 'pending_message_status.dart';
 
 part 'chat_service_blocking.dart';
@@ -348,8 +350,11 @@ class Tim2ToxChatService
   }
 
   @override
-  Future<ChatMessage> sendText(String conversationId, String text) =>
-      _sendText(conversationId, text);
+  Future<ChatMessage> sendText(
+    String conversationId,
+    String text, {
+    KeyedRecording? recording,
+  }) => _sendText(conversationId, text, recording: recording);
 
   @override
   Future<void> clearHistory(String conversationId) async {

@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 
 import 'identity_paths.dart';
+import '../chat/recording_metadata.dart';
 
 /// One unsent message found in the durable outbox at export time.
 final class QueuedRow {
@@ -16,6 +17,7 @@ final class QueuedRow {
     required this.text,
     required this.queuedAt,
     this.msgId,
+    this.recording,
   });
 
   /// Tim2Tox queue slot: a peer key, or `group:<id>`.
@@ -26,6 +28,7 @@ final class QueuedRow {
   final String text;
   final DateTime queuedAt;
   final String? msgId;
+  final KeyedRecording? recording;
 
   /// History file id this row belongs to (peer key or group id).
   String get historyId => queueKey.startsWith('group:')
@@ -39,6 +42,7 @@ final class QueuedRow {
     conversationId: conversationId,
     text: text,
     queuedAt: queuedAt,
+    recording: recording,
   );
 }
 
@@ -147,6 +151,7 @@ abstract final class BackupSnapshot {
               queueKey: key,
               conversationId: conv,
               text: item.text,
+              recording: RecordingMetadata.decode(item.cloudCustomData),
               queuedAt: item.timestamp,
               msgId: id == null || id.isEmpty ? null : id,
             ),
@@ -216,8 +221,7 @@ abstract final class BackupSnapshot {
   static Future<Map<String, (int, DateTime)>> stamp(
     Iterable<File> files,
   ) async => {
-    for (final f in files)
-      f.path: (await f.length(), await f.lastModified()),
+    for (final f in files) f.path: (await f.length(), await f.lastModified()),
   };
 
   /// Throws [SnapshotUnstable] when a file read for the snapshot changed or
@@ -353,11 +357,11 @@ abstract final class BackupSnapshot {
     }
     final list = decoded is Map ? decoded['items'] : decoded;
     if (list is! List) return const [];
-    return [
-      for (final e in list) ?RestoredPendingItem.fromJson(e),
-    ];
+    return [for (final e in list) ?RestoredPendingItem.fromJson(e)];
   }
 
   static Uint8List encodePending(List<RestoredPendingItem> items) =>
-      encodeJson({'items': [for (final i in items) i.toJson()]});
+      encodeJson({
+        'items': [for (final i in items) i.toJson()],
+      });
 }

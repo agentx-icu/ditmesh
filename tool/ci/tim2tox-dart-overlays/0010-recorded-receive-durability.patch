@@ -1,0 +1,300 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -3586,6 +3586,10 @@
+   /// The native default-instance session epoch captured at [init]; a later
+   /// quarantine is authorized ONLY for this epoch.
+   int _sessionEpoch = 0;
++
++  // Local generation also changes when an older native library has no epoch.
++  int _localSessionEpoch = 0;
++
+   /// The native session epoch (`tim2tox_ffi_get_session_epoch(0)`) of the
+   /// init THIS service performed. [rekeyLiveProfilePassphrase] hands it back so
+   /// the native side refuses to re-key any other session's profile.
+@@ -3593,6 +3597,8 @@
+ 
+   /// The Dart-side session state [init] opens before any native work.
+   void _beginSession() {
++    _localSessionEpoch++;
++    _extensionPendingReceives[this]?.clear();
+     _sessionClosed = false;
+     // A re-init may be another account: its legacy self state is unswept.
+     _selfLegacySwept = false;
+--- a/lib/service/extension_transport.dart
++++ b/lib/service/extension_transport.dart
+@@ -4,6 +4,21 @@
+ final _extensionMetadataUpdates = Expando<bool>();
+ bool isExtensionMetadataUpdate(ChatMessage row) =>
+     _extensionMetadataUpdates[row] ?? false;
++
++// Only failed/unpublished arrivals survive an attempt. A full map rejects a
++// new arrival before append; evicting one would lose its publication marker.
++const _maxExtensionPendingReceives = 128;
++final _extensionPendingReceives =
++    Expando<Map<String, _ExtensionPendingReceive>>();
++
++class _ExtensionPendingReceive {
++  _ExtensionPendingReceive(this.epoch, this.scope);
++  final int epoch;
++  final MessageHistoryReceiptScope scope;
++  ChatMessage? row;
++  bool unpublished = false;
++  Future<bool>? attempt;
++}
+ 
+ /// Narrow bridge used by DitMesh's additive timing protocol. These helpers
+ /// share upstream history, unread, streams and durable queue ownership.
+@@ -56,29 +71,143 @@
+     } on FormatException { return false; }
+   }
+ 
+-  /// Persist before ACK; duplicates are checked by explicit envelope identity,
+-  /// including archived history. No content- or timestamp-based association.
+-  Future<bool> receiveExtensionText(String sender, String alias, String text,
+-      {String? metadata, ChatMessageContentKind kind = ChatMessageContentKind.normal}) async {
++  /// A Dart session token for callers crossing the receive durability await.
++  int get extensionSessionEpoch => _localSessionEpoch;
++
++  void _guardExtensionReceive(String peer, _ExtensionPendingReceive pending) {
++    if (_sessionClosed ||
++        _pollDisposed ||
++        isBlocked(peer) ||
++        pending.epoch != _localSessionEpoch ||
++        !pending.scope.isCurrent) {
++      throw StateError('Recorded receive no longer belongs to this session');
++    }
++  }
++
++  /// A cached identity may still owe a failed write. Keep its first arrival
++  /// unpublished until the receipt scope proves a write in the same session.
++  Future<bool> receiveExtensionText(
++    String sender,
++    String alias,
++    String text, {
++    String? metadata,
++    ChatMessageContentKind kind = ChatMessageContentKind.normal,
++  }) async {
+     final peer = _normalizeFriendId(sender);
+-    if (_pollDisposed || isBlocked(peer)) return false;
+-    bool hasAlias(ChatMessage row) => row.msgID == alias || row.altMsgIds.contains(alias);
+-    if (_messageHistoryPersistence.getHistory(peer).any(hasAlias)) return false;
+-    if (await _messageHistoryPersistence.hasArchivedHistory(peer)) {
+-      if ((await _messageHistoryPersistence.loadArchivedHistory(peer)).any(hasAlias)) return false;
+-    }
+-    if (_pollDisposed || isBlocked(peer)) return false;
+-    final row = ChatMessage(text: text, fromUserId: peer, isSelf: false,
+-        timestamp: DateTime.now(), msgID: alias, altMsgIds: [alias],
+-        contentKind: kind, cloudCustomData: metadata);
+-    await _messageHistoryPersistence.appendHistory(peer, row);
+-    if (_pollDisposed || isBlocked(peer)) return false;
+-    _lastByPeer[peer] = row;
+-    if (_activePeerId != peer) {
+-      _unreadByPeer.update(peer, (v) => v + 1, ifAbsent: () => 1);
+-    }
+-    _messages.add(row);
+-    return true;
++    if (_sessionClosed || _pollDisposed || isBlocked(peer)) {
++      throw StateError('Recorded receive session is closed');
++    }
++    final entries = _extensionPendingReceives[this] ??=
++        <String, _ExtensionPendingReceive>{};
++    // A clear may invalidate many failed arrivals at once. Reclaim every
++    // expired scope before enforcing the bound, while retaining valid markers.
++    entries.removeWhere((_, pending) =>
++        pending.epoch != _localSessionEpoch || !pending.scope.isCurrent);
++    final key = '$peer|$alias';
++    var pending = entries[key];
++    if (pending == null) {
++      if (entries.length >= _maxExtensionPendingReceives) {
++        throw StateError('Too many recorded arrivals awaiting persistence');
++      }
++      pending = _ExtensionPendingReceive(
++        _localSessionEpoch,
++        _messageHistoryPersistence.receiptScope(peer),
++      );
++      entries[key] = pending;
++    }
++    final previousAttempt = pending.attempt;
++    if (previousAttempt != null) {
++      await previousAttempt;
++      return false;
++    }
++    final attempt = _persistExtensionReceive(
++      peer,
++      alias,
++      text,
++      metadata,
++      kind,
++      pending,
++      entries,
++      key,
++    );
++    pending.attempt = attempt;
++    try {
++      return await attempt;
++    } finally {
++      pending.attempt = null;
++      if (pending.epoch != _localSessionEpoch || !pending.scope.isCurrent) {
++        if (identical(entries[key], pending)) entries.remove(key);
++      }
++    }
++  }
++
++  Future<bool> _persistExtensionReceive(
++    String peer,
++    String alias,
++    String text,
++    String? metadata,
++    ChatMessageContentKind kind,
++    _ExtensionPendingReceive pending,
++    Map<String, _ExtensionPendingReceive> entries,
++    String key,
++  ) async {
++    _guardExtensionReceive(peer, pending);
++    bool hasAlias(ChatMessage row) =>
++        !row.isSelf && (row.msgID == alias || row.altMsgIds.contains(alias));
++    if (pending.row == null) {
++      for (final row in _messageHistoryPersistence.getHistory(peer)) {
++        if (hasAlias(row)) {
++          pending.row = row;
++          break;
++        }
++      }
++      if (pending.row == null &&
++          await _messageHistoryPersistence.hasArchivedHistory(peer)) {
++        _guardExtensionReceive(peer, pending);
++        for (final row in await _messageHistoryPersistence.loadArchivedHistory(
++          peer,
++        )) {
++          if (hasAlias(row)) {
++            pending.row = row;
++            break;
++          }
++        }
++      }
++      _guardExtensionReceive(peer, pending);
++      if (pending.row == null) {
++        pending.row = ChatMessage(
++          text: text,
++          fromUserId: peer,
++          isSelf: false,
++          timestamp: DateTime.now(),
++          msgID: alias,
++          altMsgIds: [alias],
++          contentKind: kind,
++          cloudCustomData: metadata,
++        );
++        pending.unpublished = true;
++        await _messageHistoryPersistence.appendHistory(peer, pending.row!);
++        _guardExtensionReceive(peer, pending);
++      }
++    }
++    // Also re-saves cached duplicates: appendHistory installs cache rows before
++    // its awaited save, and background retry success does not publish arrivals.
++    if (!await pending.scope.persistMessage(alias)) {
++      throw StateError('Recorded receive did not become durable');
++    }
++    _guardExtensionReceive(peer, pending);
++    final publish = pending.unpublished;
++    if (publish) {
++      final row = pending.row!;
++      _lastByPeer[peer] = row;
++      if (_activePeerId != peer) {
++        _unreadByPeer.update(peer, (v) => v + 1, ifAbsent: () => 1);
++      }
++      _messages.add(row);
++      pending.unpublished = false;
++    }
++    if (identical(entries[key], pending)) entries.remove(key);
++    return publish;
+   }
+ 
+   /// Late group timing changes the existing text row, never adds a control row.
+--- a/lib/utils/message_history_persistence.dart
++++ b/lib/utils/message_history_persistence.dart
+@@ -2072,6 +2072,64 @@
+         () => _writeMainFile(normalizedId, messages, token, deleteSeqAtStart));
+   }
+ 
++  /// Captures the same session/clear token as ordinary history operations.
++  /// Receipt callers must retain this scope across append and every retry.
++  MessageHistoryReceiptScope receiptScope(String conversationId) {
++    final id = ConversationIdUtils.normalize(conversationId);
++    return MessageHistoryReceiptScope._(this, id, _token(id));
++  }
++
++  Future<bool> _persistMessageForReceipt(
++    String id,
++    String msgID,
++    _OpToken token,
++  ) {
++    final deleteSeqAtStart = _deleteSeq;
++    return _serialized(id, () async {
++      if (_disposed || _isStale(id, token)) return false;
++      bool matches(ChatMessage row) => !row.isSelf && _idMatches(row, msgID);
++      final rows = _historyById[id];
++      final cached = rows?.any(matches) ?? false;
++      final queued = _pendingArchive[id]?.any(matches) ?? false;
++      if (cached || queued) {
++        if (rows != null && rows.isNotEmpty) {
++          await _writeMainFile(
++            id,
++            List<ChatMessage>.from(rows),
++            token,
++            deleteSeqAtStart,
++          );
++        } else {
++          // A queued archive row may outlive its cached window. Never replace
++          // an unloaded main file with an empty snapshot just to flush it.
++          await _drainPendingArchive(id, await _resolveStorageRoots());
++        }
++        return !_disposed && !_isStale(id, token);
++      }
++      // loadArchivedHistory includes memory-only overflow. Only a disk read
++      // under this lock can establish durability when the row left the cache.
++      final archive = await _getArchiveFile(id);
++      if (await archive.exists()) {
++        await for (final line
++            in archive
++                .openRead()
++                .transform(utf8.decoder)
++                .transform(const LineSplitter())) {
++          try {
++            if (matches(
++              ChatMessage.fromJson(jsonDecode(line) as Map<String, dynamic>),
++            )) {
++              return !_disposed && !_isStale(id, token);
++            }
++          } on Object {
++            // Same damaged-line tolerance as the normal archive reader.
++          }
++        }
++      }
++      return false;
++    });
++  }
++
+   bool _emptyIsADelete(String normalizedId) =>
+       (_historyById[normalizedId]?.isEmpty ?? false) &&
+       (_recentlyDeleted[normalizedId]?.isNotEmpty ?? false);
+@@ -4461,6 +4519,20 @@
+ /// see "One concurrency model per conversation" in [MessageHistoryPersistence].
+ typedef _OpToken = ({int epoch, int gen});
+ 
++/// A receipt-specific durability barrier. Unlike saveHistory's intentional
++/// no-op for stale work, this returns false after clear/dispose/owner change.
++class MessageHistoryReceiptScope {
++  MessageHistoryReceiptScope._(this._store, this._id, this._token);
++  final MessageHistoryPersistence _store;
++  final String _id;
++  final _OpToken _token;
++
++  bool get isCurrent => !_store._disposed && !_store._isStale(_id, _token);
++
++  Future<bool> persistMessage(String msgID) =>
++      _store._persistMessageForReceipt(_id, msgID, _token);
++}
++
+ /// What a default history directory's `.tim2tox_history_owner` file says.
+ ///
+ /// [exists] without an [owner] is the state an interrupted claim leaves: a

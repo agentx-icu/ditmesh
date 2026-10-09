@@ -1,4 +1,6 @@
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
+import 'package:tim2tox_dart/models/chat_message.dart';
+import 'rhythm_transport.dart';
 
 /// [FfiChatService] with a case-insensitive blacklist check.
 ///
@@ -25,6 +27,37 @@ class DitmeshFfiChatService extends FfiChatService {
   });
 
   Set<String> _canonical = const <String>{};
+  late final RhythmTransport _rhythm = RhythmTransport(this);
+
+  bool supportsRecordedPeer(String peer) => _rhythm.supportsPeer(peer);
+
+  @override
+  void onFriendWireState(String peer, bool online) =>
+      _rhythm.presence(peer, online);
+
+  @override
+  Future<String?> sendTextExtension(
+    String peer,
+    String text,
+    String? metadata, {
+    String? durableId,
+    required ChatMessageContentKind kind,
+  }) => _rhythm.send(peer, text, metadata, durableId: durableId, kind: kind);
+
+  @override
+  bool consumeCustomExtension(String peer, String payload, {String? groupId}) =>
+      _rhythm.consume(peer, payload, groupId: groupId);
+
+  @override
+  void onGroupExtensionSent(
+    String groupId,
+    String text,
+    String? metadata,
+    String? alias,
+  ) => _rhythm.groupSent(groupId, text, metadata, alias);
+
+  @override
+  ChatMessage enrichGroupExtension(ChatMessage row) => _rhythm.enrich(row);
 
   static String _canon(String id) {
     final trimmed = id.trim().toUpperCase();

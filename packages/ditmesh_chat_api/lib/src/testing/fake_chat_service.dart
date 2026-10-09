@@ -5,6 +5,7 @@ import '../chat_service.dart';
 import '../identity_service.dart';
 import '../message_search.dart';
 import '../models.dart';
+import '../keyed_recording.dart';
 import '../outbox.dart';
 import '../tox_address.dart';
 import 'replay_stream.dart';
@@ -300,7 +301,11 @@ final class FakeChatService
   Stream<ChatMessage> get messageEvents => _messageEvents.stream;
 
   @override
-  Future<ChatMessage> sendText(String conversationId, String text) async {
+  Future<ChatMessage> sendText(
+    String conversationId,
+    String text, {
+    KeyedRecording? recording,
+  }) async {
     _requireSession();
     if (utf8.encode(text).length > maxMessageBytes) {
       throw ChatException(
@@ -333,6 +338,7 @@ final class FakeChatService
       timestamp: _clock(),
       status: delivered ? MessageStatus.sent : MessageStatus.pending,
       isMine: true,
+      recording: recording,
     );
     _append(conversation, message, unreadDelta: 0);
     return message;

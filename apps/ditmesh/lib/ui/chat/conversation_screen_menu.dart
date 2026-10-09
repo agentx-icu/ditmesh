@@ -464,7 +464,11 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
           scope: BlockScope.contact,
         );
       case 'listenOnly':
-        final settings = MorsePlaybackSettings.of(context, listen: false);
+        final settings = ConversationPlaybackPreferences.settingsFor(
+          context,
+          _id,
+          listen: false,
+        );
         settings.listenOnly = !settings.listenOnly;
     }
   }

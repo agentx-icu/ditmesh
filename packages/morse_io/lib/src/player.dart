@@ -45,8 +45,8 @@ final class PlayerStopped extends PlayerEvent {
 /// time.
 final class MorsePlayer {
   MorsePlayer({required MorseSink sink, Clock? clock})
-      : _sink = sink,
-        _clock = clock ?? SystemClock.shared;
+    : _sink = sink,
+      _clock = clock ?? SystemClock.shared;
 
   final MorseSink _sink;
   final Clock _clock;
@@ -77,11 +77,23 @@ final class MorsePlayer {
   int get currentIndex => _current;
 
   /// Total length of the timeline being played (zero when idle).
-  Duration get totalDuration => _offsets.isEmpty ? Duration.zero : _offsets.last;
+  Duration get totalDuration =>
+      _offsets.isEmpty ? Duration.zero : _offsets.last;
+
+  /// Elapsed timeline time, frozen while paused and bounded by its length.
+  Duration get elapsed {
+    if (!_playing) return Duration.zero;
+    final value = (_paused ? _pausedAt : _clock.now()) - _startAt;
+    return value < Duration.zero
+        ? Duration.zero
+        : value > totalDuration
+        ? totalDuration
+        : value;
+  }
 
   /// Starts [elements] from the beginning. A running timeline is stopped
   /// first (emitting [PlayerStopped]). An empty list completes immediately.
-  void play(List<MorseElement> elements) {
+  void play(List<MorseElement> elements, {bool paused = false}) {
     stop();
     if (elements.isEmpty) {
       _emit(const PlayerCompleted());
@@ -94,8 +106,9 @@ final class MorsePlayer {
     }
     _offsets = offsets;
     _playing = true;
-    _paused = false;
+    _paused = paused;
     _startAt = _clock.now();
+    if (paused) _pausedAt = _startAt;
     _startElement(0);
   }
 
@@ -141,9 +154,9 @@ final class MorsePlayer {
   void _startElement(int index) {
     _current = index;
     final element = _elements[index];
-    _setSink(element.on);
+    if (!_paused) _setSink(element.on);
     _emit(PlayerElementStarted(index, element));
-    _scheduleBoundaryAfter(index);
+    if (!_paused) _scheduleBoundaryAfter(index);
   }
 
   void _scheduleBoundaryAfter(int index) {
@@ -167,7 +180,10 @@ final class MorsePlayer {
   void _scheduleAt(Duration absolute, void Function() callback) {
     _timer?.cancel();
     final delay = absolute - _clock.now();
-    _timer = _clock.schedule(delay.isNegative ? Duration.zero : delay, callback);
+    _timer = _clock.schedule(
+      delay.isNegative ? Duration.zero : delay,
+      callback,
+    );
   }
 
   void _setSink(bool on) {

@@ -5,3 +5,4 @@
 /tencent_cloud_chat_sdk/
 # Bootstrap state (version + sha256 + patch digest) for --offline-check-only.
 .vendor_state.json
+/tim2tox_ditmesh/

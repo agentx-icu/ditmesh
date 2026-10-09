@@ -38,6 +38,13 @@ class _PlaybackSettingsSheet extends StatelessWidget {
                 s.chatPlaybackSettings,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s.chatOriginalRhythm),
+                subtitle: Text(s.chatOriginalPreference),
+                value: settings.originalRhythm,
+                onChanged: (v) => settings.originalRhythm = v,
+              ),
               _SliderRow(
                 label: s.chatCharacterSpeed,
                 value: settings.wpm,

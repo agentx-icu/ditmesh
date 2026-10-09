@@ -1,0 +1,38 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -6769,8 +6769,12 @@
+     // Friend is online - send immediately (via the _ex export so the NATIVE
+     // send id — which the toxcore delivery-ACK path reports — can be
+     // aliased onto this row).
++    final extensionEpoch = _sessionEpoch;
+     final extensionId = await sendTextExtension(normalizedPeerId, text,
+         cloudCustomData, durableId: clientMessageID, kind: outgoing.contentKind);
++    if (_sessionClosed || _pollDisposed || _sessionEpoch != extensionEpoch) {
++      throw StateError('Chat session ended while negotiating recorded send');
++    }
+     final nativeMsgID = extensionId ?? _sendC2cTextByKindCheckedEx(
+       normalizedPeerId, text, outgoing.contentKind,
+     );
+@@ -13109,8 +13113,20 @@
+       }
+     }
+ 
+-    final extensionId = await sendTextExtension(normalizedPeerId, item.text,
+-        item.cloudCustomData, durableId: item.msgID, kind: item.contentKind);
++    final extensionEpoch = _sessionEpoch;
++    String? extensionId;
++    try {
++      extensionId = await sendTextExtension(normalizedPeerId, item.text,
++          item.cloudCustomData, durableId: item.msgID, kind: item.contentKind);
++    } on Object {
++      if (_sessionClosed || _pollDisposed || _sessionEpoch != extensionEpoch) {
++        throw const _OfflineDuringDrain();
++      }
++      rethrow;
++    }
++    if (_sessionClosed || _pollDisposed || _sessionEpoch != extensionEpoch) {
++      throw const _OfflineDuringDrain();
++    }
+     final alias = extensionId ?? _sendC2cTextByKindCheckedEx(
+       normalizedPeerId, item.text, item.contentKind,
+     );

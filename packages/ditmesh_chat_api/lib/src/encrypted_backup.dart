@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
+import 'keyed_recording.dart';
 
 import 'backup_media.dart';
 
@@ -169,18 +170,21 @@ final class RestoredPendingItem {
     required this.conversationId,
     required this.text,
     required this.queuedAt,
+    this.recording,
   });
 
   final String id;
   final String conversationId;
   final String text;
   final DateTime queuedAt;
+  final KeyedRecording? recording;
 
   Map<String, Object?> toJson() => {
     'id': id,
     'conversationId': conversationId,
     'text': text,
     'queuedAt': queuedAt.toUtc().toIso8601String(),
+    if (recording != null) 'recording': recording!.toJson(),
   };
 
   static RestoredPendingItem? fromJson(Object? json) {
@@ -197,6 +201,7 @@ final class RestoredPendingItem {
       conversationId: conv,
       text: text,
       queuedAt: at,
+      recording: KeyedRecording.fromJson(json['recording']),
     );
   }
 }

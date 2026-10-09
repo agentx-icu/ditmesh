@@ -2,6 +2,8 @@
 
 # RFC: message annotation on the wire (Tim2Tox track D, item 1)
 
+DitMesh now implements the [2026-10-09 original keyed-rhythm contract](2026-10-09-keyed-rhythm.md), using exact message identities and a compatible receipt carrier. This document is retained as the earlier upstream proposal.
+
 > Status: **draft, not yet filed upstream** (2026-09-30). Target repository:
 > `agentx-icu/tim2tox` (submodule pin `9d4245a`). Companion items of track D —
 > Dart-side custom packet API, lossy packet API, `failed` message status — are

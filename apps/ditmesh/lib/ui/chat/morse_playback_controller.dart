@@ -4,6 +4,16 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart';
+import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'playback_timeline.dart';
+
+part 'morse_playback_queue.dart';
+part 'morse_playback_controls.dart';
+
+/// A live keying sink keeps priority even when the local sidetone is disabled.
+abstract interface class LiveKeyingSink implements MorseSink {
+  MorseSink withSidetone(bool Function() enabled);
+}
 
 /// Why a clip is sounding: a tapped bubble or auto-play of a received
 /// message. Decides what hand keying puts back and what auto-play cancels.
@@ -79,6 +89,12 @@ class MorsePlaybackController extends ChangeNotifier {
   bool _disposed = false;
   bool _background = false;
   bool _holdAuto = false;
+  bool _manualPaused = false;
+  Timer? _progressTimer;
+  int _elementOffset = 0;
+  int _activeWord = 0;
+
+  void _notify() => notifyListeners();
 
   /// While true no automatic clip starts (a tapped bubble still plays). The
   /// conversation sets it while the app is `inactive` (a call banner,
@@ -129,6 +145,65 @@ class MorsePlaybackController extends ChangeNotifier {
   /// Ids waiting to play, in order (diagnostics and tests).
   List<String> get queuedIds => [for (final c in _queue) c.id];
 
+  bool get isPaused =>
+      _current != null && (_manualPaused || _background || _player.isPaused);
+  bool get manuallyPaused => _manualPaused;
+  bool get usingOriginal => _current?.timeline.isOriginal ?? false;
+  int get activeWord => _activeWord;
+  int get wordCount => _current?.timeline.words.length ?? 0;
+  List<String> get words =>
+      List.unmodifiable(_current?.timeline.words ?? const <String>[]);
+  int get rangeStart => _current?.first ?? 0;
+  int get rangeEnd => _current?.last ?? 0;
+  bool get looping => _current?.loop ?? false;
+  Duration get elapsed => _current == null ? Duration.zero : _player.elapsed;
+  Duration get total =>
+      _current == null ? Duration.zero : _player.totalDuration;
+
+  void pause() {
+    if (_disposed || _current == null || _manualPaused) return;
+    _manualPaused = true;
+    _current?.paused = true;
+    _player.pause();
+    _progressTimer?.cancel();
+    _progressTimer = null;
+    _notify();
+  }
+
+  void resume() {
+    if (_disposed || !_manualPaused) return;
+    _manualPaused = false;
+    _current?.paused = false;
+    unawaited(_advance());
+    _scheduleProgress();
+    _notify();
+  }
+
+  Future<void> seekWord(int word) {
+    final clip = _current;
+    if (_disposed || clip == null || clip.timeline.words.isEmpty) {
+      return Future.value();
+    }
+    clip.first = word.clamp(0, clip.timeline.words.length - 1);
+    clip.last = clip.timeline.words.length - 1;
+    clip.loop = false;
+    return _restartRange(clip);
+  }
+
+  Future<void> previousWord() => seekWord(activeWord - 1);
+  Future<void> nextWord() => seekWord(activeWord + 1);
+
+  Future<void> setWordRange(int first, int last, {bool loop = false}) {
+    final clip = _current;
+    if (_disposed || clip == null || clip.timeline.words.isEmpty) {
+      return Future.value();
+    }
+    clip.first = first.clamp(0, clip.timeline.words.length - 1);
+    clip.last = last.clamp(clip.first, clip.timeline.words.length - 1);
+    clip.loop = loop;
+    return _restartRange(clip);
+  }
+
   /// Prepares the sink (audio engine, vibrator probe) once.
   Future<void> prepare() => _prepared ??= sink.prepare().catchError((Object e) {
     // No audio device (CI, headless): keep going silently; the pattern
@@ -143,11 +218,29 @@ class MorsePlaybackController extends ChangeNotifier {
     String text,
     MorseTiming timing, {
     double? toneHz,
+    KeyedRecording? recording,
+    bool original = false,
+    int firstWord = 0,
+    int? lastWord,
+    bool loop = false,
   }) {
     if (_disposed) return Future<void>.value();
     _queue
       ..clear()
-      ..add(_Clip(messageId, text, timing, toneHz, PlaybackOrigin.manual));
+      ..add(
+        _Clip(
+          messageId,
+          text,
+          timing,
+          toneHz,
+          PlaybackOrigin.manual,
+          recording: recording,
+          original: original,
+          first: firstWord,
+          last: lastWord,
+          loop: loop,
+        ),
+      );
     _halt();
     return _advance();
   }
@@ -166,12 +259,27 @@ class MorsePlaybackController extends ChangeNotifier {
     String text,
     MorseTiming timing, {
     double? toneHz,
+    KeyedRecording? recording,
+    bool original = false,
+    int firstWord = 0,
+    int? lastWord,
+    bool loop = false,
   }) {
     if (playingId == messageId) {
       stop();
       return Future<void>.value();
     }
-    return play(messageId, text, timing, toneHz: toneHz);
+    return play(
+      messageId,
+      text,
+      timing,
+      toneHz: toneHz,
+      recording: recording,
+      original: original,
+      firstWord: firstWord,
+      lastWord: lastWord,
+      loop: loop,
+    );
   }
 
   /// Queues a received message for auto-play behind anything already
@@ -182,15 +290,29 @@ class MorsePlaybackController extends ChangeNotifier {
     String text,
     MorseTiming timing, {
     double? toneHz,
+    KeyedRecording? recording,
+    bool original = false,
   }) {
-    if (_disposed || MorseEncoder.toPattern(text).isEmpty) return;
+    if (_disposed || PlaybackTimeline(text, timing).elements.isEmpty) return;
     if (playingId == messageId || _queue.any((c) => c.id == messageId)) return;
-    final Duration length = MorseEncoder.encode(
+    final Duration length = PlaybackTimeline(
       text,
       timing,
-    ).fold(Duration.zero, (sum, e) => sum + e.duration);
+      recording: recording,
+      original: original,
+    ).elements.fold(Duration.zero, (sum, e) => sum + e.duration);
     if (length > maxAutoClip) return;
-    _queue.add(_Clip(messageId, text, timing, toneHz, PlaybackOrigin.auto));
+    _queue.add(
+      _Clip(
+        messageId,
+        text,
+        timing,
+        toneHz,
+        PlaybackOrigin.auto,
+        recording: recording,
+        original: original,
+      ),
+    );
     _trimAuto();
     unawaited(_advance());
   }
@@ -219,228 +341,17 @@ class MorsePlaybackController extends ChangeNotifier {
     }
   }
 
-  /// Starts the oldest queued clip when nothing sounds and hand keying is
-  /// neither down nor within its hold-off (then a timer retries).
-  Future<void> _advance() {
-    if (_disposed ||
-        _background ||
-        _current != null ||
-        _keyDown ||
-        _queue.isEmpty) {
-      return Future<void>.value();
-    }
-    if (_holdAuto && _queue.first.origin == PlaybackOrigin.auto) {
-      return Future<void>.value();
-    }
-    final Duration? quietAt = _quietAt;
-    final Duration left = quietAt == null
-        ? Duration.zero
-        : quietAt - clock.now();
-    if (left > Duration.zero) {
-      _holdTimer ??= clock.schedule(left, () {
-        _holdTimer = null;
-        unawaited(_advance());
-      });
-      return Future<void>.value();
-    }
-    return _start(_queue.removeFirst());
-  }
-
-  /// Enforces [maxQueuedAuto] on every insertion: drops the oldest waiting
-  /// auto clip other than [keep] (an interrupted message going back to the
-  /// head). Manual clips are never dropped.
-  void _trimAuto({_Clip? keep}) {
-    while (_queue.where((c) => c.origin == PlaybackOrigin.auto).length >
-        maxQueuedAuto) {
-      _queue.remove(
-        _queue.firstWhere(
-          (c) => c.origin == PlaybackOrigin.auto && !identical(c, keep),
-        ),
-      );
-    }
-  }
-
-  void _cancelHold() {
-    _holdTimer?.cancel();
-    _holdTimer = null;
-  }
-
-  /// Reserves [clip] as current, then plays it after `prepare()` unless a
-  /// newer start or a stop superseded it. Always crosses an async boundary,
-  /// so a completion event never re-enters the player synchronously.
-  Future<void> _start(_Clip clip) async {
-    final int token = ++_startToken;
-    if (_player.isPlaying) _player.stop();
-    _current = clip;
-    _activeMark = -1;
-    _marksBefore = 0;
-    notifyListeners();
-    await prepare();
-    if (_disposed || token != _startToken) return;
-    if (_holdAuto && clip.origin == PlaybackOrigin.auto) {
-      // The app went `inactive` while the sink prepared: back to the head of
-      // the queue until the hold is cleared.
-      _queue.addFirst(clip);
-      _trimAuto(keep: clip);
-      _reset();
-      return;
-    }
-    final double? toneHz = clip.toneHz;
-    if (toneHz != null && _sidetone != null) _sidetone.frequencyHz = toneHz;
-    _player.play(_timeline(clip));
-    // The app left the foreground while the sink prepared: hold the clip at
-    // its first element until it is back.
-    if (_background) _player.pause();
-  }
-
-  /// An auto-played clip waits for whatever part of a word gap has not
-  /// already passed since the last key-up; a tapped bubble starts at once.
-  List<MorseElement> _timeline(_Clip clip) {
-    final List<MorseElement> elements = MorseEncoder.encode(
-      clip.text,
-      clip.timing,
-    );
-    final Duration? last = _lastKeyUp;
-    if (clip.origin == PlaybackOrigin.manual || last == null) return elements;
-    final Duration owed = clip.timing.wordGap - (clock.now() - last);
-    if (owed <= Duration.zero || elements.isEmpty) return elements;
-    return [MorseElement(MorseElementKind.wordGap, owed), ...elements];
-  }
-
-  /// Cuts the current clip. An idle player emits nothing, so a clip cancelled
-  /// while preparing is cleared here.
-  void _halt() {
-    _startToken++;
-    if (_player.isPlaying) {
-      _player.stop();
-    } else if (_current != null) {
-      _reset();
-    }
-  }
-
-  void _reset() {
-    _current = null;
-    _activeMark = -1;
-    notifyListeners();
-  }
-
-  void _keyingOn() {
-    if (_disposed) return;
-    _keyDown = true;
-    _cancelHold();
-    final _Clip? current = _current;
-    if (current != null) {
-      // The operator takes the key: put an automatic clip back.
-      if (current.origin == PlaybackOrigin.auto) {
-        _queue.addFirst(current);
-        _trimAuto(keep: current);
-      }
-      _halt();
-    }
-    final double? toneHz = keyingToneHz;
-    if (toneHz != null && _sidetone != null) _sidetone.frequencyHz = toneHz;
-    sink.on();
-  }
-
-  void _keyingOff() {
-    if (_disposed) return;
-    sink.off();
-    if (!_keyDown) return;
-    _keyDown = false;
-    final Duration now = clock.now();
-    _lastKeyUp = now;
-    _quietAt = now + keyingHoldoff;
-    // Only schedules (the hold-off is still running): never starts playback
-    // from inside the keyer's callback.
-    unawaited(_advance());
-  }
-
-  void _onForegroundChanged(bool foreground) {
-    if (_disposed || foreground == !_background) return;
-    _background = !foreground;
-    if (_background) {
-      _player.pause();
-      return;
-    }
-    // The sinks that gate themselves on the lifecycle (sidetone, haptics)
-    // subscribed after this controller, so they hear the change after it:
-    // resume on a microtask, once their listeners have run, or the player
-    // would re-key sinks that still believe they are in the background.
-    scheduleMicrotask(() {
-      if (_disposed || _background) return;
-      _player.resume();
-      unawaited(_advance());
-    });
-  }
-
-  void _onEvent(PlayerEvent event) {
-    switch (event) {
-      case PlayerElementStarted(:final index, :final element):
-        if (element.on) {
-          _soundOn = true;
-          _activeMark = _marksBefore;
-          _marksBefore++;
-          notifyListeners();
-        } else {
-          _keyReleased();
-          if (index == 0) notifyListeners();
-        }
-      case PlayerCompleted():
-        _keyReleased();
-        _reset();
-        unawaited(_advance());
-      case PlayerStopped():
-        // Cut during a gap: the key-up that counts is the one already noted.
-        _keyReleased();
-        if (_current != null) _reset();
-    }
-  }
-
-  void _keyReleased() {
-    if (_soundOn) _lastKeyUp = clock.now();
-    _soundOn = false;
-  }
-
   @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
     _queue.clear();
     _cancelHold();
+    _progressTimer?.cancel();
     _stopListening();
     unawaited(_subscription.cancel());
     unawaited(_player.dispose());
     unawaited(sink.dispose());
     super.dispose();
   }
-}
-
-final class _Clip {
-  const _Clip(this.id, this.text, this.timing, this.toneHz, this.origin);
-
-  final String id;
-  final String text;
-  final MorseTiming timing;
-  final double? toneHz;
-  final PlaybackOrigin origin;
-}
-
-/// [MorsePlaybackController.keyingSink]: the keyers' view of the shared sink.
-final class _KeyingSink implements MorseSink {
-  _KeyingSink(this._owner);
-
-  final MorsePlaybackController _owner;
-
-  @override
-  Future<void> prepare() => _owner.prepare();
-
-  @override
-  void on() => _owner._keyingOn();
-
-  @override
-  void off() => _owner._keyingOff();
-
-  // The owner disposes the real sink.
-  @override
-  Future<void> dispose() async {}
 }

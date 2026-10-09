@@ -1,0 +1,19 @@
+--- a/lib/utils/message_history_persistence.dart
++++ b/lib/utils/message_history_persistence.dart
+@@ -3218,13 +3218,15 @@
+     // case that needs it) untouched. The drain crash-recovery fallback that
+     // *does* re-append a self row does its own content existence check
+     // (`_drainTextItem`), so it no longer relies on this branch.
+-    if (message.text.isNotEmpty && !message.isSelf) {
++    if (message.text.isNotEmpty && !message.isSelf &&
++        !(message.msgID?.startsWith('dmr:') ?? false)) {
+       const dedupWindow = Duration(seconds: 2);
+       // GH-4: only when identity is UNKNOWN on one side (legacy /
+       // conference / an older native library). Two rows that both carry a
+       // group alias and did not match exactly above are two genuine
+       // messages: a member sending "ok" twice within the window.
+       final contentMatch = list.indexWhere((msg) =>
++          !(msg.msgID?.startsWith('dmr:') ?? false) &&
+           chatMessagesShareGroupIdentity(msg, message) == null &&
+           msg.text == message.text &&
+           msg.fromUserId == message.fromUserId &&

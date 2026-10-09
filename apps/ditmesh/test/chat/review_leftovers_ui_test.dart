@@ -126,7 +126,11 @@ class _Gated implements ChatService {
   @override
   Future<void> markRead(String id) => d.markRead(id);
   @override
-  Future<ChatMessage> sendText(String id, String text) => d.sendText(id, text);
+  Future<ChatMessage> sendText(
+    String id,
+    String text, {
+    KeyedRecording? recording,
+  }) => d.sendText(id, text, recording: recording);
   @override
   bool get supportsSendControl => d.supportsSendControl;
   @override

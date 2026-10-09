@@ -6,6 +6,7 @@ import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/chat/conversation_timeline.dart';
 import 'package:ditmesh/ui/chat/input_mode.dart';
+import 'package:ditmesh/ui/chat/morse_playback_controller.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import 'test_support.dart';
@@ -26,6 +27,66 @@ Future<void> _keyDit(WidgetTester tester, ChatHarness h) async {
 }
 
 void main() {
+  testWidgets('sending cancels a preview queued behind hand keying', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn(withMessage: false);
+      return ConversationScreen(target: _ann());
+    });
+    await _keyDit(tester, h);
+    await tester.tap(find.byKey(const ValueKey('draft-preview')));
+    await tester.pump();
+    expect(h.playback.queuedIds, contains('draft:c2c_$kPeerKey'));
+    await tester.tap(find.byTooltip(s.chatSend));
+    await tester.pumpAndSettle();
+    expect(h.playback.queuedIds, isEmpty);
+    expect(h.playback.playingId, isNull);
+  });
+
+  testWidgets('emptying the draft keeps queued preview Stop enabled', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn(withMessage: false);
+      return ConversationScreen(target: _ann());
+    });
+    await _keyDit(tester, h);
+    await tester.tap(find.byKey(const ValueKey('draft-preview')));
+    await tester.pump();
+    await tester.tap(find.byTooltip(s.chatDeleteLast));
+    await tester.pump();
+    final stop = tester.widget<IconButton>(
+      find.byKey(const ValueKey('draft-preview')),
+    );
+    expect(stop.onPressed, isNotNull);
+    await tester.tap(find.byKey(const ValueKey('draft-preview')));
+    await tester.pump();
+    expect(h.playback.queuedIds, isEmpty);
+  });
+
+  testWidgets('draft preview commits keying without sending and can stop', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn(withMessage: false);
+      return ConversationScreen(target: _ann());
+    });
+    await _keyDit(tester, h);
+    await tester.tap(find.byKey(const ValueKey('draft-preview')));
+    await tester.pump();
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, 'E');
+    h.clock.advance(MorsePlaybackController.keyingHoldoff);
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(h.playback.playingId, 'draft:c2c_$kPeerKey');
+    expect(await h.service.loadHistory('c2c_$kPeerKey'), isEmpty);
+    await tester.tap(find.byKey(const ValueKey('draft-preview')));
+    await tester.pump();
+    expect(h.playback.playingId, isNull);
+    expect(field.controller!.text, 'E');
+  });
+
   for (final group in [false, true]) {
     testWidgets(
       '${group ? 'group' : 'direct'} chat only accepts decoded Morse',

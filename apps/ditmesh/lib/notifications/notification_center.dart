@@ -179,8 +179,7 @@ class NotificationCenter {
   /// such a channel is dropped by the OS. Read at [start] and again each
   /// time the app returns to the foreground, since the user changes it in
   /// Settings while the app is in the background.
-  ValueListenable<Set<NotificationChannelKind>> get blockedChannels =>
-      _blocked;
+  ValueListenable<Set<NotificationChannelKind>> get blockedChannels => _blocked;
 
   /// [owner] (a conversation screen) shows [conversationId] to the user
   /// right now. While the app is in the foreground its notification is
@@ -297,7 +296,11 @@ class NotificationCenter {
   // ---- Inbound events --------------------------------------------------------
 
   void _onMessage(ChatMessage message) {
-    if (message.isMine || message.status != MessageStatus.received) return;
+    if (message.isMine ||
+        message.isUpdate ||
+        message.status != MessageStatus.received) {
+      return;
+    }
     final String id = message.conversationId;
     if (_isForeground.value && _activeConversation == id) return;
     if (!_prefs.enabled || _prefs.isMuted(id)) return;

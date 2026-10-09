@@ -29,9 +29,13 @@ class _DelayedService implements ChatService {
   int get maxMessageBytes => delegate.maxMessageBytes;
 
   @override
-  Future<ChatMessage> sendText(String id, String text) async {
+  Future<ChatMessage> sendText(
+    String id,
+    String text, {
+    KeyedRecording? recording,
+  }) async {
     await sent.future;
-    return delegate.sendText(id, text);
+    return delegate.sendText(id, text, recording: recording);
   }
 
   @override

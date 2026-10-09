@@ -84,10 +84,10 @@ class SZh extends S {
   String get connectionOffline => '离线';
 
   @override
-  String get messageStatusPending => '已排队 — 对方离线';
+  String get messageStatusPending => '已在本机排队';
 
   @override
-  String get messageStatusPendingDetail => 'Tox 没有服务器：消息会在对方上线后送达。';
+  String get messageStatusPendingDetail => '消息已保存在本机，双方应用同时运行且网络可达时会继续发送。';
 
   @override
   String get messageStatusSending => '发送中';
@@ -4452,6 +4452,151 @@ class SZh extends S {
   }
 
   @override
+  String get firstChatTitle => '第一次电码聊天';
+
+  @override
+  String get firstChatStart => '开始体验';
+
+  @override
+  String get firstChatDismiss => '收起引导';
+
+  @override
+  String get firstChatKeyTitle => '1. 给自己拍发 CQ';
+
+  @override
+  String get firstChatKeyBody => '用电键拍发 CQ：短按是点，长按是划。解码后的草稿保持只读。';
+
+  @override
+  String get firstChatSelf => '在发给自己中试一试';
+
+  @override
+  String get firstChatListenTitle => '2. 试听与纠错';
+
+  @override
+  String get firstChatListenBody => '发送前点试听来听草稿，用退格删除错误。发送后点消息上的播放按钮。发给自己的消息只保存在本机。';
+
+  @override
+  String get firstChatFriendTitle => '3. 与好友聊天';
+
+  @override
+  String get firstChatFriendBody => '打开联系人，通过二维码或 Tox ID 添加好友，等待对方接受申请。';
+
+  @override
+  String get firstChatFriend => '添加好友';
+
+  @override
+  String get firstChatOnline => '双方应用都保持运行且网络可达时，消息才能送到好友。';
+
+  @override
+  String get pendingMessagesTitle => '待发送与失败消息';
+
+  @override
+  String get pendingMessagesExplanation => '排队消息保存在本机，双方应用连接后继续发送。你可以取消排队消息，或重试已确认失败的消息。';
+
+  @override
+  String get pendingMessagesEmpty => '没有待发送或失败消息';
+
+  @override
+  String get deliveryDetailsTitle => '投递详情';
+
+  @override
+  String get deliveryLocalTitle => '已保存到本机';
+
+  @override
+  String get deliveryLocalDetail => '这条发给自己的消息已保存在本机。';
+
+  @override
+  String get deliverySentDetail => '本机已把消息交给传输层，正在等待对端确认接收。';
+
+  @override
+  String get deliveryPeerTitle => '对端已接收';
+
+  @override
+  String get deliveryPeerDetail => '对端已确认接收；这不代表对方已经阅读或收听。';
+
+  @override
+  String get deliveryGroupTitle => '群成员已接收';
+
+  @override
+  String get deliveryGroupDetail => '至少一名群成员已确认接收，其他成员仍可能离线。';
+
+  @override
+  String get deliveryLocalOffline => '本机尚未连接到网络。';
+
+  @override
+  String get deliveryPeerOffline => '好友目前离线。';
+
+  @override
+  String get deliveryGroupWaiting => '正在等待连接到群组。';
+
+  @override
+  String get chatPreviewDraft => '试听草稿';
+
+  @override
+  String get chatStopPreview => '停止试听';
+
+  @override
+  String get chatMessagePlayback => '消息播放器';
+
+  @override
+  String get chatOriginalRhythm => '原始拍发节奏';
+
+  @override
+  String get chatListenerRhythm => '我的收听速度';
+
+  @override
+  String get chatOriginalAvailable => '已保存实际按键与间隔时长。';
+
+  @override
+  String get chatOriginalUnavailable => '无可用原始节奏，将按你的收听速度播放。';
+
+  @override
+  String get chatOriginalPlaying => '正在播放原始节奏';
+
+  @override
+  String get chatListenerPlaying => '正在按你的收听速度播放';
+
+  @override
+  String get chatPause => '暂停';
+
+  @override
+  String get chatResume => '继续';
+
+  @override
+  String get chatPreviousWord => '上一词';
+
+  @override
+  String get chatNextWord => '下一词';
+
+  @override
+  String chatWordNumber(int number) {
+    return '第 $number 词';
+  }
+
+  @override
+  String get chatRangeStart => '起始词';
+
+  @override
+  String get chatRangeEnd => '结束词';
+
+  @override
+  String get chatRepeatRange => '重播选定词段';
+
+  @override
+  String get chatLoopRange => '循环选定词段';
+
+  @override
+  String get chatPlaybackProgress => '播放进度';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return '第 $current / $total 词';
+  }
+
+  @override
+  String get chatOriginalPreference => '有匹配的录音时使用原始拍发节奏。';
+
+  @override
   String chatConversationActions(String name) {
     return '$name 的操作';
   }
@@ -4548,10 +4693,10 @@ class SZhHant extends SZh {
   String get connectionOffline => '離線';
 
   @override
-  String get messageStatusPending => '已排隊 — 對方離線';
+  String get messageStatusPending => '已在本機排隊';
 
   @override
-  String get messageStatusPendingDetail => 'Tox 沒有伺服器：訊息會在對方上線後送達。';
+  String get messageStatusPendingDetail => '訊息已儲存在本機，雙方應用程式同時執行且網路可達時會繼續傳送。';
 
   @override
   String get messageStatusSending => '傳送中';
@@ -8914,6 +9059,151 @@ class SZhHant extends SZh {
   String chatGroupReconnectRefused(String name) {
     return '$name 拒絕了重新連線。歷史紀錄已保留；請使用群組密碼重試。';
   }
+
+  @override
+  String get firstChatTitle => '第一次電碼聊天';
+
+  @override
+  String get firstChatStart => '開始體驗';
+
+  @override
+  String get firstChatDismiss => '收起引導';
+
+  @override
+  String get firstChatKeyTitle => '1. 給自己拍發 CQ';
+
+  @override
+  String get firstChatKeyBody => '用電鍵拍發 CQ：短按是點，長按是劃。解碼後的草稿保持唯讀。';
+
+  @override
+  String get firstChatSelf => '在傳給自己中試一試';
+
+  @override
+  String get firstChatListenTitle => '2. 試聽與更正';
+
+  @override
+  String get firstChatListenBody => '傳送前點試聽來聽草稿，用退格刪除錯誤。傳送後點訊息上的播放按鈕。傳給自己的訊息只儲存在本機。';
+
+  @override
+  String get firstChatFriendTitle => '3. 與好友聊天';
+
+  @override
+  String get firstChatFriendBody => '開啟聯絡人，透過 QR 碼或 Tox ID 加入好友，等待對方接受邀請。';
+
+  @override
+  String get firstChatFriend => '加入好友';
+
+  @override
+  String get firstChatOnline => '雙方應用程式都保持執行且網路可達時，訊息才能送到好友。';
+
+  @override
+  String get pendingMessagesTitle => '待傳送與失敗訊息';
+
+  @override
+  String get pendingMessagesExplanation => '排隊訊息儲存在本機，雙方應用程式連線後繼續傳送。可取消排隊訊息，或重試已確認失敗的訊息。';
+
+  @override
+  String get pendingMessagesEmpty => '沒有待傳送或失敗訊息';
+
+  @override
+  String get deliveryDetailsTitle => '投遞詳情';
+
+  @override
+  String get deliveryLocalTitle => '已儲存到本機';
+
+  @override
+  String get deliveryLocalDetail => '這則傳給自己的訊息已儲存在本機。';
+
+  @override
+  String get deliverySentDetail => '本機已將訊息交給傳輸層，正在等待對方確認接收。';
+
+  @override
+  String get deliveryPeerTitle => '對方已接收';
+
+  @override
+  String get deliveryPeerDetail => '對方已確認接收；這不代表對方已經閱讀或收聽。';
+
+  @override
+  String get deliveryGroupTitle => '群組成員已接收';
+
+  @override
+  String get deliveryGroupDetail => '至少一名群組成員已確認接收，其他成員仍可能離線。';
+
+  @override
+  String get deliveryLocalOffline => '本機尚未連線。';
+
+  @override
+  String get deliveryPeerOffline => '好友目前離線。';
+
+  @override
+  String get deliveryGroupWaiting => '正在等待連線到群組。';
+
+  @override
+  String get chatPreviewDraft => '試聽草稿';
+
+  @override
+  String get chatStopPreview => '停止試聽';
+
+  @override
+  String get chatMessagePlayback => '訊息播放器';
+
+  @override
+  String get chatOriginalRhythm => '原始拍發節奏';
+
+  @override
+  String get chatListenerRhythm => '我的收聽速度';
+
+  @override
+  String get chatOriginalAvailable => '已儲存實際按鍵與間隔時長。';
+
+  @override
+  String get chatOriginalUnavailable => '無可用原始節奏，將按你的收聽速度播放。';
+
+  @override
+  String get chatOriginalPlaying => '正在播放原始節奏';
+
+  @override
+  String get chatListenerPlaying => '正在按你的收聽速度播放';
+
+  @override
+  String get chatPause => '暫停';
+
+  @override
+  String get chatResume => '繼續';
+
+  @override
+  String get chatPreviousWord => '上一詞';
+
+  @override
+  String get chatNextWord => '下一詞';
+
+  @override
+  String chatWordNumber(int number) {
+    return '第 $number 詞';
+  }
+
+  @override
+  String get chatRangeStart => '起始詞';
+
+  @override
+  String get chatRangeEnd => '結束詞';
+
+  @override
+  String get chatRepeatRange => '重播選定詞段';
+
+  @override
+  String get chatLoopRange => '循環選定詞段';
+
+  @override
+  String get chatPlaybackProgress => '播放進度';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return '第 $current / $total 詞';
+  }
+
+  @override
+  String get chatOriginalPreference => '有相符的錄音時使用原始拍發節奏。';
 
   @override
   String chatConversationActions(String name) {

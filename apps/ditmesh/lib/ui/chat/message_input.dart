@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:morse_core/morse_core.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
@@ -10,11 +9,13 @@ import '../../i18n/l10n_extension.dart';
 import 'chat_layout.dart';
 import 'chat_scope.dart';
 import 'keying_input.dart';
+import 'keyed_draft_recording.dart';
 import 'input_mode.dart';
 import 'input_mode_selector.dart';
 import 'local_message_sends.dart';
 import 'compose_editing.dart';
 import 'morse_pattern_text.dart';
+import 'playback_timeline.dart';
 import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
 
@@ -24,6 +25,7 @@ import 'morse_playback_settings.dart';
 export 'input_mode.dart';
 
 part 'message_draft_writer.dart';
+part 'message_input_layout.dart';
 
 /// The compose area: mode selector, keying pad, read-only draft field with
 /// live Morse preview and remaining-byte counter, send button. Drafts are
@@ -141,6 +143,7 @@ class _MessageInputState extends State<MessageInput>
     // Selection/focus changes do not create a new draft revision.
     if (_text.text == _lastDraft) return;
     _lastDraft = _text.text;
+    _writer.recording.reconcile(_lastDraft);
     _editRevision++;
     setState(() {});
     _draftTimer?.cancel();
@@ -235,6 +238,24 @@ class _MessageInputState extends State<MessageInput>
   bool get _sendEnabled =>
       _canSend || (!_sending && _keyingPending && _bytesLeft >= 0);
 
+  String get _previewId => 'draft:${widget.conversationId}';
+
+  void _preview(MorsePlaybackSettings settings) {
+    _keying.complete();
+    final text = _text.text.trim();
+    if (text.isEmpty || _sending) return;
+    unawaited(
+      widget.playback.toggle(
+        _previewId,
+        text,
+        settings.timing,
+        toneHz: settings.toneHz,
+        recording: _writer.recording.forText(text),
+        original: settings.originalRhythm,
+      ),
+    );
+  }
+
   Future<void> _send() async {
     // Finish the character being keyed so it ends THIS message instead of
     // starting the next one; then re-check text and byte budget.
@@ -248,9 +269,11 @@ class _MessageInputState extends State<MessageInput>
       final ChatMessage sent = await widget.service.sendText(
         widget.conversationId,
         text,
+        recording: _writer.recording.forText(text),
       );
       LocalMessageSends.forService(widget.service).publish(sent);
       if (!mounted) return;
+      widget.playback.cancelMessages({_previewId});
       _draftTimer?.cancel();
       if (_editRevision == revision) _text.clear();
       unawaited(_persistDraft());
@@ -322,140 +345,8 @@ class _MessageInputState extends State<MessageInput>
     );
   }
 
+  void _change(VoidCallback change) => setState(change);
+
   @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
-    final S s = context.s;
-    final MorsePlaybackSettings settings = MorsePlaybackSettings.of(context);
-    // Live keying sounds at the listener's tone, not the sink's default.
-    widget.playback.keyingToneHz = settings.toneHz;
-    final String pattern = MorseEncoder.toPattern(_text.text);
-    final int left = _bytesLeft;
-    final bool tooLong = left < 0;
-
-    // Short screens (a phone in landscape): the pad shrinks, the mode switch
-    // joins the draft row and the preview row goes, so the conversation
-    // keeps most of the height.
-    final bool compact = MediaQuery.sizeOf(context).height < compactHeight;
-    final Widget selector = LayoutBuilder(
-      builder: (context, constraints) => InputModeSelector(
-        mode: _mode,
-        // Icon-only below ~420 px so the segments fit a phone.
-        showLabels: !compact && constraints.maxWidth >= 420,
-        onChanged: (m) => _changeMode(m, settings),
-      ),
-    );
-    final Widget keyer = KeyingInput(
-      key: ValueKey<InputMode>(_mode),
-      mode: _mode == InputMode.straightKey
-          ? KeyingMode.straightKey
-          : KeyingMode.paddles,
-      timing: settings.timing,
-      // Keyers take the sink from playback, which yields to them.
-      sink: widget.playback.keyingSink,
-      clock: widget.playback.clock,
-      onText: _appendDecoded,
-      controller: _keying,
-      onPendingChanged: (pending) {
-        if (mounted) setState(() => _keyingPending = pending);
-      },
-      height: compact ? 64 : 132,
-      showHint: !compact,
-    );
-    final Widget draftRow = Padding(
-      padding: EdgeInsets.fromLTRB(compact ? 6 : 12, 6, 6, compact ? 6 : 0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (compact) ...[
-            SizedBox(width: 120, child: selector),
-            const SizedBox(width: 6),
-          ],
-          Expanded(
-            // Keyed, not typed: no soft keyboard, and focus stays
-            // on the key so desktop keying keeps working.
-            child: TextField(
-              controller: _text,
-              focusNode: _focus,
-              readOnly: true,
-              canRequestFocus: false,
-              minLines: 1,
-              maxLines: compact ? 2 : 4,
-              decoration: InputDecoration(
-                hintText: s.chatKeyMessage,
-                border: const OutlineInputBorder(),
-                isDense: true,
-                errorText: tooLong ? s.chatTooLong : null,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: s.chatDeleteLast,
-            onPressed: _text.text.isEmpty ? null : _deleteLast,
-            icon: const Icon(Icons.backspace_outlined),
-          ),
-          IconButton.filled(
-            tooltip: s.chatSend,
-            onPressed: _sendEnabled ? () => unawaited(_send()) : null,
-            icon: _sending
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-          ),
-        ],
-      ),
-    );
-
-    return Material(
-      color: scheme.surfaceContainerLow,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (!compact)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: selector,
-              ),
-            keyer,
-            draftRow,
-            if (!compact)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: MorsePatternText(
-                        pattern.isEmpty ? ' ' : pattern,
-                        maxLines: 2,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Flexible: at 2x text the counter must not overflow.
-                    Flexible(
-                      child: Text(
-                        s.chatBytesLeftCount(left),
-                        textAlign: TextAlign.end,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: tooLong
-                              ? scheme.error
-                              : scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _buildComposer(context);
 }

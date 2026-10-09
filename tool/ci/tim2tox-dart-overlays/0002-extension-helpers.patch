@@ -1,0 +1,102 @@
+--- /dev/null
++++ b/lib/service/extension_transport.dart
+@@ -0,0 +1,99 @@
++part of 'ffi_chat_service.dart';
++
++/// Narrow bridge used by DitMesh's additive timing protocol. These helpers
++/// share upstream history, unread, streams and durable queue ownership.
++extension FfiExtensionTransport on FfiChatService {
++  bool sendExtensionPacket(String target, String payload, {String? groupId}) {
++    if (_pollDisposed) return false;
++    final encodedId = 'dmr1:${base64Encode(utf8.encode(payload))}';
++    if (payload.length > 1300) return false;
++    if (groupId != null) {
++      final group = groupId.toNativeUtf8();
++      final peer = target.toNativeUtf8();
++      final id = encodedId.toNativeUtf8();
++      final type = 'received'.toNativeUtf8();
++      try {
++        // Existing private NGC receipt channel: old clients swallow unresolved
++        // IDs; qTox/Toxic do not see a public control message.
++        if (encodedId.length + 145 > 1024) return false;
++        return _ffi.sendGroupReceiptNative(0, group, peer, id, type) == 1;
++      } on Object { return false; }
++      finally {
++        pkgffi.malloc.free(group); pkgffi.malloc.free(peer);
++        pkgffi.malloc.free(id); pkgffi.malloc.free(type);
++      }
++    }
++    final bytes = utf8.encode(jsonEncode({'type': 'receipt', 'msgID': encodedId,
++      'receiptType': 'received', 'sender': _wireSelfSender()}));
++    if (bytes.isEmpty || bytes.length > 1300) return false;
++    final peer = target.toNativeUtf8();
++    final data = pkgffi.malloc.allocate<ffi.Uint8>(bytes.length);
++    try {
++      data.asTypedList(bytes.length).setAll(0, bytes);
++      return _ffi.sendC2CControlNative(peer, data, bytes.length, 1) == 1;
++    } on Object { return false; }
++    finally { pkgffi.malloc.free(peer); pkgffi.malloc.free(data); }
++  }
++
++  bool consumeExtensionReceipt(String peer, String payload, {String? groupId}) {
++    if (payload.length > 1300) return false;
++    try {
++      final value = jsonDecode(payload);
++      if (value is! Map || value.length != 4 || value['type'] != 'receipt' ||
++          value['receiptType'] != 'received' || value['sender'] is! String ||
++          (value['sender'] as String).toUpperCase() != peer.toUpperCase()) return false;
++      final id = value['msgID'];
++      if (id is! String || !id.startsWith('dmr1:')) return false;
++      final body = utf8.decode(base64Decode(id.substring(5)));
++      // Reserved malformed extension data is a control, never display content.
++      consumeCustomExtension(peer, body, groupId: groupId);
++      return true;
++    } on FormatException { return false; }
++  }
++
++  /// Persist before ACK; duplicates are checked by explicit envelope identity,
++  /// including archived history. No content- or timestamp-based association.
++  Future<bool> receiveExtensionText(String sender, String alias, String text,
++      {String? metadata, ChatMessageContentKind kind = ChatMessageContentKind.normal}) async {
++    final peer = _normalizeFriendId(sender);
++    if (_pollDisposed || isBlocked(peer)) return false;
++    bool hasAlias(ChatMessage row) => row.msgID == alias || row.altMsgIds.contains(alias);
++    if (_messageHistoryPersistence.getHistory(peer).any(hasAlias)) return false;
++    if (await _messageHistoryPersistence.hasArchivedHistory(peer)) {
++      if ((await _messageHistoryPersistence.loadArchivedHistory(peer)).any(hasAlias)) return false;
++    }
++    if (_pollDisposed || isBlocked(peer)) return false;
++    final row = ChatMessage(text: text, fromUserId: peer, isSelf: false,
++        timestamp: DateTime.now(), msgID: alias, altMsgIds: [alias],
++        contentKind: kind, cloudCustomData: metadata);
++    await _messageHistoryPersistence.appendHistory(peer, row);
++    if (_pollDisposed || isBlocked(peer)) return false;
++    _lastByPeer[peer] = row;
++    if (_activePeerId != peer) {
++      _unreadByPeer.update(peer, (v) => v + 1, ifAbsent: () => 1);
++    }
++    _messages.add(row);
++    return true;
++  }
++
++  /// Late group timing changes the existing text row, never adds a control row.
++  Future<bool> attachExtensionMetadata(String group, String sender,
++      String alias, String metadata) async {
++    final rows = _messageHistoryPersistence.getCachedList(group);
++    if (rows == null || _pollDisposed || isBlocked(sender)) return false;
++    for (var i = 0; i < rows.length; i++) {
++      final row = rows[i];
++      if (!row.isSelf && row.fromUserId.toUpperCase() == sender.toUpperCase() &&
++          row.altMsgIds.contains(alias)) {
++        if (row.cloudCustomData == metadata) return true;
++        final updated = row.copyWith(cloudCustomData: metadata);
++        rows[i] = updated;
++        if (_lastByPeer[group]?.msgID == row.msgID) _lastByPeer[group] = updated;
++        await _messageHistoryPersistence.saveHistory(group, rows);
++        if (!_pollDisposed) _messages.add(updated);
++        return true;
++      }
++    }
++    return false;
++  }
++}

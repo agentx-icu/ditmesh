@@ -13,6 +13,8 @@ bash tool/ci/build_tim2tox.sh --target macos-arm64
 
 bootstrap 固定并补丁化 Dart 兼容 SDK，通过 overlay 移除腾讯原生 IM 插件，写入不提交的依赖 overrides。Tim2Tox 链接 c-toxcore 与固定版本静态 libsodium，不启用 ToxAV。
 
+它也把固定 Tim2Tox 的 Dart 包复制到忽略目录 `third_party/tim2tox_ditmesh`，应用 `tool/ci/tim2tox-dart-overlays` 中的原始节奏传输补丁。根 overrides 和 lock 指向该副本。可用 `dart run tool/bootstrap_deps.dart --offline-check-only` 按上游源码和评审补丁验证；两者有变化时重新运行 bootstrap，保持上游子模块干净。
+
 macOS 应用要求 **13.0 及以上**，Intel/ARM 一致，以满足内嵌 Objective-C 框架。生成 ZIP/PKG 前，打包器逐个核对实际 Mach-O 各架构要求与主应用声明，依赖要求更高时直接阻止打包。传输库本身可以支持更低系统版本，不会降低应用要求。
 
 ## 本机构建

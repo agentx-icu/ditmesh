@@ -6,7 +6,17 @@ import 'models.dart';
 /// ([ChatService.searchMessages]).
 @immutable
 final class MessageSearchQuery {
-  const MessageSearchQuery({this.text = '', this.senderId, this.from, this.to});
+  const MessageSearchQuery({
+    this.text = '',
+    this.senderId,
+    this.from,
+    this.to,
+    this.statuses,
+  });
+
+  /// Only these delivery states. Null accepts every state; an empty set
+  /// accepts none. Useful for a single filtered outbox-history scan.
+  final Set<MessageStatus>? statuses;
 
   /// Case-insensitive substring of the message body; empty matches every
   /// body (filter-only searches).
@@ -22,9 +32,14 @@ final class MessageSearchQuery {
   final DateTime? to;
 
   bool get isEmpty =>
-      text.trim().isEmpty && senderId == null && from == null && to == null;
+      text.trim().isEmpty &&
+      senderId == null &&
+      from == null &&
+      to == null &&
+      statuses == null;
 
   bool matches(ChatMessage m) {
+    if (statuses != null && !statuses!.contains(m.status)) return false;
     final needle = text.trim().toLowerCase();
     if (needle.isNotEmpty && !m.text.toLowerCase().contains(needle)) {
       return false;

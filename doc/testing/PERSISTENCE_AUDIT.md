@@ -1,6 +1,6 @@
 [简体中文](./PERSISTENCE_AUDIT.zh-CN.md)
 
-# DitMesh persistence audit — 2026-10-08
+# DitMesh persistence audit — 2026-10-09
 
 This inventory documents chat storage, save barriers and backup restoration. Executed checks are recorded in [VALIDATION.md](../VALIDATION.md).
 
@@ -14,6 +14,7 @@ This inventory documents chat storage, save barriers and backup restoration. Exe
 | Display name, status, Tox ID and password flag | `<identity>/identity.json` and native self profile | Atomic record replacement; serialized identity mutations; malformed records do not crash inspection. |
 | Password verifier | Identity-keyed `flutter_secure_storage` | Platform Keychain/Keystore/desktop secure store; failed profile/password operations roll back. Passwords are absent from ordinary preferences. |
 | Messages, read state and unread counts | `<identity>/data/chat_history/` | Debounced saves have an explicit flush barrier. Unread state is reconstructed from durable history. |
+| Optional original keyed timing | Message metadata in history and the authoritative outbox | Validated mark/gap spans survive history reload, queued-send restart and selected encrypted history/pending backup components. Late metadata enriches the existing message. |
 | Offline direct/group outbox | `<identity>/data/offline_message_queue.json` | Restart preserves queued sends and their pending status. Delivery/retry keeps the message identifier rather than creating duplicate bubbles. |
 | Friend requests, rejection records and Tim2Tox host metadata | Account-scoped `shared_preferences` | Requests and group metadata survive reconnect. Identity removal clears its scoped keys. |
 | Drafts, pinned/hidden conversations and queued invitations | Account-scoped `shared_preferences` | Offline edits persist; replaced editors cannot write into a new identity. |
@@ -22,6 +23,8 @@ This inventory documents chat storage, save barriers and backup restoration. Exe
 | Appearance | `appearance.preferences` in `<support>/settings.json` | Style and brightness are saved together before publication. Failure retains the previous visible choice. New/corrupt records use Modern Calm/system mode. |
 | Language, playback/input/decoder settings and notification choices | `<support>/settings.json` | Restored before providers become available; failed writes remain available for retry. |
 | Muted conversations | `notifications.muted.<full-public-key>` in `settings.json` | Identity-scoped; only committed identity deletion/replacement clears the old list. |
+| First-chat guide dismissal | `chat.guide.<full-public-key>` in `settings.json` | Identity-scoped, reopenable from Chat; failed writes remain retryable and late hydration cannot overwrite a newer local choice. |
+| Conversation listening preferences | `chat.conversations.<full-public-key>` in `settings.json` | Each conversation retains speed/spacing/tone, original-source preference and repeat range/loop. Identity replacement detaches old models; global defaults seed a new conversation. |
 | Window bounds/maximized, close-to-tray and tray sounds | Desktop keys in `settings.json` | Bounds are checked against current displays; failed saves revert the visible model. |
 | Public bootstrap configuration | Global `shared_preferences` | Independent of identity deletion and replacement; startup uses current saved configuration. LAN/probe instances have separate private profiles. |
 

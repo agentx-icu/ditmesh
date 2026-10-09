@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'vendor_overlay.dart';
+import 'tim2tox_dart_overlay.dart';
 
 const _submodulePath = 'third_party/tim2tox';
 const _submoduleUrl = 'https://github.com/agentx-icu/tim2tox';
@@ -113,6 +114,7 @@ Future<void> main(List<String> args) async {
     _writeStateAtomic(stateFile, newState);
   }
 
+  Tim2ToxDartOverlay.prepare(repoRoot);
   _writeOverrides(repoRoot);
   stdout.writeln('Bootstrap complete.');
 }
@@ -352,7 +354,7 @@ void _writeOverrides(String repoRoot) {
         'bump.')
     ..writeln('dependency_overrides:')
     ..writeln('  tim2tox_dart:')
-    ..writeln('    path: $_submodulePath/dart')
+    ..writeln('    path: ${Tim2ToxDartOverlay.destination}')
     ..writeln('  tencent_cloud_chat_sdk:')
     ..writeln('    path: $_sdkDirRel')
     // tim2tox_dart's pubspec requires tencent_cloud_chat_common (a UIKit
@@ -377,6 +379,8 @@ int _offlineCheck(String repoRoot) {
   }
 
   final lockFile = File('$repoRoot/$_lockRel');
+  final dartProblem = Tim2ToxDartOverlay.verify(repoRoot);
+  if (dartProblem != null) return fail(dartProblem);
   if (!lockFile.existsSync()) return fail('lock file missing');
   final tim2tox = Directory('$repoRoot/$_submodulePath');
   if (!tim2tox.existsSync()) return fail('submodule directory missing');

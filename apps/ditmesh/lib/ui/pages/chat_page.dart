@@ -12,6 +12,8 @@ import '../chat/conversation_route.dart';
 import '../chat/conversation_screen.dart';
 import '../chat/conversation_target.dart';
 import '../chat/restored_pending.dart';
+import '../chat/first_chat_guide.dart';
+import '../chat/pending_messages_page.dart';
 import '../contacts/contacts_page.dart';
 import '../shell/shell_router.dart';
 import 'placeholder_page.dart';
@@ -104,6 +106,30 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  void _guide(ChatService service) {
+    unawaited(
+      showFirstChatGuide(
+        context,
+        onSelf: () {
+          final id = service.selfConversationId;
+          if (!mounted || id == null) return;
+          _open(
+            context,
+            ConversationTarget.self(
+              id: id,
+              title:
+                  maybeIdentityService(context)?.current?.displayName ??
+                  context.s.chatSelfMe,
+            ),
+          );
+        },
+        onFriend: () {
+          if (mounted) unawaited(_openContacts(context, service));
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final S s = context.s;
@@ -132,26 +158,60 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         title: Text(ChatPage.title(s)),
         actions: [
+          IconButton(
+            key: const ValueKey('pending-messages-open'),
+            tooltip: s.pendingMessagesTitle,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PendingMessagesPage(service: service),
+              ),
+            ),
+            icon: const Icon(Icons.outbox_outlined),
+          ),
+          IconButton(
+            key: const ValueKey('first-chat-guide-help'),
+            tooltip: s.firstChatTitle,
+            onPressed: () => _guide(service),
+            icon: const Icon(Icons.help_outline),
+          ),
           _RequestsBadge(
             service: service,
             onPressed: () => unawaited(_openContacts(context, service)),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Unsent messages a restore brought over (F10), for review only.
-          const RestoredPendingBanner(),
-          Expanded(
-            child: ConversationList(
-              service: service,
-              selectedId: _selected?.id,
-              emptyText: ChatPage.description(s),
-              onOpen: (c) =>
-                  _open(context, ConversationTarget.fromConversation(c)),
+      body: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: constraints.maxHeight * .45,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Restored unsent items (F10) are for review only.
+                    const RestoredPendingBanner(),
+                    FirstChatGuideCard(
+                      service: service,
+                      onStart: () => _guide(service),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ConversationList(
+                service: service,
+                selectedId: _selected?.id,
+                emptyText: ChatPage.description(s),
+                onOpen: (c) =>
+                    _open(context, ConversationTarget.fromConversation(c)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 

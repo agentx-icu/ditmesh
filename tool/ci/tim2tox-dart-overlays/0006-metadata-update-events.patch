@@ -1,0 +1,24 @@
+--- a/lib/service/extension_transport.dart
++++ b/lib/service/extension_transport.dart
+@@ -1,4 +1,9 @@
+ part of 'ffi_chat_service.dart';
++
++// Weak event annotation; never persisted or exposed as wire metadata.
++final _extensionMetadataUpdates = Expando<bool>();
++bool isExtensionMetadataUpdate(ChatMessage row) =>
++    _extensionMetadataUpdates[row] ?? false;
+ 
+ /// Narrow bridge used by DitMesh's additive timing protocol. These helpers
+ /// share upstream history, unread, streams and durable queue ownership.
+@@ -90,7 +95,10 @@
+         rows[i] = updated;
+         if (_lastByPeer[group]?.msgID == row.msgID) _lastByPeer[group] = updated;
+         await _messageHistoryPersistence.saveHistory(group, rows);
+-        if (!_pollDisposed) _messages.add(updated);
++        if (!_pollDisposed) {
++          _extensionMetadataUpdates[updated] = true;
++          _messages.add(updated);
++        }
+         return true;
+       }
+     }

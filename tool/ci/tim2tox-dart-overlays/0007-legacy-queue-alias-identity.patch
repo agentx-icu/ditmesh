@@ -1,0 +1,15 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -13116,7 +13116,11 @@
+     );
+     if (alias != null && history != null) {
+       for (var i = 0; i < history.length; i++) {
+-        if (history[i].isSelf && history[i].msgID == item.msgID) {
++        if (history[i].isSelf && history[i].filePath == null &&
++            history[i].text == item.text &&
++            history[i].contentKind == item.contentKind &&
++            _offlineRowMatchesItem(history[i], item,
++                item.timestamp.millisecondsSinceEpoch)) {
+           history[i] = history[i].copyWith(altMsgIds: [...history[i].altMsgIds, alias]);
+           if (pendingMsgIndex == i) pendingMsg = history[i];
+           break;

@@ -36,3 +36,25 @@ The [gallery](screenshots/README.md) contains **156 frames**: 13 scenes × Engli
 All **12 packages** from the platform build were downloaded and checked for complete asset coverage, SHA-256, archive integrity and bundled native libraries. Both macOS architectures passed inspection of every embedded Mach-O against the application minimum of **13.0**. Package checks also covered the signal-tower icon and Apple permission translations for all ten languages.
 
 Commands for reproducing these checks are in the [test guide](testing/TEST_PYRAMID.md), [build guide](operations/BUILD_AND_DEPLOY.md) and [capture guide](../tool/screenshots/README.md).
+
+## Local chat-experience worktree — 2026-10-09
+
+Branch `codex/chat-onboarding-playback`, based on `71c9e95`, was checked locally on macOS ARM64 with Flutter 3.41.9 / Dart 3.11.5. The earlier CI and package evidence above belongs to its stated release revision.
+
+| Check | Local result |
+|---|---|
+| Backend / pure API | Backend suite: 345 passed, 5 native/worker opt-ins skipped; API: 89 passed. The separate native run below covers the native opt-ins. |
+| Application / Morse I/O | Application: 1576 passed, 2 opt-in image exports skipped; Morse I/O: 143 passed. |
+| Native integration / callbacks | 12 native integration and 7 callback checks passed, 1 separate peer-worker entry skipped; both real peer workers passed through the coordinator. |
+| Real recorded delivery | Direct and NGC complete playable timings, distinct identical text, actual receipts, encrypted restart, durable recorded queue and group rejoin passed. |
+| Review regressions | Overflow bounds, receipt after queue removal, legacy null-ID queues, late metadata without extra arrivals, logout during negotiation, peer restart/old hello/stale ACK, prepare/resume keying priority, failed receive/retry/recovery, clear/session invalidation and bounded pending-state reclamation passed. |
+| Guide / delivery | Independent spec and quality reviews approved. A 3× text test scrolls both headers and opens the friend flow. |
+| Original capture / player | Independent spec review approved. Full 320×640 and 667×375 screens at 3× text support keying, sending, original replay and pause; the delivery target remains at least 48×48. |
+| Final code review | Independent Codex whole-tree review approved after reproduced layout, prepare/resume, durability and expired-capacity findings were fixed; receive/transport final review passed 10 targeted tests. |
+| Dependency integrity / source checks | Offline bootstrap and clean pinned submodule passed; application/packages/tool analysis reports zero issues with `--fatal-infos`; complexity, import and UI-literal guards passed. |
+| Packaging / import checks | 8 packaging, 9 macOS runtime and 19 screenshot-import checks passed. |
+| macOS application | Debug build, cold-start navigation smoke and 4 native persistence checks passed. A fresh file store restored guide dismissal and per-conversation listening/original-rhythm/range preferences. |
+
+The native library used Homebrew libsodium 1.0.21 for this local run after pinned 1.0.20 download endpoints timed out; the repository's release pin remains 1.0.20. Local linking warns that the Homebrew dylib requires macOS 26, so this run does not verify distribution on macOS 13. The packaging test and application build use the Xcode 26.4 SDK explicitly because the installed Command Line Tools 27 SDK is incompatible with the selected linker.
+
+Final real-peer evidence directory: `/var/folders/cz/1y3n3_k12g5d1jmk7m425kr00000gn/T/ditmesh_real_peers_tqvectwq`. The new recording transport contract is documented in [the implemented RFC](rfcs/2026-10-09-keyed-rhythm.md).

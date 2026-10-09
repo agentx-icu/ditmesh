@@ -7,6 +7,7 @@ import 'package:ditmesh_chat/ditmesh_chat.dart';
 import 'package:ditmesh_chat/src/chat/conversation_meta_store.dart';
 import 'package:ditmesh_chat/src/identity/backup_envelope.dart';
 import 'package:ditmesh_chat/src/identity/backup_snapshot.dart';
+import 'package:ditmesh_chat/src/chat/recording_metadata.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
 import 'package:tim2tox_dart/models/chat_message.dart';
@@ -123,6 +124,78 @@ void main() {
   }
 
   final prefs = Uint8List.fromList(utf8.encode('{"chat.playback":{"wpm":22}}'));
+
+  test(
+    'encrypted backup preserves actual rhythm in history and inert pending items',
+    () async {
+      final svc = await seeded();
+      final recording = KeyedRecording(durationsMs: [83, 113, 251]);
+      final metadata = RecordingMetadata.encode(recording)!;
+      final history =
+          jsonDecode(File(historyFile(paths)).readAsStringSync())
+              as Map<String, dynamic>;
+      for (final row in history['messages'] as List) {
+        (row as Map)['cloudCustomData'] = metadata;
+      }
+      File(historyFile(paths)).writeAsStringSync(jsonEncode(history));
+      await OfflineMessageQueuePersistence(
+        queueFilePath: paths.offlineQueueFile,
+      ).saveQueue({
+        kPeerKey: [
+          (
+            kind: 'text',
+            text: 'QRL?',
+            filePath: null,
+            fileName: null,
+            timestamp: t1,
+            msgID: 'queued-1',
+            cloudCustomData: metadata,
+            contentKind: ChatMessageContentKind.normal,
+          ),
+        ],
+      });
+      final bytes = await svc.exportEncryptedBackup(
+        EncryptedBackupRequest(
+          passphrase: 'correct horse',
+          categories: {..._all, BackupCategory.pendingMessages},
+          preferences: prefs,
+        ),
+      );
+      await svc.dispose();
+      final other = IdentityPaths(p.join(tempRoot.path, 'device2'));
+      final restored = service(other);
+      try {
+        final report = await restored.restoreEncryptedBackup(
+          bytes,
+          'correct horse',
+        );
+        expect(report.pendingForReview, 1);
+        final document =
+            jsonDecode(File(historyFile(other)).readAsStringSync()) as Map;
+        expect(
+          RecordingMetadata.decode(
+            (document['messages'] as List).first['cloudCustomData'] as String,
+          ),
+          recording,
+        );
+        final pending =
+            jsonDecode(
+                  File(
+                    p.join(other.trainingDirectory, restoredPendingDoc),
+                  ).readAsStringSync(),
+                )
+                as Map;
+        expect(
+          RestoredPendingItem.fromJson(
+            (pending['items'] as List).single,
+          )?.recording,
+          recording,
+        );
+      } finally {
+        await restored.dispose();
+      }
+    },
+  );
 
   EncryptedBackupRequest request(Set<BackupCategory> cats) =>
       EncryptedBackupRequest(

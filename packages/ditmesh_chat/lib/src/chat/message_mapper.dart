@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart' as api;
 import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/utils/conversation_id_utils.dart';
+import 'package:tim2tox_dart/service/ffi_chat_service.dart'
+    show isExtensionMetadataUpdate;
+import 'recording_metadata.dart';
 
 /// Conversation-id helpers shared by the chat service parts.
 ///
@@ -83,6 +86,8 @@ class MessageMapper {
           ? api.MessageStatus.pending
           : statusOf(m),
       isMine: isMine,
+      recording: RecordingMetadata.decode(m.cloudCustomData),
+      isUpdate: isExtensionMetadataUpdate(m),
     );
   }
 
@@ -92,7 +97,8 @@ class MessageMapper {
     if (!m.isSelf) return api.MessageStatus.received;
     if (m.isCancelled) return api.MessageStatus.cancelled;
     if (m.isFailed) return api.MessageStatus.failed;
-    return m.isPending ? api.MessageStatus.pending : api.MessageStatus.sent;
+    if (m.isPending) return api.MessageStatus.pending;
+    return m.isReceived ? api.MessageStatus.delivered : api.MessageStatus.sent;
   }
 
   /// Id for a row Tim2Tox stored without a native one: deterministic across

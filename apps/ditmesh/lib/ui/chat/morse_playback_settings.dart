@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'input_mode.dart';
 
-/// The listener's own playback preferences (plan §5.2: the sender's speed is
-/// never transmitted; every message is rendered at the receiver's settings).
+/// Listener defaults or a conversation's override, including optional actual
+/// keyed-rhythm playback when a message carries a matching recording.
 ///
 /// Defaults: 15 wpm characters, Farnsworth 8 wpm overall, 700 Hz sidetone.
 /// Provide one instance above the shell with `ChangeNotifierProvider`; until
@@ -20,7 +20,15 @@ class MorsePlaybackSettings extends ChangeNotifier {
     InputMode inputMode = InputMode.straightKey,
     bool autoPlay = false,
     bool listenOnly = false,
-  }) : _listenOnly = listenOnly,
+    bool originalRhythm = false,
+    int repeatStart = 0,
+    int? repeatEnd,
+    bool repeatLoop = false,
+  }) : _originalRhythm = originalRhythm,
+       _repeatStart = repeatStart,
+       _repeatEnd = repeatEnd,
+       _repeatLoop = repeatLoop,
+       _listenOnly = listenOnly,
        _wpm = wpm,
        _farnsworthWpm = farnsworthWpm,
        _toneHz = toneHz,
@@ -45,6 +53,55 @@ class MorsePlaybackSettings extends ChangeNotifier {
       return shared;
     }
   }
+
+  bool _originalRhythm;
+  int _repeatStart;
+  int? _repeatEnd;
+  bool _repeatLoop;
+  bool get originalRhythm => _originalRhythm;
+  int get repeatStart => _repeatStart;
+  int? get repeatEnd => _repeatEnd;
+  bool get repeatLoop => _repeatLoop;
+  set originalRhythm(bool value) {
+    if (_originalRhythm == value) return;
+    _originalRhythm = value;
+    notifyListeners();
+  }
+
+  set repeatStart(int value) {
+    final next = value.clamp(0, 10000);
+    if (_repeatStart == next) return;
+    _repeatStart = next;
+    if (_repeatEnd != null && _repeatEnd! < next) _repeatEnd = next;
+    notifyListeners();
+  }
+
+  set repeatEnd(int? value) {
+    final next = value?.clamp(_repeatStart, 10000);
+    if (_repeatEnd == next) return;
+    _repeatEnd = next;
+    notifyListeners();
+  }
+
+  set repeatLoop(bool value) {
+    if (_repeatLoop == value) return;
+    _repeatLoop = value;
+    notifyListeners();
+  }
+
+  Map<String, Object?> toJson() => {
+    'wpm': wpm,
+    'farnsworthWpm': farnsworthWpm,
+    'toneHz': toneHz,
+    'trainingMode': trainingMode,
+    'inputMode': inputMode.name,
+    'autoPlay': autoPlay,
+    'listenOnly': listenOnly,
+    'originalRhythm': originalRhythm,
+    'repeatStart': repeatStart,
+    'repeatEnd': repeatEnd,
+    'repeatLoop': repeatLoop,
+  };
 
   double _wpm;
   double _farnsworthWpm;

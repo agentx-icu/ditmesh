@@ -129,6 +129,18 @@ void main() {
         first.playback.farnsworthWpm = 12;
         first.playback.toneHz = 550;
         first.playback.trainingMode = true;
+        first.playback.originalRhythm = true;
+        first.firstChat.dismiss();
+        final conversation = first.conversations.forConversation(
+          'c2c_disposable_peer',
+          first.playback,
+        );
+        conversation.wpm = 24;
+        conversation.farnsworthWpm = 10;
+        conversation.originalRhythm = true;
+        conversation.repeatStart = 1;
+        conversation.repeatEnd = 2;
+        conversation.repeatLoop = true;
         first.reference.wpm = 30;
         first.reference.farnsworthWpm = 14;
         first.reference.toneHz = 600;
@@ -171,6 +183,18 @@ void main() {
         expect(reopened.playback.farnsworthWpm, 12);
         expect(reopened.playback.toneHz, 550);
         expect(reopened.playback.trainingMode, isTrue);
+        expect(reopened.playback.originalRhythm, isTrue);
+        expect(reopened.firstChat.dismissed, isTrue);
+        final restoredConversation = reopened.conversations.forConversation(
+          'c2c_disposable_peer',
+          reopened.playback,
+        );
+        expect(restoredConversation.wpm, 24);
+        expect(restoredConversation.farnsworthWpm, 10);
+        expect(restoredConversation.originalRhythm, isTrue);
+        expect(restoredConversation.repeatStart, 1);
+        expect(restoredConversation.repeatEnd, 2);
+        expect(restoredConversation.repeatLoop, isTrue);
         expect(reopened.reference.wpm, 30);
         expect(reopened.reference.farnsworthWpm, 14);
         expect(reopened.reference.toneHz, 600);

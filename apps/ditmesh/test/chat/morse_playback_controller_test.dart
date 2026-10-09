@@ -303,14 +303,14 @@ void main() {
       c.enqueue('a', 'E', _t);
       foreground.set(false);
       await _settle();
-      expect(sink.log, [(true, 0), (false, 0)]);
+      expect(sink.log, isEmpty);
       clock.advance(_ms * 500);
-      expect(sink.log.length, 2);
+      expect(sink.log, isEmpty);
       expect(c.playingId, 'a');
       foreground.set(true);
       await _settle();
       clock.advance(_ms * 60);
-      expect(sink.log.sublist(2), [(true, 500), (false, 560)]);
+      expect(sink.log, [(true, 500), (false, 560)]);
       expect(c.playingId, isNull);
     });
 
