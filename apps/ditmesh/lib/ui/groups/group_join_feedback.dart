@@ -39,7 +39,16 @@ String refusedGroupLabel(GroupJoinRefusal r) {
 /// Localized text for [r].
 String groupJoinRefusalMessage(S s, GroupJoinRefusal r) {
   final String name = refusedGroupLabel(r);
-  if (r.established) return s.chatGroupReconnectRefused(name);
+  if (r.established) {
+    // Only a password refusal is told to retry with one.
+    return switch (r.reason) {
+      GroupJoinRefusalReason.invalidPassword => s.chatGroupReconnectRefused(
+        name,
+      ),
+      GroupJoinRefusalReason.groupFull => s.chatGroupJoinRefusedFull(name),
+      GroupJoinRefusalReason.unknown => s.chatGroupReconnectFailed(name),
+    };
+  }
   return switch (r.reason) {
     GroupJoinRefusalReason.invalidPassword => s.chatGroupJoinRefusedPassword(
       name,
@@ -49,10 +58,10 @@ String groupJoinRefusalMessage(S s, GroupJoinRefusal r) {
   };
 }
 
-/// The call that retries [r] with [password], or null when there is none:
-/// the invite again (a private group cannot be joined by chat id), a held
-/// group by its own id, any other join by chat id.
-Future<void> Function(String password)? groupJoinRetry(
+/// The call that retries [r] (with a password or without), or null when
+/// there is none: the invite again (a private group cannot be joined by chat
+/// id), a held group by its own id, any other join by chat id.
+Future<void> Function(String? password)? groupJoinRetry(
   ChatService service,
   GroupJoinRefusal r,
 ) {
@@ -67,6 +76,15 @@ Future<void> Function(String password)? groupJoinRetry(
   if (chatId != null) return (p) => service.joinGroup(chatId, password: p);
   return null;
 }
+
+/// Whether retrying [r] asks for a password: only when the group refused
+/// one. toxcore keeps a password given to a join as the group's local
+/// password, and a peer that believes a passwordless group has one sends
+/// and expects password fields its peers do not use, so it never connects
+/// again (proven on two real peers). A full group, or a refusal of unknown
+/// cause, is retried as it was.
+bool groupJoinRetryAsksPassword(GroupJoinRefusal r) =>
+    r.reason == GroupJoinRefusalReason.invalidPassword;
 
 class _GroupJoinFeedbackState extends State<GroupJoinFeedback> {
   StreamSubscription<GroupJoinRefusal>? _sub;
@@ -132,16 +150,19 @@ class _GroupJoinFeedbackState extends State<GroupJoinFeedback> {
 
   Future<void> _retry(
     GroupJoinRefusal r,
-    Future<void> Function(String password) retry,
+    Future<void> Function(String? password) retry,
     ChatSessionToken session,
   ) async {
     if (_stale(session)) return;
     final S s = context.s;
-    final String? password = await showGroupPasswordDialog(
-      context,
-      groupName: refusedGroupLabel(r),
-    );
-    if (password == null || _stale(session)) return;
+    String? password;
+    if (groupJoinRetryAsksPassword(r)) {
+      password = await showGroupPasswordDialog(
+        context,
+        groupName: refusedGroupLabel(r),
+      );
+      if (password == null || _stale(session)) return;
+    }
     try {
       await retry(password);
     } on Object catch (e) {

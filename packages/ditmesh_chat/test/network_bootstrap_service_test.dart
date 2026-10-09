@@ -174,19 +174,93 @@ void main() {
     expect(store.getString('pre_lan_bootstrap_host'), isNull);
   });
 
-  test(
-    'failed restore keeps host alive and recovery snapshot for retry',
-    () async {
+  // A previous node that cannot be re-applied (its host does not resolve
+  // offline) must not trap the user in LAN mode (review L8).
+  for (final throws in [false, true]) {
+    test('leaving LAN when the previous node is refused: throws=$throws', () async {
+      final records = <ChatLogRecord>[];
+      await service.dispose();
+      service = Tim2ToxNetworkBootstrapService(
+        store: store,
+        runtime: runtime,
+        logger: CallbackChatLogger(records.add),
+      );
+      await service.initialize();
       await service.selectNode(_node);
       await service.setMode(BootstrapMode.lan);
       await service.startLan(45500);
-      runtime.accepts = false;
-      await expectLater(service.stopLan(), throwsA(isA<ChatException>()));
-      expect(service.configuration.lanNode, _lan);
-      expect(store.getString('pre_lan_bootstrap_host'), _node.host);
-      runtime.accepts = true;
-    },
-  );
+      runtime.applyOverride = (node) async {
+        if (throws) throw StateError('host lookup failed');
+        return false;
+      };
+      await service.setMode(BootstrapMode.manual);
+      expect(service.configuration.mode, BootstrapMode.manual);
+      expect(service.configuration.lanNode, isNull);
+      expect(service.configuration.current, _node);
+      expect(runtime.stopped, 1);
+      expect(store.getString('pre_lan_bootstrap_host'), isNull);
+      expect(
+        records.map((r) => r.message),
+        contains('[Bootstrap] previous node not re-applied; leaving LAN anyway'),
+      );
+    });
+  }
+
+  test('a failed LAN stop after a refused re-apply keeps the journal', () async {
+    await service.selectNode(_node);
+    await service.setMode(BootstrapMode.lan);
+    await service.startLan(45500);
+    runtime.accepts = false;
+    runtime.stops = false;
+    await expectLater(service.stopLan(), throwsA(isA<ChatException>()));
+    expect(service.configuration.lanNode, _lan);
+    expect(store.getString('pre_lan_bootstrap_host'), _node.host);
+    runtime.accepts = true;
+    runtime.stops = true;
+  });
+
+  test('disposal during the re-apply commits and publishes nothing', () async {
+    await service.selectNode(_node);
+    await service.setMode(BootstrapMode.lan);
+    await service.startLan(45500);
+    final gate = Completer<bool>();
+    final entered = Completer<void>();
+    runtime.applyOverride = (_) {
+      entered.complete();
+      return gate.future;
+    };
+    final published = <BootstrapConfiguration>[];
+    final sub = service.changes.listen(published.add);
+    final stopping = service.stopLan();
+    await entered.future;
+    final disposing = service.dispose();
+    gate.complete(false);
+    await expectLater(stopping, throwsA(isA<ChatException>()));
+    await disposing;
+    expect(published, isEmpty);
+    expect(store.getString('pre_lan_bootstrap_host'), _node.host);
+    await sub.cancel();
+  });
+
+  test('a node the runtime does not accept is logged (review L9)', () async {
+    final records = <ChatLogRecord>[];
+    await service.dispose();
+    service = Tim2ToxNetworkBootstrapService(
+      store: store,
+      runtime: runtime,
+      fetchNodes: () async =>
+          const BootstrapCatalogue(nodes: [_node], fromFallback: false),
+      logger: CallbackChatLogger(records.add),
+    );
+    await service.initialize();
+    runtime.accepts = false;
+    await service.sessionStarted();
+    expect(
+      records.where((r) => r.level == ChatLogLevel.warning).map((r) => r.message),
+      contains(startsWith('[Bootstrap] node ')),
+    );
+    runtime.accepts = true;
+  });
 
   test(
     'pre-identity selection and LAN hosting do not need a chat session',

@@ -1279,5 +1279,9 @@
   "chatGroupJoinRefusedPassword": "{name} hat den Beitritt abgelehnt: Das Passwort ist falsch oder fehlt.",
   "chatGroupJoinRefusedFull": "{name} hat den Beitritt abgelehnt: Die Gruppe ist voll.",
   "chatGroupJoinRefused": "{name} hat den Beitritt abgelehnt.",
-  "chatGroupReconnectRefused": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; versuche es mit dem Gruppenpasswort erneut."
+  "chatGroupReconnectRefused": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; versuche es mit dem Gruppenpasswort erneut.",
+  "chatConversationActions": "Aktionen für {name}",
+  "chatDraftSaveFailed": "Der Entwurf konnte nicht gespeichert werden. Lass diese Ansicht offen oder sende ihn jetzt.",
+  "chatSearchClearDates": "Zeitraum entfernen",
+  "chatGroupReconnectFailed": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen."
 }

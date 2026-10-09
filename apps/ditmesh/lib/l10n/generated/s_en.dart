@@ -4492,4 +4492,20 @@ class SEn extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name refused to reconnect. Its history is kept; retry with the group\'s password.';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'The draft could not be saved. Keep this screen open or send it now.';
+
+  @override
+  String get chatSearchClearDates => 'Clear date range';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name refused to reconnect. Its history is kept; you can retry.';
+  }
 }

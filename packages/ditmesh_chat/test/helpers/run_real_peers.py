@@ -22,8 +22,10 @@ import time
 def stop_group(process, sig):
     try:
         os.killpg(process.pid, sig)
-    except ProcessLookupError:
-        pass  # It finished between poll() and signalling.
+    except (ProcessLookupError, PermissionError):
+        # It finished between poll() and signalling (macOS answers EPERM
+        # for a process group whose leader has already exited).
+        pass
 
 
 def main():
@@ -66,7 +68,8 @@ def main():
             raise RuntimeError("A peer failed; inspect its test/backend logs")
         if not all((root / f"{role}.complete").exists() for role in ("alice", "bob")):
             raise RuntimeError("Workers exited without completing the real-peer scenario")
-        print("PASS: real DM, NGC, encrypted restart, durable queue and NGC rejoin", flush=True)
+        print("PASS: real DM, NGC, encrypted restart, durable queue, NGC rejoin "
+              "and rejoinGroup of a held group", flush=True)
         return 0
     except (RuntimeError, KeyboardInterrupt) as error:
         print(f"FAIL: {error}\nEvidence retained at {root}", flush=True)

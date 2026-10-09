@@ -3,7 +3,9 @@ import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'message_mapper.dart';
 
 /// One page of a conversation's text history, oldest first: the newest
-/// [limit] chat-text rows strictly before [before] (or overall).
+/// [limit] chat-text rows strictly before [before] (or overall). [before]
+/// is a time filter, not a cursor: rows sharing its timestamp are left out
+/// (see `ChatService.loadHistory`).
 ///
 /// Tim2Tox keeps only the newest rows of a conversation in [memory]; older
 /// ones live in an archive that [archive] loads (null when there is none).

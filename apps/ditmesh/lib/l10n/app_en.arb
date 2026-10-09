@@ -6315,5 +6315,31 @@
         "type": "String"
       }
     }
+  },
+  "chatConversationActions": "Actions for {name}",
+  "@chatConversationActions": {
+    "description": "Tooltip and accessible name of a conversation row's overflow menu button; name is the conversation title",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDraftSaveFailed": "The draft could not be saved. Keep this screen open or send it now.",
+  "@chatDraftSaveFailed": {
+    "description": "Snackbar: the compose draft could not be saved to storage"
+  },
+  "chatSearchClearDates": "Clear date range",
+  "@chatSearchClearDates": {
+    "description": "Tooltip of the delete button on the message search date-range chip"
+  },
+  "chatGroupReconnectFailed": "{name} refused to reconnect. Its history is kept; you can retry.",
+  "@chatGroupReconnectFailed": {
+    "description": "Snackbar: a group we already held refused to take us back, not because of a password",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

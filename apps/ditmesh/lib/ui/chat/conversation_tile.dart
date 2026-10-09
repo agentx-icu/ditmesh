@@ -98,6 +98,9 @@ class ConversationTile extends StatelessWidget {
         ? ''
         : MorseEncoder.toPattern(previewText);
     final bool unread = conversation.unreadCount > 0;
+    final String title = conversation.isSelf && conversation.title.isEmpty
+        ? context.s.chatSelfMe
+        : conversation.title;
 
     return GestureDetector(
       onSecondaryTapUp: (details) => _showMenu(context, details.globalPosition),
@@ -130,9 +133,7 @@ class ConversationTile extends StatelessWidget {
               ),
             Expanded(
               child: Text(
-                conversation.isSelf && conversation.title.isEmpty
-                    ? context.s.chatSelfMe
-                    : conversation.title,
+                title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -186,7 +187,8 @@ class ConversationTile extends StatelessWidget {
           children: [
             if (unread) _UnreadBadge(count: conversation.unreadCount),
             PopupMenuButton<ConversationAction>(
-              tooltip: '',
+              // The accessible name of the icon button, too.
+              tooltip: context.s.chatConversationActions(title),
               onSelected: onAction,
               itemBuilder: (context) => _menuItems(context.s),
             ),

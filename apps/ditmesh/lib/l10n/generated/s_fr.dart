@@ -4494,4 +4494,20 @@ class SFr extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name a refusé la reconnexion. L\'historique est conservé ; réessayez avec le mot de passe du groupe.';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Actions pour $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'Le brouillon n\'a pas pu être enregistré. Gardez cet écran ouvert ou envoyez-le maintenant.';
+
+  @override
+  String get chatSearchClearDates => 'Effacer la plage de dates';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name a refusé la reconnexion. L\'historique est conservé ; vous pouvez réessayer.';
+  }
 }

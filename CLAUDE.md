@@ -12,4 +12,4 @@ DitMesh is the Morse-only Tox chat application split from MorseCQ. Current appli
 - New behavior needs useful regression tests; verify mobile and desktop parity. Preserve stream/timer teardown and durable outbox/backup ownership semantics.
 - Documents are English + zh-CN pairs. Append change logs to plan edits. Screenshots come from the integration capture pipeline, never hand-edited PNGs.
 - Never commit build outputs, caches, native binaries, signing keys or generated registrants.
-- User policy: no RTK and no Claude reviews/tools. Independent Codex agent review plus appropriate local verification is required.
+- User policy: no RTK. Independent Codex agent review plus appropriate local verification is required.

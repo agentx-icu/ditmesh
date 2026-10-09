@@ -153,8 +153,16 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
       lastDate: DateTime(now.year, now.month, now.day),
       initialDateRange: _range,
     );
-    if (!mounted) return;
+    // Cancelling the picker keeps the current filter; clearing it is the
+    // chip's own delete action.
+    if (range == null || !mounted) return;
     setState(() => _range = range);
+    unawaited(_search());
+  }
+
+  void _clearRange() {
+    if (_range == null) return;
+    setState(() => _range = null);
     unawaited(_search());
   }
 
@@ -207,22 +215,29 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
                         },
                       ),
                     ),
-                ActionChip(
-                  avatar: const Icon(Icons.date_range, size: 18),
-                  label: Text(
-                    _range == null
-                        ? s.chatSearchAnyDate
-                        : s.chatSearchDateRange(
-                            MaterialLocalizations.of(
-                              context,
-                            ).formatShortDate(_range!.start),
-                            MaterialLocalizations.of(
-                              context,
-                            ).formatShortDate(_range!.end),
-                          ),
+                if (_range case final range?)
+                  InputChip(
+                    avatar: const Icon(Icons.date_range, size: 18),
+                    label: Text(
+                      s.chatSearchDateRange(
+                        MaterialLocalizations.of(
+                          context,
+                        ).formatShortDate(range.start),
+                        MaterialLocalizations.of(
+                          context,
+                        ).formatShortDate(range.end),
+                      ),
+                    ),
+                    onPressed: () => unawaited(_pickRange()),
+                    onDeleted: _clearRange,
+                    deleteButtonTooltipMessage: s.chatSearchClearDates,
+                  )
+                else
+                  ActionChip(
+                    avatar: const Icon(Icons.date_range, size: 18),
+                    label: Text(s.chatSearchAnyDate),
+                    onPressed: () => unawaited(_pickRange()),
                   ),
-                  onPressed: () => unawaited(_pickRange()),
-                ),
                 const SizedBox(width: 6),
                 FilterChip(
                   label: Text(s.chatSearchBookmarked),

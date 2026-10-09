@@ -35,6 +35,14 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
   bool _jumpedAway = false;
   bool _loadingNewer = false;
 
+  /// The last later-rows read of this window failed: reported once per
+  /// failure streak (scrolling again retries silently).
+  bool _newerFailed = false;
+
+  /// Bumped by every picked search result: of two picks whose reads
+  /// overlap, only the later one installs its window.
+  int _searchRequest = 0;
+
   /// Live arrivals while jumped away, merged at the live end.
   final List<ChatMessage> _parked = <ChatMessage>[];
 
@@ -91,6 +99,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       if (!mounted || generation != _generation || !_jumpedAway) return;
       final later = rows.where((m) => m.id != anchor.id).toList();
       final reachedEnd = later.length < _aroundPage;
+      _newerFailed = false;
       setState(() {
         final known = {for (final m in _messages) m.id};
         _messages.addAll(later.where((m) => known.add(m.id)));
@@ -102,10 +111,20 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
           _jumpedAway = false;
         }
       });
-    } on Object {
-      // Scrolling again retries.
+    } on Object catch (e) {
+      // Scrolling again retries; a failure streak of this window is
+      // reported once.
+      debugPrint('[Conversation] loading later rows failed: $e');
+      if (mounted &&
+          generation == _generation &&
+          _jumpedAway &&
+          !_newerFailed) {
+        _newerFailed = true;
+        showSnack(context, describeChatError(context.s, e));
+      }
     } finally {
-      _loadingNewer = false;
+      // A newer window (another jump, the latest page) owns the flag now.
+      if (generation == _generation) _loadingNewer = false;
     }
   }
 
@@ -163,6 +182,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       // land in the emptied list and are merged by `_load`.
       _jumpedAway = false;
       _generation++;
+      _newerFailed = false;
       _parked.clear();
       setState(() {
         _older.clear();
@@ -192,10 +212,17 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       bookmarks: bookmarks,
     );
     if (hit == null || !mounted) return;
-    final int generation = ++_generation;
+    // Nothing is invalidated until the window is installed: a jump that
+    // finds nothing (or fails) leaves the loads in flight to finish.
+    final int generation = _generation;
+    final int request = ++_searchRequest;
     try {
       final rows = await _service.loadAround(_id, hit.id);
-      if (!mounted || generation != _generation) return;
+      if (!mounted ||
+          generation != _generation ||
+          request != _searchRequest) {
+        return;
+      }
       if (rows.isEmpty) {
         // Gone (cleared / deleted): its bookmark no longer resolves.
         try {
@@ -207,7 +234,14 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
         return;
       }
       final at = rows.indexWhere((m) => m.id == hit.id);
+      // Outstanding page loads belong to the window being replaced.
+      _generation++;
+      _newerFailed = false;
       setState(() {
+        _loadingOlder = false;
+        _loadingNewer = false;
+        _error = null;
+        _olderError = null;
         _jumpedAway = true;
         _older
           ..clear()
@@ -222,7 +256,9 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
         if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
       });
     } on Object catch (e) {
-      if (mounted) showSnack(context, describeChatError(context.s, e));
+      if (mounted && request == _searchRequest) {
+        showSnack(context, describeChatError(context.s, e));
+      }
     }
   }
 
@@ -310,6 +346,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final bool wasJumped = _jumpedAway;
     _generation++;
     _jumpedAway = false;
+    _newerFailed = false;
     _parked.clear();
     setState(() {
       _older.clear();
@@ -348,6 +385,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       _clearing = true;
       _loading = false;
       _loadingOlder = false;
+      _loadingNewer = false;
     });
     // A message being deleted must not keep sounding or wait in the queue.
     _playback.cancelMessages(ids);

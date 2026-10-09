@@ -124,15 +124,31 @@ extension _IdentityBackup on Tim2ToxIdentityService {
       await _prepareForReplacement();
       await _disconnectImpl();
       _requireTeardownConfirmed();
+      final store = _store;
+      final before = store == null ? null : KvSnapshot.capture(store);
       await _verifier.replacePassword(
         record.toxId,
         encrypted ? password : null,
         () async {
           if (await root.exists()) await root.rename(previous.path);
+          var movedIn = false;
           try {
             await Directory(staged.root).rename(root.path);
+            movedIn = true;
+            // Part of the commit: stale bindings or queued invites of the
+            // restored identity must not survive into its next session.
+            if (old != null) await _clearPreferences(old.toxId);
+            await _clearPreferences(record.toxId);
             replaced = true;
           } catch (_) {
+            if (store != null && before != null) {
+              try {
+                await before.restore(store);
+              } on Object catch (e, st) {
+                _logger.error('[Backup] preference rollback failed', e, st);
+              }
+            }
+            if (movedIn) await root.rename(staged.root);
             if (await previous.exists()) await previous.rename(root.path);
             rethrow;
           }
@@ -141,13 +157,15 @@ extension _IdentityBackup on Tim2ToxIdentityService {
       _forgetIdentity();
       _sessionPassword = encrypted ? password : null;
       _publish(record);
-      if (old != null) {
-        if (old.toxId != record.toxId) {
+      if (old != null && old.toxId != record.toxId) {
+        // Cleanup after the commit: a failure must not report the committed
+        // import as failed.
+        try {
           await _verifier.removePassword(old.toxId);
+        } on Object catch (e, st) {
+          _logger.error('[Backup] could not remove the old verifier', e, st);
         }
-        await _clearPreferences(old.toxId);
       }
-      await _clearPreferences(record.toxId);
     } catch (_) {
       if (!replaced && old != null) {
         _sessionPassword = oldPassword;
@@ -155,12 +173,34 @@ extension _IdentityBackup on Tim2ToxIdentityService {
       }
       rethrow;
     } finally {
-      // If both the replacement rename and rollback fail, retain the old
-      // tree in `previous` for recovery instead of deleting the only copy.
-      if (replaced || !await previous.exists()) {
-        await stage.delete(recursive: true);
-      }
+      await _discardStage(stage, previous, committed: replaced);
     }
     return record.toIdentity();
+  }
+
+  /// Removes an import's staging directory. If both the replacement rename
+  /// and its rollback failed, the old tree in [previous] is the only copy
+  /// and is kept for recovery. After a commit a failed deletion must not
+  /// report the import as failed: it is logged, and at least the previous
+  /// profile is removed so the leftover can never be mistaken for an
+  /// interrupted import (`interruptedImports`) and "recovered" later.
+  Future<void> _discardStage(
+    Directory stage,
+    Directory previous, {
+    required bool committed,
+  }) async {
+    if (!committed && await previous.exists()) return;
+    try {
+      await stage.delete(recursive: true);
+    } on Object catch (e, st) {
+      if (!committed) rethrow;
+      _logger.error('[Backup] could not remove the import staging', e, st);
+      try {
+        final old = File(IdentityPaths(previous.path).profileFile);
+        if (await old.exists()) await old.delete();
+      } on Object catch (e, st) {
+        _logger.error('[Backup] stale previous profile left in staging', e, st);
+      }
+    }
   }
 }

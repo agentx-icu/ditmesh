@@ -7789,6 +7789,30 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{name} refused to reconnect. Its history is kept; retry with the group\'s password.'**
   String chatGroupReconnectRefused(String name);
+
+  /// Tooltip and accessible name of a conversation row's overflow menu button; name is the conversation title
+  ///
+  /// In en, this message translates to:
+  /// **'Actions for {name}'**
+  String chatConversationActions(String name);
+
+  /// Snackbar: the compose draft could not be saved to storage
+  ///
+  /// In en, this message translates to:
+  /// **'The draft could not be saved. Keep this screen open or send it now.'**
+  String get chatDraftSaveFailed;
+
+  /// Tooltip of the delete button on the message search date-range chip
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date range'**
+  String get chatSearchClearDates;
+
+  /// Snackbar: a group we already held refused to take us back, not because of a password
+  ///
+  /// In en, this message translates to:
+  /// **'{name} refused to reconnect. Its history is kept; you can retry.'**
+  String chatGroupReconnectFailed(String name);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

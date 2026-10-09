@@ -122,7 +122,12 @@ class _ConversationsPart {
     if (ta != null && tb != null && ta != tb) return tb.compareTo(ta);
     if (ta == null && tb != null) return 1;
     if (ta != null && tb == null) return -1;
-    return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    final byTitle = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    if (byTitle != 0) return byTitle;
+    // A total order: List.sort is not stable, and ties would reorder (and
+    // republish) the list between identical rebuilds.
+    final exact = a.title.compareTo(b.title);
+    return exact != 0 ? exact : a.id.compareTo(b.id);
   }
 
   static bool _same(Conversation a, Conversation b) =>

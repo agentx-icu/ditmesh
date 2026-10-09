@@ -164,6 +164,34 @@ abstract final class BackupSnapshot {
     }
   }
 
+  /// [queue] without the rows the user already withdrew (a removed or
+  /// blocked friend's queue, a refused send) whose cancel had not persisted
+  /// yet: [withdrawals] are `peer\tmessageId` entries of the identity's
+  /// `ditmesh_pending_withdrawals`. Those rows are not unsent messages; a
+  /// restore must not offer them for review again. Matched on the C2C
+  /// queue key (case-insensitive) and the durable id together.
+  static List<QueuedRow> withoutWithdrawn(
+    List<QueuedRow> queue,
+    Set<String> withdrawals,
+  ) {
+    if (withdrawals.isEmpty) return queue;
+    final withdrawn = {
+      for (final entry in withdrawals)
+        if (entry.indexOf('\t') case final tab when tab > 0)
+          '${entry.substring(0, tab).trim().toUpperCase()}\t'
+              '${entry.substring(tab + 1)}',
+    };
+    return [
+      for (final row in queue)
+        if (row.queueKey.startsWith('group:') ||
+            row.msgId == null ||
+            !withdrawn.contains(
+              '${row.queueKey.trim().toUpperCase()}\t${row.msgId}',
+            ))
+          row,
+    ];
+  }
+
   // ---- file walks ----------------------------------------------------------
 
   /// Regular files under [dir] (no symlinks followed), sorted, as

@@ -15,8 +15,9 @@ class _FriendsPart {
   final Map<String, String> _names = {};
   final Set<String> _online = {};
 
-  /// Bumped by every [remove]: a send that awaited across one re-checks
-  /// its target.
+  /// Bumped when every [remove] starts and again when its native removal
+  /// returns: a send that awaited across one re-checks its target, and a
+  /// friend-list snapshot read across either point is dropped ([refresh]).
   int removals = 0;
 
   /// Keys whose [remove] is still running: a send to them is refused even
@@ -110,8 +111,13 @@ class _FriendsPart {
   }
 
   Future<void> refresh(FfiChatService svc) async {
+    final epoch = removals;
     final raw = await svc.getFriendList();
     if (!_owner._isCurrent(svc)) return;
+    // A removal started or finished while this was read: the snapshot may
+    // still list the removed friend. The removal's own refresh (and the
+    // next tick) publish a fresh one.
+    if (removals != epoch) return;
     final next = <Friend>[];
     final onlineNow = <String>{};
     for (final f in raw) {
@@ -139,7 +145,11 @@ class _FriendsPart {
       ..addAll(onlineNow);
     next.sort((a, b) {
       if (a.online != b.online) return a.online ? -1 : 1;
-      return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+      final byName = a.displayName.toLowerCase().compareTo(
+        b.displayName.toLowerCase(),
+      );
+      // A total order (List.sort is not stable): equal names keep one order.
+      return byName != 0 ? byName : a.publicKey.compareTo(b.publicKey);
     });
     if (!listEqualsBy(friends.value, next, _sameFriend)) friends.force(next);
     // Never awaited here: an invite waits on a native callback, and the
@@ -350,6 +360,7 @@ class _FriendsPart {
       await svc.removeFriend(key);
     } finally {
       removing.remove(key);
+      removals++;
     }
     _owner._ensureCurrent(svc);
     await withdrawQueuedFor(svc, key);

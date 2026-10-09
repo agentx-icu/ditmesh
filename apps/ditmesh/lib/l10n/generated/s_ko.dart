@@ -4450,4 +4450,20 @@ class SKo extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name 재연결이 거부되었습니다. 기록은 유지됩니다. 그룹 비밀번호로 다시 시도하세요.';
   }
+
+  @override
+  String chatConversationActions(String name) {
+    return '$name 작업';
+  }
+
+  @override
+  String get chatDraftSaveFailed => '초안을 저장하지 못했습니다. 이 화면을 열어 두거나 지금 보내세요.';
+
+  @override
+  String get chatSearchClearDates => '날짜 범위 지우기';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name 재연결이 거부되었습니다. 기록은 유지됩니다. 다시 시도할 수 있습니다.';
+  }
 }

@@ -122,29 +122,87 @@ class _BlockingPart {
       _owner._ensureCurrent(svc);
       // Persist first, so Tim2Tox drops their traffic from here on.
       await _store(svc, (scope) => _owner._prefs.addToBlackList([key], scope));
-      // From native state, not the published lists: those may not have
-      // been refreshed yet in a new session.
-      final friends = _owner._friendsPart;
-      final nativeFriends = await svc.getFriendList();
-      _owner._ensureCurrent(svc);
-      if (nativeFriends.any((f) => _key(f.userId) == key)) {
-        await friends.remove(svc, key);
+      // Read before the views are filtered: a request only the store still
+      // remembers (none natively after a restart) must be dismissed too.
+      final requested = _owner._friendsPart.requests.value.any(
+        (r) => r.publicKey == key,
+      );
+      // The block is in effect: hide them from every published view now,
+      // whatever the cleanup below does.
+      _hideNow(svc, key);
+      try {
+        await _cleanUpAfterBlock(svc, key, requested: requested);
+      } finally {
+        await _republishEach(svc);
       }
-      final nativeRequests = await svc.getFriendApplications();
-      _owner._ensureCurrent(svc);
-      if (nativeRequests.any((a) => _key(a.userId) == key) ||
-          friends.requests.value.any((r) => r.publicKey == key)) {
-        await friends.reject(svc, key);
-      }
-      // A copy: declining edits the pending list.
-      for (final invite in svc.getPendingGroupInvites().toList()) {
-        if (_key(invite.inviterUserId) == key) {
-          svc.rejectGroupInvite(invite.id);
-          _owner._groupsPart.declinedByBlock.add(invite.id);
-        }
-      }
-      await _republish(svc);
     });
+  }
+
+  /// Drops [key] from the friend, request and invite lists already
+  /// published, and rebuilds the conversations, without any native read.
+  void _hideNow(FfiChatService svc, String key) {
+    final friends = _owner._friendsPart;
+    final invites = _owner._groupsPart.invites;
+    final f = friends.friends.value;
+    if (f.any((x) => x.publicKey == key)) {
+      friends.friends.force([...f.where((x) => x.publicKey != key)]);
+    }
+    final r = friends.requests.value;
+    if (r.any((x) => x.publicKey == key)) {
+      friends.requests.force([...r.where((x) => x.publicKey != key)]);
+    }
+    final i = invites.value;
+    if (i.any((x) => x.fromPublicKey == key)) {
+      invites.force([...i.where((x) => x.fromPublicKey != key)]);
+    }
+    _owner._conversationsPart.rebuild(svc);
+  }
+
+  /// Removes the friendship, declines their request and their invites;
+  /// looked up in native state, not the published lists (those may not
+  /// have been refreshed yet in a new session).
+  Future<void> _cleanUpAfterBlock(
+    FfiChatService svc,
+    String key, {
+    required bool requested,
+  }) async {
+    final friends = _owner._friendsPart;
+    final nativeFriends = await svc.getFriendList();
+    _owner._ensureCurrent(svc);
+    if (nativeFriends.any((f) => _key(f.userId) == key)) {
+      await friends.remove(svc, key);
+    }
+    final nativeRequests = await svc.getFriendApplications();
+    _owner._ensureCurrent(svc);
+    if (requested || nativeRequests.any((a) => _key(a.userId) == key)) {
+      await friends.reject(svc, key);
+    }
+    // A copy: declining edits the pending list.
+    for (final invite in svc.getPendingGroupInvites().toList()) {
+      if (_key(invite.inviterUserId) == key) {
+        svc.rejectGroupInvite(invite.id);
+        _owner._groupsPart.declinedByBlock.add(invite.id);
+      }
+    }
+  }
+
+  /// [_republish] with every step attempted independently and failures
+  /// logged: after a block's cleanup failed, one failing read must not
+  /// keep the other views stale. Nothing is published for a detached
+  /// session.
+  Future<void> _republishEach(FfiChatService svc) async {
+    for (final step in <Future<void> Function()>[
+      () => _owner._friendsPart.refreshRequests(svc),
+      () => _owner._groupsPart.refreshInvites(svc),
+    ]) {
+      if (!_owner._isCurrent(svc)) return;
+      try {
+        await step();
+      } on Object catch (e, st) {
+        _owner._logger.error('[Chat] refresh after a block failed', e, st);
+      }
+    }
+    if (_owner._isCurrent(svc)) _owner._conversationsPart.rebuild(svc);
   }
 
   Future<void> unblock(FfiChatService svc, String publicKey) async {

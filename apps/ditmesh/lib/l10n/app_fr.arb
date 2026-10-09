@@ -1279,5 +1279,9 @@
   "chatGroupJoinRefusedPassword": "{name} a refusé l'adhésion : le mot de passe est incorrect ou manquant.",
   "chatGroupJoinRefusedFull": "{name} a refusé l'adhésion : le groupe est complet.",
   "chatGroupJoinRefused": "{name} a refusé l'adhésion.",
-  "chatGroupReconnectRefused": "{name} a refusé la reconnexion. L'historique est conservé ; réessayez avec le mot de passe du groupe."
+  "chatGroupReconnectRefused": "{name} a refusé la reconnexion. L'historique est conservé ; réessayez avec le mot de passe du groupe.",
+  "chatConversationActions": "Actions pour {name}",
+  "chatDraftSaveFailed": "Le brouillon n'a pas pu être enregistré. Gardez cet écran ouvert ou envoyez-le maintenant.",
+  "chatSearchClearDates": "Effacer la plage de dates",
+  "chatGroupReconnectFailed": "{name} a refusé la reconnexion. L'historique est conservé ; vous pouvez réessayer."
 }

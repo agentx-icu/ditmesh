@@ -252,18 +252,35 @@ class Tim2ToxNetworkBootstrapService implements NetworkBootstrapService {
     }
     final prior = _settings.preLan;
     final generation = ++_generation;
-    if (prior != null &&
-        _runtime.hasSession &&
-        !await _runtime.apply(
+    if (prior != null && _runtime.hasSession) {
+      // Re-applied before the LAN node goes, so the session keeps a path.
+      // A refusal (its host does not resolve offline, the node is gone)
+      // must not trap the user in LAN mode: the prior node is still saved
+      // as current and every later rebootstrap applies it again.
+      var restored = false;
+      try {
+        restored = await _runtime.apply(
           prior,
           isCurrent: () => _live(generation, null),
-        )) {
+        );
+      } on Object catch (error, stack) {
+        _logger.error('[Bootstrap] previous node re-apply failed', error, stack);
+      }
+      if (!restored) {
+        _logger.warn(
+          '[Bootstrap] previous node not re-applied; leaving LAN anyway',
+        );
+      }
+    }
+    // Disposed meanwhile: dispose() stops the host itself; nothing more is
+    // committed or published. (A session stop just moves on.)
+    if (_disposed) {
       throw const ChatException(
-        'bootstrap_restore_failed',
-        'Could not restore previous node',
+        'bootstrap_unavailable',
+        'Network settings are closed',
       );
     }
-    // Restore before destroying the service. A failure retains the journal.
+    // A persistence or stop failure retains the journal.
     await _settings.setCurrent(prior);
     if (!await _runtime.stopLan()) {
       throw const ChatException(
@@ -284,10 +301,13 @@ class Tim2ToxNetworkBootstrapService implements NetworkBootstrapService {
     for (final node in nodes.take(4)) {
       if (!_live(generation, isCurrent) || !_runtime.hasSession) return;
       try {
-        await _runtime.apply(
+        final accepted = await _runtime.apply(
           node,
           isCurrent: () => _live(generation, isCurrent),
         );
+        if (!accepted && _live(generation, isCurrent)) {
+          _logger.warn('[Bootstrap] node ${node.id} was not accepted');
+        }
       } on Object catch (error, stack) {
         _logger.error('[Bootstrap] node application failed', error, stack);
       }
