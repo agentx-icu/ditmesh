@@ -5,6 +5,8 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../../i18n/chat_error_messages.dart';
 import '../../../i18n/l10n_extension.dart';
+import '../../common/fitting_hint.dart';
+import '../../responsive.dart';
 import '../chat_layout.dart';
 import '../conversation_timeline.dart';
 import 'message_bookmarks.dart';
@@ -180,78 +182,92 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
     final s = context.s;
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _query,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: s.chatSearchHint,
-            border: InputBorder.none,
-          ),
-          onChanged: (_) => _changed(),
-          onSubmitted: (_) => unawaited(_search()),
-        ),
-      ),
-      body: Column(
-        children: <Widget>[
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Row(
-              children: <Widget>[
-                for (final sender in _Sender.values)
-                  if (sender != _Sender.them || widget.peerKey != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        label: Text(switch (sender) {
-                          _Sender.anyone => s.chatSearchAnyone,
-                          _Sender.me => s.chatSearchMe,
-                          _Sender.them => s.chatSearchThem,
-                        }),
-                        selected: _sender == sender,
-                        onSelected: (_) {
-                          setState(() => _sender = sender);
-                          unawaited(_search());
-                        },
-                      ),
-                    ),
-                if (_range case final range?)
-                  InputChip(
-                    avatar: const Icon(Icons.date_range, size: 18),
-                    label: Text(
-                      s.chatSearchDateRange(
-                        MaterialLocalizations.of(
-                          context,
-                        ).formatShortDate(range.start),
-                        MaterialLocalizations.of(
-                          context,
-                        ).formatShortDate(range.end),
-                      ),
-                    ),
-                    onPressed: () => unawaited(_pickRange()),
-                    onDeleted: _clearRange,
-                    deleteButtonTooltipMessage: s.chatSearchClearDates,
-                  )
-                else
-                  ActionChip(
-                    avatar: const Icon(Icons.date_range, size: 18),
-                    label: Text(s.chatSearchAnyDate),
-                    onPressed: () => unawaited(_pickRange()),
-                  ),
-                const SizedBox(width: 6),
-                FilterChip(
-                  label: Text(s.chatSearchBookmarked),
-                  selected: _bookmarkedOnly,
-                  onSelected: (v) {
-                    setState(() => _bookmarkedOnly = v);
-                    unawaited(_search());
-                  },
+        // As wide as the results below it, not the whole monitor.
+        title: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: kReadableMaxWidth),
+          child: LayoutBuilder(
+            builder: (context, box) => TextField(
+              controller: _query,
+              autofocus: true,
+              decoration: InputDecoration(
+                // "Search" when the full hint does not fit the bar.
+                hintText: fittingHint(
+                  context,
+                  s.chatSearchHint,
+                  // Less the field's own horizontal content padding.
+                  width: box.maxWidth - 32,
                 ),
-              ],
+                border: InputBorder.none,
+              ),
+              onChanged: (_) => _changed(),
+              onSubmitted: (_) => unawaited(_search()),
             ),
           ),
-          Expanded(child: _list(context)),
-        ],
+        ),
+      ),
+      body: ReadableBody(
+        child: Column(
+          children: <Widget>[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: <Widget>[
+                  for (final sender in _Sender.values)
+                    if (sender != _Sender.them || widget.peerKey != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: ChoiceChip(
+                          label: Text(switch (sender) {
+                            _Sender.anyone => s.chatSearchAnyone,
+                            _Sender.me => s.chatSearchMe,
+                            _Sender.them => s.chatSearchThem,
+                          }),
+                          selected: _sender == sender,
+                          onSelected: (_) {
+                            setState(() => _sender = sender);
+                            unawaited(_search());
+                          },
+                        ),
+                      ),
+                  if (_range case final range?)
+                    InputChip(
+                      avatar: const Icon(Icons.date_range, size: 18),
+                      label: Text(
+                        s.chatSearchDateRange(
+                          MaterialLocalizations.of(
+                            context,
+                          ).formatShortDate(range.start),
+                          MaterialLocalizations.of(
+                            context,
+                          ).formatShortDate(range.end),
+                        ),
+                      ),
+                      onPressed: () => unawaited(_pickRange()),
+                      onDeleted: _clearRange,
+                      deleteButtonTooltipMessage: s.chatSearchClearDates,
+                    )
+                  else
+                    ActionChip(
+                      avatar: const Icon(Icons.date_range, size: 18),
+                      label: Text(s.chatSearchAnyDate),
+                      onPressed: () => unawaited(_pickRange()),
+                    ),
+                  const SizedBox(width: 6),
+                  FilterChip(
+                    label: Text(s.chatSearchBookmarked),
+                    selected: _bookmarkedOnly,
+                    onSelected: (v) {
+                      setState(() => _bookmarkedOnly = v);
+                      unawaited(_search());
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: _list(context)),
+          ],
+        ),
       ),
     );
   }

@@ -7,6 +7,8 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/qso_practice.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
+import '../../common/field_label.dart';
 import '../learn_playback.dart';
 import 'qso_screen.dart';
 
@@ -126,7 +128,7 @@ class _QsoSetupScreenState extends State<QsoSetupScreen> {
     final s = context.s;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(s.learnQsoTitle)),
+      appBar: AppBar(title: AppBarTitle(s.learnQsoTitle)),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
@@ -172,7 +174,7 @@ class _QsoSetupScreenState extends State<QsoSetupScreen> {
                           textCapitalization: TextCapitalization.characters,
                           autocorrect: false,
                           decoration: InputDecoration(
-                            labelText: s.learnQsoYourCall,
+                            label: FieldLabel(s.learnQsoYourCall),
                             errorText: _callError(s),
                             border: const OutlineInputBorder(),
                           ),
@@ -184,7 +186,7 @@ class _QsoSetupScreenState extends State<QsoSetupScreen> {
                           textCapitalization: TextCapitalization.characters,
                           autocorrect: false,
                           decoration: InputDecoration(
-                            labelText: s.learnQsoYourName,
+                            label: FieldLabel(s.learnQsoYourName),
                             errorText: _wordError(s, _name),
                             border: const OutlineInputBorder(),
                           ),
@@ -196,7 +198,7 @@ class _QsoSetupScreenState extends State<QsoSetupScreen> {
                           textCapitalization: TextCapitalization.characters,
                           autocorrect: false,
                           decoration: InputDecoration(
-                            labelText: s.learnQsoYourQth,
+                            label: FieldLabel(s.learnQsoYourQth),
                             errorText: _wordError(s, _qth),
                             border: const OutlineInputBorder(),
                           ),

@@ -25,6 +25,9 @@ class WelcomePage extends StatelessWidget {
               'icon/app_icon_1024.png',
               width: 64,
               height: 64,
+              // Decoded at the pixels it covers (sharp at any device pixel
+              // ratio) instead of the full 1024 px, ~4 MB of image memory.
+              cacheWidth: (64 * MediaQuery.devicePixelRatioOf(context)).ceil(),
               excludeFromSemantics: true,
             ),
           ),

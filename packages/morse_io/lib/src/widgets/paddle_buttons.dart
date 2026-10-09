@@ -262,16 +262,27 @@ class _Paddle extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
             ),
-            child: Center(
-              // The button's semantics carry the label; the printed text
-              // must not be announced a second time.
-              child: ExcludeSemantics(
-                child: Text(
-                  label,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: down ? scheme.onPrimary : scheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Center(
+                // The button's semantics carry the label; the printed text
+                // must not be announced a second time.
+                child: ExcludeSemantics(
+                  // A long label or large text shrinks to the paddle
+                  // instead of wrapping out of it.
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: down
+                            ? scheme.onPrimary
+                            : scheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
                   ),
                 ),
               ),

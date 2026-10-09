@@ -1363,7 +1363,7 @@ class SJa extends S {
   String get learnReviewTitle => '復習';
 
   @override
-  String get learnListen => '聞いてください…';
+  String get learnListen => '再生中';
 
   @override
   String get learnReady => '準備完了';
@@ -3087,7 +3087,10 @@ class SJa extends S {
   String get materialsTitleField => 'タイトル';
 
   @override
-  String get materialsTagsField => 'タグ（カンマ区切り）';
+  String get materialsTagsField => 'タグ';
+
+  @override
+  String get materialsTagsHelper => 'タグはカンマで区切ります';
 
   @override
   String get materialsTextField => 'テキスト';

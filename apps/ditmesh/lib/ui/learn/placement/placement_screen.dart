@@ -8,6 +8,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
 import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
@@ -175,7 +176,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
       guard: _phase == _Phase.round || _phase == _Phase.tierResult,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(s.placementTitle),
+          title: AppBarTitle(s.placementTitle),
           actions: <Widget>[
             if (_phase == _Phase.round || _phase == _Phase.tierResult)
               TextButton(onPressed: _stopEarly, child: Text(s.placementStop)),

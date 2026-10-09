@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/reference/morse_to_text_view.dart';
-import 'package:ditmesh/ui/reference/reference_layout.dart';
 import 'package:ditmesh/ui/reference/text_to_morse_view.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
+import 'package:ditmesh/ui/responsive.dart';
 
 import 'reference_test_support.dart';
 
@@ -51,7 +51,7 @@ void main() {
       expect(node.hasFocus, isTrue);
       expect(
         find.descendant(
-          of: find.byType(ReferenceMinHeight),
+          of: find.byType(MinHeightScrollView),
           matching: find.byType(Scrollable),
         ),
         findsWidgets,
@@ -66,7 +66,7 @@ void main() {
     });
   }
 
-  testWidgets('ReferenceMinHeight keeps one element tree across the '
+  testWidgets('MinHeightScrollView keeps one element tree across the '
       'threshold', (tester) async {
     // A plain key: a GlobalKey would reparent and hide a remount.
     const Key childKey = ValueKey<String>('child');
@@ -77,7 +77,7 @@ void main() {
         child: SizedBox(
           width: 300,
           height: height,
-          child: ReferenceMinHeight(
+          child: MinHeightScrollView(
             minHeight: 200,
             child: const SizedBox.expand(key: childKey),
           ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
+import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_actions.dart';
 import 'tox_id_qr_dialog.dart';
@@ -53,7 +54,7 @@ class _BackupWizardPageState extends State<BackupWizardPage> {
     };
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.accountBackupTitle),
+        title: AppBarTitle(s.accountBackupTitle),
         automaticallyImplyLeading: !widget.mandatory,
       ),
       body: AccountPageBody(

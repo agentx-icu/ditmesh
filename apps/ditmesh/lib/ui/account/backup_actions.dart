@@ -60,6 +60,7 @@ Future<bool?> _askIncludeRecordings(
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
+      scrollable: true,
       title: Text(s.accountBackupMediaTitle),
       content: Text(
         tooLarge

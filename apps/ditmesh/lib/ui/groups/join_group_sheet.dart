@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 import '../contacts/tox_id.dart';
 
 /// Join an NGC group by its 64-hex chat id (+ optional password). Resolves
@@ -99,7 +100,7 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
                 enableSuggestions: false,
                 style: const TextStyle(fontFamily: 'monospace'),
                 decoration: InputDecoration(
-                  labelText: s.chatChatIdLabel,
+                  label: FieldLabel(s.chatChatIdLabel),
                   border: const OutlineInputBorder(),
                   errorText: error == null ? null : describeChatError(s, error),
                 ),
@@ -113,7 +114,7 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
                 controller: _password,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: s.chatPassword,
+                  label: FieldLabel(s.chatPassword),
                   border: const OutlineInputBorder(),
                 ),
               ),

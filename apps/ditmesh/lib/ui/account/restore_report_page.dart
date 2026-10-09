@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_labels.dart';
 
@@ -109,7 +110,7 @@ class RestoreReportPage extends StatelessWidget {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.restoreXReportTitle),
+        title: AppBarTitle(s.restoreXReportTitle),
         automaticallyImplyLeading: false,
       ),
       body: AccountPageBody(

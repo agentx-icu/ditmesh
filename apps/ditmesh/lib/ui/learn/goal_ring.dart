@@ -30,7 +30,16 @@ class GoalRing extends StatelessWidget {
           track: scheme.surfaceContainerHighest,
           fill: fraction >= 1 ? scheme.tertiary : scheme.primary,
         ),
-        child: Center(child: child),
+        // Inside the stroke, shrunk rather than wrapped out of the ring at
+        // large text ("100%" at 3x is wider than the ring).
+        child: Padding(
+          padding: EdgeInsets.all(strokeWidth + 4),
+          child: Center(
+            child: child == null
+                ? null
+                : FittedBox(fit: BoxFit.scaleDown, child: child),
+          ),
+        ),
       ),
     );
   }

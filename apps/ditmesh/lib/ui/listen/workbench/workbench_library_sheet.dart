@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/audio_material_store.dart';
 import '../../../training/training_controller.dart';
+import '../../common/field_label.dart';
 import 'recording_files.dart';
 import 'workbench_controller.dart';
 import 'workbench_waveform.dart';
@@ -51,13 +52,17 @@ class _SaveDialogState extends State<_SaveDialog> {
             TextField(
               key: const ValueKey('workbench-save-title'),
               controller: _title,
-              decoration: InputDecoration(labelText: s.workbenchSaveTitle),
+              decoration: InputDecoration(
+                label: FieldLabel(s.workbenchSaveTitle),
+              ),
             ),
             TextField(
               controller: _note,
               minLines: 1,
               maxLines: 4,
-              decoration: InputDecoration(labelText: s.workbenchSaveNote),
+              decoration: InputDecoration(
+                label: FieldLabel(s.workbenchSaveNote),
+              ),
             ),
           ],
         ),

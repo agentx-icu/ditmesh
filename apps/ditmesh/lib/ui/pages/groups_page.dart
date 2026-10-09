@@ -10,6 +10,7 @@ import '../chat/chat_scope.dart';
 import '../chat/conversation_route.dart';
 import '../chat/conversation_screen.dart';
 import '../chat/conversation_target.dart';
+import '../common/app_bar_title.dart';
 import '../groups/create_group_sheet.dart';
 import '../groups/group_join_feedback.dart';
 import '../groups/group_list.dart';
@@ -111,7 +112,7 @@ class _GroupsPageState extends State<GroupsPage> {
 
     final Widget list = Scaffold(
       appBar: AppBar(
-        title: Text(GroupsPage.title(s)),
+        title: AppBarTitle(GroupsPage.title(s)),
         actions: [
           IconButton(
             tooltip: s.chatJoinGroup,

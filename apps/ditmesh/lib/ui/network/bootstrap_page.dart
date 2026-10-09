@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../i18n/l10n_extension.dart';
 import '../account/account_widgets.dart';
+import '../common/app_bar_title.dart';
 import 'bootstrap_current_node.dart';
 import 'bootstrap_manual_form.dart';
 import 'bootstrap_nodes_page.dart';
@@ -40,7 +41,7 @@ class _BootstrapPageState extends State<BootstrapPage> {
     final s = context.s;
     final service = context.read<NetworkBootstrapService?>();
     return Scaffold(
-      appBar: AppBar(title: Text(s.bootstrapTitle)),
+      appBar: AppBar(title: AppBarTitle(s.bootstrapTitle)),
       body: service == null
           ? Center(child: Text(s.bootstrapServiceUnavailable))
           : StreamBuilder<BootstrapConfiguration>(

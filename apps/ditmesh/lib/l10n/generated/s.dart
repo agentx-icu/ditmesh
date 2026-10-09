@@ -2432,10 +2432,10 @@ abstract class S {
   /// **'Review'**
   String get learnReviewTitle;
 
-  /// Receive drill: status while Morse is playing
+  /// Receive drill: status while Morse is playing; a complete word, no trailing ellipsis (it would read as clipped text)
   ///
   /// In en, this message translates to:
-  /// **'Listen...'**
+  /// **'Playing'**
   String get learnListen;
 
   /// Receive drill: status when playback finished and an answer is expected
@@ -5480,11 +5480,17 @@ abstract class S {
   /// **'Title'**
   String get materialsTitleField;
 
-  /// Material editor: tags field (comma separated)
+  /// Material editor: tags field label (short; the helper explains the format)
   ///
   /// In en, this message translates to:
-  /// **'Tags (comma separated)'**
+  /// **'Tags'**
   String get materialsTagsField;
+
+  /// Material editor: helper under the tags field
+  ///
+  /// In en, this message translates to:
+  /// **'Separate tags with commas'**
+  String get materialsTagsHelper;
 
   /// Material editor: running text field
   ///

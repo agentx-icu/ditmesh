@@ -9,6 +9,7 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/receive_session.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_settings.dart';
+import '../../common/app_bar_title.dart';
 import '../conditions/conditions_playback.dart';
 import '../conditions/conditions_widgets.dart';
 import '../drill_session_guard.dart';
@@ -17,6 +18,7 @@ import '../learn_playback.dart';
 import '../progress_save_snack.dart';
 import 'answer_keypad.dart';
 import 'receive_summary_view.dart';
+import 'receive_widgets.dart';
 import 'round_result_view.dart';
 
 enum _Phase { listen, result, summary }
@@ -322,7 +324,7 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
       guard: _hasUnsavedRounds,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(title),
+          title: AppBarTitle(title),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
             child: LinearProgressIndicator(
@@ -353,28 +355,10 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
         if (_session.conditions case final RadioScenario c)
           ConditionsChip(scenario: c),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              _playing ? Icons.volume_up : Icons.volume_off_outlined,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                _playing ? s.learnListen : s.learnReady,
-                style: theme.textTheme.titleMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: ready && !_playing ? _replay : null,
-              icon: const Icon(Icons.replay),
-              label: Text(s.learnReplay),
-            ),
-          ],
+        PlaybackStatusRow(
+          playing: _playing,
+          onReplay: ready && !_playing ? _replay : null,
+          replayLabel: s.learnReplay,
         ),
         if (_conditionsBlocked || _conditionsFailed)
           Padding(
@@ -422,6 +406,11 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
           style: theme.textTheme.headlineSmall?.copyWith(letterSpacing: 2),
           decoration: InputDecoration(
             hintText: s.learnAnswerHint,
+            // Smaller than the typed answer and wrapping, never clipped.
+            hintStyle: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            hintMaxLines: 3,
             border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _submit(),

@@ -124,32 +124,33 @@ class ConversationTile extends StatelessWidget {
                       : scheme.onPrimaryContainer,
                 ),
               ),
-        title: Row(
-          children: [
-            if (conversation.pinned)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(Icons.push_pin, size: 14, color: scheme.primary),
-              ),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: unread ? FontWeight.bold : FontWeight.normal,
+        title: _TitleLine(
+          name: Row(
+            children: [
+              if (conversation.pinned)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(Icons.push_pin, size: 14, color: scheme.primary),
+                ),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: unread ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
               ),
-            ),
-            if (conversation.isSelf) const SelfBadge(),
-            if (last != null)
-              Text(
-                formatMessageTime(context, last.timestamp),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: unread ? scheme.primary : scheme.onSurfaceVariant,
-                ),
-              ),
-          ],
+              if (conversation.isSelf) const SelfBadge(),
+            ],
+          ),
+          time: last == null
+              ? null
+              : formatMessageTime(context, last.timestamp),
+          timeStyle: theme.textTheme.labelSmall?.copyWith(
+            color: unread ? scheme.primary : scheme.onSurfaceVariant,
+          ),
         ),
         subtitle: previewText.isEmpty
             ? null
@@ -281,6 +282,60 @@ class _SwipeBackground extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.labelSmall),
         ],
       ),
+    );
+  }
+}
+
+/// The name with the time of the last message beside it, or under it when
+/// the two do not fit one line: a 320 px phone at 2x text left the name no
+/// room and the row overflowed past the unread badge.
+class _TitleLine extends StatelessWidget {
+  const _TitleLine({
+    required this.name,
+    required this.time,
+    required this.timeStyle,
+  });
+
+  final Widget name;
+  final String? time;
+  final TextStyle? timeStyle;
+
+  /// Width the name keeps beside the time, at text scale 1.
+  static const double _minNameWidth = 96;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? time = this.time;
+    if (time == null) return name;
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints box) {
+        final TextScaler scaler = MediaQuery.textScalerOf(context);
+        final TextPainter painter = TextPainter(
+          text: TextSpan(text: time, style: timeStyle),
+          textDirection: Directionality.of(context),
+          textScaler: scaler,
+          maxLines: 1,
+        )..layout();
+        final double timeWidth = painter.width;
+        painter.dispose();
+        if (box.maxWidth - timeWidth >= scaler.scale(_minNameWidth)) {
+          return Row(
+            children: [
+              Expanded(child: name),
+              Text(time, maxLines: 1, style: timeStyle),
+            ],
+          );
+        }
+        // Under the name it may wrap ("Sep 30, / 2025" beside a 99+ badge).
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            name,
+            Text(time, style: timeStyle),
+          ],
+        );
+      },
     );
   }
 }

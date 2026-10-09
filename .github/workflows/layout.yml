@@ -1,0 +1,60 @@
+name: Layout
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  crawl:
+    name: Crawl (shard ${{ matrix.shard }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+          cache: true
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+      - name: Resolve pinned workspace
+        run: dart pub get --enforce-lockfile
+      - name: Install real multilingual fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-core fonts-noto-cjk fonts-noto-mono fontconfig
+          test -s /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+      - name: Every screen at every window profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          mono="$(fc-match -f '%{file}' 'Noto Sans Mono')"
+          test -s "$mono"
+          out="$GITHUB_WORKSPACE/build/layout-crawl"
+          mkdir -p "$out"
+          cd apps/ditmesh
+          flutter test test/layout/layout_crawl_test.dart --no-pub \
+            --total-shards 4 --shard-index ${{ matrix.shard }} \
+            --dart-define=DITMESH_LAYOUT_CRAWL=true \
+            --dart-define=DITMESH_MATRIX_FONT=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc \
+            --dart-define=DITMESH_MATRIX_MONO_FONT="$mono" \
+            --dart-define=DITMESH_CRAWL_OUT="$out"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: layout-crawl-${{ matrix.shard }}
+          path: build/layout-crawl
+          if-no-files-found: ignore
+          retention-days: 14

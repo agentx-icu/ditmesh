@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../responsive.dart';
 import 'listen_controller.dart';
 import 'listen_settings.dart';
 
@@ -95,27 +96,50 @@ class ListenFrequencyPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        ListTile(
-          dense: true,
-          title: Text(s.listenTone),
-          subtitle: Text(badge),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+        // Tone and lock state with the frequency beside them, or below
+        // them when a narrow phone at large text has no room (a ListTile's
+        // trailing frequency took the whole tile there).
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
             children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(s.listenTone, style: theme.textTheme.bodyMedium),
+                  Text(
+                    badge,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
               Text(
                 s.listenHzValue(controller.frequencyHz.round()),
                 style: theme.textTheme.titleMedium,
               ),
-              if (!auto) ...<Widget>[
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => controller.setAutoTune(true),
-                  child: Text(s.listenRetune),
-                ),
-              ],
             ],
           ),
         ),
+        // Below the header, not beside the frequency: there the button
+        // squeezed the title to nothing on a 320 px phone and overflowed at
+        // large text.
+        if (!auto)
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: TextButton(
+                onPressed: () => controller.setAutoTune(true),
+                child: Text(s.listenRetune),
+              ),
+            ),
+          ),
         Slider(
           value: hz,
           min: ListenSettings.minHz,
@@ -165,8 +189,12 @@ class ListenDecodedText extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
             child: Row(
               children: <Widget>[
-                Text(s.listenDecoded, style: theme.textTheme.labelLarge),
-                const Spacer(),
+                Expanded(
+                  child: Text(
+                    s.listenDecoded,
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ),
                 IconButton(
                   tooltip: s.listenCopy,
                   onPressed: text.isEmpty ? null : onCopy,
@@ -219,30 +247,47 @@ class ListenStatsRow extends StatelessWidget {
     final wpm = controller.wpm;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      child: Row(
+      // Two label/value groups that wrap onto a second line when a narrow
+      // phone, a long locale or large text cannot fit them side by side.
+      child: Wrap(
+        spacing: 24,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
-          Text(s.listenPending, style: theme.textTheme.labelMedium),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              pending.isEmpty ? '—' : pending,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontFamily: 'monospace',
-                letterSpacing: 2,
+          _pair(
+            Text(s.listenPending, style: theme.textTheme.labelMedium),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: Text(
+                pending.isEmpty ? '—' : pending,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  letterSpacing: 2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(s.listenSpeed, style: theme.textTheme.labelMedium),
-          const SizedBox(width: 8),
-          Text(
-            wpm == null ? s.listenSpeedUnknown : s.listenWpmValue(wpm.round()),
-            style: theme.textTheme.titleMedium,
+          _pair(
+            Text(s.listenSpeed, style: theme.textTheme.labelMedium),
+            Text(
+              wpm == null
+                  ? s.listenSpeedUnknown
+                  : s.listenWpmValue(wpm.round()),
+              style: theme.textTheme.titleMedium,
+            ),
           ),
         ],
       ),
     );
   }
+
+  static Widget _pair(Widget label, Widget value) => Wrap(
+    spacing: 8,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: <Widget>[label, value],
+  );
 }
 
 /// Permission / failure / background-stop banner.
@@ -286,6 +331,9 @@ class ListenStatusBanner extends StatelessWidget {
         isError ? Icons.mic_off : Icons.info_outline,
         color: isError ? scheme.onErrorContainer : scheme.onSurface,
       ),
+      // Beside the message the button squeezed a long translation off a
+      // phone; below it there is always room.
+      forceActionsBelow: layoutClassOf(context) == LayoutClass.compact,
       actions: <Widget>[
         if (isError)
           TextButton(onPressed: onRetry, child: Text(s.listenPermissionRetry))

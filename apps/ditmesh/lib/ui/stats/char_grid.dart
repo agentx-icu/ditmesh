@@ -74,6 +74,11 @@ class CharCell extends StatelessWidget {
     final background = palette.bucketBackground(b);
     final foreground = palette.bucketForeground(b);
     final wide = char.length > 1;
+    // Grows with the text size so the glyph and its attempt badge stay
+    // inside the cell (a fixed 40 px box clipped them from 2x text).
+    final double side = MediaQuery.textScalerOf(
+      context,
+    ).scale(40).clamp(40.0, 72.0);
     final semantics = stats.attempts == 0
         ? '$char, ${s.statsCharsNotStarted}'
         : '$char, ${formatPercent(s, stats.accuracy)}, '
@@ -88,8 +93,8 @@ class CharCell extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            width: wide ? 56 : 40,
-            height: 40,
+            width: wide ? side * 1.4 : side,
+            height: side,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: learned ? null : Border.all(color: scheme.outlineVariant),
@@ -97,13 +102,22 @@ class CharCell extends StatelessWidget {
             child: Stack(
               children: <Widget>[
                 Center(
-                  child: Text(
-                    char,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: learned || stats.attempts > 0
-                          ? foreground
-                          : scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                  // A prosign ("<BT>") at 3x is wider than the capped cell:
+                  // shrink it rather than wrap it out of the cell.
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        char,
+                        maxLines: 1,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: learned || stats.attempts > 0
+                              ? foreground
+                              : scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),

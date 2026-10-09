@@ -7,6 +7,9 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/group_practice.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_controller_host.dart';
+import '../../common/app_bar_title.dart';
+import '../../common/field_label.dart';
+import '../../responsive.dart';
 import 'group_practice_session_page.dart';
 
 /// Group practice sessions of one group (F14): a manually coordinated,
@@ -77,6 +80,7 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
+          scrollable: true,
           title: Text(s.groupPracticeNew),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -85,7 +89,7 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
               TextField(
                 key: const Key('gp-title'),
                 controller: title,
-                decoration: InputDecoration(labelText: s.groupPracticeTitleField),
+                decoration: InputDecoration(label: FieldLabel(s.groupPracticeTitleField)),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -160,57 +164,62 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
     final locale = Localizations.localeOf(context).toString();
     final sessions = _book.forConversation(widget.conversationId);
     return Scaffold(
-      appBar: AppBar(title: Text(s.groupPracticeTitle)),
+      appBar: AppBar(title: AppBarTitle(s.groupPracticeTitle)),
       floatingActionButton: _controller == null
           ? null
           : FloatingActionButton.extended(
               key: const Key('gp-new'),
               onPressed: _create,
               icon: const Icon(Icons.add),
-              label: Text(s.groupPracticeNew),
-            ),
-      body: SafeArea(
-        top: false,
-        child: _error != null
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  // No host or no identity: say so; anything else is a
-                  // read failure, not a missing identity.
-                  child: Text(
-                    _error is StateError || _error is ChatException
-                        ? s.learnIdentityRequired
-                        : s.errorUnknown,
-                  ),
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(s.groupPracticeIntro),
-                  ),
-                  const SizedBox(height: 8),
-                  for (final session in sessions)
-                    ListTile(
-                      key: Key('gp-session-${session.id}'),
-                      leading: Icon(
-                        session.completed
-                            ? Icons.task_alt
-                            : Icons.school_outlined,
-                      ),
-                      title: Text(session.title),
-                      subtitle: Text(
-                        '${groupRoleLabel(s, session.role)} · '
-                        '${DateFormat.yMd(locale).add_Hm().format(session.createdAt.toLocal())} · '
-                        '${s.groupPracticeRoundsDone(session.summary.done, session.summary.rounds)}',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _openSession(session.id),
-                    ),
-                ],
+              label: Text(
+                s.groupPracticeNew,
+                textScaler: edgeLabelTextScaler(context),
               ),
+            ),
+      body: ReadableBody(
+        child: SafeArea(
+          top: false,
+          child: _error != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    // No host or no identity: say so; anything else is a
+                    // read failure, not a missing identity.
+                    child: Text(
+                      _error is StateError || _error is ChatException
+                          ? s.learnIdentityRequired
+                          : s.errorUnknown,
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(s.groupPracticeIntro),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final session in sessions)
+                      ListTile(
+                        key: Key('gp-session-${session.id}'),
+                        leading: Icon(
+                          session.completed
+                              ? Icons.task_alt
+                              : Icons.school_outlined,
+                        ),
+                        title: Text(session.title),
+                        subtitle: Text(
+                          '${groupRoleLabel(s, session.role)} · '
+                          '${DateFormat.yMd(locale).add_Hm().format(session.createdAt.toLocal())} · '
+                          '${s.groupPracticeRoundsDone(session.summary.done, session.summary.rounds)}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _openSession(session.id),
+                      ),
+                  ],
+                ),
+        ),
       ),
     );
   }

@@ -1418,7 +1418,7 @@ class SRu extends S {
   String get learnReviewTitle => 'Повторение';
 
   @override
-  String get learnListen => 'Слушайте...';
+  String get learnListen => 'Воспроизведение';
 
   @override
   String get learnReady => 'Готово';
@@ -3162,7 +3162,10 @@ class SRu extends S {
   String get materialsTitleField => 'Название';
 
   @override
-  String get materialsTagsField => 'Теги (через запятую)';
+  String get materialsTagsField => 'Теги';
+
+  @override
+  String get materialsTagsHelper => 'Разделяйте теги запятыми';
 
   @override
   String get materialsTextField => 'Текст';

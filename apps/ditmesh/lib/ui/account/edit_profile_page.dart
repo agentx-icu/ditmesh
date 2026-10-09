@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../common/field_label.dart';
 import 'account_widgets.dart';
 
 /// Display name and status message.
@@ -68,7 +70,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final s = context.s;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(s.accountEditProfile)),
+      appBar: AppBar(title: AppBarTitle(s.accountEditProfile)),
       body: AccountPageBody(
         children: [
           Text(s.accountEditProfileBody, style: theme.textTheme.bodyMedium),
@@ -79,7 +81,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             maxLength: 64,
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: s.accountDisplayName,
+              label: FieldLabel(s.accountDisplayName),
               errorText: _nameError,
               border: const OutlineInputBorder(),
             ),
@@ -91,7 +93,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _save(),
             decoration: InputDecoration(
-              labelText: s.accountStatusMessage,
+              label: FieldLabel(s.accountStatusMessage),
               border: const OutlineInputBorder(),
             ),
           ),

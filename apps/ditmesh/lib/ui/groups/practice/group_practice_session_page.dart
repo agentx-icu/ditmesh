@@ -10,8 +10,10 @@ import '../../../training/group_practice.dart';
 import '../../../training/training_controller.dart';
 import '../../chat/chat_layout.dart';
 import '../../chat/morse_playback_settings.dart';
+import '../../common/app_bar_title.dart';
 import '../../learn/chat_copy/chat_copy_screen.dart';
 import '../../learn/learn_playback.dart';
+import '../../responsive.dart';
 import 'group_practice_page.dart';
 
 /// One local group practice session (F14): its rounds (references to
@@ -130,6 +132,7 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(s.groupPracticeDeleteTitle),
         content: Text(s.groupPracticeDeleteBody),
         actions: [
@@ -261,7 +264,7 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
         .length;
     return Scaffold(
       appBar: AppBar(
-        title: Text(session.title),
+        title: AppBarTitle(session.title),
         actions: [
           IconButton(
             tooltip: s.actionDelete,
@@ -276,73 +279,78 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
               key: const Key('gp-add-round'),
               onPressed: _addRounds,
               icon: const Icon(Icons.playlist_add),
-              label: Text(s.groupPracticeAddRound),
-            ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          children: [
-            Text(
-              '${groupRoleLabel(s, session.role)} · '
-              '${instructor ? s.groupPracticeInstructorHint : s.groupPracticeParticipantHint}',
-            ),
-            const SizedBox(height: 8),
-            Text(
-              s.groupPracticeLocalNote,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (_notConnected) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(child: Text(s.groupPracticeNotConnected)),
-                  TextButton(
-                    key: const Key('gp-retry'),
-                    onPressed: _resolveAll,
-                    child: Text(s.actionRetry),
-                  ),
-                ],
+              label: Text(
+                s.groupPracticeAddRound,
+                textScaler: edgeLabelTextScaler(context),
               ),
-            ],
-            const SizedBox(height: 8),
-            for (final (i, r) in session.rounds.indexed) _round(i, r, instructor),
-            const Divider(height: 32),
-            Card(
-              key: const Key('gp-summary'),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+      body: ReadableBody(
+        child: SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            children: [
+              Text(
+                '${groupRoleLabel(s, session.role)} · '
+                '${instructor ? s.groupPracticeInstructorHint : s.groupPracticeParticipantHint}',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.groupPracticeLocalNote,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (_notConnected) ...[
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    Text(s.groupPracticeSummary, style: Theme.of(context).textTheme.titleSmall),
-                    Text(s.groupPracticeRoundsDone(sum.done, sum.rounds)),
-                    if (missing > 0)
-                      Text(s.groupPracticeUnavailableCount(missing)),
-                    if (sum.attempts > 0) ...[
-                      Text(s.groupPracticeAccuracy((sum.accuracy * 100).round())),
-                      if (sum.assisted > 0) Text(s.groupPracticeAssisted(sum.assisted)),
-                      const SizedBox(height: 8),
-                      Text(
-                        s.groupPracticeShareHint(
-                          sum.done,
-                          sum.rounds,
-                          (sum.accuracy * 100).round(),
-                        ),
-                        key: const Key('gp-share'),
-                      ),
-                    ],
+                    Expanded(child: Text(s.groupPracticeNotConnected)),
+                    TextButton(
+                      key: const Key('gp-retry'),
+                      onPressed: _resolveAll,
+                      child: Text(s.actionRetry),
+                    ),
                   ],
                 ),
+              ],
+              const SizedBox(height: 8),
+              for (final (i, r) in session.rounds.indexed) _round(i, r, instructor),
+              const Divider(height: 32),
+              Card(
+                key: const Key('gp-summary'),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.groupPracticeSummary, style: Theme.of(context).textTheme.titleSmall),
+                      Text(s.groupPracticeRoundsDone(sum.done, sum.rounds)),
+                      if (missing > 0)
+                        Text(s.groupPracticeUnavailableCount(missing)),
+                      if (sum.attempts > 0) ...[
+                        Text(s.groupPracticeAccuracy((sum.accuracy * 100).round())),
+                        if (sum.assisted > 0) Text(s.groupPracticeAssisted(sum.assisted)),
+                        const SizedBox(height: 8),
+                        Text(
+                          s.groupPracticeShareHint(
+                            sum.done,
+                            sum.rounds,
+                            (sum.accuracy * 100).round(),
+                          ),
+                          key: const Key('gp-share'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-            if (!session.completed)
-              OutlinedButton(
-                key: const Key('gp-complete'),
-                onPressed: () => _update((b) => b.complete(session.id)),
-                child: Text(s.groupPracticeComplete),
-              ),
-          ],
+              if (!session.completed)
+                OutlinedButton(
+                  key: const Key('gp-complete'),
+                  onPressed: () => _update((b) => b.complete(session.id)),
+                  child: Text(s.groupPracticeComplete),
+                ),
+            ],
+          ),
         ),
       ),
     );

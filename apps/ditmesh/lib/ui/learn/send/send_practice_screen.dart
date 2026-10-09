@@ -12,6 +12,7 @@ import '../../../training/send_detail_store.dart';
 import '../../../training/send_session.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_settings.dart';
+import '../../common/app_bar_title.dart';
 import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
@@ -313,7 +314,7 @@ class _SendPracticeScreenState extends State<SendPracticeScreen>
     final flash = _playback?.flash;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.learnSendTitle),
+        title: AppBarTitle(s.learnSendTitle),
         actions: <Widget>[
           if (_result == null && _playback != null)
             IconButton(

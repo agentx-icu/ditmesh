@@ -1,6 +1,7 @@
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:flutter/material.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 import 'bootstrap_labels.dart';
 
 class BootstrapManualForm extends StatefulWidget {
@@ -100,7 +101,7 @@ class _BootstrapManualFormState extends State<BootstrapManualForm> {
           controller: _host,
           autocorrect: false,
           onChanged: _edited,
-          decoration: InputDecoration(labelText: s.bootstrapHost),
+          decoration: InputDecoration(label: FieldLabel(s.bootstrapHost)),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -108,7 +109,7 @@ class _BootstrapManualFormState extends State<BootstrapManualForm> {
           controller: _port,
           keyboardType: TextInputType.number,
           onChanged: _edited,
-          decoration: InputDecoration(labelText: s.bootstrapPort),
+          decoration: InputDecoration(label: FieldLabel(s.bootstrapPort)),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -116,7 +117,7 @@ class _BootstrapManualFormState extends State<BootstrapManualForm> {
           controller: _key,
           autocorrect: false,
           onChanged: _edited,
-          decoration: InputDecoration(labelText: s.bootstrapPublicKey),
+          decoration: InputDecoration(label: FieldLabel(s.bootstrapPublicKey)),
         ),
         const SizedBox(height: 16),
         if (_verdict != null) ...[

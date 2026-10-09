@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/fitting_hint.dart';
 import 'chat_layout.dart';
 import 'conversation_tile.dart';
 
@@ -107,19 +108,28 @@ class _ConversationListState extends State<ConversationList> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-          child: SearchBar(
-            controller: _search,
-            hintText: s.chatSearchConversations,
-            leading: const Icon(Icons.search),
-            trailing: [
-              if (_query.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  tooltip: MaterialLocalizations.of(context).clearButtonTooltip,
-                  onPressed: _search.clear,
-                ),
-            ],
-            elevation: const WidgetStatePropertyAll<double>(0),
+          child: LayoutBuilder(
+            builder: (context, box) => SearchBar(
+              controller: _search,
+              hintText: fittingHint(
+                context,
+                s.chatSearchConversations,
+                // Padding, the search icon and room for the clear button.
+                width: box.maxWidth - 2 * kMinInteractiveDimension - 32,
+              ),
+              leading: const Icon(Icons.search),
+              trailing: [
+                if (_query.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.clear),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).clearButtonTooltip,
+                    onPressed: _search.clear,
+                  ),
+              ],
+              elevation: const WidgetStatePropertyAll<double>(0),
+            ),
           ),
         ),
         Expanded(

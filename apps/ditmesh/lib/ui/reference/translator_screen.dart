@@ -3,6 +3,8 @@ import 'package:morse_io/morse_io.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../responsive.dart';
 import 'morse_to_text_view.dart';
 import 'playback_settings_sheet.dart';
 import 'reference_layout.dart';
@@ -111,7 +113,7 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
       ],
       child: Scaffold(
         appBar: AppBar(
-          title: Text(s.referenceTranslatorTitle),
+          title: AppBarTitle(s.referenceTranslatorTitle),
           actions: <Widget>[
             IconButton(
               tooltip: s.referencePlaybackSettings,
@@ -122,54 +124,59 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
           ],
         ),
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final bool twoPane = referenceTwoPaneForWidth(
-                constraints.maxWidth,
-              );
-              return Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: SegmentedButton<TranslatorMode>(
-                      showSelectedIcon: false,
-                      // Equal-width segments; icons only when there is room,
-                      // so three labels fit a 360 px phone without overflow.
-                      expandedInsets: EdgeInsets.zero,
-                      segments: <ButtonSegment<TranslatorMode>>[
-                        for (final TranslatorMode m in TranslatorMode.values)
-                          ButtonSegment<TranslatorMode>(
-                            value: m,
-                            label: Text(
-                              m.label(s),
-                              maxLines: 1,
-                              softWrap: false,
+          // Two panes of ~700 px at most: wider input fields and output
+          // lines on a large monitor only spread the text apart.
+          child: ReadableBody(
+            maxWidth: 1400,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final bool twoPane = referenceTwoPaneForWidth(
+                  constraints.maxWidth,
+                );
+                return Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: SegmentedButton<TranslatorMode>(
+                        showSelectedIcon: false,
+                        // Equal-width segments; icons only when there is room,
+                        // so three labels fit a 360 px phone without overflow.
+                        expandedInsets: EdgeInsets.zero,
+                        segments: <ButtonSegment<TranslatorMode>>[
+                          for (final TranslatorMode m in TranslatorMode.values)
+                            ButtonSegment<TranslatorMode>(
+                              value: m,
+                              label: Text(
+                                m.label(s),
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                              icon: twoPane ? Icon(m.icon) : null,
                             ),
-                            icon: twoPane ? Icon(m.icon) : null,
-                          ),
-                      ],
-                      selected: <TranslatorMode>{_mode},
-                      onSelectionChanged: _selectMode,
+                        ],
+                        selected: <TranslatorMode>{_mode},
+                        onSelectionChanged: _selectMode,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: switch (_mode) {
-                      TranslatorMode.textToMorse => TextToMorseView(
-                        twoPane: twoPane,
-                        initialText: widget.initialText,
-                      ),
-                      TranslatorMode.morseToText => MorseToTextView(
-                        twoPane: twoPane,
-                      ),
-                      TranslatorMode.key => TapToKeyView(
-                        clock: _clock,
-                        twoPane: twoPane,
-                      ),
-                    },
-                  ),
-                ],
-              );
-            },
+                    Expanded(
+                      child: switch (_mode) {
+                        TranslatorMode.textToMorse => TextToMorseView(
+                          twoPane: twoPane,
+                          initialText: widget.initialText,
+                        ),
+                        TranslatorMode.morseToText => MorseToTextView(
+                          twoPane: twoPane,
+                        ),
+                        TranslatorMode.key => TapToKeyView(
+                          clock: _clock,
+                          twoPane: twoPane,
+                        ),
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),

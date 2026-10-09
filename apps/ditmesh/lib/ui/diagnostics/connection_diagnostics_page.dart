@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../diagnostics/connection_diagnostics.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
 
 /// Connection diagnostics (F09): what the device observed about its own Tox
 /// connection, the selected contact and the durable outbox, in plain words,
@@ -34,7 +35,7 @@ class ConnectionDiagnosticsPage extends StatelessWidget {
     String time(DateTime at) =>
         DateFormat.yMd(locale).add_Hm().format(at.toLocal());
     return Scaffold(
-      appBar: AppBar(title: Text(s.diagTitle)),
+      appBar: AppBar(title: AppBarTitle(s.diagTitle)),
       body: SafeArea(
         top: false,
         child: Center(

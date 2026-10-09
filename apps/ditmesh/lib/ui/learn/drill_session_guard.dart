@@ -97,6 +97,7 @@ Future<bool> confirmLeaveDrill(BuildContext context) async {
   final bool? leave = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
+      scrollable: true,
       title: Text(s.learnLeaveDrillTitle),
       content: Text(s.learnLeaveDrillBody),
       actions: <Widget>[

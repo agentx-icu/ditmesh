@@ -1380,7 +1380,7 @@ class SDe extends S {
   String get learnReviewTitle => 'Wiederholen';
 
   @override
-  String get learnListen => 'Hören…';
+  String get learnListen => 'Wird abgespielt';
 
   @override
   String get learnReady => 'Bereit';
@@ -3114,7 +3114,10 @@ class SDe extends S {
   String get materialsTitleField => 'Titel';
 
   @override
-  String get materialsTagsField => 'Schlagwörter (durch Komma getrennt)';
+  String get materialsTagsField => 'Schlagwörter';
+
+  @override
+  String get materialsTagsHelper => 'Schlagwörter durch Kommas trennen';
 
   @override
   String get materialsTextField => 'Text';

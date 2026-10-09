@@ -224,16 +224,25 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
                         ),
                       ],
               ),
-              child: Center(
-                // The button's semantics carry the label; the printed text
-                // must not be announced a second time.
-                child: ExcludeSemantics(
-                  child: Text(
-                    widget.label,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: foreground,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+              child: Padding(
+                // The square inscribed in the circle, so a long label
+                // ("MANIPULATEUR") or large text stays inside the key.
+                padding: EdgeInsets.all(side * 0.15),
+                child: Center(
+                  // The button's semantics carry the label; the printed text
+                  // must not be announced a second time.
+                  child: ExcludeSemantics(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: foreground,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
                     ),
                   ),
                 ),

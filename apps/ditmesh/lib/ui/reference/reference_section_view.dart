@@ -64,13 +64,15 @@ class ReferenceSearchResults extends StatelessWidget {
             children: <Widget>[
               Icon(g.key.icon, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(
-                g.key.label(s),
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.primary,
+              Expanded(
+                child: Text(
+                  g.key.label(s),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 s.referenceEntryCount(g.value.length),
                 style: theme.textTheme.labelSmall,

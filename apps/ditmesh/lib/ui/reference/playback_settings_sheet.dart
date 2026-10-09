@@ -12,8 +12,10 @@ Future<void> showReferencePlaybackSettings(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => SafeArea(
-      child: Padding(
+      // Scrolls on short landscape phones instead of overflowing.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ReferencePlaybackSettingsSheet(settings: settings),
       ),

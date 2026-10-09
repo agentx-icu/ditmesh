@@ -9,6 +9,8 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../responsive.dart';
 
 /// Unsent messages a restore brought over from the previous device (F10),
 /// kept in `<dataDirectory>/chat/restored_pending.json`, outside the
@@ -170,7 +172,7 @@ class _RestoredPendingPageState extends State<RestoredPendingPage> {
     final locale = Localizations.localeOf(context).toString();
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.pendingReviewTitle),
+        title: AppBarTitle(s.pendingReviewTitle),
         actions: [
           if (_items.isNotEmpty)
             TextButton(
@@ -179,42 +181,44 @@ class _RestoredPendingPageState extends State<RestoredPendingPage> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(s.pendingReviewBody),
-          ),
-          if (_items.isEmpty)
+      body: ReadableBody(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: [
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(s.pendingReviewEmpty),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(s.pendingReviewBody),
             ),
-          for (final item in _items)
-            ListTile(
-              key: ValueKey('restored-pending-${item.id}'),
-              title: Text(_title(chat, item.conversationId)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SelectableText(item.text),
-                  Text(
-                    s.pendingReviewQueuedAt(
-                      DateFormat.yMd(
-                        locale,
-                      ).add_Hm().format(item.queuedAt.toLocal()),
+            if (_items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(s.pendingReviewEmpty),
+              ),
+            for (final item in _items)
+              ListTile(
+                key: ValueKey('restored-pending-${item.id}'),
+                title: Text(_title(chat, item.conversationId)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SelectableText(item.text),
+                    Text(
+                      s.pendingReviewQueuedAt(
+                        DateFormat.yMd(
+                          locale,
+                        ).add_Hm().format(item.queuedAt.toLocal()),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                trailing: IconButton(
+                  tooltip: s.pendingReviewDismiss,
+                  icon: const Icon(Icons.close),
+                  onPressed: () => _dismiss(item.id),
+                ),
               ),
-              trailing: IconButton(
-                tooltip: s.pendingReviewDismiss,
-                icon: const Icon(Icons.close),
-                onPressed: () => _dismiss(item.id),
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

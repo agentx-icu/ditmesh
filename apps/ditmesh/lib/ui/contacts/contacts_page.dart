@@ -8,6 +8,8 @@ import '../../i18n/l10n_extension.dart';
 import '../account/avatar_initial.dart';
 import '../chat/chat_layout.dart';
 import '../chat/conversation_target.dart';
+import '../common/app_bar_title.dart';
+import '../responsive.dart';
 import 'add_friend_sheet.dart';
 import 'friend_request_inbox.dart';
 import 'my_tox_id_sheet.dart';
@@ -83,7 +85,7 @@ class ContactsPage extends StatelessWidget {
     final S s = context.s;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.chatContacts),
+        title: AppBarTitle(s.chatContacts),
         actions: [
           IconButton(
             tooltip: s.chatMyToxId,
@@ -98,48 +100,51 @@ class ContactsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<List<Friend>>(
-        stream: service.friendChanges,
-        initialData: service.friends,
-        builder: (context, snapshot) {
-          final List<Friend> friends =
-              List<Friend>.of(snapshot.data ?? const <Friend>[])..sort((a, b) {
-                if (a.online != b.online) return a.online ? -1 : 1;
-                return a.displayName.toLowerCase().compareTo(
-                  b.displayName.toLowerCase(),
-                );
-              });
-          return ListView(
-            children: [
-              SelfContactTile(
-                service: service,
-                identity: identity,
-                onOpen: onOpenConversation,
-              ),
-              FriendRequestInbox(service: service),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(
-                  s.chatFriendsCount(friends.length),
-                  style: Theme.of(context).textTheme.titleSmall,
+      body: ReadableBody(
+        child: StreamBuilder<List<Friend>>(
+          stream: service.friendChanges,
+          initialData: service.friends,
+          builder: (context, snapshot) {
+            final List<Friend> friends =
+                List<Friend>.of(snapshot.data ?? const <Friend>[])
+                  ..sort((a, b) {
+                    if (a.online != b.online) return a.online ? -1 : 1;
+                    return a.displayName.toLowerCase().compareTo(
+                      b.displayName.toLowerCase(),
+                    );
+                  });
+            return ListView(
+              children: [
+                SelfContactTile(
+                  service: service,
+                  identity: identity,
+                  onOpen: onOpenConversation,
                 ),
-              ),
-              if (friends.isEmpty)
+                FriendRequestInbox(service: service),
                 Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(s.chatNoFriends, textAlign: TextAlign.center),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    s.chatFriendsCount(friends.length),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                 ),
-              for (final Friend f in friends)
-                _FriendTile(
-                  key: ValueKey<String>('friend_${f.publicKey}'),
-                  friend: f,
-                  onTap: () =>
-                      onOpenConversation(ConversationTarget.fromFriend(f)),
-                  onRemove: () => unawaited(_removeFriend(context, f)),
-                ),
-            ],
-          );
-        },
+                if (friends.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(s.chatNoFriends, textAlign: TextAlign.center),
+                  ),
+                for (final Friend f in friends)
+                  _FriendTile(
+                    key: ValueKey<String>('friend_${f.publicKey}'),
+                    friend: f,
+                    onTap: () =>
+                        onOpenConversation(ConversationTarget.fromFriend(f)),
+                    onRemove: () => unawaited(_removeFriend(context, f)),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:morse_dsp/morse_dsp.dart';
 
 import '../../../i18n/l10n_extension.dart';
+import '../../common/field_label.dart';
 import 'workbench_controller.dart';
 
 String formatClock(Duration d) {
@@ -163,7 +164,7 @@ class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
       decoration: InputDecoration(
-        labelText: label,
+        label: FieldLabel(label),
         border: const OutlineInputBorder(),
         isDense: true,
       ),

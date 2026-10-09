@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../i18n/l10n_extension.dart';
 import '../account/backup_actions.dart';
+import '../common/field_label.dart';
 
 class LanBootstrapPanel extends StatefulWidget {
   const LanBootstrapPanel({
@@ -64,7 +65,7 @@ class _LanBootstrapPanelState extends State<LanBootstrapPanel> {
             enabled: !_busy,
             keyboardType: TextInputType.number,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: s.bootstrapPort),
+            decoration: InputDecoration(label: FieldLabel(s.bootstrapPort)),
           ),
         if (node != null) ...[
           SelectableText(node.endpoint),

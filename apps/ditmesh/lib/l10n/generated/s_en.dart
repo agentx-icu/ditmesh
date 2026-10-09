@@ -1379,7 +1379,7 @@ class SEn extends S {
   String get learnReviewTitle => 'Review';
 
   @override
-  String get learnListen => 'Listen...';
+  String get learnListen => 'Playing';
 
   @override
   String get learnReady => 'Ready';
@@ -3113,7 +3113,10 @@ class SEn extends S {
   String get materialsTitleField => 'Title';
 
   @override
-  String get materialsTagsField => 'Tags (comma separated)';
+  String get materialsTagsField => 'Tags';
+
+  @override
+  String get materialsTagsHelper => 'Separate tags with commas';
 
   @override
   String get materialsTextField => 'Text';

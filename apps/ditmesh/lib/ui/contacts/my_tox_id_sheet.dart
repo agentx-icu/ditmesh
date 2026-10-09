@@ -12,6 +12,10 @@ Future<void> showMyToxIdSheet(BuildContext context, Identity? identity) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    // The default sheet stops at 9/16 of the screen, which cuts the QR code
+    // in half on a landscape phone; let it take the height it needs.
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => MyToxIdCard(identity: identity),
   );
 }

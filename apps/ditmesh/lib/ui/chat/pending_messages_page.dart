@@ -5,6 +5,8 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
+import '../responsive.dart';
 import 'conversation_menu.dart';
 import 'message_status_icon.dart';
 
@@ -178,7 +180,7 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
     final s = context.s;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.pendingMessagesTitle),
+        title: AppBarTitle(s.pendingMessagesTitle),
         actions: [
           IconButton(
             tooltip: s.actionRetry,
@@ -187,69 +189,64 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(s.pendingMessagesExplanation),
-          ),
-          if (_loading) const LinearProgressIndicator(),
-          if (_error != null)
+      // One scrolling list, explanation included: above an `Expanded` list
+      // the explanation and an error left no room on a landscape phone at
+      // large text.
+      body: ReadableBody(
+        child: ListView(
+          children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(describeChatError(s, _error!)),
+              child: Text(s.pendingMessagesExplanation),
             ),
-          Expanded(
-            child: rows.isEmpty && !_loading && _error == null
-                ? Center(child: Text(s.pendingMessagesEmpty))
-                : ListView.builder(
-                    itemCount: rows.length,
-                    itemBuilder: (context, index) {
-                      final m = rows[index];
-                      return ListTile(
-                        key: ValueKey('pending-row-${m.id}'),
-                        title: Text(
-                          _title(m),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          m.text,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        leading: MessageStatusIcon(m.status, message: m),
-                        trailing: !widget.service.supportsSendControl
-                            ? null
-                            : IconButton(
-                                key: ValueKey(
-                                  m.status == MessageStatus.failed
-                                      ? 'pending-retry-${m.id}'
-                                      : 'pending-cancel-${m.id}',
-                                ),
-                                tooltip: m.status == MessageStatus.failed
-                                    ? s.chatRetrySend
-                                    : s.chatCancelSend,
-                                onPressed: m.status == MessageStatus.sending
-                                    ? null
-                                    : () => ConversationMenu.sendControl(
-                                        context,
-                                        widget.service,
-                                        m,
-                                        retry: m.status == MessageStatus.failed,
-                                      ),
-                                icon: Icon(
-                                  m.status == MessageStatus.failed
-                                      ? Icons.refresh
-                                      : Icons.close,
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            if (_loading) const LinearProgressIndicator(),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(describeChatError(s, _error!)),
+              ),
+            if (rows.isEmpty && !_loading && _error == null)
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(child: Text(s.pendingMessagesEmpty)),
+              ),
+            for (final m in rows) _row(context, m),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _row(BuildContext context, ChatMessage m) {
+    final s = context.s;
+    return ListTile(
+      key: ValueKey('pending-row-${m.id}'),
+      title: Text(_title(m), maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(m.text, maxLines: 2, overflow: TextOverflow.ellipsis),
+      leading: MessageStatusIcon(m.status, message: m),
+      trailing: !widget.service.supportsSendControl
+          ? null
+          : IconButton(
+              key: ValueKey(
+                m.status == MessageStatus.failed
+                    ? 'pending-retry-${m.id}'
+                    : 'pending-cancel-${m.id}',
+              ),
+              tooltip: m.status == MessageStatus.failed
+                  ? s.chatRetrySend
+                  : s.chatCancelSend,
+              onPressed: m.status == MessageStatus.sending
+                  ? null
+                  : () => ConversationMenu.sendControl(
+                      context,
+                      widget.service,
+                      m,
+                      retry: m.status == MessageStatus.failed,
+                    ),
+              icon: Icon(
+                m.status == MessageStatus.failed ? Icons.refresh : Icons.close,
+              ),
+            ),
     );
   }
 }

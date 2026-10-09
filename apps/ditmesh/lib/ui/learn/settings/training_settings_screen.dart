@@ -9,6 +9,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_settings.dart';
+import '../../common/app_bar_title.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
 
@@ -333,7 +334,7 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
       ],
     );
     return Scaffold(
-      appBar: AppBar(title: Text(s.learnSettingsTitle)),
+      appBar: AppBar(title: AppBarTitle(s.learnSettingsTitle)),
       body: AnimatedBuilder(
         animation: widget.controller,
         builder: (context, _) => Center(
@@ -393,17 +394,18 @@ class _SliderTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         ListTile(
-          title: Text(title),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          // The value sits in the title row so a long title wraps instead of
+          // being squeezed to a few characters by a wide trailing value at
+          // large text on a phone.
+          title: Wrap(
+            spacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
+              Text(title),
               Text(value, style: theme.textTheme.titleMedium),
-              if (trailing != null) ...<Widget>[
-                const SizedBox(width: 8),
-                trailing!,
-              ],
             ],
           ),
+          trailing: trailing,
         ),
         slider,
       ],

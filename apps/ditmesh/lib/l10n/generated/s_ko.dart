@@ -1363,7 +1363,7 @@ class SKo extends S {
   String get learnReviewTitle => '복습';
 
   @override
-  String get learnListen => '들어 보세요…';
+  String get learnListen => '재생 중';
 
   @override
   String get learnReady => '준비 완료';
@@ -3087,7 +3087,10 @@ class SKo extends S {
   String get materialsTitleField => '제목';
 
   @override
-  String get materialsTagsField => '태그(쉼표로 구분)';
+  String get materialsTagsField => '태그';
+
+  @override
+  String get materialsTagsHelper => '태그는 쉼표로 구분하세요';
 
   @override
   String get materialsTextField => '텍스트';

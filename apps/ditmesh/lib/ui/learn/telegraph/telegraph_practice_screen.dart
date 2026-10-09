@@ -5,6 +5,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/telegraph_sessions.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
 import '../../telegraph/telegraph_labels.dart';
 import '../learn_playback.dart';
 import '../receive/receive_drill_screen.dart';
@@ -80,7 +81,7 @@ class _TelegraphPracticeScreenState extends State<TelegraphPracticeScreen> {
     final answered = _recall.answered(_book);
     final sample = TelegraphCurriculum.introductoryFor(_book).take(5);
     return Scaffold(
-      appBar: AppBar(title: Text(s.telegraphTitle)),
+      appBar: AppBar(title: AppBarTitle(s.telegraphTitle)),
       body: SafeArea(
         top: false,
         child: Center(

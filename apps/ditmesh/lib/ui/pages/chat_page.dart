@@ -14,7 +14,9 @@ import '../chat/conversation_target.dart';
 import '../chat/restored_pending.dart';
 import '../chat/first_chat_guide.dart';
 import '../chat/pending_messages_page.dart';
+import '../common/app_bar_title.dart';
 import '../contacts/contacts_page.dart';
+import '../responsive.dart';
 import '../shell/shell_router.dart';
 import 'placeholder_page.dart';
 
@@ -156,7 +158,7 @@ class _ChatPageState extends State<ChatPage> {
 
     final Widget list = Scaffold(
       appBar: AppBar(
-        title: Text(ChatPage.title(s)),
+        title: AppBarTitle(ChatPage.title(s)),
         actions: [
           IconButton(
             key: const ValueKey('pending-messages-open'),
@@ -248,10 +250,14 @@ class _RequestsBadge extends StatelessWidget {
         return IconButton(
           tooltip: context.s.chatContacts,
           onPressed: onPressed,
-          icon: Badge.count(
-            count: count,
-            isLabelVisible: count > 0,
-            child: const Icon(Icons.people_outline),
+          // Clamped: at 2x the count grew past the screen edge.
+          icon: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: kBarLabelMaxTextScale,
+            child: Badge.count(
+              count: count,
+              isLabelVisible: count > 0,
+              child: const Icon(Icons.people_outline),
+            ),
           ),
         );
       },

@@ -7,6 +7,7 @@ import '../../di/app_settings.dart';
 import '../../i18n/l10n_extension.dart';
 import '../account/account_routes.dart';
 import '../chat/chat_layout.dart';
+import '../common/app_bar_title.dart';
 import 'site_links.dart';
 
 /// Community guidelines the user accepts before using an identity (App
@@ -48,7 +49,7 @@ class _TermsGatePageState extends State<TermsGatePage> {
       contentPadding: EdgeInsets.zero,
     );
     return Scaffold(
-      appBar: AppBar(title: Text(s.termsGateTitle)),
+      appBar: AppBar(title: AppBarTitle(s.termsGateTitle)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

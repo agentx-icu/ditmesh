@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../common/app_bar_title.dart';
+
 /// Shared body for the not-yet-built destinations: a centred icon, the
 /// destination name and a one-line description. Replaced page by page as
 /// real features land; do not grow it into a framework.
@@ -19,9 +21,11 @@ class PlaceholderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: AppBarTitle(title)),
+      // Scrolls when a landscape phone at large text is shorter than the
+      // icon, title and description.
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -9,6 +9,7 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/qso_practice.dart';
 import '../../../training/send_session.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
 import '../drill_session_guard.dart';
 import '../keying/keyer_panel.dart';
 import '../learn_platform.dart';
@@ -264,7 +265,7 @@ class _QsoScreenState extends State<QsoScreen> with WidgetsBindingObserver {
     final playback = _playback;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.learnQsoTitle),
+        title: AppBarTitle(s.learnQsoTitle),
         actions: <Widget>[
           if (_remotePlaying)
             IconButton(

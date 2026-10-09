@@ -1822,9 +1822,9 @@
   "@learnReviewTitle": {
     "description": "Receive drill picker / screen: title of the spaced-repetition review drill"
   },
-  "learnListen": "Listen...",
+  "learnListen": "Playing",
   "@learnListen": {
-    "description": "Receive drill: status while Morse is playing"
+    "description": "Receive drill: status while Morse is playing; a complete word, no trailing ellipsis (it would read as clipped text)"
   },
   "learnReady": "Ready",
   "@learnReady": {
@@ -4400,9 +4400,13 @@
   "@materialsTitleField": {
     "description": "Material editor: title field"
   },
-  "materialsTagsField": "Tags (comma separated)",
+  "materialsTagsField": "Tags",
   "@materialsTagsField": {
-    "description": "Material editor: tags field (comma separated)"
+    "description": "Material editor: tags field label (short; the helper explains the format)"
+  },
+  "materialsTagsHelper": "Separate tags with commas",
+  "@materialsTagsHelper": {
+    "description": "Material editor: helper under the tags field"
   },
   "materialsTextField": "Text",
   "@materialsTextField": {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../di/app_settings.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/app_bar_title.dart';
 import 'style_labels.dart';
 import 'style_preview.dart';
 import 'ui_style.dart';
@@ -177,7 +178,7 @@ class _AppearancePageState extends State<AppearancePage> {
     final settings = context.watch<AppSettings>();
     final changed = _style != settings.style || _mode != settings.themeMode;
     return Scaffold(
-      appBar: AppBar(title: Text(context.s.appearanceTitle)),
+      appBar: AppBar(title: AppBarTitle(context.s.appearanceTitle)),
       body: LayoutBuilder(
         builder: (context, constraints) => SingleChildScrollView(
           padding: const EdgeInsets.all(16),

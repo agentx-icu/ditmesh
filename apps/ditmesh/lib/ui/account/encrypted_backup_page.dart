@@ -7,6 +7,7 @@ import '../../di/portable_preferences.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
+import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_actions.dart';
 import 'backup_file_gateway.dart';
@@ -131,7 +132,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      appBar: AppBar(title: Text(s.backupXTitle)),
+      appBar: AppBar(title: AppBarTitle(s.backupXTitle)),
       body: FutureBuilder<BackupInventory>(
         future: _inventory,
         builder: (context, snap) {

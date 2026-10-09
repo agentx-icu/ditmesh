@@ -17,6 +17,7 @@ import '../account/edit_profile_page.dart';
 import '../account/identity_card.dart';
 import '../appearance/appearance_page.dart';
 import '../appearance/style_labels.dart';
+import '../common/app_bar_title.dart';
 import '../diagnostics/connection_diagnostics_page.dart';
 import '../keying/key_setup_page.dart';
 import '../moderation/blocked_people_page.dart';
@@ -38,7 +39,7 @@ class MePage extends StatelessWidget {
     final s = context.s;
     final service = context.read<IdentityService>();
     return Scaffold(
-      appBar: AppBar(title: Text(title(s))),
+      appBar: AppBar(title: AppBarTitle(title(s))),
       body: StreamBuilder<Identity?>(
         stream: service.identityChanges,
         initialData: service.current,

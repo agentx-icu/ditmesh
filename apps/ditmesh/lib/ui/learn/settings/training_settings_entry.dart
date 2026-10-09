@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_controller_host.dart';
+import '../../common/app_bar_title.dart';
 import '../learn_playback.dart';
 import '../learning_unavailable.dart';
 import 'training_settings_screen.dart';
@@ -43,10 +44,10 @@ class _TrainingSettingsEntryState extends State<TrainingSettingsEntry> {
           );
         }
         return Scaffold(
-          appBar: AppBar(title: Text(context.s.learnSettings)),
+          appBar: AppBar(title: AppBarTitle(context.s.learnSettings)),
           body: Center(
             child: snapshot.hasError
-                ? Padding(
+                ? SingleChildScrollView(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

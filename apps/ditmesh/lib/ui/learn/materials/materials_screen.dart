@@ -10,6 +10,8 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/material_practice.dart';
 import '../../../training/material_store.dart';
 import '../../../training/training_controller.dart';
+import '../../common/app_bar_title.dart';
+import '../../responsive.dart';
 import '../learn_playback.dart';
 import '../receive/receive_drill_screen.dart';
 import 'material_editor_screen.dart';
@@ -281,6 +283,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(s.materialsDeleteTitle),
         content: Text(s.materialsDeleteBody(m.title)),
         actions: <Widget>[
@@ -312,7 +315,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     final all = _all;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.materialsTitle),
+        title: AppBarTitle(s.materialsTitle),
         actions: <Widget>[
           IconButton(
             tooltip: s.materialsImport,
@@ -332,54 +335,53 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         key: const ValueKey('material-new'),
         onPressed: () => unawaited(_edit()),
         icon: const Icon(Icons.add),
-        label: Text(s.materialsNew),
+        label: Text(s.materialsNew, textScaler: edgeLabelTextScaler(context)),
       ),
       body: all == null
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: TextField(
-                    controller: _search,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText: s.materialsSearch,
-                      border: const OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: FilterChip(
-                      label: Text(s.materialsFavoritesOnly),
-                      selected: _favoritesOnly,
-                      onSelected: (v) => setState(() => _favoritesOnly = v),
+          // One list, search field included: a fixed field and chip above
+          // an `Expanded` list left no room on a landscape phone with the
+          // keyboard up.
+          : ReadableBody(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 88),
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: TextField(
+                      controller: _search,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: s.materialsSearch,
+                        hintMaxLines: 2,
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: all.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              s.materialsEmpty,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.only(bottom: 88),
-                          children: [
-                            for (final m in _visible) _tile(context, m),
-                          ],
-                        ),
-                ),
-              ],
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: FilterChip(
+                        label: Text(s.materialsFavoritesOnly),
+                        selected: _favoritesOnly,
+                        onSelected: (v) => setState(() => _favoritesOnly = v),
+                      ),
+                    ),
+                  ),
+                  if (all.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        s.materialsEmpty,
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  else
+                    for (final m in _visible) _tile(context, m),
+                ],
+              ),
             ),
     );
   }

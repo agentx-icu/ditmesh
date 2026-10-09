@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:radio_tools/radio_tools.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../common/field_label.dart';
 import 'tool_page.dart';
 
 /// Maidenhead locator from coordinates, and distance / heading between two
@@ -69,10 +70,21 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
       signed: true,
       decimal: true,
     );
+    // Side by side when both labels fit, stacked on a narrow phone or with
+    // large text. One Flex either way keeps focus across a rotation.
+    final narrow =
+        MediaQuery.sizeOf(context).width <
+        MediaQuery.textScalerOf(context).scale(360);
     return <Widget>[
-      Row(
+      Flex(
+        direction: narrow ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment: narrow
+            ? CrossAxisAlignment.stretch
+            : CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(
+          Flexible(
+            flex: narrow ? 0 : 1,
+            fit: FlexFit.tight,
             child: TextField(
               key: GridLocatorTool.latitudeKey,
               controller: _lat,
@@ -80,20 +92,22 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
               textInputAction: TextInputAction.next,
               onChanged: _changed,
               decoration: InputDecoration(
-                labelText: s.toolsGridLatitude,
+                label: FieldLabel(s.toolsGridLatitude),
                 border: const OutlineInputBorder(),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+          SizedBox(width: narrow ? 0 : 12, height: narrow ? 12 : 0),
+          Flexible(
+            flex: narrow ? 0 : 1,
+            fit: FlexFit.tight,
             child: TextField(
               key: GridLocatorTool.longitudeKey,
               controller: _lon,
               keyboardType: keyboard,
               onChanged: _changed,
               decoration: InputDecoration(
-                labelText: s.toolsGridLongitude,
+                label: FieldLabel(s.toolsGridLongitude),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -145,7 +159,7 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
       enableSuggestions: false,
       onChanged: _changed,
       decoration: InputDecoration(
-        labelText: label,
+        label: FieldLabel(label),
         // ui-literal-ok: Maidenhead locator example, identical in every locale
         hintText: 'OM89ex',
         errorText: invalid ? s.toolsGridInvalidLocator : null,

@@ -7,6 +7,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
+import '../../common/field_label.dart';
 import '../../learn/progress_save_snack.dart';
 import '../../learn/receive/answer_keypad.dart';
 import '../../learn/receive/round_result_view.dart';
@@ -252,7 +253,7 @@ class _WorkbenchDecodePanelState extends State<WorkbenchDecodePanel> {
           minLines: 1,
           maxLines: 3,
           decoration: InputDecoration(
-            labelText: s.workbenchReference,
+            label: FieldLabel(s.workbenchReference),
             helperText: s.workbenchReferenceHelp,
             helperMaxLines: 3,
             border: const OutlineInputBorder(),
