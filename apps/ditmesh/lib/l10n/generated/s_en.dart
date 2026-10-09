@@ -84,10 +84,10 @@ class SEn extends S {
   String get connectionOffline => 'Offline';
 
   @override
-  String get messageStatusPending => 'Queued — peer is offline';
+  String get messageStatusPending => 'Queued on this device';
 
   @override
-  String get messageStatusPendingDetail => 'Tox has no server: the message is delivered when the peer comes online.';
+  String get messageStatusPendingDetail => 'The message is saved locally. It will send when both apps are running and their networks can connect.';
 
   @override
   String get messageStatusSending => 'Sending';
@@ -4492,4 +4492,149 @@ class SEn extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name refused to reconnect. Its history is kept; retry with the group\'s password.';
   }
+
+  @override
+  String get firstChatTitle => 'Your first Morse chat';
+
+  @override
+  String get firstChatStart => 'Get started';
+
+  @override
+  String get firstChatDismiss => 'Dismiss guide';
+
+  @override
+  String get firstChatKeyTitle => '1. Key CQ to yourself';
+
+  @override
+  String get firstChatKeyBody => 'Use the key to send CQ. A short press makes a dot and a longer press makes a dash. Your decoded draft stays read-only.';
+
+  @override
+  String get firstChatSelf => 'Try in my self chat';
+
+  @override
+  String get firstChatListenTitle => '2. Listen and correct';
+
+  @override
+  String get firstChatListenBody => 'Before sending, use Preview to hear the draft and Backspace to remove a mistake. After sending, tap Play on your message. Self-chat messages stay on this device.';
+
+  @override
+  String get firstChatFriendTitle => '3. Chat with a friend';
+
+  @override
+  String get firstChatFriendBody => 'Open Contacts, add your friend by QR code or Tox ID, and wait for the friend request to be accepted.';
+
+  @override
+  String get firstChatFriend => 'Add a friend';
+
+  @override
+  String get firstChatOnline => 'Keep both apps running and connected for messages to reach your friend.';
+
+  @override
+  String get pendingMessagesTitle => 'Pending and failed messages';
+
+  @override
+  String get pendingMessagesExplanation => 'Queued messages stay on this device until both apps are connected. You can cancel a queued message or retry a confirmed failure.';
+
+  @override
+  String get pendingMessagesEmpty => 'No pending or failed messages';
+
+  @override
+  String get deliveryDetailsTitle => 'Delivery details';
+
+  @override
+  String get deliveryLocalTitle => 'Saved locally';
+
+  @override
+  String get deliveryLocalDetail => 'This self-chat message is saved on this device.';
+
+  @override
+  String get deliverySentDetail => 'Your app handed the message to transport. Waiting for the recipient to confirm receipt.';
+
+  @override
+  String get deliveryPeerTitle => 'Recipient received';
+
+  @override
+  String get deliveryPeerDetail => 'The recipient confirmed receipt. This does not indicate that they read or listened to it.';
+
+  @override
+  String get deliveryGroupTitle => 'Received by a group member';
+
+  @override
+  String get deliveryGroupDetail => 'At least one group member confirmed receipt. Other members may still be offline.';
+
+  @override
+  String get deliveryLocalOffline => 'This device is not connected yet.';
+
+  @override
+  String get deliveryPeerOffline => 'Your friend is offline.';
+
+  @override
+  String get deliveryGroupWaiting => 'Waiting for a connection to the group.';
+
+  @override
+  String get chatPreviewDraft => 'Preview draft';
+
+  @override
+  String get chatStopPreview => 'Stop preview';
+
+  @override
+  String get chatMessagePlayback => 'Message playback';
+
+  @override
+  String get chatOriginalRhythm => 'Original keying rhythm';
+
+  @override
+  String get chatListenerRhythm => 'Your listening speed';
+
+  @override
+  String get chatOriginalAvailable => 'Recorded marks and gaps are available.';
+
+  @override
+  String get chatOriginalUnavailable => 'Original rhythm unavailable; plays at your listening speed.';
+
+  @override
+  String get chatOriginalPlaying => 'Playing original rhythm';
+
+  @override
+  String get chatListenerPlaying => 'Playing at your listening speed';
+
+  @override
+  String get chatPause => 'Pause';
+
+  @override
+  String get chatResume => 'Resume';
+
+  @override
+  String get chatPreviousWord => 'Previous word';
+
+  @override
+  String get chatNextWord => 'Next word';
+
+  @override
+  String chatWordNumber(int number) {
+    return 'Word $number';
+  }
+
+  @override
+  String get chatRangeStart => 'First word';
+
+  @override
+  String get chatRangeEnd => 'Last word';
+
+  @override
+  String get chatRepeatRange => 'Replay selected words';
+
+  @override
+  String get chatLoopRange => 'Loop selected words';
+
+  @override
+  String get chatPlaybackProgress => 'Playback progress';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return 'Word $current of $total';
+  }
+
+  @override
+  String get chatOriginalPreference => 'Use original rhythm when a matching recording is available.';
 }

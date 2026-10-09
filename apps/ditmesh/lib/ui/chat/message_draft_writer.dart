@@ -23,6 +23,7 @@ class _DraftWriter {
   Future<void> _tail = Future<void>.value();
   Future<void> get settled => _tail;
   int pending = 0;
+  final recording = KeyedDraftRecording();
   String latest = '';
   String savedDraft = '';
   Object? error;

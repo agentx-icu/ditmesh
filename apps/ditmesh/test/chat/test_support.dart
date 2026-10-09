@@ -34,11 +34,14 @@ const Size kDesktop = Size(1280, 800);
 /// Minimal [IdentityService] for the chat UI: only [current] is meaningful.
 /// Everything else is unreachable from the chat/contacts/groups screens.
 final class StubIdentityService implements IdentityService {
-  StubIdentityService({Identity? identity})
-    : current = identity ?? Identity(toxId: kSelfToxId, displayName: 'Me');
+  StubIdentityService({
+    Identity? identity,
+    this.dataDirectoryPath = '/tmp/ditmesh-test',
+  }) : current = identity ?? Identity(toxId: kSelfToxId, displayName: 'Me');
 
   @override
   final Identity? current;
+  final String dataDirectoryPath;
 
   @override
   ConnectionStatus get connectionStatus => ConnectionStatus.online;
@@ -59,7 +62,7 @@ final class StubIdentityService implements IdentityService {
   Future<void> disconnect() async {}
 
   @override
-  Future<String> dataDirectory() async => '/tmp/ditmesh-test';
+  Future<String> dataDirectory() async => dataDirectoryPath;
 
   @override
   Future<Identity> open() async => current!;
@@ -119,7 +122,7 @@ final class ChatHarness {
   final FakeClock clock;
   final MorsePlaybackController playback;
 
-  Widget wrap(Widget child) => MultiProvider(
+  Widget wrap(Widget child, {TextScaler? textScaler}) => MultiProvider(
     providers: [
       Provider<ChatService>.value(value: service),
       Provider<IdentityService>.value(value: identity),
@@ -132,6 +135,12 @@ final class ChatHarness {
       localizationsDelegates: S.localizationsDelegates,
       supportedLocales: S.supportedLocales,
       locale: const Locale('en'),
+      builder: textScaler == null
+          ? null
+          : (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+              child: child!,
+            ),
       home: child,
     ),
   );

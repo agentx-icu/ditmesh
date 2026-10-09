@@ -7,7 +7,9 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import '../i18n/key_value_store.dart';
 import '../notifications/notification_prefs.dart';
 import '../ui/chat/morse_playback_settings.dart';
+import '../ui/chat/conversation_playback_preferences.dart';
 import '../ui/chat/input_mode.dart';
+import '../ui/chat/first_chat_progress.dart';
 import '../ui/listen/listen_preferences.dart';
 import '../ui/listen/listen_settings.dart';
 import '../ui/reference/reference_playback_settings.dart';
@@ -15,7 +17,8 @@ import 'app_settings.dart';
 
 /// Restores preferences before providers are exposed and saves changes through
 /// the same store as language/window settings. Conversation mutes are scoped
-/// by the full identity public key; other playback/privacy choices are global.
+/// by the full identity public key, as are guide and conversation overrides.
+/// Global playback defaults seed each conversation before its first override.
 final class AppPreferences implements IdentityDataStore {
   AppPreferences(
     this._store, {
@@ -44,6 +47,7 @@ final class AppPreferences implements IdentityDataStore {
       ),
       autoPlay: _bool(c, 'autoPlay', false),
       listenOnly: _bool(c, 'listenOnly', false),
+      originalRhythm: _bool(c, 'originalRhythm', false),
     );
     final r = _read('reference.playback');
     reference = ReferencePlaybackSettings(
@@ -64,18 +68,21 @@ final class AppPreferences implements IdentityDataStore {
       ),
     );
     _watch(notifications, _saveNotifications);
-    _watch(
-      playback,
-      () => _saveJson('chat.playback', {
-        'wpm': playback.wpm,
-        'farnsworthWpm': playback.farnsworthWpm,
-        'toneHz': playback.toneHz,
-        'trainingMode': playback.trainingMode,
-        'inputMode': playback.inputMode.name,
-        'autoPlay': playback.autoPlay,
-        'listenOnly': playback.listenOnly,
-      }),
-    );
+    conversations = ConversationPlaybackPreferences();
+    _watch(conversations, () {
+      final key = _identityKey;
+      if (key != null && !_replacing) {
+        _saveJson('chat.conversations.$key', conversations.toJson());
+      }
+    });
+    firstChat = FirstChatProgress();
+    _watch(firstChat, () {
+      final key = _identityKey;
+      if (key != null && !_replacing) {
+        _saveJson('chat.guide.$key', {'dismissed': firstChat.dismissed});
+      }
+    });
+    _watch(playback, () => _saveJson('chat.playback', playback.toJson()));
     _watch(
       reference,
       () => _saveJson('reference.playback', {
@@ -103,6 +110,8 @@ final class AppPreferences implements IdentityDataStore {
   late final AppSettings settings;
   late final NotificationPrefs notifications;
   late final MorsePlaybackSettings playback;
+  late final ConversationPlaybackPreferences conversations;
+  late final FirstChatProgress firstChat;
   late final ReferencePlaybackSettings reference;
   late final ListenPreferences listen;
   final Map<ChangeNotifier, VoidCallback> _listeners = {};
@@ -203,6 +212,8 @@ final class AppPreferences implements IdentityDataStore {
     _identityKey = key;
     if (key == null && old != null) {
       _change('notifications.muted.$old', null);
+      _change('chat.guide.$old', null);
+      _change('chat.conversations.$old', null);
     }
     Iterable<String> muted = const [];
     try {
@@ -219,6 +230,32 @@ final class AppPreferences implements IdentityDataStore {
     }
     _hydrating = true;
     notifications.replaceMuted(muted);
+    final guideKey = 'chat.guide.$key';
+    Map<String, Object?> guide = {};
+    try {
+      final raw = _dirty.containsKey(guideKey)
+          ? _dirty[guideKey]?.value
+          : _store.getString(guideKey);
+      final doc = raw == null ? null : jsonDecode(raw);
+      if (doc is Map<String, Object?>) guide = doc;
+    } on FormatException {
+      // An invalid guide preference starts with the guide available.
+    }
+    firstChat.restore(_bool(guide, 'dismissed', false));
+    Map<String, Object?> chatValues = {};
+    if (key != null) {
+      final storageKey = 'chat.conversations.$key';
+      try {
+        final raw = _dirty.containsKey(storageKey)
+            ? _dirty[storageKey]?.value
+            : _store.getString(storageKey);
+        final decoded = raw == null ? null : jsonDecode(raw);
+        if (decoded is Map<String, Object?>) chatValues = decoded;
+      } on FormatException {
+        /* Invalid overrides use the global defaults. */
+      }
+    }
+    conversations.restore(chatValues);
     _hydrating = false;
   }
 

@@ -111,6 +111,23 @@ final Object screenB = Object();
 
 void main() {
   group('inbound messages', () {
+    test(
+      'late recording enriches existing message without another notification',
+      () async {
+        final h = await harness();
+        final row = h.chat.receiveMessage(kAnnConv, 'CQ');
+        await pumpEventQueue();
+        expect(h.api.shown, hasLength(1));
+        h.chat.attachRecording(row.id, KeyedRecording(durationsMs: [83]));
+        await pumpEventQueue();
+        expect(h.api.shown, hasLength(1));
+        expect(
+          (await h.chat.loadHistory(kAnnConv)).single.recording,
+          isNotNull,
+        );
+      },
+    );
+
     test('in the background posts title, text and Morse pattern', () async {
       final Harness h = await harness();
       await h.receive('CQ CQ DE ANN');

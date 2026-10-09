@@ -74,7 +74,7 @@ void main() {
   );
 
   test(
-    'failed mute removal retries without leaking into a replacement',
+    'failed identity preference removal retries without leaking into replacement',
     () async {
       final identity = FakeIdentityService();
       final first = await identity.create(displayName: 'first');
@@ -85,6 +85,7 @@ void main() {
         identity: identity,
       );
       prefs.notifications.setMuted('c2c_peer', true);
+      prefs.firstChat.dismiss();
       await prefs.flush();
       final backup = await identity.exportBackup();
       await prefs.prepareForReplacement();
@@ -92,16 +93,19 @@ void main() {
         store.getString('notifications.muted.${first.publicKey}'),
         isNotNull,
       );
+      expect(store.getString('chat.guide.${first.publicKey}'), isNotNull);
       store.failRemove = true;
       await identity.deleteIdentity();
       await identity.importBackup(backup);
       expect(identity.current!.publicKey, first.publicKey);
       await pumpEventQueue();
       expect(prefs.notifications.mutedConversations, isEmpty);
+      expect(prefs.firstChat.dismissed, isFalse);
       await expectLater(prefs.flush(), throwsStateError);
       store.failRemove = false;
       await prefs.flush();
       expect(store.getString('notifications.muted.${first.publicKey}'), isNull);
+      expect(store.getString('chat.guide.${first.publicKey}'), isNull);
       prefs.dispose();
       await identity.dispose();
     },

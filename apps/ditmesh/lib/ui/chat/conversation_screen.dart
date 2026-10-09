@@ -27,6 +27,7 @@ import 'message_input.dart';
 import 'local_message_sends.dart';
 import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
+import 'conversation_playback_preferences.dart';
 
 part 'conversation_screen_menu.dart';
 
@@ -139,7 +140,14 @@ class _ConversationScreenState extends State<ConversationScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _autoPlay.update(context);
+    _autoPlay.update(
+      context,
+      settings: ConversationPlaybackPreferences.settingsFor(
+        context,
+        _id,
+        listen: false,
+      ),
+    );
     _attention.update(context);
   }
 
@@ -276,6 +284,15 @@ class _ConversationScreenState extends State<ConversationScreen>
     final int index = _messages.indexWhere((m) => m.id == message.id);
     final int olderIndex = _older.indexWhere((m) => m.id == message.id);
     final bool added = index < 0 && olderIndex < 0;
+    if (added && message.isUpdate) {
+      final parkedIndex = _parked.indexWhere((m) => m.id == message.id);
+      if (parkedIndex >= 0) {
+        _parked[parkedIndex] = message;
+      } else if (_loading) {
+        _pendingStatuses[message.id] = message;
+      }
+      return;
+    }
     // The stream includes old outgoing status updates outside our window.
     // A new local send is explicitly accepted through the composer's onSent.
     if (added && message.isMine && !ownSend) {
@@ -368,7 +385,8 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final MorsePlaybackSettings settings = MorsePlaybackSettings.of(context);
+    final settings = ConversationPlaybackPreferences.settingsFor(context, _id);
+    _autoPlay.update(context, settings: settings);
     final Group? group = _group();
     final bool conference = group?.kind == GroupKind.conference;
 
@@ -390,13 +408,16 @@ class _ConversationScreenState extends State<ConversationScreen>
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: box.maxHeight * 0.75),
               child: SingleChildScrollView(
-                child: MessageInput(
-                  key: ValueKey<String>('input_$_id'),
-                  service: _service,
-                  conversationId: _id,
-                  playback: _playback,
-                  initialDraft: _draft(),
-                  onSent: (_) => _showLatest(),
+                child: ChangeNotifierProvider<MorsePlaybackSettings>.value(
+                  value: settings,
+                  child: MessageInput(
+                    key: ValueKey<String>('input_$_id'),
+                    service: _service,
+                    conversationId: _id,
+                    playback: _playback,
+                    initialDraft: _draft(),
+                    onSent: (_) => _showLatest(),
+                  ),
                 ),
               ),
             ),

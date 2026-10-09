@@ -14,4 +14,4 @@
 - [测试金字塔](testing/TEST_PYRAMID.zh-CN.md)
 - [当前持久化清单](testing/PERSISTENCE_AUDIT.zh-CN.md)
 - [添加界面语言](i18n/ADDING_A_LANGUAGE.zh-CN.md)
-- [未来键控时序协议 RFC](rfcs/2026-09-30-tim2tox-message-annotation.zh-CN.md)
+- [已实现的原始拍发节奏协议](rfcs/2026-10-09-keyed-rhythm.zh-CN.md)

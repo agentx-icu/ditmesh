@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:morse_core/morse_core.dart';
+import 'package:morse_core/morse_core.dart' show TelegraphGroups;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
@@ -7,6 +7,8 @@ import '../telegraph/telegraph_interpret_sheet.dart';
 import 'chat_layout.dart';
 import 'message_status_icon.dart';
 import 'morse_pattern_text.dart';
+import 'playback_timeline.dart';
+import 'playback_word_text.dart';
 import '../appearance/style_tokens.dart';
 
 /// A chat bubble with the three layers from plan §5.3: Morse pattern, plain
@@ -21,6 +23,9 @@ class MessageBubble extends StatelessWidget {
     required this.onPlay,
     required this.onReveal,
     this.activeMark,
+    this.activeWord,
+    this.playbackControls,
+    this.onPlaybackSettings,
     this.showSender = false,
     this.listenOnly = false,
     this.onPractice,
@@ -46,6 +51,7 @@ class MessageBubble extends StatelessWidget {
       !_textHidden && TelegraphGroups.hasGroups(message.text);
 
   bool get _hasActions =>
+      onPlaybackSettings != null ||
       _canInterpret ||
       onPractice != null ||
       onSaveMaterial != null ||
@@ -65,6 +71,9 @@ class MessageBubble extends StatelessWidget {
   final bool revealed;
   final bool playing;
   final int? activeMark;
+  final int? activeWord;
+  final Widget? playbackControls;
+  final VoidCallback? onPlaybackSettings;
   final VoidCallback onPlay;
   final VoidCallback onReveal;
 
@@ -89,7 +98,7 @@ class MessageBubble extends StatelessWidget {
     final Color foreground = mine
         ? scheme.onPrimaryContainer
         : scheme.onSurface;
-    final String pattern = MorseEncoder.toPattern(message.text);
+    final String pattern = PlaybackTimeline.patternFor(message.text);
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -153,6 +162,7 @@ class MessageBubble extends StatelessWidget {
                           tooltip: s.chatMessageLearnActions,
                           icon: const Icon(Icons.more_vert),
                           onSelected: (v) => switch (v) {
+                            _LearnAction.playback => onPlaybackSettings,
                             _LearnAction.telegraph =>
                               () => showTelegraphInterpretation(
                                 context,
@@ -165,6 +175,11 @@ class MessageBubble extends StatelessWidget {
                             _LearnAction.cancel => onCancelSend,
                           }?.call(),
                           itemBuilder: (_) => [
+                            if (onPlaybackSettings != null)
+                              PopupMenuItem(
+                                value: _LearnAction.playback,
+                                child: Text(s.chatMessagePlayback),
+                              ),
                             if (onRetry != null)
                               PopupMenuItem(
                                 value: _LearnAction.retry,
@@ -206,15 +221,19 @@ class MessageBubble extends StatelessWidget {
                   if (_textHidden)
                     _HiddenText(onReveal: onReveal)
                   else
-                    SelectableText(
-                      message.text,
+                    PlaybackWordText(
+                      text: message.text,
+                      activeWord: activeWord,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: foreground,
                       ),
                     ),
+                  ?playbackControls,
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         formatMessageTime(context, message.timestamp),
@@ -223,7 +242,6 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ),
                       if (bookmarked) ...[
-                        const SizedBox(width: 4),
                         Icon(
                           Icons.bookmark,
                           size: 14,
@@ -232,8 +250,7 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ],
                       if (mine) ...[
-                        const SizedBox(width: 4),
-                        MessageStatusIcon(message.status),
+                        MessageStatusIcon(message.status, message: message),
                       ],
                     ],
                   ),
@@ -251,7 +268,15 @@ class MessageBubble extends StatelessWidget {
 }
 
 /// Distinct from the app bar's `String` menu.
-enum _LearnAction { practice, save, bookmark, retry, cancel, telegraph }
+enum _LearnAction {
+  playback,
+  practice,
+  save,
+  bookmark,
+  retry,
+  cancel,
+  telegraph,
+}
 
 class _HiddenText extends StatelessWidget {
   const _HiddenText({required this.onReveal});

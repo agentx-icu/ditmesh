@@ -100,11 +100,11 @@
   "@connectionOffline": {
     "description": "Not connected to the Tox network"
   },
-  "messageStatusPending": "Queued — peer is offline",
+  "messageStatusPending": "Queued on this device",
   "@messageStatusPending": {
     "description": "Outgoing message waiting for the peer to come online"
   },
-  "messageStatusPendingDetail": "Tox has no server: the message is delivered when the peer comes online.",
+  "messageStatusPendingDetail": "The message is saved locally. It will send when both apps are running and their networks can connect.",
   "@messageStatusPendingDetail": {
     "description": "Explains why a message can stay queued (P2P, no store-and-forward server)"
   },
@@ -6315,5 +6315,206 @@
         "type": "String"
       }
     }
+  },
+  "firstChatTitle": "Your first Morse chat",
+  "firstChatStart": "Get started",
+  "firstChatDismiss": "Dismiss guide",
+  "firstChatKeyTitle": "1. Key CQ to yourself",
+  "firstChatKeyBody": "Use the key to send CQ. A short press makes a dot and a longer press makes a dash. Your decoded draft stays read-only.",
+  "firstChatSelf": "Try in my self chat",
+  "firstChatListenTitle": "2. Listen and correct",
+  "firstChatListenBody": "Before sending, use Preview to hear the draft and Backspace to remove a mistake. After sending, tap Play on your message. Self-chat messages stay on this device.",
+  "firstChatFriendTitle": "3. Chat with a friend",
+  "firstChatFriendBody": "Open Contacts, add your friend by QR code or Tox ID, and wait for the friend request to be accepted.",
+  "firstChatFriend": "Add a friend",
+  "firstChatOnline": "Keep both apps running and connected for messages to reach your friend.",
+  "pendingMessagesTitle": "Pending and failed messages",
+  "pendingMessagesExplanation": "Queued messages stay on this device until both apps are connected. You can cancel a queued message or retry a confirmed failure.",
+  "pendingMessagesEmpty": "No pending or failed messages",
+  "deliveryDetailsTitle": "Delivery details",
+  "deliveryLocalTitle": "Saved locally",
+  "deliveryLocalDetail": "This self-chat message is saved on this device.",
+  "deliverySentDetail": "Your app handed the message to transport. Waiting for the recipient to confirm receipt.",
+  "deliveryPeerTitle": "Recipient received",
+  "deliveryPeerDetail": "The recipient confirmed receipt. This does not indicate that they read or listened to it.",
+  "deliveryGroupTitle": "Received by a group member",
+  "deliveryGroupDetail": "At least one group member confirmed receipt. Other members may still be offline.",
+  "deliveryLocalOffline": "This device is not connected yet.",
+  "deliveryPeerOffline": "Your friend is offline.",
+  "deliveryGroupWaiting": "Waiting for a connection to the group.",
+  "chatPreviewDraft": "Preview draft",
+  "chatStopPreview": "Stop preview",
+  "@firstChatTitle": {
+    "description": "Chat interface: firstChatTitle."
+  },
+  "@firstChatStart": {
+    "description": "Chat interface: firstChatStart."
+  },
+  "@firstChatDismiss": {
+    "description": "Chat interface: firstChatDismiss."
+  },
+  "@firstChatKeyTitle": {
+    "description": "Chat interface: firstChatKeyTitle."
+  },
+  "@firstChatKeyBody": {
+    "description": "Chat interface: firstChatKeyBody."
+  },
+  "@firstChatSelf": {
+    "description": "Chat interface: firstChatSelf."
+  },
+  "@firstChatListenTitle": {
+    "description": "Chat interface: firstChatListenTitle."
+  },
+  "@firstChatListenBody": {
+    "description": "Chat interface: firstChatListenBody."
+  },
+  "@firstChatFriendTitle": {
+    "description": "Chat interface: firstChatFriendTitle."
+  },
+  "@firstChatFriendBody": {
+    "description": "Chat interface: firstChatFriendBody."
+  },
+  "@firstChatFriend": {
+    "description": "Chat interface: firstChatFriend."
+  },
+  "@firstChatOnline": {
+    "description": "Chat interface: firstChatOnline."
+  },
+  "@pendingMessagesTitle": {
+    "description": "Chat interface: pendingMessagesTitle."
+  },
+  "@pendingMessagesExplanation": {
+    "description": "Chat interface: pendingMessagesExplanation."
+  },
+  "@pendingMessagesEmpty": {
+    "description": "Chat interface: pendingMessagesEmpty."
+  },
+  "@deliveryDetailsTitle": {
+    "description": "Chat interface: deliveryDetailsTitle. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryLocalTitle": {
+    "description": "Chat interface: deliveryLocalTitle. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryLocalDetail": {
+    "description": "Chat interface: deliveryLocalDetail. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliverySentDetail": {
+    "description": "Chat interface: deliverySentDetail. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryPeerTitle": {
+    "description": "Chat interface: deliveryPeerTitle. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryPeerDetail": {
+    "description": "Chat interface: deliveryPeerDetail. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryGroupTitle": {
+    "description": "Chat interface: deliveryGroupTitle. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryGroupDetail": {
+    "description": "Chat interface: deliveryGroupDetail. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryLocalOffline": {
+    "description": "Chat interface: deliveryLocalOffline. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryPeerOffline": {
+    "description": "Chat interface: deliveryPeerOffline. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@deliveryGroupWaiting": {
+    "description": "Chat interface: deliveryGroupWaiting. Keep delivery, reading and listening confirmation distinct."
+  },
+  "@chatPreviewDraft": {
+    "description": "Chat interface: chatPreviewDraft."
+  },
+  "@chatStopPreview": {
+    "description": "Chat interface: chatStopPreview."
+  },
+  "chatMessagePlayback": "Message playback",
+  "@chatMessagePlayback": {
+    "description": "Message playback control: chatMessagePlayback."
+  },
+  "chatOriginalRhythm": "Original keying rhythm",
+  "@chatOriginalRhythm": {
+    "description": "Message playback control: chatOriginalRhythm."
+  },
+  "chatListenerRhythm": "Your listening speed",
+  "@chatListenerRhythm": {
+    "description": "Message playback control: chatListenerRhythm."
+  },
+  "chatOriginalAvailable": "Recorded marks and gaps are available.",
+  "@chatOriginalAvailable": {
+    "description": "Message playback control: chatOriginalAvailable."
+  },
+  "chatOriginalUnavailable": "Original rhythm unavailable; plays at your listening speed.",
+  "@chatOriginalUnavailable": {
+    "description": "Message playback control: chatOriginalUnavailable."
+  },
+  "chatOriginalPlaying": "Playing original rhythm",
+  "@chatOriginalPlaying": {
+    "description": "Message playback control: chatOriginalPlaying."
+  },
+  "chatListenerPlaying": "Playing at your listening speed",
+  "@chatListenerPlaying": {
+    "description": "Message playback control: chatListenerPlaying."
+  },
+  "chatPause": "Pause",
+  "@chatPause": {
+    "description": "Message playback control: chatPause."
+  },
+  "chatResume": "Resume",
+  "@chatResume": {
+    "description": "Message playback control: chatResume."
+  },
+  "chatPreviousWord": "Previous word",
+  "@chatPreviousWord": {
+    "description": "Message playback control: chatPreviousWord."
+  },
+  "chatNextWord": "Next word",
+  "@chatNextWord": {
+    "description": "Message playback control: chatNextWord."
+  },
+  "chatWordNumber": "Word {number}",
+  "@chatWordNumber": {
+    "description": "Message playback control: chatWordNumber.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "chatRangeStart": "First word",
+  "@chatRangeStart": {
+    "description": "Message playback control: chatRangeStart."
+  },
+  "chatRangeEnd": "Last word",
+  "@chatRangeEnd": {
+    "description": "Message playback control: chatRangeEnd."
+  },
+  "chatRepeatRange": "Replay selected words",
+  "@chatRepeatRange": {
+    "description": "Message playback control: chatRepeatRange."
+  },
+  "chatLoopRange": "Loop selected words",
+  "@chatLoopRange": {
+    "description": "Message playback control: chatLoopRange."
+  },
+  "chatPlaybackProgress": "Playback progress",
+  "@chatPlaybackProgress": {
+    "description": "Message playback control: chatPlaybackProgress."
+  },
+  "chatWordProgress": "Word {current} of {total}",
+  "@chatWordProgress": {
+    "description": "Message playback control: chatWordProgress.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatOriginalPreference": "Use original rhythm when a matching recording is available.",
+  "@chatOriginalPreference": {
+    "description": "Message playback control: chatOriginalPreference."
   }
 }

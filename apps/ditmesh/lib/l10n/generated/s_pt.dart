@@ -84,10 +84,10 @@ class SPt extends S {
   String get connectionOffline => 'Offline';
 
   @override
-  String get messageStatusPending => 'Na fila: o contato está offline';
+  String get messageStatusPending => 'Na fila neste dispositivo';
 
   @override
-  String get messageStatusPendingDetail => 'O Tox não tem servidor: a mensagem é entregue quando o contato fica online.';
+  String get messageStatusPendingDetail => 'A mensagem está salva localmente. Será enviada quando ambos os aplicativos estiverem abertos e puderem se conectar.';
 
   @override
   String get messageStatusSending => 'Enviando';
@@ -4494,4 +4494,149 @@ class SPt extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name recusou a nova ligação. O histórico mantém-se; tente novamente com a palavra-passe do grupo.';
   }
+
+  @override
+  String get firstChatTitle => 'Seu primeiro chat Morse';
+
+  @override
+  String get firstChatStart => 'Começar';
+
+  @override
+  String get firstChatDismiss => 'Fechar guia';
+
+  @override
+  String get firstChatKeyTitle => '1. Envie CQ para si';
+
+  @override
+  String get firstChatKeyBody => 'Transmita CQ com a chave: um toque curto faz um ponto e um longo faz um traço. O rascunho decodificado é somente leitura.';
+
+  @override
+  String get firstChatSelf => 'Testar no meu chat pessoal';
+
+  @override
+  String get firstChatListenTitle => '2. Ouça e corrija';
+
+  @override
+  String get firstChatListenBody => 'Antes de enviar, ouça a prévia e apague os erros. Depois, toque em Reproduzir na mensagem. Mensagens pessoais ficam neste dispositivo.';
+
+  @override
+  String get firstChatFriendTitle => '3. Converse com um amigo';
+
+  @override
+  String get firstChatFriendBody => 'Abra Contatos, adicione seu amigo por QR ou Tox ID e espere que aceite o pedido.';
+
+  @override
+  String get firstChatFriend => 'Adicionar amigo';
+
+  @override
+  String get firstChatOnline => 'Os dois aplicativos devem estar abertos e conectados para entregar mensagens.';
+
+  @override
+  String get pendingMessagesTitle => 'Mensagens pendentes e com falha';
+
+  @override
+  String get pendingMessagesExplanation => 'As mensagens ficam neste dispositivo até que os dois aplicativos estejam conectados. Você pode cancelar ou tentar novamente após uma falha confirmada.';
+
+  @override
+  String get pendingMessagesEmpty => 'Nenhuma mensagem pendente ou com falha';
+
+  @override
+  String get deliveryDetailsTitle => 'Detalhes de entrega';
+
+  @override
+  String get deliveryLocalTitle => 'Salvo localmente';
+
+  @override
+  String get deliveryLocalDetail => 'Esta mensagem pessoal está salva neste dispositivo.';
+
+  @override
+  String get deliverySentDetail => 'O aplicativo passou a mensagem ao transporte e aguarda a confirmação do destinatário.';
+
+  @override
+  String get deliveryPeerTitle => 'Recebimento confirmado';
+
+  @override
+  String get deliveryPeerDetail => 'O destinatário confirmou o recebimento. Isso não confirma leitura ou reprodução.';
+
+  @override
+  String get deliveryGroupTitle => 'Recebido por um membro';
+
+  @override
+  String get deliveryGroupDetail => 'Pelo menos um membro confirmou o recebimento. Outros ainda podem estar desconectados.';
+
+  @override
+  String get deliveryLocalOffline => 'Este dispositivo ainda não está conectado.';
+
+  @override
+  String get deliveryPeerOffline => 'Seu amigo está desconectado.';
+
+  @override
+  String get deliveryGroupWaiting => 'Aguardando conexão ao grupo.';
+
+  @override
+  String get chatPreviewDraft => 'Ouvir rascunho';
+
+  @override
+  String get chatStopPreview => 'Parar prévia';
+
+  @override
+  String get chatMessagePlayback => 'Reproduzir mensagem';
+
+  @override
+  String get chatOriginalRhythm => 'Ritmo de transmissão original';
+
+  @override
+  String get chatListenerRhythm => 'Sua velocidade de escuta';
+
+  @override
+  String get chatOriginalAvailable => 'As marcações e pausas reais foram gravadas.';
+
+  @override
+  String get chatOriginalUnavailable => 'Ritmo original indisponível; usa sua velocidade de escuta.';
+
+  @override
+  String get chatOriginalPlaying => 'Reproduzindo o ritmo original';
+
+  @override
+  String get chatListenerPlaying => 'Reproduzindo na sua velocidade';
+
+  @override
+  String get chatPause => 'Pausar';
+
+  @override
+  String get chatResume => 'Continuar';
+
+  @override
+  String get chatPreviousWord => 'Palavra anterior';
+
+  @override
+  String get chatNextWord => 'Próxima palavra';
+
+  @override
+  String chatWordNumber(int number) {
+    return 'Palavra $number';
+  }
+
+  @override
+  String get chatRangeStart => 'Primeira palavra';
+
+  @override
+  String get chatRangeEnd => 'Última palavra';
+
+  @override
+  String get chatRepeatRange => 'Repetir palavras selecionadas';
+
+  @override
+  String get chatLoopRange => 'Repetir em ciclo';
+
+  @override
+  String get chatPlaybackProgress => 'Progresso da reprodução';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return 'Palavra $current de $total';
+  }
+
+  @override
+  String get chatOriginalPreference => 'Usar o ritmo original quando houver uma gravação correspondente.';
 }

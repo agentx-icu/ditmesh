@@ -44,4 +44,8 @@ Stop hosting before closing a node that other devices are using. The settings se
 
 Android/iOS path changes and application resume trigger guarded reconnection. Bursts are debounced, repeated kicks are rate-limited, and work stops when the session or selected mode changes. Both peers must be reachable for chat delivery; offline messages stay in DitMesh's durable local queue.
 
+The Chat pending-message list lets you inspect queued and failed history rows, cancel a queued send, or retry a failed send. Status details follow local connectivity and peer presence. A sent check means the local transport accepted the message; a delivered check requires the actual peer receipt. Group delivery confirms at least one member. Neither receipt proves reading or listening.
+
+Optional original keying rhythm is carried with messages between compatible DitMesh clients and retained in the local queue. Other clients continue receiving ordinary text. Group rhythm is optional metadata on a private channel: a text receipt does not prove that its rhythm arrived. See the [rhythm protocol](../rfcs/2026-10-09-keyed-rhythm.md).
+
 Actual native/UI/CI evidence is recorded in [validation](../VALIDATION.md).

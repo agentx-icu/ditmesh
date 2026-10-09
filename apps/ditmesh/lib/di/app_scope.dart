@@ -20,6 +20,8 @@ import '../training/training_controller_host.dart';
 import '../ui/chat/search/message_bookmarks.dart';
 import '../ui/account/backup_file_gateway.dart';
 import '../ui/chat/morse_playback_settings.dart';
+import '../ui/chat/conversation_playback_preferences.dart';
+import '../ui/chat/first_chat_progress.dart';
 import '../ui/listen/listen_preferences.dart';
 import '../ui/reference/reference_playback_settings.dart';
 import 'app_features.dart';
@@ -186,11 +188,17 @@ class _AppScopeState extends State<AppScope> {
         Provider<ChatService>.value(value: _chat),
         Provider<BackupFileGateway>.value(value: _backupFiles),
         Provider<AppPreferences>.value(value: _preferences),
+        ChangeNotifierProvider<FirstChatProgress>.value(
+          value: _preferences.firstChat,
+        ),
         ChangeNotifierProvider<AppSettings>.value(value: _settings),
         ChangeNotifierProvider<StartupController>.value(value: _startup),
         ChangeNotifierProvider<LocaleController>.value(value: _locale),
         ChangeNotifierProvider<KeyProfiles?>.value(value: _keyProfiles),
         ChangeNotifierProvider<MorsePlaybackSettings>.value(value: _playback),
+        ChangeNotifierProvider<ConversationPlaybackPreferences>.value(
+          value: _preferences.conversations,
+        ),
         ChangeNotifierProvider<ReferencePlaybackSettings>.value(
           value: _preferences.reference,
         ),

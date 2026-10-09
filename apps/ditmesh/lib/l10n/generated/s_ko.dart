@@ -84,10 +84,10 @@ class SKo extends S {
   String get connectionOffline => '오프라인';
 
   @override
-  String get messageStatusPending => '전송 대기 — 상대방이 오프라인입니다';
+  String get messageStatusPending => '이 기기에서 대기 중';
 
   @override
-  String get messageStatusPendingDetail => 'Tox에는 서버가 없습니다. 상대방이 온라인이 되면 메시지가 전달됩니다.';
+  String get messageStatusPendingDetail => '메시지가 기기에 저장되었습니다. 양쪽 앱이 실행 중이고 연결 가능하면 전송됩니다.';
 
   @override
   String get messageStatusSending => '전송 중';
@@ -4450,4 +4450,149 @@ class SKo extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name 재연결이 거부되었습니다. 기록은 유지됩니다. 그룹 비밀번호로 다시 시도하세요.';
   }
+
+  @override
+  String get firstChatTitle => '첫 모스 채팅';
+
+  @override
+  String get firstChatStart => '시작하기';
+
+  @override
+  String get firstChatDismiss => '안내 닫기';
+
+  @override
+  String get firstChatKeyTitle => '1. 나에게 CQ 보내기';
+
+  @override
+  String get firstChatKeyBody => '전건으로 CQ를 입력하세요. 짧게 누르면 점, 길게 누르면 선입니다. 해독된 초안은 읽기 전용입니다.';
+
+  @override
+  String get firstChatSelf => '나와의 채팅에서 시도';
+
+  @override
+  String get firstChatListenTitle => '2. 듣고 수정하기';
+
+  @override
+  String get firstChatListenBody => '보내기 전에 미리 듣기로 초안을 듣고 지우기로 실수를 수정하세요. 보낸 후 메시지의 재생을 누르세요. 나에게 보낸 메시지는 이 기기에 저장됩니다.';
+
+  @override
+  String get firstChatFriendTitle => '3. 친구와 채팅하기';
+
+  @override
+  String get firstChatFriendBody => '연락처에서 QR 코드나 Tox ID로 친구를 추가하고 요청 수락을 기다리세요.';
+
+  @override
+  String get firstChatFriend => '친구 추가';
+
+  @override
+  String get firstChatOnline => '메시지를 전달하려면 양쪽 앱이 실행 중이고 연결되어 있어야 합니다.';
+
+  @override
+  String get pendingMessagesTitle => '대기 및 실패 메시지';
+
+  @override
+  String get pendingMessagesExplanation => '대기 메시지는 기기에 저장되며 양쪽 앱이 연결되면 전송됩니다. 대기 메시지를 취소하거나 실패한 메시지를 다시 시도할 수 있습니다.';
+
+  @override
+  String get pendingMessagesEmpty => '대기 또는 실패 메시지가 없습니다';
+
+  @override
+  String get deliveryDetailsTitle => '전달 상세 정보';
+
+  @override
+  String get deliveryLocalTitle => '기기에 저장됨';
+
+  @override
+  String get deliveryLocalDetail => '나에게 보낸 메시지가 이 기기에 저장되었습니다.';
+
+  @override
+  String get deliverySentDetail => '앱이 메시지를 전송 계층에 넘겼습니다. 상대의 수신 확인을 기다립니다.';
+
+  @override
+  String get deliveryPeerTitle => '상대가 수신함';
+
+  @override
+  String get deliveryPeerDetail => '상대의 수신이 확인되었습니다. 읽거나 들었다는 의미는 아닙니다.';
+
+  @override
+  String get deliveryGroupTitle => '그룹 구성원이 수신함';
+
+  @override
+  String get deliveryGroupDetail => '최소 한 명이 수신을 확인했습니다. 다른 구성원은 오프라인일 수 있습니다.';
+
+  @override
+  String get deliveryLocalOffline => '이 기기는 아직 연결되지 않았습니다.';
+
+  @override
+  String get deliveryPeerOffline => '친구가 오프라인입니다.';
+
+  @override
+  String get deliveryGroupWaiting => '그룹 연결을 기다립니다.';
+
+  @override
+  String get chatPreviewDraft => '초안 미리 듣기';
+
+  @override
+  String get chatStopPreview => '미리 듣기 중지';
+
+  @override
+  String get chatMessagePlayback => '메시지 재생';
+
+  @override
+  String get chatOriginalRhythm => '원래 송신 리듬';
+
+  @override
+  String get chatListenerRhythm => '내 청취 속도';
+
+  @override
+  String get chatOriginalAvailable => '실제 키 입력과 간격이 기록되어 있습니다.';
+
+  @override
+  String get chatOriginalUnavailable => '원래 리듬이 없어 내 청취 속도로 재생합니다.';
+
+  @override
+  String get chatOriginalPlaying => '원래 리듬으로 재생 중';
+
+  @override
+  String get chatListenerPlaying => '내 청취 속도로 재생 중';
+
+  @override
+  String get chatPause => '일시정지';
+
+  @override
+  String get chatResume => '계속';
+
+  @override
+  String get chatPreviousWord => '이전 단어';
+
+  @override
+  String get chatNextWord => '다음 단어';
+
+  @override
+  String chatWordNumber(int number) {
+    return '단어 $number';
+  }
+
+  @override
+  String get chatRangeStart => '시작 단어';
+
+  @override
+  String get chatRangeEnd => '마지막 단어';
+
+  @override
+  String get chatRepeatRange => '선택한 단어 다시 재생';
+
+  @override
+  String get chatLoopRange => '선택한 단어 반복';
+
+  @override
+  String get chatPlaybackProgress => '재생 진행률';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return '단어 $current / $total';
+  }
+
+  @override
+  String get chatOriginalPreference => '일치하는 기록이 있으면 원래 송신 리듬을 사용합니다.';
 }

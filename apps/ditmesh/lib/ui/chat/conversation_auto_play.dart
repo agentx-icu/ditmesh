@@ -48,8 +48,8 @@ class ConversationAutoPlay with WidgetsBindingObserver {
   /// Call from `didChangeDependencies`: picks up the settings instance and
   /// whether the screen is visible (a hidden shell tab or a covered route
   /// disables tickers, and must not sound).
-  void update(BuildContext context) {
-    final settings = MorsePlaybackSettings.of(context, listen: false);
+  void update(BuildContext context, {MorsePlaybackSettings? settings}) {
+    settings ??= MorsePlaybackSettings.of(context, listen: false);
     if (!identical(settings, _settings)) {
       _settings?.removeListener(_onSettings);
       _settings = settings..addListener(_onSettings);
@@ -93,6 +93,7 @@ class ConversationAutoPlay with WidgetsBindingObserver {
   /// While `inactive` it queues like any other; the controller holds the
   /// start until `resumed`.
   void incoming(ChatMessage message) {
+    if (message.isUpdate) return;
     final MorsePlaybackSettings? settings = _settings;
     if (settings == null || !settings.autoPlay || !_visible) return;
     if (_background(WidgetsBinding.instance.lifecycleState)) return;
@@ -101,6 +102,8 @@ class ConversationAutoPlay with WidgetsBindingObserver {
       message.text,
       settings.timing,
       toneHz: settings.toneHz,
+      recording: message.recording,
+      original: settings.originalRhythm,
     );
   }
 

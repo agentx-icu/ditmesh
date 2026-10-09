@@ -9,6 +9,8 @@ import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
 import '../../training/training_settings.dart';
 import 'morse_pattern_text.dart';
+import 'keyed_draft_recording.dart';
+import 'morse_playback_controller.dart';
 
 /// Which hand-keying widget the input area shows.
 enum KeyingMode { straightKey, paddles }
@@ -46,6 +48,7 @@ class KeyingInput extends StatefulWidget {
     required this.clock,
     required this.onText,
     this.controller,
+    this.onRecordedText,
     this.onPendingChanged,
     this.height = 132,
     this.showHint = true,
@@ -56,6 +59,7 @@ class KeyingInput extends StatefulWidget {
   final MorseSink sink;
   final Clock clock;
   final ValueChanged<String> onText;
+  final ValueChanged<KeyedChunk>? onRecordedText;
   final KeyingInputController? controller;
 
   /// Fires when [KeyingInputController.hasPending] flips.
@@ -71,12 +75,19 @@ class KeyingInput extends StatefulWidget {
 
 class _KeyingInputState extends State<KeyingInput> {
   KeyProfile _profile = KeyProfile.defaults;
-  late MorseSink _echo = GatedSink(widget.sink, () => _profile.appSidetone);
+  late MorseSink _echo = _gatedSink();
+  MorseSink _gatedSink() {
+    final sink = widget.sink;
+    return sink is LiveKeyingSink
+        ? sink.withSidetone(() => _profile.appSidetone)
+        : GatedSink(sink, () => _profile.appSidetone);
+  }
 
   /// Paddles unless the profile's adapter keys its own elements.
   KeyingMode get _mode =>
       _profile.adapterKeyer ? KeyingMode.straightKey : widget.mode;
   late MorseDecoder _decoder;
+  late RecordingKeyTarget _recording;
   late StreamSubscription<DecodeEvent> _events;
   StraightKey? _straight;
   IambicKeyer? _keyer;
@@ -115,6 +126,7 @@ class _KeyingInputState extends State<KeyingInput> {
     _decoder = MorseDecoder(
       config: DecoderConfig(initialDit: widget.timing.dit),
     );
+    _recording = RecordingKeyTarget(MorseDecoderTarget(_decoder), widget.clock);
     _events = _decoder.events.listen(_onDecode);
     // A sink sounds nothing until prepared (the audio engine starts here).
     unawaited(widget.sink.prepare());
@@ -146,12 +158,23 @@ class _KeyingInputState extends State<KeyingInput> {
   void didUpdateWidget(KeyingInput old) {
     super.didUpdateWidget(old);
     if (old.controller != widget.controller) {
-      if (identical(old.controller?._state, this)) old.controller?._state = null;
+      if (identical(old.controller?._state, this)) {
+        old.controller?._state = null;
+      }
       widget.controller?._state = this;
     }
-    if (old.mode != widget.mode || old.sink != widget.sink) {
+    if (old.mode != widget.mode ||
+        old.sink != widget.sink ||
+        old.clock != widget.clock) {
+      if (old.clock != widget.clock) {
+        _decoder.clearText();
+        _recording = RecordingKeyTarget(
+          MorseDecoderTarget(_decoder),
+          widget.clock,
+        );
+      }
       if (old.sink != widget.sink) {
-        _echo = GatedSink(widget.sink, () => _profile.appSidetone);
+        _echo = _gatedSink();
       }
       _disposeKeyer();
       _buildKeyer();
@@ -162,7 +185,7 @@ class _KeyingInputState extends State<KeyingInput> {
   }
 
   void _buildKeyer() {
-    final KeyTarget target = MorseDecoderTarget(_decoder);
+    final KeyTarget target = _recording;
     switch (_mode) {
       case KeyingMode.straightKey:
         _straight = StraightKey(target: target, sink: _echo);
@@ -184,7 +207,15 @@ class _KeyingInputState extends State<KeyingInput> {
     final IambicKeyer? k = _keyer;
     _straight = null;
     _keyer = null;
-    if (s != null) unawaited(s.dispose());
+    if (s != null) {
+      // StraightKey.dispose cannot see the decoder through our recording
+      // target. Cancel a held mark explicitly before rebuilding its input.
+      if (s.isDown) {
+        _decoder.cancelMark();
+        _recording.cancelMark();
+      }
+      unawaited(s.dispose());
+    }
     if (k != null) unawaited(k.dispose());
   }
 
@@ -194,7 +225,14 @@ class _KeyingInputState extends State<KeyingInput> {
       case DecodeEventKind.word:
       case DecodeEventKind.unknownPattern:
         final String? text = event.text;
-        if (text != null && text.isNotEmpty) widget.onText(text);
+        if (text != null && text.isNotEmpty) {
+          final chunk = _recording.consume(text);
+          if (widget.onRecordedText != null) {
+            widget.onRecordedText!(chunk);
+          } else {
+            widget.onText(text);
+          }
+        }
       case DecodeEventKind.element:
         break;
     }
@@ -298,7 +336,9 @@ class _KeyingInputState extends State<KeyingInput> {
           // instead of on a row of its own.
           : Row(
               children: [
-                Expanded(child: SizedBox(height: widget.height, child: pad)),
+                Expanded(
+                  child: SizedBox(height: widget.height, child: pad),
+                ),
                 const SizedBox(width: 8),
                 SizedBox(width: 72, child: Center(child: pattern)),
               ],

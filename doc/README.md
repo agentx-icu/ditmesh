@@ -14,4 +14,4 @@
 - [Test pyramid](testing/TEST_PYRAMID.md)
 - [Current persistence inventory](testing/PERSISTENCE_AUDIT.md)
 - [Adding an interface language](i18n/ADDING_A_LANGUAGE.md)
-- [Future keyed-timing protocol RFC](rfcs/2026-09-30-tim2tox-message-annotation.md)
+- [Implemented original keyed-rhythm protocol](rfcs/2026-10-09-keyed-rhythm.md)

@@ -84,10 +84,10 @@ class SRu extends S {
   String get connectionOffline => 'Не в сети';
 
   @override
-  String get messageStatusPending => 'В очереди: собеседник не в сети';
+  String get messageStatusPending => 'В очереди на этом устройстве';
 
   @override
-  String get messageStatusPendingDetail => 'У Tox нет сервера: сообщение будет доставлено, когда собеседник появится в сети.';
+  String get messageStatusPendingDetail => 'Сообщение сохранено локально. Оно будет отправлено, когда обе программы работают и могут подключиться.';
 
   @override
   String get messageStatusSending => 'Отправка';
@@ -4573,4 +4573,149 @@ class SRu extends S {
   String chatGroupReconnectRefused(String name) {
     return '$name отклонила повторное подключение. История сохранена; повторите попытку с паролем группы.';
   }
+
+  @override
+  String get firstChatTitle => 'Ваш первый чат Морзе';
+
+  @override
+  String get firstChatStart => 'Начать';
+
+  @override
+  String get firstChatDismiss => 'Закрыть подсказку';
+
+  @override
+  String get firstChatKeyTitle => '1. Передайте себе CQ';
+
+  @override
+  String get firstChatKeyBody => 'Передайте CQ ключом: короткое нажатие — точка, длинное — тире. Расшифрованный черновик доступен только для чтения.';
+
+  @override
+  String get firstChatSelf => 'Попробовать в чате с собой';
+
+  @override
+  String get firstChatListenTitle => '2. Прослушайте и исправьте';
+
+  @override
+  String get firstChatListenBody => 'Перед отправкой прослушайте черновик и удалите ошибки. Затем нажмите воспроизведение у сообщения. Сообщения себе остаются на этом устройстве.';
+
+  @override
+  String get firstChatFriendTitle => '3. Общайтесь с другом';
+
+  @override
+  String get firstChatFriendBody => 'Откройте Контакты, добавьте друга по QR или Tox ID и дождитесь принятия запроса.';
+
+  @override
+  String get firstChatFriend => 'Добавить друга';
+
+  @override
+  String get firstChatOnline => 'Для доставки обе программы должны работать и быть подключены.';
+
+  @override
+  String get pendingMessagesTitle => 'Ожидающие сообщения и ошибки';
+
+  @override
+  String get pendingMessagesExplanation => 'Сообщения остаются на устройстве до подключения обеих программ. Можно отменить отправку или повторить её после подтверждённой ошибки.';
+
+  @override
+  String get pendingMessagesEmpty => 'Нет ожидающих сообщений или ошибок';
+
+  @override
+  String get deliveryDetailsTitle => 'Сведения о доставке';
+
+  @override
+  String get deliveryLocalTitle => 'Сохранено локально';
+
+  @override
+  String get deliveryLocalDetail => 'Это сообщение себе сохранено на данном устройстве.';
+
+  @override
+  String get deliverySentDetail => 'Программа передала сообщение транспорту и ждёт подтверждения получения.';
+
+  @override
+  String get deliveryPeerTitle => 'Получение подтверждено';
+
+  @override
+  String get deliveryPeerDetail => 'Получатель подтвердил получение. Это не подтверждает чтение или прослушивание.';
+
+  @override
+  String get deliveryGroupTitle => 'Получено участником группы';
+
+  @override
+  String get deliveryGroupDetail => 'Как минимум один участник подтвердил получение. Остальные могут быть не в сети.';
+
+  @override
+  String get deliveryLocalOffline => 'Это устройство ещё не подключено.';
+
+  @override
+  String get deliveryPeerOffline => 'Друг не в сети.';
+
+  @override
+  String get deliveryGroupWaiting => 'Ожидание подключения к группе.';
+
+  @override
+  String get chatPreviewDraft => 'Прослушать черновик';
+
+  @override
+  String get chatStopPreview => 'Остановить прослушивание';
+
+  @override
+  String get chatMessagePlayback => 'Воспроизведение сообщения';
+
+  @override
+  String get chatOriginalRhythm => 'Исходный ритм передачи';
+
+  @override
+  String get chatListenerRhythm => 'Ваша скорость прослушивания';
+
+  @override
+  String get chatOriginalAvailable => 'Реальные нажатия и паузы сохранены.';
+
+  @override
+  String get chatOriginalUnavailable => 'Исходный ритм недоступен; используется ваша скорость.';
+
+  @override
+  String get chatOriginalPlaying => 'Воспроизводится исходный ритм';
+
+  @override
+  String get chatListenerPlaying => 'Воспроизведение с вашей скоростью';
+
+  @override
+  String get chatPause => 'Пауза';
+
+  @override
+  String get chatResume => 'Продолжить';
+
+  @override
+  String get chatPreviousWord => 'Предыдущее слово';
+
+  @override
+  String get chatNextWord => 'Следующее слово';
+
+  @override
+  String chatWordNumber(int number) {
+    return 'Слово $number';
+  }
+
+  @override
+  String get chatRangeStart => 'Первое слово';
+
+  @override
+  String get chatRangeEnd => 'Последнее слово';
+
+  @override
+  String get chatRepeatRange => 'Повторить выбранные слова';
+
+  @override
+  String get chatLoopRange => 'Повторять выбранные слова циклически';
+
+  @override
+  String get chatPlaybackProgress => 'Ход воспроизведения';
+
+  @override
+  String chatWordProgress(int current, int total) {
+    return 'Слово $current из $total';
+  }
+
+  @override
+  String get chatOriginalPreference => 'Использовать исходный ритм, если доступна соответствующая запись.';
 }

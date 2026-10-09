@@ -12,6 +12,8 @@ dart pub get
 
 The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. Tim2Tox links c-toxcore and pinned static libsodium; ToxAV is disabled.
 
+It also stages the pinned Tim2Tox Dart package into ignored `third_party/tim2tox_ditmesh` and applies `tool/ci/tim2tox-dart-overlays` for original rhythm transport. The root override and lock refer to that copy. Run `dart run tool/bootstrap_deps.dart --offline-check-only` to verify it against the upstream sources and reviewed patches; re-run bootstrap after changing either. Keep the upstream submodule clean.
+
 macOS application packages require **13.0 or later** on Intel and ARM. This satisfies the bundled Objective-C framework. The packager checks the application minimum against every actual embedded Mach-O architecture before generating ZIP/PKG; a dependency requiring a newer system blocks packaging. The transport library may support a lower system version without lowering the application requirement.
 
 ## Local target commands
