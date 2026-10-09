@@ -1,4 +1,5 @@
 import 'package:meta/meta.dart';
+import 'keyed_recording.dart';
 
 /// Tox network connection state of the local identity.
 enum ConnectionStatus { offline, connecting, online }
@@ -9,6 +10,10 @@ enum MessageStatus {
   pending,
   sending,
   sent,
+
+  /// Confirmed received by the peer, or at least one group member. Neither
+  /// read nor listened; local transport acceptance alone is only [sent].
+  delivered,
   failed,
   received,
 
@@ -150,6 +155,8 @@ final class ChatMessage {
     required this.status,
     required this.isMine,
     this.senderName,
+    this.recording,
+    this.isUpdate = false,
   });
 
   final String id;
@@ -162,18 +169,29 @@ final class ChatMessage {
   final DateTime timestamp;
   final MessageStatus status;
   final bool isMine;
+  final KeyedRecording? recording;
 
-  ChatMessage copyWith({MessageStatus? status, String? senderName}) =>
-      ChatMessage(
-        id: id,
-        conversationId: conversationId,
-        senderId: senderId,
-        senderName: senderName ?? this.senderName,
-        text: text,
-        timestamp: timestamp,
-        status: status ?? this.status,
-        isMine: isMine,
-      );
+  /// Enriches an existing message row; never a new arrival, notification
+  /// or automatic playback request. This annotation is local to the event.
+  final bool isUpdate;
+
+  ChatMessage copyWith({
+    MessageStatus? status,
+    String? senderName,
+    KeyedRecording? recording,
+    bool? isUpdate,
+  }) => ChatMessage(
+    id: id,
+    conversationId: conversationId,
+    senderId: senderId,
+    senderName: senderName ?? this.senderName,
+    text: text,
+    timestamp: timestamp,
+    status: status ?? this.status,
+    isMine: isMine,
+    recording: recording ?? this.recording,
+    isUpdate: isUpdate ?? this.isUpdate,
+  );
 }
 
 @immutable

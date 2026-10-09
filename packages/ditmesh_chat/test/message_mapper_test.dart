@@ -6,6 +6,41 @@ import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 
 void main() {
+  test('received acknowledgement wins only over sent', () {
+    t2t.ChatMessage row({
+      bool pending = false,
+      bool failed = false,
+      bool cancelled = false,
+      bool mine = true,
+    }) => t2t.ChatMessage(
+      fromUserId: 'me',
+      text: 'CQ',
+      timestamp: DateTime.utc(2026),
+      isSelf: mine,
+      isReceived: true,
+      isPending: pending,
+      isFailed: failed,
+      isCancelled: cancelled,
+    );
+    expect(MessageMapper.statusOf(row()), MessageStatus.delivered);
+    expect(MessageMapper.statusOf(row(pending: true)), MessageStatus.pending);
+    expect(MessageMapper.statusOf(row(failed: true)), MessageStatus.failed);
+    expect(
+      MessageMapper.statusOf(row(cancelled: true)),
+      MessageStatus.cancelled,
+    );
+    expect(MessageMapper.statusOf(row(mine: false)), MessageStatus.received);
+    final mapper = MessageMapper(
+      selfKey: 'SELF',
+      selfName: 'me',
+      nameOf: (_) => null,
+      isQueued: (_, _) => true,
+    );
+    expect(
+      mapper.map(row(), conversationId: 'c2c_PEER').status,
+      MessageStatus.pending,
+    );
+  });
   test('a failed queued send maps to failed, even while still queued', () {
     final queue = OfflineMessageQueuePersistence();
     final row = t2t.ChatMessage(

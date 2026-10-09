@@ -4,7 +4,11 @@ part of 'tim2tox_chat_service.dart';
 /// online, friend or not, and a queue item for a non-friend never drains
 /// (and never fails), so the target is checked against native state first.
 extension _Sending on Tim2ToxChatService {
-  Future<ChatMessage> _sendText(String conversationId, String text) async {
+  Future<ChatMessage> _sendText(
+    String conversationId,
+    String text, {
+    KeyedRecording? recording,
+  }) async {
     final svc = _requireService();
     final bytes = utf8.encode(text).length;
     if (bytes > Tim2ToxChatService.toxMessageBudget) {
@@ -26,9 +30,18 @@ extension _Sending on Tim2ToxChatService {
     if (checked) await _requireFriend(svc, key);
     final t2t.ChatMessage row;
     try {
+      final id = recording == null ? null : 'dmr:${RhythmProtocol.freshId()}';
+      if (isGroup) {
+        svc.armNextSendCloudCustomData(RecordingMetadata.encode(recording));
+      }
       row = isGroup
-          ? await svc.sendGroupTextWithResult(peer, text)
-          : await svc.sendTextWithResult(peer, text);
+          ? await svc.sendGroupTextWithResult(peer, text, clientMessageID: id)
+          : await svc.sendTextWithResult(
+              peer,
+              text,
+              clientMessageID: id,
+              cloudCustomData: RecordingMetadata.encode(recording),
+            );
     } on ArgumentError catch (e) {
       throw ChatException('invalid_message', e.message?.toString() ?? '$e');
     } on StateError catch (e) {

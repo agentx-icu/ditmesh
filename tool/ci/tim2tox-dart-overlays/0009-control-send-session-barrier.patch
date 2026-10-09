@@ -1,0 +1,11 @@
+--- a/lib/service/extension_transport.dart
++++ b/lib/service/extension_transport.dart
+@@ -9,7 +9,7 @@
+ /// share upstream history, unread, streams and durable queue ownership.
+ extension FfiExtensionTransport on FfiChatService {
+   bool sendExtensionPacket(String target, String payload, {String? groupId}) {
+-    if (_pollDisposed) return false;
++    if (_sessionClosed || _pollDisposed) return false;
+     final encodedId = 'dmr1:${base64Encode(utf8.encode(payload))}';
+     if (payload.length > 1300) return false;
+     if (groupId != null) {

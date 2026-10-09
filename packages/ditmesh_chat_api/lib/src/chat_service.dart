@@ -1,5 +1,6 @@
 import 'message_search.dart';
 import 'models.dart';
+import 'keyed_recording.dart';
 
 /// Friends, conversations, C2C and group messaging.
 ///
@@ -135,7 +136,11 @@ abstract interface class ChatService {
   /// friend (an outgoing, unanswered request counts): otherwise this throws
   /// `not_friend`, or `peer_blocked` for a blocked key, and nothing is
   /// queued.
-  Future<ChatMessage> sendText(String conversationId, String text);
+  Future<ChatMessage> sendText(
+    String conversationId,
+    String text, {
+    KeyedRecording? recording,
+  });
 
   /// Tox single-message budget after Tim2Tox's fragment header (1322 bytes).
   int get maxMessageBytes;

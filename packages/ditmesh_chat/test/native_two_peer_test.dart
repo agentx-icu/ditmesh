@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tencent_cloud_chat_sdk/native_im/bindings/native_library_manager.dart';
 
 import 'helpers/real_peer_store.dart';
+import 'helpers/real_peer_rhythm.dart';
 
 /// Run with helpers/run_real_peers.py. Tim2Tox owns a singleton per process,
 /// so the runner starts two workers. Files coordinate bootstrap endpoints and
@@ -60,6 +61,8 @@ class _Peer {
   late String groupChatId;
   String? queuedId;
   String? lastMembers;
+  KeyedRecording rhythm(String sender, String text) =>
+      realPeerRhythm(sender, text);
 
   String get other => role == 'alice' ? 'bob' : 'alice';
   IdentityPaths get paths => IdentityPaths('${root.path}/$role/identity');
@@ -239,13 +242,26 @@ class _Peer {
   );
 
   Future<void> exchange(String conversation, String own, String remote) async {
-    final row = await chat.sendText(conversation, own);
+    final row = await chat.sendText(
+      conversation,
+      own,
+      recording: rhythm(role, own),
+    );
     await incoming(conversation, remote);
     await wait(
-      'sent status for "$own"',
+      'received exact original rhythm for "$remote"',
       () async => (await chat.loadHistory(conversation)).any(
         (message) =>
-            message.id == row.id && message.status == MessageStatus.sent,
+            !message.isMine &&
+            message.text == remote &&
+            message.recording == rhythm(other, remote),
+      ),
+    );
+    await wait(
+      'confirmed received status for "$own"',
+      () async => (await chat.loadHistory(conversation)).any(
+        (message) =>
+            message.id == row.id && message.status == MessageStatus.delivered,
       ),
     );
   }
@@ -273,6 +289,7 @@ class _Peer {
       'CQ DE ${other.toUpperCase()}',
     );
     await barrier('direct-delivery');
+    await repeatedDirectRhythms();
 
     if (role == 'alice') {
       final created = await chat.createGroup('Local Morse Net');
@@ -298,18 +315,17 @@ class _Peer {
     await friendOnline();
     if (role == 'bob') {
       await incoming(dm, 'CQ AFTER RESTART');
-      expect(
-        (await chat.loadHistory(
-          dm,
-        )).where((row) => !row.isMine && row.text == 'CQ AFTER RESTART'),
-        hasLength(1),
-      );
+      final received = (await chat.loadHistory(
+        dm,
+      )).where((row) => !row.isMine && row.text == 'CQ AFTER RESTART').toList();
+      expect(received, hasLength(1));
+      expect(received.single.recording, rhythm(other, 'CQ AFTER RESTART'));
     } else {
       await wait(
         'durable queue drain',
-        () async => (await chat.loadHistory(
-          dm,
-        )).any((row) => row.id == queuedId && row.status == MessageStatus.sent),
+        () async => (await chat.loadHistory(dm)).any(
+          (row) => row.id == queuedId && row.status == MessageStatus.delivered,
+        ),
       );
       await (active!.identity as PersistentIdentityService).persist();
       expect(
@@ -352,7 +368,11 @@ class _Peer {
         return !members.any((member) => !member.isSelf && member.online);
       });
       await note('native group remote offline or removed');
-      final queued = await chat.sendText(dm, 'CQ AFTER RESTART');
+      final queued = await chat.sendText(
+        dm,
+        'CQ AFTER RESTART',
+        recording: rhythm(role, 'CQ AFTER RESTART'),
+      );
       expect(queued.status, MessageStatus.pending);
       queuedId = queued.id;
       await chat.setPinned(dm, true);
@@ -374,6 +394,7 @@ class _Peer {
       )).singleWhere((row) => row.id == queuedId);
       expect(row.status, MessageStatus.pending);
       expect(row.text, 'CQ AFTER RESTART');
+      expect(row.recording, rhythm(role, 'CQ AFTER RESTART'));
       await mark('reopened');
     }
     await note('encrypted identity and disk preferences reopened');
@@ -386,5 +407,42 @@ class _Peer {
     await (backend.identity as PersistentIdentityService).persist();
     await backend.dispose().timeout(const Duration(seconds: 20));
     await store.flush();
+  }
+
+  Future<void> repeatedDirectRhythms() async {
+    final first = realPeerRhythm('alice', 'CQ SAME');
+    final second = realPeerRhythm('alice', 'CQ SAME', second: true);
+    if (role == 'alice') {
+      final a = await chat.sendText(dm, 'CQ SAME', recording: first);
+      final b = await chat.sendText(dm, 'CQ SAME', recording: second);
+      expect(a.id, isNot(b.id));
+      await wait(
+        'both repeated texts have distinct confirmed delivery',
+        () async {
+          final rows = await chat.loadHistory(dm);
+          return [a.id, b.id].every(
+            (id) => rows.any(
+              (row) => row.id == id && row.status == MessageStatus.delivered,
+            ),
+          );
+        },
+      );
+    } else {
+      await wait(
+        'repeated text recordings remain attached to distinct identities',
+        () async {
+          final rows = (await chat.loadHistory(
+            dm,
+          )).where((row) => !row.isMine && row.text == 'CQ SAME').toList();
+          return rows.length == 2 &&
+              rows[0].recording == first &&
+              rows[1].recording == second &&
+              chat.conversations.singleWhere((c) => c.id == dm).unreadCount ==
+                  3;
+        },
+      );
+      expect(chat.conversations.singleWhere((c) => c.id == dm).unreadCount, 3);
+    }
+    await barrier('repeated-direct-rhythms');
   }
 }

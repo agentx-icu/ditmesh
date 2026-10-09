@@ -20,6 +20,21 @@ void main() {
   tearDown(() => chat.dispose());
 
   group('searchMessages', () {
+    test('status filter excludes normal history from pending scan', () async {
+      chat.receiveMessage(cid, 'received');
+      final pending = await chat.sendText(cid, 'queued');
+      final failed = await chat.sendText(cid, 'failed');
+      chat.failMessage(failed.id);
+      final page = await chat.searchMessages(
+        cid,
+        const MessageSearchQuery(
+          statuses: {MessageStatus.pending, MessageStatus.failed},
+        ),
+      );
+      expect(page.results.map((m) => m.id).toSet(), {pending.id, failed.id});
+      expect(const MessageSearchQuery(statuses: {}).isEmpty, isFalse);
+    });
+
     test('a fired cancel token aborts the search', () async {
       chat.receiveMessage(cid, 'CQ');
       final cancel = MessageSearchCancel()..cancel();

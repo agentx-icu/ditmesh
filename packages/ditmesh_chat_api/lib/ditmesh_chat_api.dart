@@ -15,6 +15,7 @@ export 'src/chat_service.dart';
 export 'src/identity_service.dart';
 export 'src/message_search.dart';
 export 'src/models.dart';
+export 'src/keyed_recording.dart';
 export 'src/outbox.dart';
 export 'src/peer_text.dart';
 export 'src/tox_address.dart';

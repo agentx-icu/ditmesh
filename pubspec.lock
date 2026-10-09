@@ -1122,7 +1122,7 @@ packages:
   tim2tox_dart:
     dependency: "direct overridden"
     description:
-      path: "third_party/tim2tox/dart"
+      path: "third_party/tim2tox_ditmesh"
       relative: true
     source: path
     version: "0.1.0"

@@ -1,0 +1,144 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -31,6 +31,8 @@
+ import 'package:tencent_cloud_chat_sdk/native_im/adapter/tim_group_manager.dart';
+ import 'package:tencent_cloud_chat_sdk/native_im/tools.dart';
+ import 'package:tencent_cloud_chat_sdk/models/v2_tim_callback.dart';
++
++part 'extension_transport.dart';
+ 
+ typedef _init_c = ffi.Int32 Function();
+ typedef _set_file_recv_dir_c = ffi.Int32 Function(ffi.Pointer<pkgffi.Utf8>);
+@@ -1189,6 +1191,15 @@
+   /// group row must not count as unread, must not be receipted, ...). Callers
+   /// must gate this behind a test seam; production never sets it.
+   void debugSetSelfId(String id) => _selfId = id;
++
++  // DitMesh overlay hooks. Default behavior remains the upstream protocol.
++  Future<String?> sendTextExtension(String peer, String text, String? metadata,
++      {String? durableId, required ChatMessageContentKind kind}) async => null;
++  void onFriendWireState(String peer, bool online) {}
++  bool consumeCustomExtension(String peer, String payload, {String? groupId}) => false;
++  ChatMessage enrichGroupExtension(ChatMessage row) => row;
++  void onGroupExtensionSent(String groupId, String text, String? metadata,
++      String? alias) {}
+ 
+   /// One-shot cloudCustomData (the V2TIM reply-quote / forward metadata) for the
+   /// NEXT [sendText]/[sendGroupText]. The desktop reply flow builds the
+@@ -6758,10 +6769,10 @@
+     // Friend is online - send immediately (via the _ex export so the NATIVE
+     // send id — which the toxcore delivery-ACK path reports — can be
+     // aliased onto this row).
+-    final nativeMsgID = _sendC2cTextByKindCheckedEx(
+-      normalizedPeerId,
+-      text,
+-      outgoing.contentKind,
++    final extensionId = await sendTextExtension(normalizedPeerId, text,
++        cloudCustomData, durableId: clientMessageID, kind: outgoing.contentKind);
++    final nativeMsgID = extensionId ?? _sendC2cTextByKindCheckedEx(
++      normalizedPeerId, text, outgoing.contentKind,
+     );
+     // P1-1 (text-send): include the monotonic `_msgIDSequence` like the inbound
+     // and file-send paths, so two C2C texts sent in the same millisecond don't
+@@ -7076,6 +7087,7 @@
+             _typingUntil.remove(normalizedUid);
+             _typingUntil.remove(uid);
+           }
++          onFriendWireState(normalizedUid, nativeOnline);
+           // If friend just came online, send avatar if needed and send pending messages
+           if (nativeOnline && previousStatus != 'online') {
+             unawaited(_sendAvatarToFriendIfNeeded(uid));
+@@ -7723,6 +7735,9 @@
+     int? epochMs,
+     int? pseudoMsgId,
+   }) {
++    // Extension controls are consumed before history, preview or unread.
++    if (contentKind == ChatMessageContentKind.custom &&
++        consumeCustomExtension(from, text, groupId: gid)) return false;
+     // Check if this group was quit - if so, don't add it back
+     if (_quitGroups.contains(gid)) return false;
+     // This line arrived THROUGH its author, so the author is a resolvable NGC
+@@ -7831,7 +7846,7 @@
+             senderPk: from,
+             pseudoMsgId: pseudoMsgId,
+           );
+-    final msg = ChatMessage(
++    final msg = enrichGroupExtension(ChatMessage(
+       text: text,
+       fromUserId: from,
+       isSelf: from == _selfId,
+@@ -7841,7 +7856,7 @@
+       contentKind: contentKind,
+       sourceInstanceId: sourceInstanceId,
+       altMsgIds: [if (alias != null) alias],
+-    );
++    ));
+     _lastByPeer[gid] = msg; // reuse for group last message
+     _appendHistory(gid, msg);
+     final emitted = _emitInboundMessage(
+@@ -7911,6 +7926,8 @@
+       // Typed routes fail closed below. Legacy ACTION and generic payloads do
+       // not need to be JSON.
+     }
++
++    if (parsed.route == 3 && consumeCustomExtension(parsed.sender, parsed.payload)) return true;
+ 
+     switch (parsed.route) {
+       case 4:
+@@ -11263,6 +11280,7 @@
+     // Read the cross-peer id IMMEDIATELY after the synchronous send: it is
+     // thread-local and only describes the send that just happened.
+     final alias = _groupSendAlias(groupId);
++    onGroupExtensionSent(groupId, text, cloudCustomData, alias);
+     final msgID = _usableClientMessageID(clientMessageID)
+         ? clientMessageID!
+         : '${DateTime.now().millisecondsSinceEpoch}_${_msgIDSequence++}_${_selfId}_$groupId';
+@@ -11418,6 +11436,7 @@
+         // onto the existing row below — a queued group message must be able to
+         // collect read receipts exactly like a directly-sent one.
+         final drainedAlias = _groupSendAlias(groupId);
++        onGroupExtensionSent(groupId, item.text, item.cloudCustomData, drainedAlias);
+         // Stamp the alias BEFORE the first await. A peer can receipt this
+         // message while we are still persisting the queue removal, and a
+         // receipt that arrives against an alias-less row now resolves to
+@@ -13088,11 +13107,20 @@
+       }
+     }
+ 
+-    _sendC2cTextByKindChecked(
+-      normalizedPeerId,
+-      item.text,
+-      item.contentKind,
++    final extensionId = await sendTextExtension(normalizedPeerId, item.text,
++        item.cloudCustomData, durableId: item.msgID, kind: item.contentKind);
++    final alias = extensionId ?? _sendC2cTextByKindCheckedEx(
++      normalizedPeerId, item.text, item.contentKind,
+     );
++    if (alias != null && history != null) {
++      for (var i = 0; i < history.length; i++) {
++        if (history[i].isSelf && history[i].msgID == item.msgID) {
++          history[i] = history[i].copyWith(altMsgIds: [...history[i].altMsgIds, alias]);
++          if (pendingMsgIndex == i) pendingMsg = history[i];
++          break;
++        }
++      }
++    }
+ 
+     // #25 Option B: durably clear the queue entry NOW (after send, before the
+     // history reconcile) so a crash can't make the next drain re-send.
+@@ -13188,6 +13216,7 @@
+           msgID: msgID,
+           cloudCustomData: item.cloudCustomData,
+           contentKind: item.contentKind,
++          altMsgIds: [if (alias != null) alias],
+         );
+         _lastByPeer[normalizedPeerId] = msg;
+         _appendHistory(normalizedPeerId, msg);
+@@ -13195,6 +13224,7 @@
+         await _saveHistory(normalizedPeerId);
+       }
+     }
++    _drainUnmatchedDeliveryAcks(normalizedPeerId);
+   }
+ 
+   // Replay a queued file item via sendFile(addToChatHistory: false): the

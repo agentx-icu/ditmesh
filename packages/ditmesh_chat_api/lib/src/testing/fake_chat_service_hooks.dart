@@ -5,6 +5,27 @@ part of 'fake_chat_service.dart';
 /// a part file so the service itself stays under the 500-line gate; being
 /// part of the same library it may touch the private state directly.
 extension FakeChatServiceTestHooks on FakeChatService {
+  /// Mirrors optional group timing received after its text, without unread
+  /// increment or another new-message event.
+  void attachRecording(String messageId, KeyedRecording recording) {
+    for (final list in _messages.values) {
+      final index = list.indexWhere((m) => m.id == messageId);
+      if (index < 0) continue;
+      final updated = list[index].copyWith(recording: recording);
+      list[index] = updated;
+      final conversation = _conversations[updated.conversationId];
+      if (conversation?.lastMessage?.id == messageId) {
+        _conversations[conversation!.id] = _copyConversation(
+          conversation,
+          lastMessage: updated,
+        );
+        _publishConversations();
+      }
+      _messageEvents.add(updated.copyWith(isUpdate: true));
+      return;
+    }
+  }
+
   /// Adds (or replaces) a friend without going through a request.
   void addFakeFriend(Friend friend) {
     _friends[friend.publicKey] = friend;

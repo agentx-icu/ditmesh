@@ -1,0 +1,27 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -13139,6 +13139,24 @@
+     // history reconcile) so a crash can't make the next drain re-send.
+     if (onDispatched != null) await onDispatched();
+ 
++    // A peer receipt can replace the row while durable queue removal waits.
++    // Reconcile the latest exact row, retaining its delivery confirmation.
++    if (pendingMsg != null && history != null) {
++      final currentIndex = history.indexWhere(
++        (row) => row.isSelf &&
++            row.filePath == null &&
++            row.text == item.text &&
++            row.contentKind == item.contentKind &&
++            _offlineRowMatchesItem(
++                row, item, item.timestamp.millisecondsSinceEpoch),
++      );
++      if (currentIndex >= 0) {
++        pendingMsgIndex = currentIndex;
++        pendingMsg = history[currentIndex];
++      } else {
++        pendingMsg = null;
++      }
++    }
+     if (pendingMsg != null && pendingMsgIndex != null && history != null) {
+       if (pendingMsg.isFailed) _reportFailureCleared(pendingMsg.msgID);
+       final updatedMsg = pendingMsg.copyWith(isPending: false, isFailed: false);

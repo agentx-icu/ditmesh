@@ -1,0 +1,18 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -7929,6 +7929,7 @@
+ 
+     if (parsed.route == 3 && consumeCustomExtension(parsed.sender, parsed.payload)) return true;
+ 
++    if (parsed.route == 1 && consumeExtensionReceipt(parsed.sender, parsed.payload)) return true;
+     switch (parsed.route) {
+       case 4:
+         // Reserved (a briefly-shipped msgid-bind experiment): tolerated and
+@@ -8043,6 +8044,7 @@
+       return false;
+     }
+     if (decoded == null) return false;
++    if (consumeExtensionReceipt(sender, body, groupId: eventGroupId)) return true;
+     // Every group receipt that reached Dart, applied or not: evidence for the
+     // native replay filter (a replayed receipt must arrive once).
+     if (eventGroupId != null && decoded['type'] == 'receipt') {

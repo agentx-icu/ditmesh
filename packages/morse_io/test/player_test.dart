@@ -30,6 +30,20 @@ void main() {
 
   tearDown(() => player.dispose());
 
+  test('starting paused is silent until an explicit resume', () {
+    player.play(_timeline, paused: true);
+    expect(player.isPlaying, isTrue);
+    expect(player.isPaused, isTrue);
+    expect(sink.log, isEmpty);
+    expect(clock.pendingTimers, 0);
+    clock.advance(_ms * 500);
+    expect(player.elapsed, Duration.zero);
+    player.resume();
+    expect(sink.log, [(true, 500)]);
+    clock.advance(_ms * 100);
+    expect(sink.log.last, (false, 600));
+  });
+
   test('keys the exact on/off sequence with absolute timestamps', () {
     player.play(_timeline);
     expect(player.isPlaying, isTrue);
@@ -47,8 +61,13 @@ void main() {
     ]);
     expect(player.isPlaying, isFalse);
     expect(player.currentIndex, -1);
-    expect(events.whereType<PlayerElementStarted>().map((e) => e.index),
-        <int>[0, 1, 2, 3, 4]);
+    expect(events.whereType<PlayerElementStarted>().map((e) => e.index), <int>[
+      0,
+      1,
+      2,
+      3,
+      4,
+    ]);
     expect(events.last, isA<PlayerCompleted>());
     expect(clock.pendingTimers, 0);
   });
