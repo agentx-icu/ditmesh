@@ -13,6 +13,8 @@ void main() {
         'R NET ${sender.toUpperCase()}',
         'CQ SAME',
         'CQ AFTER RESTART',
+        'RJ0 ${sender.toUpperCase()}',
+        '1234567890',
       ]) {
         final recording = realPeerRhythm(sender, text);
         final timeline = PlaybackTimeline(

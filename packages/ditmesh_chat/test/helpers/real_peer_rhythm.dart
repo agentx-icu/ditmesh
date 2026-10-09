@@ -35,6 +35,18 @@ KeyedRecording realPeerRhythm(
     '-.--',
     '--..',
   ];
+  const digits = [
+    '-----',
+    '.----',
+    '..---',
+    '...--',
+    '....-',
+    '.....',
+    '-....',
+    '--...',
+    '---..',
+    '----.',
+  ];
   final dit = second
       ? 111
       : sender == 'alice'
@@ -58,7 +70,10 @@ KeyedRecording realPeerRhythm(
     final codes = words[w].codeUnits;
     for (var c = 0; c < codes.length; c++) {
       if (c > 0) spans.add(353 + c * 7);
-      final pattern = alphabet[codes[c] - 65];
+      final code = codes[c];
+      final pattern = code >= 48 && code <= 57
+          ? digits[code - 48]
+          : alphabet[code - 65];
       for (var i = 0; i < pattern.length; i++) {
         if (i > 0) spans.add(gap + i);
         spans.add((pattern[i] == '.' ? dit : dah) + mark++ % 5);
