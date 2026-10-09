@@ -194,7 +194,8 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
                 hintText: fittingHint(
                   context,
                   s.chatSearchHint,
-                  width: box.maxWidth,
+                  // Less the field's own horizontal content padding.
+                  width: box.maxWidth - 32,
                 ),
                 border: InputBorder.none,
               ),

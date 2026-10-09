@@ -12,6 +12,8 @@ import 'package:ditmesh/ui/chat/conversation_header.dart';
 import 'package:ditmesh/ui/chat/conversation_list.dart';
 import 'package:ditmesh/ui/chat/conversation_tile.dart';
 import 'package:ditmesh/ui/chat/message_input.dart';
+import 'package:ditmesh/ui/chat/search/message_bookmarks.dart';
+import 'package:ditmesh/ui/chat/search/message_search_screen.dart';
 import 'package:ditmesh/ui/common/app_bar_title.dart';
 import 'package:ditmesh/ui/common/field_label.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
@@ -578,6 +580,35 @@ void main() {
       );
       final S de = lookupS(const Locale('de'));
       expectWhole(tester, find.text(de.referencePatternInputHint));
+    });
+
+    testWidgets('the message search hint stays whole on a 320 px phone in '
+        'German', (tester) async {
+      // Found by the Layout workflow with Noto: the hint was measured against
+      // the whole bar, not the field inside its padding.
+      final h = chat.ChatHarness();
+      addTearDown(h.dispose);
+      final bookmarks = MessageBookmarks.memory();
+      addTearDown(bookmarks.dispose);
+      await _pump(
+        tester,
+        profileNamed('phone-small-de'),
+        MessageSearchScreen(
+          service: h.service,
+          conversationId: 'c',
+          peerKey: 'P',
+          selfKey: 'ME',
+          bookmarks: bookmarks,
+          hideText: false,
+        ),
+      );
+      expectWhole(
+        tester,
+        find.descendant(
+          of: find.byType(InputDecorator),
+          matching: find.byType(Text),
+        ),
+      );
     });
 
     testWidgets('a long field label scales instead of ending in an ellipsis', (
