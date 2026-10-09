@@ -1326,5 +1326,9 @@
   "chatLoopRange": "Repetir en bucle",
   "chatPlaybackProgress": "Progreso de reproducción",
   "chatWordProgress": "Palabra {current} de {total}",
-  "chatOriginalPreference": "Usar el ritmo original si hay una grabación coincidente."
+  "chatOriginalPreference": "Usar el ritmo original si hay una grabación coincidente.",
+  "chatConversationActions": "Acciones para {name}",
+  "chatDraftSaveFailed": "No se pudo guardar el borrador. Mantén esta pantalla abierta o envíalo ahora.",
+  "chatSearchClearDates": "Quitar el intervalo de fechas",
+  "chatGroupReconnectFailed": "{name} rechazó la reconexión. El historial se conserva; puedes reintentarlo."
 }

@@ -1346,5 +1346,9 @@
   "chatLoopRange": "循环选定词段",
   "chatPlaybackProgress": "播放进度",
   "chatWordProgress": "第 {current} / {total} 词",
-  "chatOriginalPreference": "有匹配的录音时使用原始拍发节奏。"
+  "chatOriginalPreference": "有匹配的录音时使用原始拍发节奏。",
+  "chatConversationActions": "{name} 的操作",
+  "chatDraftSaveFailed": "草稿未能保存。请保持此页面打开，或立即发送。",
+  "chatSearchClearDates": "清除日期范围",
+  "chatGroupReconnectFailed": "{name} 拒绝了重新连接。历史记录已保留；可以重试。"
 }

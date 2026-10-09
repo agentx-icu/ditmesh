@@ -196,6 +196,14 @@ class Tim2ToxIdentityService
     var record = stored ?? await _loadOrRecoverRecord(password: password);
     if (!await _verifier.verify(record.toxId, password)) {
       await _verifier.setPassword(record.toxId, password);
+    } else if (await _verifier.needsRehash(record.toxId)) {
+      // Proven password, weaker stored rounds: upgrade, best effort (the
+      // old verifier still works if the write fails).
+      try {
+        await _verifier.setPassword(record.toxId, password);
+      } on Object catch (e, st) {
+        _logger.error('[Identity] verifier upgrade failed', e, st);
+      }
     }
     if (!record.hasPassword) {
       record = record.copyWith(hasPassword: true);
@@ -343,7 +351,12 @@ class Tim2ToxIdentityService
   }
 
   @override
-  Future<void> disconnect() => _runMutation(_disconnectImpl);
+  Future<void> disconnect() {
+    // The preview cache holds a passphrase and a decrypted archive: a
+    // session end drops it, whatever the disconnect itself answers.
+    _opened = null;
+    return _runMutation(_disconnectImpl);
+  }
 
   Future<void> _disconnectImpl() async {
     if (_started) {
@@ -360,6 +373,7 @@ class Tim2ToxIdentityService
 
   @override
   Future<void> deleteIdentity() => _runMutation(() async {
+    _opened = null;
     final record = _record ?? await IdentityRecord.read(_paths.identityFile);
     final password = _sessionPassword;
     try {
@@ -408,6 +422,7 @@ class Tim2ToxIdentityService
   }
 
   void _forgetIdentity() {
+    _opened = null;
     _record = null;
     _sessionPassword = null;
     _identity.force(null);
@@ -440,7 +455,9 @@ class Tim2ToxIdentityService
   }
 
   Future<void> dispose() async {
+    _opened = null;
     await _mutationTail;
+    _opened = null;
     final cancelled = _connSub?.cancel();
     _connSub = null;
     await Future.wait([?cancelled, _identity.close(), _status.close()]);

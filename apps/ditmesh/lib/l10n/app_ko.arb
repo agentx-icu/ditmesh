@@ -1326,5 +1326,9 @@
   "chatLoopRange": "선택한 단어 반복",
   "chatPlaybackProgress": "재생 진행률",
   "chatWordProgress": "단어 {current} / {total}",
-  "chatOriginalPreference": "일치하는 기록이 있으면 원래 송신 리듬을 사용합니다."
+  "chatOriginalPreference": "일치하는 기록이 있으면 원래 송신 리듬을 사용합니다.",
+  "chatConversationActions": "{name} 작업",
+  "chatDraftSaveFailed": "초안을 저장하지 못했습니다. 이 화면을 열어 두거나 지금 보내세요.",
+  "chatSearchClearDates": "날짜 범위 지우기",
+  "chatGroupReconnectFailed": "{name} 재연결이 거부되었습니다. 기록은 유지됩니다. 다시 시도할 수 있습니다."
 }

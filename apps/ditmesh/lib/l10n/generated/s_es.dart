@@ -4638,4 +4638,20 @@ class SEs extends S {
 
   @override
   String get chatOriginalPreference => 'Usar el ritmo original si hay una grabación coincidente.';
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Acciones para $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'No se pudo guardar el borrador. Mantén esta pantalla abierta o envíalo ahora.';
+
+  @override
+  String get chatSearchClearDates => 'Quitar el intervalo de fechas';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name rechazó la reconexión. El historial se conserva; puedes reintentarlo.';
+  }
 }

@@ -4638,4 +4638,20 @@ class SDe extends S {
 
   @override
   String get chatOriginalPreference => 'Originalrhythmus verwenden, wenn eine passende Aufzeichnung vorliegt.';
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Aktionen für $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'Der Entwurf konnte nicht gespeichert werden. Lass diese Ansicht offen oder sende ihn jetzt.';
+
+  @override
+  String get chatSearchClearDates => 'Zeitraum entfernen';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen.';
+  }
 }

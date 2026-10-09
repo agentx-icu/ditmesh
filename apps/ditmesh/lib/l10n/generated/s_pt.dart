@@ -4639,4 +4639,20 @@ class SPt extends S {
 
   @override
   String get chatOriginalPreference => 'Usar o ritmo original quando houver uma gravação correspondente.';
+
+  @override
+  String chatConversationActions(String name) {
+    return 'Ações para $name';
+  }
+
+  @override
+  String get chatDraftSaveFailed => 'Não foi possível guardar o rascunho. Mantenha este ecrã aberto ou envie-o agora.';
+
+  @override
+  String get chatSearchClearDates => 'Limpar intervalo de datas';
+
+  @override
+  String chatGroupReconnectFailed(String name) {
+    return '$name recusou a nova ligação. O histórico mantém-se; pode tentar novamente.';
+  }
 }

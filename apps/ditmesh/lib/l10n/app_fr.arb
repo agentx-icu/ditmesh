@@ -1326,5 +1326,9 @@
   "chatLoopRange": "Répéter les mots en boucle",
   "chatPlaybackProgress": "Progression de lecture",
   "chatWordProgress": "Mot {current} sur {total}",
-  "chatOriginalPreference": "Utiliser le rythme original si un enregistrement correspondant est disponible."
+  "chatOriginalPreference": "Utiliser le rythme original si un enregistrement correspondant est disponible.",
+  "chatConversationActions": "Actions pour {name}",
+  "chatDraftSaveFailed": "Le brouillon n'a pas pu être enregistré. Gardez cet écran ouvert ou envoyez-le maintenant.",
+  "chatSearchClearDates": "Effacer la plage de dates",
+  "chatGroupReconnectFailed": "{name} a refusé la reconnexion. L'historique est conservé ; vous pouvez réessayer."
 }

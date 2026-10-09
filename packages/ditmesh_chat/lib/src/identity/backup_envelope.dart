@@ -26,6 +26,14 @@ import 'profile_crypto.dart';
 ///
 /// The suite reuses the Tox savedata encryption this package already binds
 /// on every platform ([ProfileCrypto]) instead of inventing a primitive.
+///
+/// KDF strength: suite 1 is libsodium scrypt at the fixed interactive
+/// limits c-toxcore's toxencryptsave uses. A stronger work factor would
+/// raise the cost of guessing the passphrase of a stolen backup file, but
+/// it needs a configurable password-hash binding (`crypto_pwhash`) that
+/// libtim2tox_ffi does not export, and that native library is vendored and
+/// not edited here. When one exists it becomes suite 2: [open] dispatches on
+/// the suite byte, so archives written with suite 1 stay readable.
 abstract final class BackupEnvelope {
   static const int version = 1;
   static const int suiteToxEncryptSave = 1;

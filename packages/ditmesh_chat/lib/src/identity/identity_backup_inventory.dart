@@ -55,7 +55,12 @@ extension _BackupInventory on Tim2ToxIdentityService {
       final file = File(p.join(_mediaDirectory, name));
       if (await file.exists()) add(BackupCategory.media, await file.length());
     }
-    final pending = queue.length + restoredPending;
+    // Withdrawn rows are not exported for review (identity_backup_v2.dart).
+    final reviewable = BackupSnapshot.withoutWithdrawn(
+      queue,
+      meta?.withdrawals ?? const {},
+    );
+    final pending = reviewable.length + restoredPending;
     if (pending > 0) {
       sizes[BackupCategory.pendingMessages] = BackupCategorySize(
         items: pending,

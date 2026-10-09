@@ -122,7 +122,15 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       }
     }
     final queue = await BackupSnapshot.readQueue(_paths);
-    var pendingItems = [for (final (i, q) in queue.indexed) q.toItem(i)];
+    // Withdrawn rows stay withheld from history (the full queue filters it
+    // below) but are not offered for review; the withdrawal records
+    // themselves are not exported: a restore never rebuilds the outbox, so
+    // there is nothing for them to withdraw there.
+    final reviewable = BackupSnapshot.withoutWithdrawn(
+      queue,
+      _metaFor(record.toxId)?.withdrawals ?? const {},
+    );
+    var pendingItems = [for (final (i, q) in reviewable.indexed) q.toItem(i)];
 
     for (final (rel, file) in await BackupSnapshot.files(
       _paths.trainingDirectory,
@@ -415,9 +423,7 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       }
       rethrow;
     } finally {
-      if (replaced || !await previous.exists()) {
-        await stage.delete(recursive: true);
-      }
+      await _discardStage(stage, previous, committed: replaced);
     }
     final restored = preview.sizes.keys.toSet()..add(BackupCategory.identity);
     return RestoreReport(

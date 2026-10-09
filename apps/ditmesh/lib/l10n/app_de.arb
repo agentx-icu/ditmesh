@@ -1326,5 +1326,9 @@
   "chatLoopRange": "Ausgewählte Wörter in Schleife",
   "chatPlaybackProgress": "Wiedergabefortschritt",
   "chatWordProgress": "Wort {current} von {total}",
-  "chatOriginalPreference": "Originalrhythmus verwenden, wenn eine passende Aufzeichnung vorliegt."
+  "chatOriginalPreference": "Originalrhythmus verwenden, wenn eine passende Aufzeichnung vorliegt.",
+  "chatConversationActions": "Aktionen für {name}",
+  "chatDraftSaveFailed": "Der Entwurf konnte nicht gespeichert werden. Lass diese Ansicht offen oder sende ihn jetzt.",
+  "chatSearchClearDates": "Zeitraum entfernen",
+  "chatGroupReconnectFailed": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen."
 }

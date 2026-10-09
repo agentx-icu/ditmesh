@@ -1326,5 +1326,9 @@
   "chatLoopRange": "選択した単語をループ",
   "chatPlaybackProgress": "再生の進行状況",
   "chatWordProgress": "単語 {current} / {total}",
-  "chatOriginalPreference": "対応する記録がある場合は元の送信リズムを使います。"
+  "chatOriginalPreference": "対応する記録がある場合は元の送信リズムを使います。",
+  "chatConversationActions": "{name} の操作",
+  "chatDraftSaveFailed": "下書きを保存できませんでした。この画面を開いたままにするか、今すぐ送信してください。",
+  "chatSearchClearDates": "期間をクリア",
+  "chatGroupReconnectFailed": "{name} への再接続が拒否されました。履歴は保持されています。再試行できます。"
 }

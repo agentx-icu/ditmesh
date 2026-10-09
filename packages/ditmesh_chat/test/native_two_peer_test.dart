@@ -198,6 +198,31 @@ class _Peer {
     ),
   );
 
+  /// [friendOnline] for the peer that stayed up while the other left: its
+  /// only DHT link went with it, and one bootstrap call to the returning
+  /// peer is not always enough on a two-node network. Repeated every 5 s.
+  Future<void> friendOnlineRebootstrapping(int generation) async {
+    final remote = await read(other, 'endpoint.$generation');
+    var attempts = 1;
+    var next = DateTime.now().add(const Duration(seconds: 5));
+    await wait('friend online (re-bootstrapping)', () async {
+      if (chat.friends.any((f) => f.publicKey == remoteKey && f.online)) {
+        return true;
+      }
+      if (DateTime.now().isAfter(next)) {
+        attempts++;
+        next = DateTime.now().add(const Duration(seconds: 5));
+        await engine.service!.tryBootstrapNode(
+          '127.0.0.1',
+          remote['udpPort'] as int,
+          remote['dhtId'] as String,
+        );
+      }
+      return false;
+    });
+    await note('friend online after $attempts bootstrap call(s)');
+  }
+
   Future<void> incoming(String conversation, String text) => wait(
     'receive "$text" in $conversation',
     () async => (await chat.loadHistory(
@@ -263,6 +288,54 @@ class _Peer {
         (message) =>
             message.id == row.id && message.status == MessageStatus.delivered,
       ),
+    );
+  }
+
+  /// Delivery across a rejoin. gc_rejoin_group drops every peer connection
+  /// of the group and builds them again; meanwhile a send either fails
+  /// natively (TOX_ERR_GROUP_SEND_MESSAGE_FAIL_SEND -> `send_failed`) or is
+  /// accepted and never arrives (handed to a connection being torn down).
+  /// So each side keeps sending fresh numbered payloads until it has seen
+  /// one of the other's AND the other has seen one of its own; the files
+  /// carry only that "seen" marker.
+  Future<void> exchangeAcrossRejoin(String conversation, String tag) async {
+    final own = '$tag ${role.toUpperCase()}';
+    final remote = '$tag ${other.toUpperCase()}';
+    final deadline = DateTime.now().add(const Duration(seconds: 120));
+    var sent = 0;
+    var refused = 0;
+    var seen = false;
+    while (!seen || !await file(other, 'seen.$tag').exists()) {
+      if (await file(other, 'failure').exists()) {
+        throw StateError(
+          'Other peer failed: ${await file(other, 'failure').readAsString()}',
+        );
+      }
+      if (DateTime.now().isAfter(deadline)) {
+        throw TimeoutException(
+          '$role: $tag across a rejoin; sent=$sent refused=$refused seen=$seen',
+        );
+      }
+      if (!await file(other, 'seen.$tag').exists()) {
+        try {
+          await chat.sendText(conversation, '$own #${sent + 1}');
+          sent++;
+        } on ChatException catch (e) {
+          if (e.code != 'send_failed') rethrow;
+          refused++;
+        }
+      }
+      if (!seen &&
+          (await chat.loadHistory(conversation)).any(
+            (m) => !m.isMine && m.text.startsWith('$remote #'),
+          )) {
+        seen = true;
+        await mark('seen.$tag');
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    await note(
+      '$tag across the rejoin: $sent sent, $refused refused (send_failed)',
     );
   }
 
@@ -347,6 +420,87 @@ class _Peer {
       'R NET ${other.toUpperCase()}',
     );
     await barrier('group-restart-delivery');
+    await rejoin();
+  }
+
+  /// `rejoinGroup` on real toxcore: a group we hold is joined again by our
+  /// own group id (the retry the app offers after a refused reconnect).
+  /// Tim2Tox has no API to give an NGC group a password or a peer limit,
+  /// so a real refusal cannot be produced here; what is proven is that
+  /// rejoining a held group succeeds (never `already_joined`), keeps one
+  /// binding, and the group carries fresh traffic afterwards, with the
+  /// founder online and while it is away.
+  ///
+  /// Measured here too (2026-10-08): the same rejoin WITH a password, of
+  /// this passwordless group, never reconnects (online or away; 120 s of
+  /// resends). gc_rejoin_group keeps the password as the group's local one,
+  /// and a peer that believes the group has a password sends and expects
+  /// password fields its peers do not. The app therefore asks for a
+  /// password only after a password refusal (`groupJoinRetryAsksPassword`).
+  Future<void> rejoin() async {
+    // A second group: its native slot is 1, so tox_group_join's status 0
+    // (what it returns for a held chat id) cannot pass for its number.
+    if (role == 'alice') {
+      final created = await chat.createGroup('Rejoin Net');
+      groupChatId = created.chatId!;
+      await mark('group2', {'chatId': groupChatId});
+      await chat.inviteToGroup(created.id, remoteKey);
+    } else {
+      groupChatId = (await read('alice', 'group2'))['chatId'] as String;
+      await wait('second group invite', () => chat.groupInvites.isNotEmpty);
+      await chat.acceptGroupInvite(chat.groupInvites.first.inviteId);
+    }
+    await groupOnline();
+    await barrier('group2-joined');
+    await exchange(
+      'group_${group!.id}',
+      'RJ0 ${role.toUpperCase()}',
+      'RJ0 ${other.toUpperCase()}',
+    );
+    await barrier('group2-delivery');
+
+    Future<void> rejoinHeld({String? password}) async {
+      final id = group!.id;
+      await chat.rejoinGroup(id, password: password);
+      expect(group!.id, id);
+      expect(
+        chat.groups.where(
+          (g) => g.chatId?.toUpperCase() == groupChatId.toUpperCase(),
+        ),
+        hasLength(1),
+        reason: 'one binding for the group',
+      );
+      await note('rejoined held group $id (password: ${password != null})');
+    }
+
+    if (role == 'bob') await rejoinHeld();
+    await barrier('rejoin-online');
+    await exchangeAcrossRejoin('group_${group!.id}', 'RJ1');
+    await barrier('rejoin-online-delivery');
+
+    // The founder leaves the network; bob rejoins while it is away; the
+    // founder comes back.
+    if (role == 'alice') {
+      await close();
+      await mark('away');
+      await read('bob', 'rejoined-away');
+      await open(fresh: false);
+    } else {
+      await read('alice', 'away');
+      await wait(
+        'founder offline',
+        () => chat.friends.any(
+          (friend) => friend.publicKey == remoteKey && !friend.online,
+        ),
+      );
+      await rejoinHeld();
+      await mark('rejoined-away');
+    }
+    await bootstrap(3);
+    await friendOnlineRebootstrapping(3);
+    await barrier('rejoin-away-returned');
+    await exchangeAcrossRejoin('group_${group!.id}', 'RJ2');
+    await barrier('rejoin-away-delivery');
   }
 
   Future<void> restart() async {

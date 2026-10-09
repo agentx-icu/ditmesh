@@ -1326,5 +1326,9 @@
   "chatLoopRange": "Повторять выбранные слова циклически",
   "chatPlaybackProgress": "Ход воспроизведения",
   "chatWordProgress": "Слово {current} из {total}",
-  "chatOriginalPreference": "Использовать исходный ритм, если доступна соответствующая запись."
+  "chatOriginalPreference": "Использовать исходный ритм, если доступна соответствующая запись.",
+  "chatConversationActions": "Действия для {name}",
+  "chatDraftSaveFailed": "Не удалось сохранить черновик. Не закрывайте этот экран или отправьте сообщение сейчас.",
+  "chatSearchClearDates": "Сбросить период",
+  "chatGroupReconnectFailed": "{name} отклонила повторное подключение. История сохранена; можно повторить попытку."
 }
