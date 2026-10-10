@@ -81,9 +81,54 @@ Future<void> tapHittable(
   expect(finder, findsOneWidget, reason: what);
   await tester.ensureVisible(finder);
   await tester.pump();
+  // A soft keyboard still sliding in or out (a real device's IME, not the
+  // test text input) resizes the page after the first scroll: scroll again
+  // once the layout has settled.
+  for (var i = 0; i < 4 && finder.hitTestable().evaluate().isEmpty; i++) {
+    await settle(tester);
+    await tester.ensureVisible(finder);
+    await tester.pump();
+  }
+  if (finder.hitTestable().evaluate().isEmpty) {
+    debugPrint(_hitDiagnostics(tester, finder, what));
+  }
   expect(finder.hitTestable(), findsOneWidget, reason: '$what is hittable');
   await tester.tap(finder);
   await settle(tester);
+}
+
+/// Taps the widget [finder] names inside a lazily built list (a ListView
+/// builds only what is near the viewport, so a row further down does not
+/// exist until the list scrolls to it).
+Future<void> scrollToAndTap(
+  WidgetTester tester,
+  Finder finder,
+  String what,
+) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tapHittable(tester, finder, what);
+}
+
+/// Where [finder] is and what the view looks like, for a failed tap.
+String _hitDiagnostics(WidgetTester tester, Finder finder, String what) {
+  final view = tester.view;
+  final dpr = view.devicePixelRatio;
+  final box = finder.evaluate().single.renderObject;
+  final rect = box is RenderBox && box.hasSize
+      ? box.localToGlobal(Offset.zero) & box.size
+      : null;
+  return '[tap] $what not hittable: rect=$rect '
+      'view=${view.physicalSize / dpr} '
+      'insets=${view.viewInsets.bottom / dpr} '
+      'padding=${view.padding.top / dpr}/${view.padding.bottom / dpr} '
+      'snackbars=${find.byType(SnackBar).evaluate().length} '
+      'barriers=${find.byType(ModalBarrier).evaluate().length}';
 }
 
 /// Asserts the screen a scene is about to capture is on stage.

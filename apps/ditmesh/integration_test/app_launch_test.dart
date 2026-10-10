@@ -63,15 +63,24 @@ void main() {
     await tester.enterText(find.byType(TextField).first, 'Ann');
     await tapText(tester, s().accountCreateButton);
     expect(find.text(s().accountBackupContinue), findsOneWidget);
-    await tester.tap(find.byType(CheckboxListTile));
-    await settle(tester);
+    // On a small phone the checkbox sits below the fold.
+    await tapHittable(
+      tester,
+      find.byType(CheckboxListTile),
+      'backup acknowledged',
+    );
     await tapText(tester, s().accountBackupContinue);
     // First launch on this device: the community guidelines come before
     // the shell (a device that accepted them earlier skips this).
     if (find.byType(TermsGatePage).evaluate().isNotEmpty) {
       expect(find.text(s().termsGateRuleZero), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('terms-agree')));
-      await settle(tester);
+      // A lazily built list: on a small phone the button is not built
+      // until the rules above it scroll away.
+      await scrollToAndTap(
+        tester,
+        find.byKey(const ValueKey('terms-agree')),
+        'terms agree',
+      );
     }
     expect(find.byType(AppShell), findsOneWidget);
 

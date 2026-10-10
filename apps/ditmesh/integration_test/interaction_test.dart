@@ -176,11 +176,14 @@ Future<void> _onboard(WidgetTester tester, S Function() s) async {
   await tapText(tester, s().accountCreateIdentity);
   await tester.enterText(find.byType(TextField).first, 'Kim');
   await tapText(tester, s().accountCreateButton);
-  await tester.tap(find.byType(CheckboxListTile));
-  await settle(tester);
+  await tapHittable(
+    tester,
+    find.byType(CheckboxListTile),
+    'backup acknowledged',
+  );
   await tapText(tester, s().accountBackupContinue);
   if (find.byType(TermsGatePage).evaluate().isNotEmpty) {
-    await tapHittable(
+    await scrollToAndTap(
       tester,
       find.byKey(const ValueKey('terms-agree')),
       'terms agree',
