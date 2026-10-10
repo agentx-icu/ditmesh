@@ -292,6 +292,10 @@ class Tim2ToxEngine extends ChatEngine {
     try {
       _stagePassphrase(svc, config.profilePassphrase);
       await svc.init(profileDirectory: config.paths.profileDirectory);
+      // Native reports the self address only once logged in (Tim2Tox sets
+      // it in Login): checked before login, every cold start of an existing
+      // identity read an empty address and failed with identity_mismatch.
+      await svc.login(userId: loginAlias, userSig: 'dummy_sig');
       // Tim2Tox may fall back onto a native instance it could not detach;
       // never publish (or rename) a session that is not this identity's.
       final loaded = svc.getSelfToxId()?.toUpperCase() ?? '';
@@ -304,7 +308,6 @@ class Tim2ToxEngine extends ChatEngine {
           'The native session is not this identity',
         );
       }
-      await svc.login(userId: loginAlias, userSig: 'dummy_sig');
       await svc.updateSelfProfile(
         nickname: config.displayName,
         statusMessage: config.statusMessage,

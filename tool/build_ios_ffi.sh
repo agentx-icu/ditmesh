@@ -46,11 +46,11 @@ done
 
 SLICES=()
 if [[ "$BUILD_DEVICE" -eq 1 ]]; then
-  bash "$SCRIPT_DIR/ci/build_tim2tox.sh" --target ios-device "${PASS[@]}"
+  bash "$SCRIPT_DIR/ci/build_tim2tox.sh" --target ios-device ${PASS[@]+"${PASS[@]}"}
   SLICES+=("$NATIVE_ROOT/ios-device/tim2tox_ffi.framework")
 fi
 if [[ "$BUILD_SIM" -eq 1 ]]; then
-  bash "$SCRIPT_DIR/ci/build_tim2tox.sh" --target ios-simulator "${PASS[@]}"
+  bash "$SCRIPT_DIR/ci/build_tim2tox.sh" --target ios-simulator ${PASS[@]+"${PASS[@]}"}
   SLICES+=("$NATIVE_ROOT/ios-simulator/tim2tox_ffi.framework")
 fi
 
