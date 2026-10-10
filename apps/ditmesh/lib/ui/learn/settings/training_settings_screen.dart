@@ -13,8 +13,9 @@ import '../../common/app_bar_title.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
 
-/// Training preferences. Reachable from the Learn home gear and pushable
-/// from the Me page via [routeName] / [route].
+/// Training preferences (speed, tone, session length, feedback outputs) for
+/// chat copy, group practice and the recording workbench. Pushed from the Me
+/// page through `kTrainingSettingsRoute`.
 class TrainingSettingsScreen extends StatefulWidget {
   const TrainingSettingsScreen({
     super.key,
@@ -22,19 +23,8 @@ class TrainingSettingsScreen extends StatefulWidget {
     required this.playback,
   });
 
-  static const String routeName = '/settings/training';
-
   /// Text keyed by "Play sample"; a Morse procedure word, never localised.
   static const String sampleText = 'CQ';
-
-  static Route<void> route({
-    required TrainingController controller,
-    required LearnPlaybackFactory playback,
-  }) => MaterialPageRoute<void>(
-    settings: const RouteSettings(name: routeName),
-    builder: (_) =>
-        TrainingSettingsScreen(controller: controller, playback: playback),
-  );
 
   final TrainingController controller;
   final LearnPlaybackFactory playback;
@@ -55,9 +45,6 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
 
   /// True while a sample bundle is being created.
   bool _creatingSample = false;
-
-  /// Daily goal while its slider is dragged; written on release.
-  int? _goalDraft;
 
   TrainerSettings get _t => _draft.trainer;
 
@@ -175,7 +162,6 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
   Widget build(BuildContext context) {
     final s = context.s;
     final flash = _sample?.flash;
-    final goal = _goalDraft ?? widget.controller.dailyGoal;
     final body = ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: <Widget>[
@@ -260,23 +246,6 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
                 _applyTrainer(_t.copyWith(sessionLengthChars: v.round())),
           ),
         ),
-        _SliderTile(
-          title: s.learnDailyGoal,
-          value: s.learnCharsCount(goal),
-          slider: Slider(
-            value: goal.clamp(25, 500).toDouble(),
-            min: 25,
-            max: 500,
-            divisions: 19,
-            label: s.learnCharsCount(goal),
-            // Shown live while dragging, written once on release.
-            onChanged: (v) => setState(() => _goalDraft = v.round()),
-            onChangeEnd: (v) {
-              setState(() => _goalDraft = null);
-              unawaited(widget.controller.setDailyGoal(v.round()));
-            },
-          ),
-        ),
         const Divider(),
         ListTile(
           title: Text(
@@ -304,33 +273,6 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
             value: _draft.hapticEnabled,
             onChanged: (v) => _apply(_draft.copyWith(hapticEnabled: v)),
           ),
-        const Divider(),
-        ListTile(
-          title: Text(s.learnKeyer),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: SegmentedButton<KeyerMode>(
-              segments: <ButtonSegment<KeyerMode>>[
-                ButtonSegment(
-                  value: KeyerMode.straight,
-                  label: Text(s.learnKeyerStraight),
-                ),
-                ButtonSegment(
-                  value: KeyerMode.iambicA,
-                  label: Text(s.learnKeyerIambicA),
-                ),
-                ButtonSegment(
-                  value: KeyerMode.iambicB,
-                  label: Text(s.learnKeyerIambicB),
-                ),
-              ],
-              selected: <KeyerMode>{_draft.keyerMode},
-              onSelectionChanged: (s) =>
-                  _apply(_draft.copyWith(keyerMode: s.first)),
-              showSelectedIcon: false,
-            ),
-          ),
-        ),
       ],
     );
     return Scaffold(

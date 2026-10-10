@@ -126,7 +126,6 @@ void main() {
   test('the nav destinations and app name exist', () {
     for (final key in [
       'appName',
-      'navLearn',
       'navChat',
       'navGroups',
       'navReference',

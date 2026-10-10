@@ -12,9 +12,6 @@ class SKo extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => '학습';
-
-  @override
   String get navChat => '채팅';
 
   @override
@@ -165,11 +162,6 @@ class SKo extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return '다음 문자가 열렸습니다: $char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target을 놓쳤습니다';
   }
@@ -195,27 +187,6 @@ class SKo extends S {
       count,
       locale: localeName,
       other: '문자 $count개',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count일',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '최근 $count회 연습',
-      one: '지난 연습',
     );
     return '$_temp0';
   }
@@ -529,9 +500,6 @@ class SKo extends S {
   String get accountTrainingDefaultsSubtitle => '속도, 음높이, Farnsworth 간격';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => '속도, 음높이, Farnsworth 간격의 기본 설정이 여기에 표시됩니다.';
-
-  @override
   String get accountAboutLicence => '라이선스';
 
   @override
@@ -834,9 +802,6 @@ class SKo extends S {
   String get learnSettings => '훈련 설정';
 
   @override
-  String get learnLoading => '학습 진도 불러오는 중…';
-
-  @override
   String get learnIdentityRequired => '훈련을 시작하려면 신원 정보를 생성하거나 잠금을 해제하세요. 진도는 신원 정보와 함께 저장되며 백업에도 포함됩니다.';
 
   @override
@@ -1089,9 +1054,6 @@ class SKo extends S {
   String get learnReceiveTitle => '수신';
 
   @override
-  String get learnReviewTitle => '복습';
-
-  @override
   String get learnListen => '재생 중';
 
   @override
@@ -1140,9 +1102,6 @@ class SKo extends S {
   String get learnLessonNotPassed => '계속 연습하세요: 정답률 90%면 다음 문자가 열립니다';
 
   @override
-  String get learnReviewRecorded => '복습이 기록되었습니다';
-
-  @override
   String get learnWeakChars => '더 연습할 문자';
 
   @override
@@ -1150,15 +1109,6 @@ class SKo extends S {
 
   @override
   String get learnNoFeedbackWarning => '소리, 화면 깜박임과 진동이 모두 꺼져 있습니다. 대신 화면을 깜박입니다.';
-
-  @override
-  String get learnKeyerStraight => '수동 전건';
-
-  @override
-  String get learnKeyerIambicA => '아이앰빅 A';
-
-  @override
-  String get learnKeyerIambicB => '아이앰빅 B';
 
   @override
   String get learnStraightKeyLabel => '전건';
@@ -1204,12 +1154,6 @@ class SKo extends S {
 
   @override
   String get learnHaptic => '진동';
-
-  @override
-  String get learnKeyer => '전건 모드';
-
-  @override
-  String get learnDailyGoal => '일일 목표';
 
   @override
   String get referenceReferenceTitle => '모스 부호 참고 자료';
@@ -1754,11 +1698,6 @@ class SKo extends S {
 
   @override
   String get learnReplayAssistedNote => '다시 들음: 연습으로는 집계되지만 레슨 해제나 복습 갱신에는 반영되지 않습니다.';
-
-  @override
-  String learnPlanNext(String step) {
-    return '다음: $step';
-  }
 
   @override
   String get messageStatusCancelled => '취소됨 — 전송되지 않음';
@@ -2514,48 +2453,6 @@ class SKo extends S {
   String get backupXMeSubtitle => 'ID, 채팅, 진도를 담은 암호화 파일. 보관하거나 다른 기기로 옮길 때 사용';
 
   @override
-  String get conditionsClear => '깨끗함';
-
-  @override
-  String get conditionsLight => '약한 간섭';
-
-  @override
-  String get conditionsRadio => '실전 무선';
-
-  @override
-  String get conditionsClearHint => '깨끗하고 일정한 톤: 일반 연습입니다.';
-
-  @override
-  String get conditionsLightHint => '잔잔한 배경 잡음과 약한 페이딩. 결과는 깨끗한 연습과 따로 기록됩니다.';
-
-  @override
-  String get conditionsRadioHint => '잡음, 깊은 페이딩, 가까운 다른 국, 약간 고르지 않은 타이밍. 결과는 깨끗한 연습과 따로 기록됩니다.';
-
-  @override
-  String conditionsActive(String name) {
-    return '수신 환경: $name';
-  }
-
-  @override
-  String get conditionsNeedSound => '무선 환경은 눈이 아니라 귀로 듣는 것입니다. 연습 설정에서 소리를 켜거나 깨끗한 환경으로 연습하세요.';
-
-  @override
-  String get conditionsCleanReplay => '효과 없이 재생';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '이 환경과 속도에서 $count회: 평균 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => '무선 환경 연습은 활동으로 기록되지만 레슨, 복습 일정, 속도 추천은 바뀌지 않습니다.';
-
-  @override
   String get keysTitle => '키와 외부 키어';
 
   @override
@@ -2808,9 +2705,6 @@ class SKo extends S {
 
   @override
   String get groupPracticeDeleteBody => '라운드와 이 기기의 결과가 삭제됩니다. 연습 기록과 그룹 메시지는 남습니다.';
-
-  @override
-  String get conditionsAudioFailed => '이 기기에서 오디오를 시작하지 못했습니다. 깨끗한 환경으로 연습하세요.';
 
   @override
   String get moderationBlock => '차단';

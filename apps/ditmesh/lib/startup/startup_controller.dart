@@ -239,7 +239,7 @@ class StartupController extends ChangeNotifier {
   }
 
   /// Deletes the guest's learning data (the learner asked for it); the
-  /// Learn tab reloads a fresh guest profile.
+  /// next learning request opens a fresh guest profile.
   Future<void> clearGuestData() async {
     final guest = _guest;
     if (guest == null) return;

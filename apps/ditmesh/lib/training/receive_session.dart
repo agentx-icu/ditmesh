@@ -3,51 +3,9 @@ import 'dart:math';
 import 'package:morse_core/morse_core.dart';
 import 'package:morse_trainer/morse_trainer.dart';
 
-/// What a receive (copy) session drills.
-enum ReceiveDrillKind {
-  /// Koch random groups from the learned set (the lesson drill).
-  groups,
-
-  /// One symbol per round: instant character recognition.
-  characters,
-
-  /// Common words that fit the learned set.
-  words,
-
-  /// CW abbreviations and Q-codes that fit the learned set.
-  abbreviations,
-
-  /// Digit groups from the learned digits.
-  numbers,
-
-  /// Amateur callsigns built from the learned set.
-  callsigns,
-
-  /// Minimal pairs: the trainee's most confused symbols and pattern
-  /// neighbours (S/H, U/V) drilled against each other.
-  confusables,
-
-  /// Templated QSO lines (needs most of the alphabet).
-  qso,
-
-  /// Contest exchanges with cut numbers (needs most of the alphabet).
-  contest,
-
-  /// SRS review: symbols that are due, weighted by weakness.
-  review;
-
-  /// Label stored as `Drill.kind` / `SessionScore.drillKind`.
-  String get label => name;
-
-  static ReceiveDrillKind parse(String? name) {
-    for (final kind in values) {
-      if (kind.name == name) {
-        return kind;
-      }
-    }
-    return ReceiveDrillKind.groups;
-  }
-}
+/// Label stored as `Drill.kind` / `SessionScore.drillKind` for receive
+/// rounds (random groups over a symbol pool).
+const String kReceiveDrillKind = 'groups';
 
 /// One played-and-answered chunk of a [ReceiveSession].
 final class ReceiveRound {
@@ -67,15 +25,14 @@ final class ReceiveRound {
   final SessionScore score;
 }
 
-/// A receive drill in progress: a sequence of short rounds (one group, one
-/// word, one callsign ...) until the character or time budget is spent.
+/// A receive drill in progress: a sequence of short rounds (one group per
+/// round) until the character budget is spent.
 ///
 /// Pure logic, no timers: the UI plays [currentTimeline], collects the copy,
 /// calls [submit], and when [isComplete] calls [finish] to get the session
 /// [SessionScore] the controller records. Time only moves through [now].
 final class ReceiveSession {
   ReceiveSession({
-    required this.kind,
     required DrillGenerator generator,
     required Iterable<String> chars,
     required this.timing,
@@ -83,32 +40,13 @@ final class ReceiveSession {
     required Random random,
     required DateTime Function() now,
     this.lesson,
-    this.countsTowardLesson = false,
-    this.timeBudget,
-    ExerciseSource? source,
-    this.planStepId,
-    this.sourceRef,
-    this.learnedChars,
-    this.conditions,
+    this.source = ExerciseSource.focus,
     String? id,
   }) : assert(charBudget > 0, 'charBudget must be positive'),
-       assert(
-         conditions == null || !conditions.isClear,
-         'clear playback is ordinary practice: pass no conditions',
-       ),
        _generator = generator,
        _random = random,
        _now = now,
        chars = List<String>.unmodifiable(chars),
-       source =
-           source ??
-           (conditions != null
-               ? ExerciseSource.conditions
-               : countsTowardLesson
-               ? ExerciseSource.course
-               : kind == ReceiveDrillKind.review
-               ? ExerciseSource.review
-               : ExerciseSource.focus),
        startedAt = now() {
     // Not from the drill random: ids must not shift a seeded drill.
     this.id = id ?? ExerciseIds.next(startedAt, Random());
@@ -121,23 +59,6 @@ final class ReceiveSession {
 
   final ExerciseSource source;
 
-  /// Daily-plan step this session executes, if any.
-  final String? planStepId;
-
-  /// Local origin reference (chat message, material entry).
-  final String? sourceRef;
-
-  /// Symbols that may enter learned-symbol statistics; null = the
-  /// controller's learned set.
-  final Set<String>? learnedChars;
-
-  /// Simulated radio conditions every round is played under (F11); null
-  /// for ordinary clean playback. Round `i` uses `conditions.forRound(i)`.
-  final RadioScenario? conditions;
-
-  /// The scenario of the round waiting to be answered.
-  RadioScenario? get currentConditions => conditions?.forRound(_rounds.length);
-
   final Set<Assistance> _assistance = <Assistance>{};
   Duration _paused = Duration.zero;
   DateTime? _pausedAt;
@@ -148,12 +69,10 @@ final class ReceiveSession {
 
   bool get isAssisted => _assistance.isNotEmpty;
 
-  void markAssistance(Assistance kind) {
-    if (!isFinished) _assistance.add(kind);
-  }
-
   /// A replay of the current round after its first playback.
-  void markReplay() => markAssistance(Assistance.replay);
+  void markReplay() {
+    if (!isFinished) _assistance.add(Assistance.replay);
+  }
 
   /// Background / pause: excluded from [activeElapsed].
   void pause() => _pausedAt ??= _now();
@@ -174,7 +93,6 @@ final class ReceiveSession {
     return active.isNegative ? Duration.zero : active;
   }
 
-  final ReceiveDrillKind kind;
   final DrillGenerator _generator;
   final Random _random;
   final DateTime Function() _now;
@@ -189,22 +107,14 @@ final class ReceiveSession {
   /// may overshoot).
   final int charBudget;
 
-  /// Optional wall-clock cap; the session ends after the round in progress.
-  final Duration? timeBudget;
-
-  /// Koch lesson this session belongs to, if any (review sessions have none).
+  /// Koch lesson this session belongs to, if any.
   final int? lesson;
-
-  /// Whether a pass on this session may unlock the next Koch lesson.
-  final bool countsTowardLesson;
 
   final DateTime startedAt;
 
   final List<ReceiveRound> _rounds = <ReceiveRound>[];
   Drill _current = Drill.fromText('');
   SessionScore? _final;
-
-  List<ReceiveRound> get rounds => List<ReceiveRound>.unmodifiable(_rounds);
 
   /// The round waiting to be answered.
   Drill get currentDrill => _current;
@@ -231,27 +141,7 @@ final class ReceiveSession {
   bool get isFinished => _final != null;
 
   /// True once the budget is spent; the UI should call [finish].
-  bool get isComplete {
-    if (isFinished) {
-      return true;
-    }
-    if (charsAnswered >= charBudget) {
-      return true;
-    }
-    final cap = timeBudget;
-    return cap != null && elapsed >= cap;
-  }
-
-  /// Running accuracy over answered rounds (0 before the first answer).
-  double get runningAccuracy {
-    var total = 0;
-    var correct = 0;
-    for (final r in _rounds) {
-      total += r.score.totalChars;
-      correct += r.score.correctChars;
-    }
-    return total == 0 ? 0 : correct / total;
-  }
+  bool get isComplete => isFinished || charsAnswered >= charBudget;
 
   /// Scores [answer] against the current round and, unless the budget is now
   /// spent, generates the next round.
@@ -264,7 +154,7 @@ final class ReceiveSession {
       answer,
       at: _now(),
       lesson: lesson,
-      drillKind: kind.label,
+      drillKind: kReceiveDrillKind,
     );
     final round = ReceiveRound(
       index: _rounds.length,
@@ -297,7 +187,7 @@ final class ReceiveSession {
       at: _now(),
       elapsed: elapsed,
       lesson: lesson,
-      drillKind: kind.label,
+      drillKind: kReceiveDrillKind,
     );
     _final = score;
     return score;

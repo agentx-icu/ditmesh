@@ -5,15 +5,18 @@ import 'package:flutter/widgets.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
-import '../ui/learn/learn_scope.dart';
+import 'file_trainer_store.dart';
 import 'guest_profile.dart';
 import 'training_controller.dart';
+import 'training_doc_store.dart';
+import 'training_settings_store.dart';
 
 /// One [TrainingController] per identity for the whole app.
 ///
-/// The Learn tab and the "training defaults" page reached from the Me page
-/// must share the same controller: two instances writing the same
-/// `progress.json` / `settings.json` would silently overwrite each other.
+/// Chat copy, group practice, the recording workbench and the training
+/// settings page reached from the Me page must share the same controller:
+/// two instances writing the same `progress.json` / `settings.json` would
+/// silently overwrite each other.
 /// The host caches the controller by identity public key and rebuilds it
 /// when the identity changes (logout / restore / delete).
 class TrainingControllerHost implements IdentityDataStore {
@@ -22,7 +25,7 @@ class TrainingControllerHost implements IdentityDataStore {
     Future<TrainingController> Function(IdentityService identity)? factory,
     ValueListenable<bool>? guestMode,
     Future<TrainingController> Function()? guestFactory,
-  }) : _factory = factory ?? LearnScope.controllerForIdentity,
+  }) : _factory = factory ?? controllerForIdentity,
        _guestMode = guestMode,
        _guestFactory = guestFactory {
     _sub = _identity.identityChanges.listen(_onIdentity);
@@ -61,18 +64,32 @@ class TrainingControllerHost implements IdentityDataStore {
   bool _suspended = false;
   Future<void>? _guestRelease;
 
-  final ValueNotifier<int> _reloads = ValueNotifier<int>(0);
+  /// Default factory: file stores under `<dataDirectory>/training/`.
+  static Future<TrainingController> controllerForIdentity(
+    IdentityService identity,
+  ) async {
+    final dir = await identity.dataDirectory();
+    final controller = TrainingController(
+      progressStore: FileTrainerStore.inDataDirectory(dir),
+      settingsStore: FileTrainingSettingsStore.inDataDirectory(dir),
+      profileKey: _profileKeyOf(identity),
+      docs: FileTrainingDocStore.inDataDirectory(dir),
+    );
+    await controller.load();
+    return controller;
+  }
 
-  /// Bumped when the learning files under a cached controller were
-  /// replaced; mounted learning screens reload their controller.
-  ValueListenable<int> get reloads => _reloads;
+  /// The identity's public key; '' when the service cannot tell (minimal
+  /// test stubs only implement `dataDirectory`).
+  static String _profileKeyOf(IdentityService identity) {
+    try {
+      return identity.current?.publicKey ?? '';
+    } on Object {
+      return '';
+    }
+  }
 
-  /// Resolves (and caches) the controller for the current identity. Matches
-  /// `LearnPage.controllerFactory`'s signature so it can be handed straight
-  /// to the Learn tab.
-  Future<TrainingController> controllerFor(BuildContext context) =>
-      controller();
-
+  /// Resolves (and caches) the controller for the current identity.
   Future<TrainingController> controller() {
     final identity = _identity.current;
     final guest = _guestActive;
@@ -116,8 +133,8 @@ class TrainingControllerHost implements IdentityDataStore {
   /// back to a fresh per-identity controller (tests, isolated screens).
   static Future<TrainingController> fromContext(BuildContext context) {
     final host = context.read<TrainingControllerHost?>();
-    if (host != null) return host.controllerFor(context);
-    return LearnScope.controllerForIdentity(context.read<IdentityService>());
+    if (host != null) return host.controller();
+    return controllerForIdentity(context.read<IdentityService>());
   }
 
   void _onGuestMode() {
@@ -167,11 +184,10 @@ class TrainingControllerHost implements IdentityDataStore {
     await _flushThenDrop();
   }
 
-  /// Serves controllers again; mounted screens reload from disk.
+  /// Serves controllers again; the next request loads from disk.
   void resumeLearning() {
     _suspended = false;
     _dropCurrent();
-    _reloads.value++;
   }
 
   void _onIdentity(Identity? identity) {

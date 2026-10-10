@@ -8,14 +8,9 @@ import 'package:ditmesh/training/receive_session.dart';
 import 'helpers/test_controller.dart';
 
 void main() {
-  ReceiveSession session({
-    int charBudget = 10,
-    Duration? timeBudget,
-    TestClock? clock,
-  }) {
+  ReceiveSession session({int charBudget = 10, TestClock? clock}) {
     final c = clock ?? TestClock();
     return ReceiveSession(
-      kind: ReceiveDrillKind.groups,
       generator: RandomGroupsDrill(
         chars: const <String>['K', 'M'],
         groupCount: 1,
@@ -24,9 +19,7 @@ void main() {
       chars: const <String>['K', 'M'],
       timing: const MorseTiming(wpm: 20),
       charBudget: charBudget,
-      timeBudget: timeBudget,
       lesson: 1,
-      countsTowardLesson: true,
       random: Random(3),
       now: () => c.now,
     );
@@ -60,21 +53,6 @@ void main() {
     expect(() => s.submit('K'), throwsStateError);
   });
 
-  test('time budget ends the session after the round in progress', () {
-    final clock = TestClock();
-    final s = session(
-      charBudget: 100,
-      timeBudget: const Duration(minutes: 1),
-      clock: clock,
-    );
-    s.submit(s.currentDrill.text);
-    expect(s.isComplete, isFalse);
-    clock.advance(const Duration(seconds: 61));
-    expect(s.isComplete, isTrue);
-    final score = s.finish();
-    expect(score.elapsed, const Duration(seconds: 61));
-  });
-
   test('aggregate score sums the rounds and carries bookkeeping', () {
     final s = session(charBudget: 10);
     final target1 = s.currentDrill.text;
@@ -89,7 +67,6 @@ void main() {
     expect(score.lesson, 1);
     expect(score.drillKind, 'groups');
     expect(score.at, kTestNow);
-    expect(s.runningAccuracy, 0.9);
     expect(s.weakChars(), <String>[target2[4]]);
     expect(s.finish(), same(score), reason: 'finish is idempotent');
   });

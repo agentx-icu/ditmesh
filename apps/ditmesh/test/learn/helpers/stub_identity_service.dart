@@ -1,8 +1,8 @@
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
-/// The smallest [IdentityService] the Learn tab can run on: only
+/// The smallest [IdentityService] learning storage can run on: only
 /// [dataDirectory] is real. Every other member throws [UnimplementedError]
-/// through [noSuchMethod], which is exactly what the scope must tolerate.
+/// through [noSuchMethod], which is exactly what callers must tolerate.
 final class StubIdentityService implements IdentityService {
   StubIdentityService(this.directory);
 

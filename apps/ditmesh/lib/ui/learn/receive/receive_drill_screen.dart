@@ -1,17 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:morse_trainer/morse_trainer.dart';
 
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/receive_session.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_settings.dart';
 import '../../common/app_bar_title.dart';
-import '../conditions/conditions_playback.dart';
-import '../conditions/conditions_widgets.dart';
 import '../drill_session_guard.dart';
 import '../learn_platform.dart';
 import '../learn_playback.dart';
@@ -36,20 +32,13 @@ class ReceiveDrillScreen extends StatefulWidget {
     required this.controller,
     required this.playback,
     required this.session,
-    this.title,
     this.screenWake = const WakelockScreenWake(),
-    this.conditionsPlayback,
   });
 
   final TrainingController controller;
   final LearnPlaybackFactory playback;
   final ReceiveSession session;
-  final String? title;
   final ScreenWakeApi screenWake;
-
-  /// Player for a session under radio conditions (F11); one is created when
-  /// the session has conditions and none is given. Owned by the screen.
-  final ConditionsPlayback? conditionsPlayback;
 
   @override
   State<ReceiveDrillScreen> createState() => _ReceiveDrillScreenState();
@@ -66,18 +55,7 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
   bool _recording = false;
   ReceiveRound? _lastRound;
   ReceiveOutcome? _outcome;
-  String? _unlockedChar;
   late final DrillScreenWake _wake = DrillScreenWake(widget.screenWake);
-
-  /// Radio-condition audio (F11), only for a session that has conditions.
-  late final ConditionsPlayback? _conditions = _session.conditions == null
-      ? null
-      : widget.conditionsPlayback ?? ConditionsPlayback();
-  StreamSubscription<bool>? _conditionsSub;
-
-  /// Set right before we stop the conditions audio ourselves, so that stop
-  /// does not count as having heard the round.
-  bool _stopping = false;
 
   ReceiveSession get _session => widget.session;
 
@@ -100,7 +78,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
     _backgrounded = isDrillBackground(state);
     if (_backgrounded) {
       _playback?.player.stop();
-      _stopConditions();
       _session.pause();
     } else if (state == AppLifecycleState.resumed) {
       _session.resume();
@@ -118,7 +95,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
       return;
     }
     _playerSub = playback.player.events.listen(_onPlayerEvent);
-    _conditionsSub = _conditions?.playing.listen(_onConditionsPlaying);
     setState(() => _playback = playback);
     _play();
   }
@@ -136,71 +112,13 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
     }
   }
 
-  void _onConditionsPlaying(bool playing) {
-    if (!playing && !_stopping) _heard = true;
-    _stopping = false;
-    if (mounted && _playing != playing) setState(() => _playing = playing);
-  }
-
-  /// Always stops: a clip still rendering or loading is not "playing" yet
-  /// but must not start once the round is over or the app is hidden.
-  void _stopConditions() {
-    final c = _conditions;
-    if (c == null) return;
-    // Set even when nothing plays yet: a clip in its loading window still
-    // emits start and stop, and that stop is ours, not "heard". The next
-    // round's start event clears the flag.
-    _stopping = true;
-    unawaited(c.stop());
-  }
-
-  /// The audio engine could not play the rendering: the round says so
-  /// instead of "listening" forever.
-  bool _conditionsFailed = false;
-
-  /// Radio conditions are an audio effect: without sound there is nothing
-  /// realistic to hear, and an unaffected flash would give the copy away.
-  bool get _conditionsBlocked =>
-      _conditions != null && !widget.controller.settings.soundEnabled;
-
   void _play() {
     final playback = _playback;
     if (playback == null || _phase != _Phase.listen || _backgrounded) {
       return;
     }
-    final conditions = _conditions;
-    if (conditions != null) {
-      if (_conditionsBlocked) return;
-      setState(() {
-        _playing = true;
-        _conditionsFailed = false;
-      });
-      conditions
-          .play(_session.currentDrill.text, _session.currentConditions!)
-          .then((started) {
-            // Dropped by a stop during rendering: no event will reset it.
-            if (!started && mounted) setState(() => _playing = false);
-          })
-          .catchError((Object _) {
-            if (mounted) {
-              setState(() {
-                _playing = false;
-                _conditionsFailed = true;
-              });
-            }
-          });
-      return;
-    }
     setState(() => _playing = true);
     playback.player.play(_session.currentTimeline);
-  }
-
-  /// After answering: the same round without any effect, as a reference.
-  /// The answer is already in, so this is not assistance.
-  void _playCleanReference(ReceiveRound round) {
-    _playback?.player.play(
-      MorseEncoder.encode(round.drill.text, _session.timing),
-    );
   }
 
   /// Playing the round again is assistance (functional spec §3.3): the
@@ -215,7 +133,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
       return;
     }
     _playback?.player.stop();
-    _stopConditions();
     final round = _session.submit(_answer.text);
     _heard = false;
     _answer.clear();
@@ -250,7 +167,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
     _wake.setActive(false);
     setState(() {
       _outcome = outcome;
-      _unlockedChar = outcome.advanced ? widget.controller.newestChar : null;
       _phase = _Phase.summary;
     });
     if (!outcome.saved) {
@@ -288,8 +204,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
     WidgetsBinding.instance.removeObserver(this);
     _wake.dispose();
     unawaited(_playerSub?.cancel());
-    unawaited(_conditionsSub?.cancel());
-    unawaited(_conditions?.dispose());
     unawaited(_playback?.dispose());
     _answer.dispose();
     _answerFocus.dispose();
@@ -299,11 +213,7 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final title =
-        widget.title ??
-        (_session.kind == ReceiveDrillKind.review
-            ? s.learnReviewTitle
-            : s.learnReceiveTitle);
+    final title = s.learnReceiveTitle;
     final body = SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -352,27 +262,14 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
           ),
           textAlign: TextAlign.center,
         ),
-        if (_session.conditions case final RadioScenario c)
-          ConditionsChip(scenario: c),
         const SizedBox(height: 8),
         PlaybackStatusRow(
           playing: _playing,
           onReplay: ready && !_playing ? _replay : null,
           replayLabel: s.learnReplay,
         ),
-        if (_conditionsBlocked || _conditionsFailed)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _conditionsFailed ? s.conditionsAudioFailed : s.conditionsNeedSound,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          )
         // Haptics only count on phones; elsewhere the flash fallback runs.
-        else if (!_perceivable(widget.controller.settings))
+        if (!_perceivable(widget.controller.settings))
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
@@ -440,8 +337,6 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         RoundResultView(round: round),
-        if (_session.conditions != null)
-          CleanReferenceButton(onPressed: () => _playCleanReference(round)),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: _next,
@@ -461,16 +356,7 @@ class _ReceiveDrillScreenState extends State<ReceiveDrillScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        ReceiveSummaryView(
-          session: _session,
-          outcome: outcome,
-          unlockedChar: _unlockedChar,
-        ),
-        if (_session.conditions case final RadioScenario c)
-          ConditionsSummary(
-            scenario: c,
-            history: widget.controller.progress.history,
-          ),
+        ReceiveSummaryView(session: _session, outcome: outcome),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(outcome),

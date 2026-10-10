@@ -12,9 +12,6 @@ class SEs extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => 'Aprender';
-
-  @override
   String get navChat => 'Chat';
 
   @override
@@ -166,11 +163,6 @@ class SEs extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return 'Nuevo carácter desbloqueado: $char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target omitido';
   }
@@ -197,28 +189,6 @@ class SEs extends S {
       locale: localeName,
       other: '$count caracteres',
       one: '$count carácter',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count días',
-      one: '$count día',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Últimas $count sesiones',
-      one: 'Última sesión',
     );
     return '$_temp0';
   }
@@ -533,9 +503,6 @@ class SEs extends S {
   String get accountTrainingDefaultsSubtitle => 'Velocidad, tono y espaciado Farnsworth';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => 'Aquí estarán los valores de velocidad, tono y Farnsworth.';
-
-  @override
   String get accountAboutLicence => 'Licencia';
 
   @override
@@ -838,9 +805,6 @@ class SEs extends S {
   String get learnSettings => 'Ajustes de entrenamiento';
 
   @override
-  String get learnLoading => 'Cargando tu progreso...';
-
-  @override
   String get learnIdentityRequired => 'Crea o desbloquea tu identidad para entrenar. El progreso se guarda con ella y se incluye en la copia de seguridad.';
 
   @override
@@ -1093,9 +1057,6 @@ class SEs extends S {
   String get learnReceiveTitle => 'Recepción';
 
   @override
-  String get learnReviewTitle => 'Repaso';
-
-  @override
   String get learnListen => 'Reproduciendo';
 
   @override
@@ -1144,9 +1105,6 @@ class SEs extends S {
   String get learnLessonNotPassed => 'Sigue practicando: el 90% desbloquea el siguiente carácter';
 
   @override
-  String get learnReviewRecorded => 'Repaso registrado';
-
-  @override
   String get learnWeakChars => 'Por mejorar';
 
   @override
@@ -1154,15 +1112,6 @@ class SEs extends S {
 
   @override
   String get learnNoFeedbackWarning => 'Sonido, destellos y vibración desactivados: la pantalla parpadeará en su lugar.';
-
-  @override
-  String get learnKeyerStraight => 'Vertical';
-
-  @override
-  String get learnKeyerIambicA => 'Yámbico A';
-
-  @override
-  String get learnKeyerIambicB => 'Yámbico B';
 
   @override
   String get learnStraightKeyLabel => 'LLAVE';
@@ -1208,12 +1157,6 @@ class SEs extends S {
 
   @override
   String get learnHaptic => 'Vibración';
-
-  @override
-  String get learnKeyer => 'Manipulador';
-
-  @override
-  String get learnDailyGoal => 'Objetivo diario';
 
   @override
   String get referenceReferenceTitle => 'Referencia de Morse';
@@ -1762,11 +1705,6 @@ class SEs extends S {
 
   @override
   String get learnReplayAssistedNote => 'Repetido: esta sesión cuenta como práctica, pero no desbloquea lecciones ni actualiza repasos.';
-
-  @override
-  String learnPlanNext(String step) {
-    return 'Siguiente: $step';
-  }
 
   @override
   String get messageStatusCancelled => 'Cancelado: nunca se envió';
@@ -2531,49 +2469,6 @@ class SEs extends S {
   String get backupXMeSubtitle => 'Un archivo cifrado con tu identidad, chats y progreso, para guardarlo o llevarlo a otro dispositivo';
 
   @override
-  String get conditionsClear => 'Limpio';
-
-  @override
-  String get conditionsLight => 'Interferencia leve';
-
-  @override
-  String get conditionsRadio => 'Práctica de radio';
-
-  @override
-  String get conditionsClearHint => 'Un tono limpio y estable: práctica normal.';
-
-  @override
-  String get conditionsLightHint => 'Ruido de fondo suave y desvanecimiento ligero. Los resultados se guardan aparte de la práctica limpia.';
-
-  @override
-  String get conditionsRadioHint => 'Ruido, desvanecimiento profundo, una estación cercana y ritmo algo irregular. Los resultados se guardan aparte de la práctica limpia.';
-
-  @override
-  String conditionsActive(String name) {
-    return 'Condiciones: $name';
-  }
-
-  @override
-  String get conditionsNeedSound => 'Las condiciones de radio se oyen, no se ven: activa el sonido en los ajustes de práctica o practica con condiciones limpias.';
-
-  @override
-  String get conditionsCleanReplay => 'Reproducir sin efectos';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count intentos con estas condiciones y velocidad: $accuracy % de media',
-      one: '1 intento con estas condiciones y velocidad: $accuracy %',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => 'La práctica con condiciones de radio cuenta como actividad, pero no cambia tus lecciones, tu repaso ni la recomendación de velocidad.';
-
-  @override
   String get keysTitle => 'Teclas y manipuladores externos';
 
   @override
@@ -2829,9 +2724,6 @@ class SEs extends S {
 
   @override
   String get groupPracticeDeleteBody => 'Sus rondas y resultados locales se eliminan de este dispositivo. Tu historial de práctica y los mensajes del grupo se conservan.';
-
-  @override
-  String get conditionsAudioFailed => 'No se pudo iniciar el audio en este dispositivo. Practica con condiciones limpias.';
 
   @override
   String get moderationBlock => 'Bloquear';

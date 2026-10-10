@@ -22,6 +22,3 @@ bool isDrillBackground(AppLifecycleState state) =>
 
 /// Whether to surface keyboard shortcuts and autofocus keyable widgets.
 bool get hasPhysicalKeyboardByDefault => !isTouchPlatform;
-
-/// Two-column layouts start at this width (see plan §4 / task brief).
-const double kLearnTwoColumnMinWidth = 900;

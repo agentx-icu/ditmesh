@@ -94,28 +94,21 @@ void main() {
         strings.s.learnLessonOf(3, 40),
         allOf(contains('3'), contains('40')),
       );
-      expect(strings.s.statsDays(22), contains('22'));
+      expect(strings.s.chatMemberCount(22), contains('22'));
       expect(strings.s.chatBytesLeftCount(-2), contains('-2'));
       expect(strings.s.appName, 'DitMesh');
     });
   }
 
-  test('Russian day counts use one, few and many forms', () {
+  test('Russian counts use one, few and many forms', () {
     final ru = lookupS(const Locale('ru'));
-    expect(ru.statsDays(0), '0 дней');
-    expect(ru.statsDays(1), '1 день');
-    expect(ru.statsDays(2), '2 дня');
-    expect(ru.statsDays(5), '5 дней');
-    expect(ru.statsDays(21), '21 день');
-    expect(ru.statsDays(22), '22 дня');
-    expect(ru.statsDays(11), '11 дней');
-    expect(ru.statsDays(12), '12 дней');
-  });
-
-  test('Portuguese zero sessions does not describe a previous session', () {
-    final pt = lookupS(const Locale('pt'));
-    expect(pt.statsTrendSubtitle(0), 'Nenhuma sessão');
-    expect(pt.statsTrendSubtitle(1), 'Última sessão');
-    expect(pt.statsTrendSubtitle(2), 'Últimas 2 sessões');
+    expect(ru.chatMemberCount(0), '0 участников');
+    expect(ru.chatMemberCount(1), '1 участник');
+    expect(ru.chatMemberCount(2), '2 участника');
+    expect(ru.chatMemberCount(5), '5 участников');
+    expect(ru.chatMemberCount(21), '21 участник');
+    expect(ru.chatMemberCount(22), '22 участника');
+    expect(ru.chatMemberCount(11), '11 участников');
+    expect(ru.chatMemberCount(12), '12 участников');
   });
 }

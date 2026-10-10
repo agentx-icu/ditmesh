@@ -1,5 +1,5 @@
 // Regression tests for the 2026-10-03 Learn review (Codex findings on the
-// app's training layer and Learn screens).
+// app's training layer, receive drill and training settings).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -7,12 +7,11 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart' show FlashOverlay;
 import 'package:morse_io/testing.dart' show FakeClock, RecordingSink;
 import 'package:morse_trainer/morse_trainer.dart';
+import 'package:ditmesh/training/chat_copy_session.dart';
 import 'package:ditmesh/training/receive_session.dart';
-import 'package:ditmesh/training/send_session.dart';
 import 'package:ditmesh/training/training_controller.dart';
 import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/training/training_settings_store.dart';
@@ -25,9 +24,6 @@ import 'package:path/path.dart' as p;
 import 'helpers/fake_playback.dart';
 import 'helpers/l10n.dart';
 import 'helpers/test_controller.dart';
-
-const MorseTiming _wpm20 = MorseTiming(wpm: 20);
-const Duration _dit = Duration(milliseconds: 60);
 
 /// Fails the first [failures] saves, then behaves like the in-memory store.
 final class _FlakyStore implements TrainerStore {
@@ -97,12 +93,6 @@ final class _GatedPlaybackFactory implements LearnPlaybackFactory {
   }
 }
 
-void _key(SendSession s, Duration at, Duration length) {
-  s
-    ..keyDown(at)
-    ..keyUp(at + length);
-}
-
 void _setPhone(WidgetTester tester) {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1.0;
@@ -115,7 +105,7 @@ void main() {
     test('still returns the outcome and retrying credits it once', () async {
       final (c, _) = await _flakyController(1);
       addTearDown(c.dispose);
-      final session = c.startLessonSession();
+      final session = c.startFocusSession(<String>['K', 'M'])!;
       while (!session.isComplete) {
         session.submit(session.currentDrill.text);
       }
@@ -126,96 +116,6 @@ void main() {
       expect(await c.retryProgressSave(), isTrue);
       expect(c.progress.history, hasLength(1));
       expect(c.progress.sessionCount, 1);
-    });
-
-    test('a send session reports the failure too', () async {
-      final (c, _) = await _flakyController(1);
-      addTearDown(c.dispose);
-      final session = c.startSendSession()
-        ..keyDown(Duration.zero)
-        ..keyUp(const Duration(milliseconds: 60));
-      final outcome = await c.recordSendSession(session);
-      expect(outcome.saved, isFalse);
-      expect(c.progress.history, hasLength(1));
-    });
-  });
-
-  group('send session held input', () {
-    test('restart while held lets the next dit decode as E', () {
-      final s = SendSession(target: 'E', timing: _wpm20, now: () => kTestNow);
-      s.keyDown(Duration.zero);
-      s.restart();
-      expect(s.isKeyDown, isFalse);
-      expect(s.decoder.isKeyDown, isFalse);
-      // The finger lifts after the restart: nothing to record.
-      s.keyUp(const Duration(milliseconds: 500));
-      _key(s, const Duration(seconds: 1), _dit);
-      expect(s.finish().attempt.decoded, 'E');
-    });
-
-    test('cancelHeld drops the open mark and keeps the text', () {
-      final s = SendSession(target: 'EE', timing: _wpm20, now: () => kTestNow);
-      _key(s, Duration.zero, _dit);
-      s.tick(const Duration(milliseconds: 400));
-      s.keyDown(const Duration(milliseconds: 500));
-      s.cancelHeld();
-      expect(s.isKeyDown, isFalse);
-      expect(s.decoder.isKeyDown, isFalse);
-      _key(s, const Duration(seconds: 1), _dit);
-      // The long pauses read as word gaps; only the symbols matter here.
-      expect(s.finish().attempt.decoded.replaceAll(' ', ''), 'EE');
-    });
-
-    test('cancelHeld takes back the gap its key-down appended', () {
-      final s = SendSession(target: 'EE', timing: _wpm20, now: () => kTestNow);
-      _key(s, Duration.zero, _dit);
-      // 90 ms after the up: 1.5 dits, an over-long intra-character gap if it
-      // were kept.
-      s.keyDown(const Duration(milliseconds: 150));
-      s.cancelHeld();
-      expect(s.gaps, isEmpty);
-      _key(s, const Duration(milliseconds: 240), _dit);
-      expect(s.gaps, <Duration>[const Duration(milliseconds: 180)]);
-      final d = s.finish();
-      expect(d.attempt.gaps, <Duration>[const Duration(milliseconds: 180)]);
-      expect(d.intraGapCount, 0);
-      expect(
-        d.issues.where((i) => i.kind == SendIssueKind.intraGapTooLong),
-        isEmpty,
-      );
-      expect(d.attempt.decoded, 'EE');
-    });
-  });
-
-  group('prosigns that share a pattern with punctuation', () {
-    for (final prosign in <String>['<AR>', '<BT>', '<KN>', '<AS>', '<SK>']) {
-      test('a perfectly keyed $prosign scores in full', () {
-        final s = SendSession(
-          target: prosign,
-          timing: _wpm20,
-          now: () => kTestNow,
-        );
-        var at = Duration.zero;
-        for (final e in MorseEncoder.encode(prosign, _wpm20)) {
-          if (e.on) {
-            _key(s, at, e.duration);
-          }
-          at += e.duration;
-        }
-        expect(s.scoreForHistory().isPerfect, isTrue, reason: prosign);
-      });
-    }
-
-    test('punctuation stays punctuation when the target asks for it', () {
-      final s = SendSession(target: '+', timing: _wpm20, now: () => kTestNow);
-      var at = Duration.zero;
-      for (final e in MorseEncoder.encode('+', _wpm20)) {
-        if (e.on) {
-          _key(s, at, e.duration);
-        }
-        at += e.duration;
-      }
-      expect(s.finish().attempt.decoded, '+');
     });
   });
 
@@ -253,7 +153,10 @@ void main() {
       final t = await TestTraining.create(settings: kShortSettings);
       addTearDown(t.controller.dispose);
       final playback = FakeLearnPlaybackFactory();
-      final ReceiveSession session = t.controller.startLessonSession();
+      final ReceiveSession session = t.controller.startFocusSession(<String>[
+        'K',
+        'M',
+      ])!;
       await tester.pumpWidget(
         l10nApp(
           home: ReceiveDrillScreen(
@@ -309,41 +212,6 @@ void main() {
     expect(m.top, k.top, reason: 'K and M share the first row');
     final keypad = tester.getSize(find.byType(AnswerKeypad));
     expect(keypad.height, lessThan(844));
-  });
-
-  testWidgets('the daily goal slider shows the value while dragging', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1600);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final t = await TestTraining.create();
-    addTearDown(t.controller.dispose);
-    await tester.pumpWidget(
-      l10nApp(
-        home: TrainingSettingsScreen(
-          controller: t.controller,
-          playback: FakeLearnPlaybackFactory(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final slider = find
-        .byType(Slider)
-        .at(
-          tester
-              .widgetList<Slider>(find.byType(Slider))
-              .toList()
-              .indexWhere((s) => s.max == 500),
-        );
-    final saves = t.progressStore.saveCount;
-    await tester.drag(slider, const Offset(400, 0));
-    await tester.pumpAndSettle();
-    expect(t.controller.dailyGoal, 500);
-    expect(tester.widget<Slider>(slider).value, 500);
-    expect(find.text(en.learnCharsCount(500)), findsOneWidget);
-    expect(t.progressStore.saveCount, saves + 1);
   });
 
   testWidgets('the sample follows the sound switch after it played once', (

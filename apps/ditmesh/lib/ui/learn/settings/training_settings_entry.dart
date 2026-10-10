@@ -11,7 +11,7 @@ import 'training_settings_screen.dart';
 /// Named-route target for `/settings/training` (pushed from the Me page).
 /// Resolves the shared [TrainingController] through
 /// [TrainingControllerHost.fromContext] so the settings page edits the same
-/// instance the Learn tab uses.
+/// instance chat copy and group practice use.
 class TrainingSettingsEntry extends StatefulWidget {
   const TrainingSettingsEntry({
     super.key,
@@ -28,8 +28,14 @@ class _TrainingSettingsEntryState extends State<TrainingSettingsEntry> {
   late Future<TrainingController> _controller =
       TrainingControllerHost.fromContext(context);
 
-  void _retry() =>
-      setState(() => _controller = TrainingControllerHost.fromContext(context));
+  void _retry() {
+    // The FutureBuilder only listens from the next frame: mark a failure as
+    // handled now so it is not reported as uncaught before then.
+    final next = TrainingControllerHost.fromContext(context)..ignore();
+    setState(() {
+      _controller = next;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
-import '../../training/training_controller_host.dart';
 import '../../training/training_settings.dart';
 import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
@@ -68,12 +67,7 @@ class KeySetupPage extends StatelessWidget {
                 groupValue: active.id,
                 onChanged: (id) async {
                   if (id == null) return;
-                  final host = Provider.of<TrainingControllerHost?>(
-                    context,
-                    listen: false,
-                  );
                   await profiles.select(id);
-                  await syncLearnKeyerMode(host, profiles.active.keyerMode);
                 },
                 child: Column(
                   children: [
@@ -207,7 +201,6 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
   Future<void> _save() async {
     final s = context.s;
     final profiles = context.read<KeyProfiles>();
-    final host = Provider.of<TrainingControllerHost?>(context, listen: false);
     final navigator = Navigator.of(context);
     final profile = _draft.copyWith(name: _name.text.trim());
     try {
@@ -222,7 +215,6 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
       );
       return;
     }
-    await syncLearnKeyerMode(host, profile.keyerMode);
     navigator.pop();
   }
 
@@ -349,23 +341,5 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
         ),
       ),
     );
-  }
-}
-
-/// Learn keeps its keyer mode in the training settings: follow the active
-/// profile so every keying surface runs the same mode. Without an identity
-/// or guest profile yet, Learn picks it up from the next save or selection.
-Future<void> syncLearnKeyerMode(
-  TrainingControllerHost? host,
-  KeyerMode mode,
-) async {
-  if (host == null) return;
-  try {
-    final c = await host.controller();
-    if (c.settings.keyerMode != mode) {
-      await c.updateSettings(c.settings.copyWith(keyerMode: mode));
-    }
-  } on Object {
-    // See above.
   }
 }
