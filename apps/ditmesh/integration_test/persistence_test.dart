@@ -260,7 +260,6 @@ void main() {
           soundEnabled: false,
           flashEnabled: true,
           hapticEnabled: true,
-          keyerMode: KeyerMode.iambicA,
         );
         await FileTrainingSettingsStore.inDataDirectory(
           directory.path,

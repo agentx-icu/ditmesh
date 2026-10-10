@@ -1,14 +1,10 @@
 // Demo data for the product screenshots: one hero identity, three friends,
-// a CW QSO, a group net, a pending friend request and a week of training.
+// a CW QSO, a group net and a pending friend request.
 //
 // Each locale is a separate copy, not just a different UI language: the
 // Chinese frames show Chinese names and a Chinese group (a Chinese UI over
 // English names reads as half-translated). The Morse text itself stays in CW
 // abbreviations in both — that is what gets keyed on the air.
-import 'dart:io';
-
-import 'package:morse_trainer/morse_trainer.dart';
-import 'package:ditmesh/training/file_trainer_store.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
 
@@ -168,11 +164,9 @@ Future<SeededBackend> buildSeed(
     connectDelay: Duration.zero,
     dataDirectoryPath: dataDir,
   );
-  // open() sets `current` so the data directory (and thus the training
-  // progress file) can be seeded; the startup gate opens it again, which is
-  // idempotent on the fake.
+  // open() sets `current` before the chat is seeded; the startup gate
+  // opens it again, which is idempotent on the fake.
   await identity.open();
-  await seedTrainingProgress(await identity.dataDirectory(), anchor: anchor);
 
   var clock = anchor;
   DateTime tick(int minutes) {
@@ -253,53 +247,4 @@ Future<SeededBackend> buildSeed(
     copy: copy,
     groupId: group.id,
   );
-}
-
-/// A week of Koch practice (lesson 4, K M R S U) with a few S/U slips, so
-/// the Learn home, the statistics page and the calendar have content. The
-/// last receive session is at [anchor] and the send session just after it,
-/// so "today" always has practice (see [seedAnchor]).
-Future<void> seedTrainingProgress(
-  String dataDir, {
-  required DateTime anchor,
-}) async {
-  var progress = TrainerProgress(currentLesson: 4, dailyGoalChars: 30);
-  const target = 'KMRSU SUKMR RSUMK KMRSU';
-  const answers = <String>[
-    'KMRSU SUKMR RSUMK KMRSU',
-    'KMRSU SUKMR RSUMK KMRUU',
-    'KMRSU UUKMR RSUMK KMRSU',
-    'KMRSU SUKMR RSUMK KMRSU',
-    'KMRSS SUKMR RSUMK KMRSU',
-    'KMRSU SUKMR RSSMK KMRSU',
-  ];
-  for (var i = answers.length - 1; i >= 0; i--) {
-    final at = anchor.subtract(Duration(days: i));
-    final score = SessionScore.evaluate(
-      target,
-      answers[i],
-      at: at,
-      elapsed: const Duration(minutes: 3),
-      lesson: 4,
-      drillKind: 'groups',
-    );
-    progress = progress.recordSession(score, now: at, lesson: 4);
-  }
-  final sendAt = anchor.add(const Duration(minutes: 40));
-  final send = SessionScore.evaluate(
-    'KMRS SUK',
-    'KMRS SUK',
-    at: sendAt,
-    elapsed: const Duration(minutes: 1),
-    lesson: 4,
-    drillKind: 'send',
-  );
-  progress = progress.recordSession(
-    send,
-    now: sendAt,
-    lesson: 4,
-    updateSrs: false,
-  );
-  await Directory(dataDir).create(recursive: true);
-  await FileTrainerStore.inDataDirectory(dataDir).save(progress);
 }

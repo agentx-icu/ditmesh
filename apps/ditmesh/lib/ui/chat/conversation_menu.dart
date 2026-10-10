@@ -65,8 +65,7 @@ abstract final class ConversationMenu {
     ),
   );
 
-  /// Clearing history removes the conversation's bookmarks (materials are
-  /// independent copies and stay).
+  /// Clearing history removes the conversation's bookmarks.
   static Future<void> forgetBookmarks(
     BuildContext context,
     String conversationId,

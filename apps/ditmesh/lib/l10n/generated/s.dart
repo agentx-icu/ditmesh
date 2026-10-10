@@ -116,12 +116,6 @@ abstract class S {
   /// **'DitMesh'**
   String get appName;
 
-  /// Shell destination: Morse training
-  ///
-  /// In en, this message translates to:
-  /// **'Learn'**
-  String get navLearn;
-
   /// Shell destination: 1:1 Morse chat over Tox
   ///
   /// In en, this message translates to:
@@ -392,12 +386,6 @@ abstract class S {
   /// **'{count, plural, =1{1 character sent} other{{count} characters sent}}'**
   String learnCharsSent(int count);
 
-  /// Receive drill session summary: verdict when the lesson was passed and a new Koch character was unlocked; {char} is that character
-  ///
-  /// In en, this message translates to:
-  /// **'Next character unlocked: {char}'**
-  String learnLessonUnlocked(String char);
-
   /// Receive drill: confusion chip when the user typed nothing for the sent character {target}
   ///
   /// In en, this message translates to:
@@ -427,18 +415,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 character} other{{count} characters}}'**
   String learnCharsCount(int count);
-
-  /// Statistics: the current streak length in days ('Streak' tile)
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 day} other{{count} days}}'**
-  String statsDays(int count);
-
-  /// Statistics, accuracy trend chart: subtitle saying how many recent sessions are plotted
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Last session} other{Last {count} sessions}}'**
-  String statsTrendSubtitle(int count);
 
   /// Reference: number of entries in a group, shown at the right of the group's header
   ///
@@ -1021,12 +997,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Speed, tone, Farnsworth spacing'**
   String get accountTrainingDefaultsSubtitle;
-
-  /// Placeholder text for the training-defaults page (currently unused)
-  ///
-  /// In en, this message translates to:
-  /// **'Speed, tone and Farnsworth defaults will live here.'**
-  String get accountTrainingDefaultsPlaceholder;
 
   /// Me page, About section: tile title for the software licence
   ///
@@ -1628,12 +1598,6 @@ abstract class S {
   /// **'Training settings'**
   String get learnSettings;
 
-  /// Learn tab: shown while training progress loads
-  ///
-  /// In en, this message translates to:
-  /// **'Loading your progress...'**
-  String get learnLoading;
-
   /// Learn tab: shown when no identity is open; training needs one
   ///
   /// In en, this message translates to:
@@ -2126,12 +2090,6 @@ abstract class S {
   /// **'Receive'**
   String get learnReceiveTitle;
 
-  /// Receive drill picker / screen: title of the spaced-repetition review drill
-  ///
-  /// In en, this message translates to:
-  /// **'Review'**
-  String get learnReviewTitle;
-
   /// Receive drill: status while Morse is playing; a complete word, no trailing ellipsis (it would read as clipped text)
   ///
   /// In en, this message translates to:
@@ -2228,12 +2186,6 @@ abstract class S {
   /// **'Keep at it: 90% unlocks the next one'**
   String get learnLessonNotPassed;
 
-  /// Receive drill summary: verdict after a review session
-  ///
-  /// In en, this message translates to:
-  /// **'Review recorded'**
-  String get learnReviewRecorded;
-
   /// Receive drill summary: heading over characters copied poorly
   ///
   /// In en, this message translates to:
@@ -2251,24 +2203,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Sound, flash and haptics are all off - the screen will flash instead.'**
   String get learnNoFeedbackWarning;
-
-  /// Keyer type option: straight key (training settings, send practice)
-  ///
-  /// In en, this message translates to:
-  /// **'Straight'**
-  String get learnKeyerStraight;
-
-  /// Keyer type option: iambic paddles, mode A (technical term, usually kept)
-  ///
-  /// In en, this message translates to:
-  /// **'Iambic A'**
-  String get learnKeyerIambicA;
-
-  /// Keyer type option: iambic paddles, mode B (technical term, usually kept)
-  ///
-  /// In en, this message translates to:
-  /// **'Iambic B'**
-  String get learnKeyerIambicB;
 
   /// Send practice: label printed on the on-screen straight key (short, upper case in English)
   ///
@@ -2359,18 +2293,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Vibration'**
   String get learnHaptic;
-
-  /// Training settings: title of the keyer type selector
-  ///
-  /// In en, this message translates to:
-  /// **'Keyer'**
-  String get learnKeyer;
-
-  /// Training settings: title of the daily goal slider (characters per day)
-  ///
-  /// In en, this message translates to:
-  /// **'Daily goal'**
-  String get learnDailyGoal;
 
   /// Reference tab: app bar title
   ///
@@ -3319,12 +3241,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Replayed: this session counts as practice but won\'t unlock a lesson or update reviews.'**
   String get learnReplayAssistedNote;
-
-  /// Daily plan card: the next step to do
-  ///
-  /// In en, this message translates to:
-  /// **'Next: {step}'**
-  String learnPlanNext(String step);
 
   /// Message status tooltip: a queued send the user cancelled before it left the device
   ///
@@ -4610,72 +4526,6 @@ abstract class S {
   /// **'An encrypted file with your identity, chats and progress, to keep or to move to another device'**
   String get backupXMeSubtitle;
 
-  /// Conditions preset: clean tone (default)
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get conditionsClear;
-
-  /// Conditions preset: light interference
-  ///
-  /// In en, this message translates to:
-  /// **'Light interference'**
-  String get conditionsLight;
-
-  /// Conditions preset: realistic radio practice
-  ///
-  /// In en, this message translates to:
-  /// **'Radio practice'**
-  String get conditionsRadio;
-
-  /// Conditions preset hint: clear
-  ///
-  /// In en, this message translates to:
-  /// **'A clean, steady tone: ordinary practice.'**
-  String get conditionsClearHint;
-
-  /// Conditions preset hint: light
-  ///
-  /// In en, this message translates to:
-  /// **'Soft background noise and gentle fading. Results are kept apart from clean practice.'**
-  String get conditionsLightHint;
-
-  /// Conditions preset hint: radio practice
-  ///
-  /// In en, this message translates to:
-  /// **'Noise, deep fading, a nearby station and slightly uneven timing. Results are kept apart from clean practice.'**
-  String get conditionsRadioHint;
-
-  /// Receive drill: chip naming the active conditions
-  ///
-  /// In en, this message translates to:
-  /// **'Conditions: {name}'**
-  String conditionsActive(String name);
-
-  /// Receive drill: conditions need sound
-  ///
-  /// In en, this message translates to:
-  /// **'Radio conditions are heard, not seen: turn sound on in the training settings, or practise with Clear conditions.'**
-  String get conditionsNeedSound;
-
-  /// Round result: replay the round without effects
-  ///
-  /// In en, this message translates to:
-  /// **'Play without effects'**
-  String get conditionsCleanReplay;
-
-  /// Receive summary: results under the same conditions and speed
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 attempt under these conditions at this speed: {accuracy}%} other{{count} attempts under these conditions at this speed: {accuracy}% on average}}'**
-  String conditionsComparable(int count, int accuracy);
-
-  /// Receive summary: conditions results do not change progress
-  ///
-  /// In en, this message translates to:
-  /// **'Practice under radio conditions counts as activity but does not change your lessons, review schedule or speed advice.'**
-  String get conditionsSeparateNote;
-
   /// Key setup page title; also the Me entry
   ///
   /// In en, this message translates to:
@@ -5113,12 +4963,6 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Its rounds and local results are removed from this device. Your training history and the group\'s messages stay.'**
   String get groupPracticeDeleteBody;
-
-  /// Receive drill: the conditions audio could not be started
-  ///
-  /// In en, this message translates to:
-  /// **'The audio could not be started on this device. Practise with Clear conditions instead.'**
-  String get conditionsAudioFailed;
 
   /// Block action (menus, friend request and invite buttons)
   ///

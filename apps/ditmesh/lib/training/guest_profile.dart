@@ -5,7 +5,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'file_trainer_store.dart';
-import 'qso_practice.dart';
 import 'training_controller.dart';
 import 'training_doc_store.dart';
 import 'training_settings_store.dart';
@@ -106,8 +105,6 @@ class GuestStore {
       docs: FileTrainingDocStore.inDataDirectory(dir),
     );
     await controller.load();
-    // A finished QSO whose save failed last time is committed now.
-    await controller.recoverFinishedQso();
     return controller;
   }
 

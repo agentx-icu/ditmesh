@@ -74,6 +74,15 @@ TrainingController _controller() => TrainingController(
   settingsStore: InMemoryTrainingSettingsStore(),
 );
 
+/// Records one scored exercise (any progress write will do).
+Future<ReceiveOutcome> _record(TrainingController c, [String id = 'ex']) =>
+    c.recordExercise(
+      score: SessionScore.evaluate('K', 'K'),
+      id: id,
+      source: ExerciseSource.chat,
+      assistance: const <Assistance>{},
+    );
+
 bool _isDisposed(TrainingController c) {
   try {
     c.addListener(() {});
@@ -237,7 +246,7 @@ void main() {
     final whileReplacing = host.controller();
     expect(loads, hasLength(1), reason: 'do not reload the old identity');
     await expectLater(whileReplacing, throwsStateError);
-    await expectLater(c.setLesson(8), throwsStateError);
+    await expectLater(_record(c), throwsStateError);
     expect(replaced, isFalse);
     settings.release.complete();
     await Future.wait(<Future<void>>[save, replacement]);

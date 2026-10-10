@@ -12,9 +12,6 @@ class SJa extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => '学習';
-
-  @override
   String get navChat => 'チャット';
 
   @override
@@ -165,11 +162,6 @@ class SJa extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return '次の文字を解放しました：$char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target を聞き逃しました';
   }
@@ -195,27 +187,6 @@ class SJa extends S {
       count,
       locale: localeName,
       other: '$count 文字',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 日',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '最近 $count 回の練習',
-      one: '前回の練習',
     );
     return '$_temp0';
   }
@@ -529,9 +500,6 @@ class SJa extends S {
   String get accountTrainingDefaultsSubtitle => '速度、音の高さ、Farnsworth 間隔';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => '速度、音の高さ、Farnsworth 間隔の初期設定がここに表示されます。';
-
-  @override
   String get accountAboutLicence => 'ライセンス';
 
   @override
@@ -834,9 +802,6 @@ class SJa extends S {
   String get learnSettings => '練習設定';
 
   @override
-  String get learnLoading => '学習の進捗を読み込み中…';
-
-  @override
   String get learnIdentityRequired => '練習を始めるには ID 情報を作成するか、ロックを解除してください。進捗は ID 情報と一緒に保存され、バックアップにも含まれます。';
 
   @override
@@ -1089,9 +1054,6 @@ class SJa extends S {
   String get learnReceiveTitle => '受信';
 
   @override
-  String get learnReviewTitle => '復習';
-
-  @override
   String get learnListen => '再生中';
 
   @override
@@ -1140,9 +1102,6 @@ class SJa extends S {
   String get learnLessonNotPassed => '続けましょう：正答率 90% で次の文字を解放';
 
   @override
-  String get learnReviewRecorded => '復習を記録しました';
-
-  @override
   String get learnWeakChars => '練習が必要';
 
   @override
@@ -1150,15 +1109,6 @@ class SJa extends S {
 
   @override
   String get learnNoFeedbackWarning => '音、画面点滅、振動がすべて無効です。代わりに画面を点滅させます。';
-
-  @override
-  String get learnKeyerStraight => '縦振れ電鍵';
-
-  @override
-  String get learnKeyerIambicA => 'アイアンビック A';
-
-  @override
-  String get learnKeyerIambicB => 'アイアンビック B';
 
   @override
   String get learnStraightKeyLabel => '電鍵';
@@ -1204,12 +1154,6 @@ class SJa extends S {
 
   @override
   String get learnHaptic => '振動';
-
-  @override
-  String get learnKeyer => '電鍵モード';
-
-  @override
-  String get learnDailyGoal => '毎日の目標';
 
   @override
   String get referenceReferenceTitle => 'モールス符号の資料';
@@ -1754,11 +1698,6 @@ class SJa extends S {
 
   @override
   String get learnReplayAssistedNote => '再生し直しました：練習には数えますが、レッスンの解放や復習の更新は行いません。';
-
-  @override
-  String learnPlanNext(String step) {
-    return '次：$step';
-  }
 
   @override
   String get messageStatusCancelled => 'キャンセル済み（未送信）';
@@ -2514,48 +2453,6 @@ class SJa extends S {
   String get backupXMeSubtitle => 'ID・チャット・進捗をまとめた暗号化ファイル。保管用にも、別の端末への移行にも';
 
   @override
-  String get conditionsClear => 'クリア';
-
-  @override
-  String get conditionsLight => '軽い混信';
-
-  @override
-  String get conditionsRadio => '実戦練習';
-
-  @override
-  String get conditionsClearHint => 'きれいで一定の音。通常の練習です。';
-
-  @override
-  String get conditionsLightHint => '小さな雑音とゆるやかなフェージング。結果はクリアな練習とは別に記録します。';
-
-  @override
-  String get conditionsRadioHint => '雑音、深いフェージング、近くの局、少し不揃いなタイミング。結果はクリアな練習とは別に記録します。';
-
-  @override
-  String conditionsActive(String name) {
-    return '受信環境：$name';
-  }
-
-  @override
-  String get conditionsNeedSound => '受信環境は音で聞くものです。練習設定で音をオンにするか、「クリア」で練習してください。';
-
-  @override
-  String get conditionsCleanReplay => '効果なしで再生';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'この環境・速度での挑戦 $count 回：平均 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => '受信環境つきの練習は活動として記録されますが、レッスン・復習スケジュール・速度のおすすめは変わりません。';
-
-  @override
   String get keysTitle => 'キーと外部キーヤー';
 
   @override
@@ -2808,9 +2705,6 @@ class SJa extends S {
 
   @override
   String get groupPracticeDeleteBody => 'ラウンドとこの端末の結果が削除されます。練習履歴とグループのメッセージは残ります。';
-
-  @override
-  String get conditionsAudioFailed => 'この端末では音声を開始できませんでした。「クリア」で練習してください。';
 
   @override
   String get moderationBlock => 'ブロック';

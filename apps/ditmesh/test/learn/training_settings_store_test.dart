@@ -21,28 +21,17 @@ void main() {
         soundEnabled: false,
         flashEnabled: true,
         hapticEnabled: true,
-        keyerMode: KeyerMode.straight,
       );
       expect(TrainingSettings.fromJson(settings.toJson()), settings);
     });
 
-    test('missing keys and unknown keyer fall back to defaults', () {
+    test('missing keys fall back to defaults', () {
       final parsed = TrainingSettings.fromJson(<String, Object?>{
-        'keyerMode': 'sideswiper',
         'trainer': <String, Object?>{'characterWpm': 15},
       });
-      expect(parsed.keyerMode, KeyerMode.iambicB);
       expect(parsed.soundEnabled, isTrue);
       expect(parsed.trainer.characterWpm, 15);
       expect(parsed.trainer.toneHz, TrainerSettings.defaults.toneHz);
-    });
-
-
-    test('hasFeedback is false only when every modality is off', () {
-      const off = TrainingSettings(soundEnabled: false);
-      expect(off.hasFeedback, isFalse);
-      expect(off.copyWith(flashEnabled: true).hasFeedback, isTrue);
-      expect(TrainingSettings.defaults.hasFeedback, isTrue);
     });
   });
 
@@ -50,7 +39,7 @@ void main() {
     test('round-trips and counts saves', () async {
       final store = InMemoryTrainingSettingsStore();
       expect(await store.load(), isNull);
-      const s = TrainingSettings(keyerMode: KeyerMode.iambicA);
+      const s = TrainingSettings(flashEnabled: true);
       await store.save(s);
       expect(store.saveCount, 1);
       expect(await store.load(), s);

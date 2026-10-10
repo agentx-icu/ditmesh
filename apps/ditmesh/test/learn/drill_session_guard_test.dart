@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
+import 'package:ditmesh/training/chat_copy_session.dart';
 import 'package:ditmesh/training/receive_session.dart';
 import 'package:ditmesh/ui/learn/receive/receive_drill_screen.dart';
 import 'package:ditmesh/ui/learn/receive/receive_summary_view.dart';
@@ -76,7 +77,7 @@ void main() {
     Future<void> pump(WidgetTester tester) async {
       t = await TestTraining.create(settings: kShortSettings);
       addTearDown(t.controller.dispose);
-      session = t.controller.startLessonSession();
+      session = t.controller.startFocusSession(<String>['K', 'M'])!;
       wake = _FakeWake();
       await _open(
         tester,

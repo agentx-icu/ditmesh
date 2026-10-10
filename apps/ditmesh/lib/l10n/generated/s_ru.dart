@@ -12,9 +12,6 @@ class SRu extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => 'Обучение';
-
-  @override
   String get navChat => 'Чаты';
 
   @override
@@ -168,11 +165,6 @@ class SRu extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return 'Открыт новый символ: $char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target пропущен';
   }
@@ -201,32 +193,6 @@ class SRu extends S {
       many: '$count символов',
       few: '$count символа',
       one: '$count символ',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count дня',
-      many: '$count дней',
-      few: '$count дня',
-      one: '$count день',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Последние $count занятия',
-      many: 'Последние $count занятий',
-      few: 'Последние $count занятия',
-      one: 'Последнее $count занятие',
     );
     return '$_temp0';
   }
@@ -543,9 +509,6 @@ class SRu extends S {
   String get accountTrainingDefaultsSubtitle => 'Скорость, тон и интервалы Фарнсворта';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => 'Здесь будут параметры скорости, тона и интервалов Фарнсворта по умолчанию.';
-
-  @override
   String get accountAboutLicence => 'Лицензия';
 
   @override
@@ -848,9 +811,6 @@ class SRu extends S {
   String get learnSettings => 'Настройки обучения';
 
   @override
-  String get learnLoading => 'Загрузка прогресса...';
-
-  @override
   String get learnIdentityRequired => 'Создайте или разблокируйте учётную запись, чтобы начать обучение. Прогресс сохраняется вместе с ключами и входит в резервную копию.';
 
   @override
@@ -1103,9 +1063,6 @@ class SRu extends S {
   String get learnReceiveTitle => 'Приём';
 
   @override
-  String get learnReviewTitle => 'Повторение';
-
-  @override
   String get learnListen => 'Воспроизведение';
 
   @override
@@ -1154,9 +1111,6 @@ class SRu extends S {
   String get learnLessonNotPassed => 'Продолжайте: точность 90% откроет следующий символ';
 
   @override
-  String get learnReviewRecorded => 'Повторение записано';
-
-  @override
   String get learnWeakChars => 'Нужно улучшить';
 
   @override
@@ -1164,15 +1118,6 @@ class SRu extends S {
 
   @override
   String get learnNoFeedbackWarning => 'Звук, вспышки и вибрация отключены — вместо них будет мигать экран.';
-
-  @override
-  String get learnKeyerStraight => 'Вертикальный';
-
-  @override
-  String get learnKeyerIambicA => 'Ямбический A';
-
-  @override
-  String get learnKeyerIambicB => 'Ямбический B';
 
   @override
   String get learnStraightKeyLabel => 'КЛЮЧ';
@@ -1218,12 +1163,6 @@ class SRu extends S {
 
   @override
   String get learnHaptic => 'Вибрация';
-
-  @override
-  String get learnKeyer => 'Тип ключа';
-
-  @override
-  String get learnDailyGoal => 'Дневная цель';
 
   @override
   String get referenceReferenceTitle => 'Справочник азбуки Морзе';
@@ -1780,11 +1719,6 @@ class SRu extends S {
 
   @override
   String get learnReplayAssistedNote => 'Повтор: занятие засчитано как практика, но не открывает урок и не обновляет повторения.';
-
-  @override
-  String learnPlanNext(String step) {
-    return 'Далее: $step';
-  }
 
   @override
   String get messageStatusCancelled => 'Отменено — не отправлено';
@@ -2567,51 +2501,6 @@ class SRu extends S {
   String get backupXMeSubtitle => 'Зашифрованный файл с личностью, чатами и прогрессом — для хранения или переноса на другое устройство';
 
   @override
-  String get conditionsClear => 'Чисто';
-
-  @override
-  String get conditionsLight => 'Лёгкие помехи';
-
-  @override
-  String get conditionsRadio => 'Эфирная практика';
-
-  @override
-  String get conditionsClearHint => 'Чистый ровный тон — обычная тренировка.';
-
-  @override
-  String get conditionsLightHint => 'Тихий шум и мягкие замирания. Результаты хранятся отдельно от чистой тренировки.';
-
-  @override
-  String get conditionsRadioHint => 'Шум, глубокие замирания, соседняя станция и немного неровный темп. Результаты хранятся отдельно от чистой тренировки.';
-
-  @override
-  String conditionsActive(String name) {
-    return 'Условия: $name';
-  }
-
-  @override
-  String get conditionsNeedSound => 'Эфирные условия слышны, а не видны: включите звук в настройках тренировки или занимайтесь в чистых условиях.';
-
-  @override
-  String get conditionsCleanReplay => 'Воспроизвести без эффектов';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count попытки: в среднем $accuracy%',
-      many: '$count попыток в этих условиях на этой скорости: в среднем $accuracy%',
-      few: '$count попытки в этих условиях на этой скорости: в среднем $accuracy%',
-      one: '$count попытка в этих условиях на этой скорости: $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => 'Тренировка в эфирных условиях засчитывается как активность, но не меняет уроки, график повторения и советы по скорости.';
-
-  @override
   String get keysTitle => 'Клавиши и внешние ключи';
 
   @override
@@ -2873,9 +2762,6 @@ class SRu extends S {
 
   @override
   String get groupPracticeDeleteBody => 'Раунды и локальные результаты будут удалены с этого устройства. История тренировок и сообщения группы останутся.';
-
-  @override
-  String get conditionsAudioFailed => 'Не удалось запустить звук на этом устройстве. Занимайтесь в чистых условиях.';
 
   @override
   String get moderationBlock => 'Заблокировать';

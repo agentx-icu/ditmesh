@@ -2,22 +2,20 @@
 // Android bold text adds width. The inherited 2x phone cases from
 // phone_layout_test.dart are repeated at 3x; overflow is accepted only where
 // a scroll view exists, so every case here must settle without an exception.
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/training/training_controller.dart';
 import 'package:ditmesh/ui/account/identity_card.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
-import 'package:ditmesh/ui/learn/learn_scope.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../account/test_app.dart';
 import '../chat/test_support.dart' as chat;
 import '../learn/helpers/l10n.dart';
+import '../learn/helpers/unavailable_training.dart';
 import '../reference/reference_test_support.dart';
 import 'phone_support.dart';
 
@@ -56,21 +54,15 @@ void main() {
     });
   });
 
-  group('learn placeholder at 3x', () {
+  group('training data placeholder at 3x', () {
     for (final bool loading in <bool>[true, false]) {
       testWidgets('${loading ? 'loading' : 'identity required'} fits a '
           '320 px phone', (tester) async {
         setPhone(tester, kSmallPhone, textScale: kAccessibilityScale);
-        final Completer<TrainingController> never =
-            Completer<TrainingController>();
         await tester.pumpWidget(
           l10nApp(
-            home: LearnScope(
-              controllerFactory: loading
-                  ? (_) => never.future
-                  : (_) => Future<TrainingController>.error('no identity'),
-              description: en.learnIdentityRequired,
-              builder: (_, _, _) => const SizedBox(),
+            home: unavailableTrainingSettings(
+              UnavailableIdentityService(loading: loading),
             ),
           ),
         );

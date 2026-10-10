@@ -252,7 +252,7 @@ void main() {
       expect(await store.hasProgress(), isFalse);
       await FileTrainingSettingsStore.inDataDirectory(
         await store.directory(),
-      ).save(const TrainingSettings(planMinutes: 15));
+      ).save(const TrainingSettings(flashEnabled: true));
       expect(await store.hasProgress(), isTrue);
     });
   });

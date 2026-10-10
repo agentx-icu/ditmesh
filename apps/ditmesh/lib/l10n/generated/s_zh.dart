@@ -12,9 +12,6 @@ class SZh extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => '学习';
-
-  @override
   String get navChat => '聊天';
 
   @override
@@ -165,11 +162,6 @@ class SZh extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return '已解锁新字符：$char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target 漏抄';
   }
@@ -195,27 +187,6 @@ class SZh extends S {
       count,
       locale: localeName,
       other: '$count 个字符',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 天',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '最近 $count 次练习',
-      one: '最近一次练习',
     );
     return '$_temp0';
   }
@@ -529,9 +500,6 @@ class SZh extends S {
   String get accountTrainingDefaultsSubtitle => '速度、音调、Farnsworth 间距';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => '速度、音调和 Farnsworth 默认值将放在这里。';
-
-  @override
   String get accountAboutLicence => '许可证';
 
   @override
@@ -834,9 +802,6 @@ class SZh extends S {
   String get learnSettings => '训练设置';
 
   @override
-  String get learnLoading => '正在加载你的进度...';
-
-  @override
   String get learnIdentityRequired => '创建或解锁身份后即可开始训练。进度随身份保存，会一同进入备份。';
 
   @override
@@ -1089,9 +1054,6 @@ class SZh extends S {
   String get learnReceiveTitle => '听抄';
 
   @override
-  String get learnReviewTitle => '复习';
-
-  @override
   String get learnListen => '正在播放';
 
   @override
@@ -1140,9 +1102,6 @@ class SZh extends S {
   String get learnLessonNotPassed => '继续加油：正确率达 90% 即可解锁下一个字符';
 
   @override
-  String get learnReviewRecorded => '复习已记录';
-
-  @override
   String get learnWeakChars => '需要加强';
 
   @override
@@ -1150,15 +1109,6 @@ class SZh extends S {
 
   @override
   String get learnNoFeedbackWarning => '声音、闪光和振动都已关闭 - 将改用屏幕闪烁提示。';
-
-  @override
-  String get learnKeyerStraight => '直键';
-
-  @override
-  String get learnKeyerIambicA => 'Iambic A';
-
-  @override
-  String get learnKeyerIambicB => 'Iambic B';
 
   @override
   String get learnStraightKeyLabel => '电键';
@@ -1204,12 +1154,6 @@ class SZh extends S {
 
   @override
   String get learnHaptic => '振动';
-
-  @override
-  String get learnKeyer => '电键模式';
-
-  @override
-  String get learnDailyGoal => '每日目标';
 
   @override
   String get referenceReferenceTitle => '莫尔斯电码手册';
@@ -1754,11 +1698,6 @@ class SZh extends S {
 
   @override
   String get learnReplayAssistedNote => '已重播：本次练习计入练习量，但不会解锁课程或更新复习。';
-
-  @override
-  String learnPlanNext(String step) {
-    return '下一步：$step';
-  }
 
   @override
   String get messageStatusCancelled => '已取消——未发送';
@@ -2514,48 +2453,6 @@ class SZh extends S {
   String get backupXMeSubtitle => '包含身份、聊天和进度的加密文件，可留存或迁移到其他设备';
 
   @override
-  String get conditionsClear => '清晰';
-
-  @override
-  String get conditionsLight => '轻度干扰';
-
-  @override
-  String get conditionsRadio => '实战电台';
-
-  @override
-  String get conditionsClearHint => '干净稳定的音调，即普通练习。';
-
-  @override
-  String get conditionsLightHint => '轻微底噪和缓慢衰落。成绩与清晰练习分开记录。';
-
-  @override
-  String get conditionsRadioHint => '噪声、深度衰落、邻近电台干扰和略不均匀的节奏。成绩与清晰练习分开记录。';
-
-  @override
-  String conditionsActive(String name) {
-    return '收听环境：$name';
-  }
-
-  @override
-  String get conditionsNeedSound => '电台环境只能听不能看：请在训练设置中打开声音，或改用“清晰”环境练习。';
-
-  @override
-  String get conditionsCleanReplay => '无效果重播';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '在此环境和速度下共 $count 次：平均 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => '电台环境练习计入活动，但不会改变课程进度、复习计划或速度建议。';
-
-  @override
   String get keysTitle => '按键与外接电键';
 
   @override
@@ -2808,9 +2705,6 @@ class SZh extends S {
 
   @override
   String get groupPracticeDeleteBody => '本机上的轮次和成绩将被删除；训练记录和群消息保留。';
-
-  @override
-  String get conditionsAudioFailed => '本设备无法播放音频。请改用“清晰”环境练习。';
 
   @override
   String get moderationBlock => '屏蔽';
@@ -3248,9 +3142,6 @@ class SZhHant extends SZh {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => '學習';
-
-  @override
   String get navChat => '聊天';
 
   @override
@@ -3401,11 +3292,6 @@ class SZhHant extends SZh {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return '已解鎖新字元：$char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target 漏抄';
   }
@@ -3431,27 +3317,6 @@ class SZhHant extends SZh {
       count,
       locale: localeName,
       other: '$count 個字元',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 天',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '最近 $count 次練習',
-      one: '最近一次練習',
     );
     return '$_temp0';
   }
@@ -3765,9 +3630,6 @@ class SZhHant extends SZh {
   String get accountTrainingDefaultsSubtitle => '速度、音調、Farnsworth 間距';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => '速度、音調和 Farnsworth 預設值將放在這裡。';
-
-  @override
   String get accountAboutLicence => '授權條款';
 
   @override
@@ -4070,9 +3932,6 @@ class SZhHant extends SZh {
   String get learnSettings => '訓練設定';
 
   @override
-  String get learnLoading => '正在載入你的進度...';
-
-  @override
   String get learnIdentityRequired => '建立或解鎖身分後即可開始訓練。進度隨身分儲存，會一同進入備份。';
 
   @override
@@ -4325,9 +4184,6 @@ class SZhHant extends SZh {
   String get learnReceiveTitle => '聽抄';
 
   @override
-  String get learnReviewTitle => '複習';
-
-  @override
   String get learnListen => '正在播放';
 
   @override
@@ -4376,9 +4232,6 @@ class SZhHant extends SZh {
   String get learnLessonNotPassed => '繼續加油：正確率達 90% 即可解鎖下一個字元';
 
   @override
-  String get learnReviewRecorded => '複習已紀錄';
-
-  @override
   String get learnWeakChars => '需要加強';
 
   @override
@@ -4386,15 +4239,6 @@ class SZhHant extends SZh {
 
   @override
   String get learnNoFeedbackWarning => '聲音、閃光和振動都已關閉 - 將改用螢幕閃爍提示。';
-
-  @override
-  String get learnKeyerStraight => '直鍵';
-
-  @override
-  String get learnKeyerIambicA => 'Iambic A';
-
-  @override
-  String get learnKeyerIambicB => 'Iambic B';
 
   @override
   String get learnStraightKeyLabel => '電鍵';
@@ -4440,12 +4284,6 @@ class SZhHant extends SZh {
 
   @override
   String get learnHaptic => '振動';
-
-  @override
-  String get learnKeyer => '電鍵模式';
-
-  @override
-  String get learnDailyGoal => '每日目標';
 
   @override
   String get referenceReferenceTitle => '摩斯電碼手冊';
@@ -4990,11 +4828,6 @@ class SZhHant extends SZh {
 
   @override
   String get learnReplayAssistedNote => '已重播：本次練習計入練習量，但不會解鎖課程或更新複習。';
-
-  @override
-  String learnPlanNext(String step) {
-    return '下一步：$step';
-  }
 
   @override
   String get messageStatusCancelled => '已取消——未發送';
@@ -5750,48 +5583,6 @@ class SZhHant extends SZh {
   String get backupXMeSubtitle => '包含身分、聊天與進度的加密檔案，可留存或移轉到其他裝置';
 
   @override
-  String get conditionsClear => '清晰';
-
-  @override
-  String get conditionsLight => '輕度干擾';
-
-  @override
-  String get conditionsRadio => '實戰電台';
-
-  @override
-  String get conditionsClearHint => '乾淨穩定的音調，即一般練習。';
-
-  @override
-  String get conditionsLightHint => '輕微底噪與緩慢衰落。成績與清晰練習分開記錄。';
-
-  @override
-  String get conditionsRadioHint => '雜訊、深度衰落、鄰近電台干擾與略不均勻的節奏。成績與清晰練習分開記錄。';
-
-  @override
-  String conditionsActive(String name) {
-    return '收聽環境：$name';
-  }
-
-  @override
-  String get conditionsNeedSound => '電台環境只能聽不能看：請在訓練設定中開啟聲音，或改用「清晰」環境練習。';
-
-  @override
-  String get conditionsCleanReplay => '無效果重播';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '在此環境與速度下共 $count 次：平均 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => '電台環境練習計入活動，但不會改變課程進度、複習計畫或速度建議。';
-
-  @override
   String get keysTitle => '按鍵與外接電鍵';
 
   @override
@@ -6044,9 +5835,6 @@ class SZhHant extends SZh {
 
   @override
   String get groupPracticeDeleteBody => '本機上的輪次與成績將被刪除；訓練紀錄與群組訊息保留。';
-
-  @override
-  String get conditionsAudioFailed => '本裝置無法播放音訊。請改用「清晰」環境練習。';
 
   @override
   String get moderationBlock => '封鎖';

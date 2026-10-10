@@ -7,6 +7,15 @@ import 'package:ditmesh/training/training_controller.dart';
 import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/training/training_settings_store.dart';
 
+/// Records one scored exercise (any progress write will do).
+Future<ReceiveOutcome> _record(TrainingController c, [String id = 'ex']) =>
+    c.recordExercise(
+      score: SessionScore.evaluate('K', 'K'),
+      id: id,
+      source: ExerciseSource.chat,
+      assistance: const <Assistance>{},
+    );
+
 final class _RetrySettingsStore implements TrainingSettingsStore {
   _RetrySettingsStore({this.failuresRemaining = 1});
 
@@ -70,32 +79,6 @@ void main() {
         settingsStore: settingsStore ?? InMemoryTrainingSettingsStore(),
       );
 
-  test(
-    'a reset triggered by notification cannot be overwritten by its save',
-    () async {
-      final c = controller();
-      await c.load();
-      Future<void>? reset;
-      c.addListener(() {
-        if (reset == null) {
-          // Set the marker before reset itself notifies.
-          reset = Future<void>.value();
-          reset = c.resetProgress();
-        }
-      });
-
-      await c.setLesson(5);
-      await reset;
-
-      expect(c.currentLesson, 1);
-      expect(
-        await FileTrainerStore.inDataDirectory(directory.path).load(),
-        isNull,
-      );
-      c.dispose();
-    },
-  );
-
   test('failed training settings save can retry the same selection', () async {
     final settings = _RetrySettingsStore();
     final c = controller(settingsStore: settings);
@@ -116,7 +99,7 @@ void main() {
     final c = controller();
     c.dispose();
 
-    await expectLater(c.setLesson(5), throwsStateError);
+    await expectLater(_record(c), throwsStateError);
     await expectLater(
       c.updateSettings(const TrainingSettings(flashEnabled: true)),
       throwsStateError,
@@ -158,14 +141,14 @@ void main() {
         progressStore: progress,
         settingsStore: InMemoryTrainingSettingsStore(),
       );
-      await expectLater(c.setLesson(5), throwsA(isA<FileSystemException>()));
+      expect((await _record(c)).saved, isFalse);
       await c.updateSettings(const TrainingSettings(flashEnabled: true));
 
       await expectLater(c.flush(), throwsA(isA<FileSystemException>()));
 
-      await c.setLesson(5);
+      expect(await c.retryProgressSave(), isTrue);
       await c.flush();
-      expect(progress.saved?.currentLesson, 5);
+      expect(progress.saved?.history, hasLength(1));
       c.dispose();
     },
   );

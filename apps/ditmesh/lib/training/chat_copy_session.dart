@@ -104,7 +104,6 @@ extension FocusedPractice on TrainingController {
     }
     final t = trainerSettings;
     return ReceiveSession(
-      kind: ReceiveDrillKind.groups,
       generator: RandomGroupsDrill(
         chars: pool,
         groupCount: 1,

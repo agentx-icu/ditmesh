@@ -46,7 +46,6 @@ void main() {
     expect(find.text(en.learnWpmValue('20')), findsOneWidget);
     expect(find.text(en.learnHzValue('700')), findsOneWidget);
     expect(find.text(en.learnCharsCount(50)), findsOneWidget);
-    expect(find.text(en.learnCharsCount(100)), findsOneWidget);
     // Defaults have Farnsworth 8 wpm on.
     expect(find.text(en.learnWpmValue('8')), findsOneWidget);
     expect(
@@ -147,19 +146,6 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('keyer mode segmented button persists', (tester) async {
-    final (t, _) = await _pump(tester);
-    await tester.scrollUntilVisible(
-      find.text(en.learnKeyerStraight),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text(en.learnKeyerStraight));
-    await tester.pumpAndSettle();
-    expect(t.controller.settings.keyerMode, KeyerMode.straight);
-    expect((await t.settingsStore.load())!.keyerMode, KeyerMode.straight);
-  });
-
   testWidgets('play sample renders CQ through the playback factory', (
     tester,
   ) async {
@@ -189,9 +175,5 @@ void main() {
       ),
     );
     expect(button.onPressed, isNotNull);
-  });
-
-  test('route carries the /settings/training name', () {
-    expect(TrainingSettingsScreen.routeName, '/settings/training');
   });
 }

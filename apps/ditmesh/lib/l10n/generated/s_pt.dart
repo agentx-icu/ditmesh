@@ -12,9 +12,6 @@ class SPt extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => 'Aprender';
-
-  @override
   String get navChat => 'Conversas';
 
   @override
@@ -166,11 +163,6 @@ class SPt extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return 'Novo caractere desbloqueado: $char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target não recebido';
   }
@@ -197,29 +189,6 @@ class SPt extends S {
       locale: localeName,
       other: '$count caracteres',
       one: '$count caractere',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count dias',
-      one: '$count dia',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Últimas $count sessões',
-      one: 'Última sessão',
-      zero: 'Nenhuma sessão',
     );
     return '$_temp0';
   }
@@ -534,9 +503,6 @@ class SPt extends S {
   String get accountTrainingDefaultsSubtitle => 'Velocidade, tom e espaçamento Farnsworth';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => 'Os padrões de velocidade, tom e Farnsworth ficarão aqui.';
-
-  @override
   String get accountAboutLicence => 'Licença';
 
   @override
@@ -839,9 +805,6 @@ class SPt extends S {
   String get learnSettings => 'Configurações de treinamento';
 
   @override
-  String get learnLoading => 'Carregando seu progresso...';
-
-  @override
   String get learnIdentityRequired => 'Crie ou desbloqueie sua identidade para começar a treinar. O progresso é salvo com ela e incluído no backup.';
 
   @override
@@ -1094,9 +1057,6 @@ class SPt extends S {
   String get learnReceiveTitle => 'Recepção';
 
   @override
-  String get learnReviewTitle => 'Revisão';
-
-  @override
   String get learnListen => 'Reproduzindo';
 
   @override
@@ -1145,9 +1105,6 @@ class SPt extends S {
   String get learnLessonNotPassed => 'Continue praticando: 90% desbloqueia o próximo caractere';
 
   @override
-  String get learnReviewRecorded => 'Revisão registrada';
-
-  @override
   String get learnWeakChars => 'Precisa melhorar';
 
   @override
@@ -1155,15 +1112,6 @@ class SPt extends S {
 
   @override
   String get learnNoFeedbackWarning => 'Som, flashes e vibração estão desligados: a tela piscará no lugar deles.';
-
-  @override
-  String get learnKeyerStraight => 'Manual';
-
-  @override
-  String get learnKeyerIambicA => 'Iâmbico A';
-
-  @override
-  String get learnKeyerIambicB => 'Iâmbico B';
 
   @override
   String get learnStraightKeyLabel => 'CHAVE';
@@ -1209,12 +1157,6 @@ class SPt extends S {
 
   @override
   String get learnHaptic => 'Vibração';
-
-  @override
-  String get learnKeyer => 'Manipulador';
-
-  @override
-  String get learnDailyGoal => 'Meta diária';
 
   @override
   String get referenceReferenceTitle => 'Referência de Morse';
@@ -1763,11 +1705,6 @@ class SPt extends S {
 
   @override
   String get learnReplayAssistedNote => 'Repetido: esta sessão conta como prática, mas não desbloqueia lições nem atualiza revisões.';
-
-  @override
-  String learnPlanNext(String step) {
-    return 'Próximo: $step';
-  }
 
   @override
   String get messageStatusCancelled => 'Cancelado — nunca enviado';
@@ -2532,49 +2469,6 @@ class SPt extends S {
   String get backupXMeSubtitle => 'Um arquivo criptografado com sua identidade, conversas e progresso, para guardar ou levar a outro dispositivo';
 
   @override
-  String get conditionsClear => 'Limpo';
-
-  @override
-  String get conditionsLight => 'Interferência leve';
-
-  @override
-  String get conditionsRadio => 'Prática de rádio';
-
-  @override
-  String get conditionsClearHint => 'Um tom limpo e estável: prática normal.';
-
-  @override
-  String get conditionsLightHint => 'Ruído de fundo suave e desvanecimento leve. Os resultados ficam separados da prática limpa.';
-
-  @override
-  String get conditionsRadioHint => 'Ruído, desvanecimento forte, uma estação vizinha e ritmo um pouco irregular. Os resultados ficam separados da prática limpa.';
-
-  @override
-  String conditionsActive(String name) {
-    return 'Condições: $name';
-  }
-
-  @override
-  String get conditionsNeedSound => 'Condições de rádio se ouvem, não se veem: ative o som nos ajustes de treino ou pratique com condições limpas.';
-
-  @override
-  String get conditionsCleanReplay => 'Tocar sem efeitos';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tentativas nestas condições e velocidade: média de $accuracy%',
-      one: '1 tentativa nestas condições e velocidade: $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => 'A prática com condições de rádio conta como atividade, mas não muda suas lições, revisões nem a recomendação de velocidade.';
-
-  @override
   String get keysTitle => 'Teclas e manipuladores externos';
 
   @override
@@ -2830,9 +2724,6 @@ class SPt extends S {
 
   @override
   String get groupPracticeDeleteBody => 'Suas rodadas e resultados locais são removidos deste dispositivo. Seu histórico de treino e as mensagens do grupo permanecem.';
-
-  @override
-  String get conditionsAudioFailed => 'Não foi possível iniciar o áudio neste dispositivo. Pratique com condições limpas.';
 
   @override
   String get moderationBlock => 'Bloquear';

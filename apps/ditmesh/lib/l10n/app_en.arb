@@ -4,10 +4,6 @@
   "@appName": {
     "description": "Product name; never translated"
   },
-  "navLearn": "Learn",
-  "@navLearn": {
-    "description": "Shell destination: Morse training"
-  },
   "navChat": "Chat",
   "@navChat": {
     "description": "Shell destination: 1:1 Morse chat over Tox"
@@ -219,15 +215,6 @@
       }
     }
   },
-  "learnLessonUnlocked": "Next character unlocked: {char}",
-  "@learnLessonUnlocked": {
-    "description": "Receive drill session summary: verdict when the lesson was passed and a new Koch character was unlocked; {char} is that character",
-    "placeholders": {
-      "char": {
-        "type": "String"
-      }
-    }
-  },
   "learnConfusedMissed": "{target} missed",
   "@learnConfusedMissed": {
     "description": "Receive drill: confusion chip when the user typed nothing for the sent character {target}",
@@ -270,24 +257,6 @@
   "learnCharsCount": "{count, plural, =1{1 character} other{{count} characters}}",
   "@learnCharsCount": {
     "description": "Training settings: the session length in characters (slider value and label)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "statsDays": "{count, plural, =1{1 day} other{{count} days}}",
-  "@statsDays": {
-    "description": "Statistics: the current streak length in days ('Streak' tile)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "statsTrendSubtitle": "{count, plural, =1{Last session} other{Last {count} sessions}}",
-  "@statsTrendSubtitle": {
-    "description": "Statistics, accuracy trend chart: subtitle saying how many recent sessions are plotted",
     "placeholders": {
       "count": {
         "type": "int"
@@ -712,10 +681,6 @@
   "@accountTrainingDefaultsSubtitle": {
     "description": "Me page: subtitle of the training-defaults tile listing what it controls"
   },
-  "accountTrainingDefaultsPlaceholder": "Speed, tone and Farnsworth defaults will live here.",
-  "@accountTrainingDefaultsPlaceholder": {
-    "description": "Placeholder text for the training-defaults page (currently unused)"
-  },
   "accountAboutLicence": "Licence",
   "@accountAboutLicence": {
     "description": "Me page, About section: tile title for the software licence"
@@ -1121,10 +1086,6 @@
   "@learnSettings": {
     "description": "Learn home: tooltip of the training settings button and that page's title"
   },
-  "learnLoading": "Loading your progress...",
-  "@learnLoading": {
-    "description": "Learn tab: shown while training progress loads"
-  },
   "learnIdentityRequired": "Create or unlock your identity to start training. Progress is stored with your identity so it travels with your backup.",
   "@learnIdentityRequired": {
     "description": "Learn tab: shown when no identity is open; training needs one"
@@ -1468,10 +1429,6 @@
   "@learnReceiveTitle": {
     "description": "Receive drill screen: app bar title"
   },
-  "learnReviewTitle": "Review",
-  "@learnReviewTitle": {
-    "description": "Receive drill picker / screen: title of the spaced-repetition review drill"
-  },
   "learnListen": "Playing",
   "@learnListen": {
     "description": "Receive drill: status while Morse is playing; a complete word, no trailing ellipsis (it would read as clipped text)"
@@ -1536,10 +1493,6 @@
   "@learnLessonNotPassed": {
     "description": "Receive drill summary: verdict when accuracy stayed under the 90% pass mark"
   },
-  "learnReviewRecorded": "Review recorded",
-  "@learnReviewRecorded": {
-    "description": "Receive drill summary: verdict after a review session"
-  },
   "learnWeakChars": "Needs work",
   "@learnWeakChars": {
     "description": "Receive drill summary: heading over characters copied poorly"
@@ -1551,18 +1504,6 @@
   "learnNoFeedbackWarning": "Sound, flash and haptics are all off - the screen will flash instead.",
   "@learnNoFeedbackWarning": {
     "description": "Receive drill: warning when sound, flash and haptics are all disabled"
-  },
-  "learnKeyerStraight": "Straight",
-  "@learnKeyerStraight": {
-    "description": "Keyer type option: straight key (training settings, send practice)"
-  },
-  "learnKeyerIambicA": "Iambic A",
-  "@learnKeyerIambicA": {
-    "description": "Keyer type option: iambic paddles, mode A (technical term, usually kept)"
-  },
-  "learnKeyerIambicB": "Iambic B",
-  "@learnKeyerIambicB": {
-    "description": "Keyer type option: iambic paddles, mode B (technical term, usually kept)"
   },
   "learnStraightKeyLabel": "KEY",
   "@learnStraightKeyLabel": {
@@ -1623,14 +1564,6 @@
   "learnHaptic": "Vibration",
   "@learnHaptic": {
     "description": "Training settings, output section: switch that vibrates in time with the Morse"
-  },
-  "learnKeyer": "Keyer",
-  "@learnKeyer": {
-    "description": "Training settings: title of the keyer type selector"
-  },
-  "learnDailyGoal": "Daily goal",
-  "@learnDailyGoal": {
-    "description": "Training settings: title of the daily goal slider (characters per day)"
   },
   "referenceReferenceTitle": "Morse reference",
   "@referenceReferenceTitle": {
@@ -2406,15 +2339,6 @@
   "learnReplayAssistedNote": "Replayed: this session counts as practice but won't unlock a lesson or update reviews.",
   "@learnReplayAssistedNote": {
     "description": "Receive drill: shown after the learner replayed a round; replays make the session assisted"
-  },
-  "learnPlanNext": "Next: {step}",
-  "@learnPlanNext": {
-    "description": "Daily plan card: the next step to do",
-    "placeholders": {
-      "step": {
-        "type": "String"
-      }
-    }
   },
   "messageStatusCancelled": "Cancelled — never sent",
   "@messageStatusCancelled": {
@@ -3461,63 +3385,6 @@
   "@backupXMeSubtitle": {
     "description": "Me page: subtitle of the export backup entry (encrypted complete backup)"
   },
-  "conditionsClear": "Clear",
-  "@conditionsClear": {
-    "description": "Conditions preset: clean tone (default)"
-  },
-  "conditionsLight": "Light interference",
-  "@conditionsLight": {
-    "description": "Conditions preset: light interference"
-  },
-  "conditionsRadio": "Radio practice",
-  "@conditionsRadio": {
-    "description": "Conditions preset: realistic radio practice"
-  },
-  "conditionsClearHint": "A clean, steady tone: ordinary practice.",
-  "@conditionsClearHint": {
-    "description": "Conditions preset hint: clear"
-  },
-  "conditionsLightHint": "Soft background noise and gentle fading. Results are kept apart from clean practice.",
-  "@conditionsLightHint": {
-    "description": "Conditions preset hint: light"
-  },
-  "conditionsRadioHint": "Noise, deep fading, a nearby station and slightly uneven timing. Results are kept apart from clean practice.",
-  "@conditionsRadioHint": {
-    "description": "Conditions preset hint: radio practice"
-  },
-  "conditionsActive": "Conditions: {name}",
-  "@conditionsActive": {
-    "description": "Receive drill: chip naming the active conditions",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "conditionsNeedSound": "Radio conditions are heard, not seen: turn sound on in the training settings, or practise with Clear conditions.",
-  "@conditionsNeedSound": {
-    "description": "Receive drill: conditions need sound"
-  },
-  "conditionsCleanReplay": "Play without effects",
-  "@conditionsCleanReplay": {
-    "description": "Round result: replay the round without effects"
-  },
-  "conditionsComparable": "{count, plural, =1{1 attempt under these conditions at this speed: {accuracy}%} other{{count} attempts under these conditions at this speed: {accuracy}% on average}}",
-  "@conditionsComparable": {
-    "description": "Receive summary: results under the same conditions and speed",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "accuracy": {
-        "type": "int"
-      }
-    }
-  },
-  "conditionsSeparateNote": "Practice under radio conditions counts as activity but does not change your lessons, review schedule or speed advice.",
-  "@conditionsSeparateNote": {
-    "description": "Receive summary: conditions results do not change progress"
-  },
   "keysTitle": "Keys and external keyers",
   "@keysTitle": {
     "description": "Key setup page title; also the Me entry"
@@ -3874,10 +3741,6 @@
   "groupPracticeDeleteBody": "Its rounds and local results are removed from this device. Your training history and the group's messages stay.",
   "@groupPracticeDeleteBody": {
     "description": "Group practice: what deleting a session removes"
-  },
-  "conditionsAudioFailed": "The audio could not be started on this device. Practise with Clear conditions instead.",
-  "@conditionsAudioFailed": {
-    "description": "Receive drill: the conditions audio could not be started"
   },
   "moderationBlock": "Block",
   "@moderationBlock": {

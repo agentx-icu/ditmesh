@@ -12,9 +12,6 @@ class SEn extends S {
   String get appName => 'DitMesh';
 
   @override
-  String get navLearn => 'Learn';
-
-  @override
   String get navChat => 'Chat';
 
   @override
@@ -166,11 +163,6 @@ class SEn extends S {
   }
 
   @override
-  String learnLessonUnlocked(String char) {
-    return 'Next character unlocked: $char';
-  }
-
-  @override
   String learnConfusedMissed(String target) {
     return '$target missed';
   }
@@ -197,28 +189,6 @@ class SEn extends S {
       locale: localeName,
       other: '$count characters',
       one: '1 character',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count days',
-      one: '1 day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTrendSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Last $count sessions',
-      one: 'Last session',
     );
     return '$_temp0';
   }
@@ -533,9 +503,6 @@ class SEn extends S {
   String get accountTrainingDefaultsSubtitle => 'Speed, tone, Farnsworth spacing';
 
   @override
-  String get accountTrainingDefaultsPlaceholder => 'Speed, tone and Farnsworth defaults will live here.';
-
-  @override
   String get accountAboutLicence => 'Licence';
 
   @override
@@ -838,9 +805,6 @@ class SEn extends S {
   String get learnSettings => 'Training settings';
 
   @override
-  String get learnLoading => 'Loading your progress...';
-
-  @override
   String get learnIdentityRequired => 'Create or unlock your identity to start training. Progress is stored with your identity so it travels with your backup.';
 
   @override
@@ -1093,9 +1057,6 @@ class SEn extends S {
   String get learnReceiveTitle => 'Receive';
 
   @override
-  String get learnReviewTitle => 'Review';
-
-  @override
   String get learnListen => 'Playing';
 
   @override
@@ -1144,9 +1105,6 @@ class SEn extends S {
   String get learnLessonNotPassed => 'Keep at it: 90% unlocks the next one';
 
   @override
-  String get learnReviewRecorded => 'Review recorded';
-
-  @override
   String get learnWeakChars => 'Needs work';
 
   @override
@@ -1154,15 +1112,6 @@ class SEn extends S {
 
   @override
   String get learnNoFeedbackWarning => 'Sound, flash and haptics are all off - the screen will flash instead.';
-
-  @override
-  String get learnKeyerStraight => 'Straight';
-
-  @override
-  String get learnKeyerIambicA => 'Iambic A';
-
-  @override
-  String get learnKeyerIambicB => 'Iambic B';
 
   @override
   String get learnStraightKeyLabel => 'KEY';
@@ -1208,12 +1157,6 @@ class SEn extends S {
 
   @override
   String get learnHaptic => 'Vibration';
-
-  @override
-  String get learnKeyer => 'Keyer';
-
-  @override
-  String get learnDailyGoal => 'Daily goal';
 
   @override
   String get referenceReferenceTitle => 'Morse reference';
@@ -1762,11 +1705,6 @@ class SEn extends S {
 
   @override
   String get learnReplayAssistedNote => 'Replayed: this session counts as practice but won\'t unlock a lesson or update reviews.';
-
-  @override
-  String learnPlanNext(String step) {
-    return 'Next: $step';
-  }
 
   @override
   String get messageStatusCancelled => 'Cancelled — never sent';
@@ -2531,49 +2469,6 @@ class SEn extends S {
   String get backupXMeSubtitle => 'An encrypted file with your identity, chats and progress, to keep or to move to another device';
 
   @override
-  String get conditionsClear => 'Clear';
-
-  @override
-  String get conditionsLight => 'Light interference';
-
-  @override
-  String get conditionsRadio => 'Radio practice';
-
-  @override
-  String get conditionsClearHint => 'A clean, steady tone: ordinary practice.';
-
-  @override
-  String get conditionsLightHint => 'Soft background noise and gentle fading. Results are kept apart from clean practice.';
-
-  @override
-  String get conditionsRadioHint => 'Noise, deep fading, a nearby station and slightly uneven timing. Results are kept apart from clean practice.';
-
-  @override
-  String conditionsActive(String name) {
-    return 'Conditions: $name';
-  }
-
-  @override
-  String get conditionsNeedSound => 'Radio conditions are heard, not seen: turn sound on in the training settings, or practise with Clear conditions.';
-
-  @override
-  String get conditionsCleanReplay => 'Play without effects';
-
-  @override
-  String conditionsComparable(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count attempts under these conditions at this speed: $accuracy% on average',
-      one: '1 attempt under these conditions at this speed: $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get conditionsSeparateNote => 'Practice under radio conditions counts as activity but does not change your lessons, review schedule or speed advice.';
-
-  @override
   String get keysTitle => 'Keys and external keyers';
 
   @override
@@ -2829,9 +2724,6 @@ class SEn extends S {
 
   @override
   String get groupPracticeDeleteBody => 'Its rounds and local results are removed from this device. Your training history and the group\'s messages stay.';
-
-  @override
-  String get conditionsAudioFailed => 'The audio could not be started on this device. Practise with Clear conditions instead.';
 
   @override
   String get moderationBlock => 'Block';

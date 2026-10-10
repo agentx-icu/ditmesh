@@ -2,13 +2,10 @@
 // landscape (~375-390 px tall, notch + home-indicator insets), the soft
 // keyboard covering half the screen, and a 2.0 text scale. Each case here
 // overflowed (or lost state) before the fix it guards.
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/training/training_controller.dart';
-import 'package:ditmesh/ui/learn/learn_scope.dart';
 import 'package:ditmesh/ui/account/identity_card.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
@@ -19,6 +16,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import '../account/test_app.dart';
 import '../chat/test_support.dart' as chat;
 import '../learn/helpers/l10n.dart';
+import '../learn/helpers/unavailable_training.dart';
 import '../reference/reference_test_support.dart';
 import 'phone_support.dart';
 
@@ -75,7 +73,7 @@ void main() {
     });
   });
 
-  group('learn placeholder', () {
+  group('training data placeholder', () {
     // Regression: the loading / identity-required placeholder was a fixed
     // Column and overflowed by 181 px on a 320 pt phone at 2x text; CI only
     // caught it when the controller load was slow enough to paint a frame.
@@ -83,16 +81,10 @@ void main() {
       testWidgets('${loading ? 'loading' : 'identity required'} fits a '
           '320 px phone at 2x text', (tester) async {
         setPhone(tester, kSmallPhone, textScale: 2);
-        final Completer<TrainingController> never =
-            Completer<TrainingController>();
         await tester.pumpWidget(
           l10nApp(
-            home: LearnScope(
-              controllerFactory: loading
-                  ? (_) => never.future
-                  : (_) => Future<TrainingController>.error('no identity'),
-              description: en.learnIdentityRequired,
-              builder: (_, _, _) => const SizedBox(),
+            home: unavailableTrainingSettings(
+              UnavailableIdentityService(loading: loading),
             ),
           ),
         );
@@ -100,7 +92,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(
           find.text(en.learnIdentityRequired),
-          loading ? findsOneWidget : findsNWidgets(2),
+          loading ? findsNothing : findsOneWidget,
         );
       });
     }

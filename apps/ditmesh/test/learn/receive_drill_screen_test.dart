@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_core/morse_core.dart';
+import 'package:ditmesh/training/chat_copy_session.dart';
 import 'package:ditmesh/training/receive_session.dart';
 import 'package:ditmesh/ui/learn/receive/answer_keypad.dart';
 import 'package:ditmesh/ui/learn/receive/receive_drill_screen.dart';
@@ -26,7 +27,7 @@ Future<(TestTraining, ReceiveSession, FakeLearnPlaybackFactory)> _pump(
   final t = await TestTraining.create(settings: kShortSettings);
   addTearDown(t.controller.dispose);
   final playback = FakeLearnPlaybackFactory();
-  final session = t.controller.startLessonSession();
+  final session = t.controller.startFocusSession(<String>['K', 'M'])!;
   await tester.pumpWidget(
     l10nApp(
       home: Builder(
@@ -105,8 +106,7 @@ void main() {
       expect(find.text(en.learnLessonNotPassed), findsOneWidget);
       expect(t.progressStore.saveCount, 1);
       expect(t.controller.progress.history.single.totalChars, 5);
-      expect(t.controller.charsToday, 5);
-      expect(t.controller.streak, 1);
+      expect(t.controller.progress.charsOn(kTestNow), 5);
 
       await tester.tap(find.widgetWithText(FilledButton, en.learnDone));
       await tester.pumpAndSettle();

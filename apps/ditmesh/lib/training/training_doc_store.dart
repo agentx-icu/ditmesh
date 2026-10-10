@@ -5,18 +5,13 @@ import 'package:path/path.dart' as p;
 
 import 'atomic_json_file.dart';
 
-/// Named JSON documents beside the training progress: simulator drafts,
-/// materials, rhythm details. Each lives under the learning profile's
+/// Named JSON documents beside the training progress: group practice
+/// sessions and audio materials. Each lives under the learning profile's
 /// `training/` directory so identity backups already include it.
 abstract interface class TrainingDocStore {
   Future<Map<String, Object?>?> read(String name);
 
   Future<void> write(String name, Map<String, Object?> json);
-
-  Future<void> delete(String name);
-
-  /// Every stored document name (for cache trimming).
-  Future<List<String>> names();
 }
 
 /// `<dataDirectory>/training/docs/<name>.json`, written atomically with a
@@ -49,23 +44,6 @@ final class FileTrainingDocStore implements TrainingDocStore {
     await directory.create(recursive: true);
     await _file(name).write(json);
   }
-
-  @override
-  Future<void> delete(String name) => _file(name).delete();
-
-  @override
-  Future<List<String>> names() async {
-    if (!await directory.exists()) return const <String>[];
-    final out = <String>[];
-    await for (final entity in directory.list()) {
-      final base = p.basename(entity.path);
-      if (entity is File && base.endsWith('.json')) {
-        out.add(base.substring(0, base.length - 5));
-      }
-    }
-    out.sort();
-    return out;
-  }
 }
 
 /// Keeps documents as JSON strings so tests exercise (de)serialisation.
@@ -82,12 +60,4 @@ final class InMemoryTrainingDocStore implements TrainingDocStore {
   Future<void> write(String name, Map<String, Object?> json) async {
     docs[name] = jsonEncode(json);
   }
-
-  @override
-  Future<void> delete(String name) async {
-    docs.remove(name);
-  }
-
-  @override
-  Future<List<String>> names() async => docs.keys.toList()..sort();
 }
