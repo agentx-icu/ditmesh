@@ -181,4 +181,103 @@ void main() {
       expect(s.log, <(bool, int)>[(true, 0), (false, 10)]);
     }
   });
+
+  group('elapsed', () {
+    test('advances with the clock while running', () {
+      player.play(_timeline);
+      expect(player.totalDuration, _ms * 900);
+      expect(player.elapsed, Duration.zero);
+      clock.advance(_ms * 250);
+      expect(player.elapsed, _ms * 250);
+      clock.advance(_ms * 400);
+      expect(player.elapsed, _ms * 650);
+      expect(player.isPlaying, isTrue);
+    });
+
+    test('freezes while paused and continues after resume', () {
+      player.play(_timeline);
+      clock.advance(_ms * 300);
+      player.pause();
+      expect(player.elapsed, _ms * 300);
+      clock.advance(_ms * 1000);
+      expect(player.elapsed, _ms * 300, reason: 'paused time is not elapsed');
+
+      player.resume();
+      expect(player.elapsed, _ms * 300);
+      clock.advance(_ms * 200);
+      expect(player.elapsed, _ms * 500);
+
+      // A second pause/resume cycle shifts the timeline again.
+      player.pause();
+      clock.advance(_ms * 50);
+      expect(player.elapsed, _ms * 500);
+      player.resume();
+      clock.advance(_ms * 100);
+      expect(player.elapsed, _ms * 600);
+    });
+
+    test('a paused start counts from zero once resumed', () {
+      player.play(_timeline, paused: true);
+      clock.advance(_ms * 500);
+      expect(player.elapsed, Duration.zero);
+      player.resume();
+      expect(player.elapsed, Duration.zero);
+      clock.advance(_ms * 150);
+      expect(player.elapsed, _ms * 150);
+    });
+
+    test('is clamped to the total duration while completion is late', () {
+      final lateClock = FakeClock(timerLatency: _ms * 50);
+      final latePlayer = MorsePlayer(
+        sink: RecordingSink(clock: lateClock),
+        clock: lateClock,
+      );
+      addTearDown(latePlayer.dispose);
+
+      latePlayer.play(_timeline);
+      // The final boundary is due at 900 ms but fires 50 ms late.
+      lateClock.advance(_ms * 930);
+      expect(latePlayer.isPlaying, isTrue);
+      expect(latePlayer.elapsed, latePlayer.totalDuration);
+      expect(latePlayer.elapsed, _ms * 900);
+
+      lateClock.advance(_ms * 20);
+      expect(latePlayer.isPlaying, isFalse);
+      expect(latePlayer.elapsed, Duration.zero);
+    });
+
+    test('returns to zero after completion', () {
+      player.play(_timeline);
+      clock.advance(_ms * 900);
+      expect(events.last, isA<PlayerCompleted>());
+      expect(player.elapsed, Duration.zero);
+      clock.advance(_ms * 100);
+      expect(player.elapsed, Duration.zero);
+    });
+
+    test('returns to zero after stop, running or paused', () {
+      player.play(_timeline);
+      clock.advance(_ms * 250);
+      player.stop();
+      expect(player.elapsed, Duration.zero);
+      clock.advance(_ms * 300);
+      expect(player.elapsed, Duration.zero);
+
+      player.play(_timeline);
+      clock.advance(_ms * 100);
+      player.pause();
+      expect(player.elapsed, _ms * 100);
+      player.stop();
+      expect(player.elapsed, Duration.zero);
+    });
+
+    test('restarting from a running timeline counts from zero again', () {
+      player.play(_timeline);
+      clock.advance(_ms * 400);
+      player.play(_timeline);
+      expect(player.elapsed, Duration.zero);
+      clock.advance(_ms * 50);
+      expect(player.elapsed, _ms * 50);
+    });
+  });
 }

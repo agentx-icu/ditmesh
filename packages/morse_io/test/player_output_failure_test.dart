@@ -54,6 +54,37 @@ void main() {
   );
 
   test(
+    'elapsed returns to zero when an output failure stops playback',
+    () async {
+      final clock = FakeClock();
+      final sink = _FailingOutput();
+      final player = MorsePlayer(
+        sink: sink,
+        clock: clock,
+        reportOutputFailures: true,
+      );
+      final elapsedAtStop = <Duration>[];
+      player.events.listen((event) {
+        if (event is PlayerStopped) elapsedAtStop.add(player.elapsed);
+      });
+      final timeline = MorseEncoder.encode('EE', const MorseTiming(wpm: 20));
+      final secondMarkAt = timeline.first.duration + timeline[1].duration;
+      player.play(timeline);
+      clock.advance(secondMarkAt - const Duration(milliseconds: 10));
+      expect(player.isPlaying, isTrue);
+      expect(player.elapsed, secondMarkAt - const Duration(milliseconds: 10));
+
+      clock.advance(const Duration(milliseconds: 20)); // second mark fails
+      expect(player.isPlaying, isFalse);
+      expect(elapsedAtStop, <Duration>[Duration.zero]);
+      expect(player.elapsed, Duration.zero);
+      clock.advance(const Duration(seconds: 1));
+      expect(player.elapsed, Duration.zero);
+      await player.dispose();
+    },
+  );
+
+  test(
     'a paused start touches no output until resume reports the failure',
     () async {
       final clock = FakeClock();
@@ -75,6 +106,7 @@ void main() {
       player.resume();
       expect(sink.marks, 1);
       expect(player.isPlaying, isFalse);
+      expect(player.elapsed, Duration.zero);
       expect(clock.pendingTimers, 0);
       expect(events.whereType<PlayerStopped>().single.error, same(sink.error));
       await player.dispose();
