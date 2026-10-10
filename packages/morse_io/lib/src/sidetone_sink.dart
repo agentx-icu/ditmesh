@@ -34,10 +34,10 @@ final class SidetoneSink implements MorseSink {
     double frequencyHz = 700,
     double volume = 0.8,
     this.ramp = const Duration(milliseconds: 5),
-  })  : _api = api ?? FlutterSoloudApi(),
-        _foreground = foreground ?? const BindingAppForeground(),
-        _frequencyHz = frequencyHz,
-        _volume = volume.clamp(0.0, 1.0);
+  }) : _api = api ?? FlutterSoloudApi(),
+       _foreground = foreground ?? const BindingAppForeground(),
+       _frequencyHz = frequencyHz,
+       _volume = volume.clamp(0.0, 1.0);
 
   final SoloudApi _api;
   final AppForeground _foreground;
@@ -54,11 +54,19 @@ final class SidetoneSink implements MorseSink {
   bool _prepared = false;
   bool _disposed = false;
   bool _isOn = false;
+  Object? _lastOutputError;
+  StackTrace? _lastOutputStackTrace;
   bool _background = false;
   void Function()? _stopListening;
 
   bool get isPrepared => _prepared;
   bool get isOn => _isOn;
+
+  /// The actual API failure when key-down could not produce a tone. Live
+  /// keying still retries on its next mark; listening assessments can detect
+  /// silent refusal rather than treating timing completion as audibility.
+  Object? get lastOutputError => _lastOutputError;
+  StackTrace? get lastOutputStackTrace => _lastOutputStackTrace;
 
   double get frequencyHz => _frequencyHz;
 
@@ -143,8 +151,17 @@ final class SidetoneSink implements MorseSink {
     if (voice == null) {
       return;
     }
-    _isOn = true;
-    _api.fadeVolume(voice, _volume, ramp);
+    try {
+      _api.fadeVolume(voice, _volume, ramp);
+      _isOn = true;
+      _lastOutputError = null;
+      _lastOutputStackTrace = null;
+    } on Object catch (error, stackTrace) {
+      _isOn = false;
+      _lastOutputError = error;
+      _lastOutputStackTrace = stackTrace;
+      rethrow;
+    }
   }
 
   /// The running voice with its device started, replacing a voice the
@@ -156,7 +173,9 @@ final class SidetoneSink implements MorseSink {
       try {
         _api.resumeVoice(voice);
         return voice;
-      } on Object {
+      } on Object catch (error, stackTrace) {
+        _lastOutputError = error;
+        _lastOutputStackTrace = stackTrace;
         _voice = null;
         _stopQuietly(voice);
       }
@@ -171,7 +190,9 @@ final class SidetoneSink implements MorseSink {
     }
     try {
       return _voice = _api.playLooping(source, volume: 0);
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      _lastOutputError = error;
+      _lastOutputStackTrace = stackTrace;
       return null;
     }
   }

@@ -2,7 +2,8 @@
 
 # morse_io
 
-Flutter I/O layer for DitMesh: renders `morse_core` timelines to **sound**,
+Flutter I/O layer shared by DitMesh and MorseCQ (one identical copy in each
+repository): renders `morse_core` timelines to **sound**,
 **haptics** and **light**, and turns on-screen / keyboard **keying** into
 `MorseDecoder` events. Targets Android, iOS, macOS, Windows and Linux.
 
