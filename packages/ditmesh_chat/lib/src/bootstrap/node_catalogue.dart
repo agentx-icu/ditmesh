@@ -19,6 +19,7 @@ class NodeCatalogue {
           host: n.host,
           port: n.port,
           publicKey: n.publicKey,
+          alternateHosts: n.alternateHosts,
           udpOnline: true,
           tcpOnline: true,
         ),
