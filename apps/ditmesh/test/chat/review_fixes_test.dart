@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_trainer/morse_trainer.dart';
-import 'package:ditmesh/training/material_store.dart';
 import 'package:ditmesh/training/training_controller_host.dart';
 import 'package:ditmesh/ui/chat/conversation_list.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
@@ -171,16 +170,6 @@ void main() {
       );
     });
     addTearDown(host.dispose);
-    // Save asks first because of the unsupported characters.
-    await tester.tap(find.byTooltip(s.chatMessageLearnActions).first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(s.chatSaveAsMaterial).last);
-    await tester.pumpAndSettle();
-    expect(find.text(s.chatPracticeUnsupported('你 好')), findsOneWidget);
-    await tester.tap(find.text(s.chatSaveMaterialConfirm));
-    await tester.pumpAndSettle();
-    expect(await t.controller.loadMaterials(), hasLength(1));
-
     // Practice: an empty copy cannot be submitted, so nothing is credited.
     await tester.tap(find.byTooltip(s.chatMessageLearnActions).first);
     await tester.pumpAndSettle();

@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:morse_trainer/morse_trainer.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/account/delete_identity_dialog.dart';
@@ -18,7 +17,6 @@ import 'package:ditmesh/ui/common/app_bar_title.dart';
 import 'package:ditmesh/ui/common/field_label.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/contacts/my_tox_id_sheet.dart';
-import 'package:ditmesh/ui/learn/goal_ring.dart';
 import 'package:ditmesh/ui/learn/receive/answer_keypad.dart';
 import 'package:ditmesh/ui/learn/receive/receive_widgets.dart';
 import 'package:ditmesh/ui/learn/settings/training_settings_screen.dart';
@@ -29,7 +27,6 @@ import 'package:ditmesh/ui/reference/morse_to_text_view.dart';
 import 'package:ditmesh/ui/reference/playback_settings_sheet.dart';
 import 'package:ditmesh/ui/reference/reference_playback_settings.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
-import 'package:ditmesh/ui/stats/char_grid.dart';
 import 'package:ditmesh/ui/theme.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
@@ -364,23 +361,6 @@ void main() {
   });
 
   group('training widgets', () {
-    testWidgets('the goal ring keeps "100%" inside at 3x', (tester) async {
-      await _pump(
-        tester,
-        const LayoutProfile('phone-3x', Size(390, 844), textScale: 3),
-        const Scaffold(
-          body: Center(
-            child: GoalRing(fraction: 1, size: 72, child: Text('100%')),
-          ),
-        ),
-      );
-      _expectTextFits(
-        tester,
-        find.text('100%'),
-        tester.getRect(find.byType(GoalRing)),
-      );
-    });
-
     testWidgets('the answer keypad wraps on a 320 px phone in German at 3x', (
       tester,
     ) async {
@@ -460,48 +440,6 @@ void main() {
         expect(status, isNot(endsWith('...')), reason: '$locale');
         expect(status, isNot(endsWith('…')), reason: '$locale');
       }
-    });
-
-    testWidgets('a prosign cell keeps <BT> whole at 3x', (tester) async {
-      await _pump(
-        tester,
-        const LayoutProfile('phone-3x-plain', Size(390, 844), textScale: 3),
-        const Scaffold(
-          body: Center(
-            child: CharCell(
-              char: '<BT>',
-              stats: CharStats(attempts: 3, correct: 3),
-              learned: true,
-            ),
-          ),
-        ),
-      );
-      _expectTextFits(
-        tester,
-        find.text('<BT>'),
-        tester.getRect(find.byType(CharCell)),
-      );
-    });
-
-    testWidgets('a character cell grows with the text at 2x', (tester) async {
-      await _pump(
-        tester,
-        const LayoutProfile('phone-2x-plain', Size(390, 844), textScale: 2),
-        const Scaffold(
-          body: Center(
-            child: CharCell(
-              char: 'K',
-              stats: CharStats(attempts: 12, correct: 10),
-              learned: true,
-            ),
-          ),
-        ),
-      );
-      _expectTextFits(
-        tester,
-        find.text('K'),
-        tester.getRect(find.byType(CharCell)),
-      );
     });
   });
   group('truncated text', () {

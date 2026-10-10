@@ -18,7 +18,7 @@ This inventory documents chat storage, save barriers and backup restoration. Exe
 | Offline direct/group outbox | `<identity>/data/offline_message_queue.json` | Restart preserves queued sends and their pending status. Delivery/retry keeps the message identifier rather than creating duplicate bubbles. |
 | Friend requests, rejection records and Tim2Tox host metadata | Account-scoped `shared_preferences` | Requests and group metadata survive reconnect. Identity removal clears its scoped keys. |
 | Drafts, pinned/hidden conversations and queued invitations | Account-scoped `shared_preferences` | Offline edits persist; replaced editors cannot write into a new identity. |
-| Copy-practice state, saved material and bookmarks | `<identity>/training/` | File stores serialize immutable snapshots. |
+| Copy-practice state and bookmarks (material files saved by earlier versions stay in place) | `<identity>/training/` | File stores serialize immutable snapshots. |
 | Optional recorded practice audio | `<identity>/media/recordings/` | Export includes referenced recordings only when selected. No file-transfer UI is exposed. |
 | Appearance | `appearance.preferences` in `<support>/settings.json` | Style and brightness are saved together before publication. Failure retains the previous visible choice. New/corrupt records use Modern Calm/system mode. |
 | Language, playback/input/decoder settings and notification choices | `<support>/settings.json` | Restored before providers become available; failed writes remain available for retry. |

@@ -27,15 +27,11 @@ class ChatCopyScreen extends StatefulWidget {
     required this.controller,
     required this.playback,
     required this.session,
-    this.onSaveMaterial,
   });
 
   final TrainingController controller;
   final LearnPlaybackFactory playback;
   final ChatCopySession session;
-
-  /// Saves the message as a training material (null hides the action).
-  final Future<bool> Function()? onSaveMaterial;
 
   @override
   State<ChatCopyScreen> createState() => _ChatCopyScreenState();
@@ -141,20 +137,6 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
           controller: widget.controller,
           playback: widget.playback,
           session: session,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _save() async {
-    final save = widget.onSaveMaterial;
-    if (save == null) return;
-    final ok = await save();
-    if (!mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? context.s.chatSavedAsMaterial : context.s.chatSaveMaterialFailed,
         ),
       ),
     );
@@ -369,12 +351,6 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
             onPressed: () => unawaited(_practiseErrors(weak)),
             icon: const Icon(Icons.center_focus_strong_outlined),
             label: Text(s.chatPracticeErrorsAction(weak.join(' '))),
-          ),
-        if (widget.onSaveMaterial != null)
-          OutlinedButton.icon(
-            onPressed: () => unawaited(_save()),
-            icon: const Icon(Icons.bookmark_add_outlined),
-            label: Text(s.chatSaveAsMaterial),
           ),
         const SizedBox(height: 12),
         FilledButton(

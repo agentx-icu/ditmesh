@@ -19,7 +19,6 @@ import 'package:ditmesh/training/training_settings_store.dart';
 import 'package:ditmesh/ui/learn/learn_playback.dart';
 import 'package:ditmesh/ui/learn/receive/answer_keypad.dart';
 import 'package:ditmesh/ui/learn/receive/receive_drill_screen.dart';
-import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
 import 'package:ditmesh/ui/learn/settings/training_settings_screen.dart';
 import 'package:path/path.dart' as p;
 
@@ -137,47 +136,6 @@ void main() {
         ..keyUp(const Duration(milliseconds: 60));
       final outcome = await c.recordSendSession(session);
       expect(outcome.saved, isFalse);
-      expect(c.progress.history, hasLength(1));
-    });
-
-    testWidgets('the send screen shows the result and offers a retry', (
-      tester,
-    ) async {
-      _setPhone(tester);
-      final (c, store) = await _flakyController(1);
-      addTearDown(c.dispose);
-      final playback = FakeLearnPlaybackFactory();
-      final session = SendSession(
-        target: 'E',
-        timing: _wpm20,
-        now: () => kTestNow,
-      );
-      await tester.pumpWidget(
-        l10nApp(
-          home: SendPracticeScreen(
-            controller: c,
-            playback: playback,
-            session: session,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      _key(session, playback.clock.now(), _dit);
-      await tester.pump();
-      await tester.tap(find.text(en.learnDone));
-      await tester.pump();
-      await tester.pump();
-      expect(find.text(en.learnTryAnother), findsOneWidget);
-      expect(find.text(en.learnProgressSaveFailed), findsOneWidget);
-      // Let the snackbar finish sliding in so the tap lands on the action;
-      // the default tap warns (and the store check fails) if it misses.
-      await tester.pump(const Duration(seconds: 1));
-      expect(store.inner.saveCount, 0);
-      await tester.tap(find.text(en.actionRetry));
-      await tester.pump();
-      await tester.pump();
-      expect(store.inner.saveCount, 1);
-      expect((await store.inner.load())!.history, hasLength(1));
       expect(c.progress.history, hasLength(1));
     });
   });

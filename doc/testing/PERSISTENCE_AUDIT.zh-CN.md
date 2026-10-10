@@ -18,7 +18,7 @@
 | 单聊/群聊离线发送队列 | `<identity>/data/offline_message_queue.json` | 重启保留待发送状态；投递及重试沿用消息 ID，避免重复气泡。 |
 | 好友申请、拒绝记录及 Tim2Tox 宿主元数据 | 按账号隔离的 `shared_preferences` | 重连恢复申请和群组信息；删除身份清理其专属键。 |
 | 草稿、置顶/隐藏会话、待处理邀请 | 按账号隔离的 `shared_preferences` | 离线修改持久化；被替换的编辑器不能向新身份写回。 |
-| 抄收练习状态、保存材料与书签 | `<identity>/training/` | 文件存储串行保存不可变快照。 |
+| 抄收练习状态与书签（旧版本保存的材料文件原样保留） | `<identity>/training/` | 文件存储串行保存不可变快照。 |
 | 可选练习录音 | `<identity>/media/recordings/` | 仅在导出选择后包含被材料引用的录音；未提供文件传输界面。 |
 | 外观 | `<support>/settings.json` 中的 `appearance.preferences` | 风格和明暗一起保存成功后生效；失败保留原选择；新建或损坏记录使用 Modern Calm/跟随系统。 |
 | 语言、播放/输入/解码设置及通知偏好 | `<support>/settings.json` | 暴露 provider 前恢复；失败写入可重试。 |

@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
-import 'package:morse_trainer/morse_trainer.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../../training/chat_copy_session.dart';
-import '../../training/material_store.dart';
 import '../../training/training_controller.dart';
 import '../../training/training_controller_host.dart';
 import '../learn/chat_copy/chat_copy_screen.dart';
@@ -17,7 +15,7 @@ import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
 
 /// Chat-to-learning entry points (functional spec §6): practise a received
-/// message on a separate page, or keep a local copy as training material.
+/// message on a separate page.
 /// Nothing here sends anything or touches the conversation's draft.
 abstract final class ConversationLearning {
   /// The app-wide per-identity controller. Only the shared host is used:
@@ -88,7 +86,6 @@ abstract final class ConversationLearning {
             controller: controller,
             playback: _playbackFactory(context),
             session: session,
-            onSaveMaterial: () => _save(controller, message, title),
           ),
         ),
       );
@@ -151,75 +148,4 @@ abstract final class ConversationLearning {
     }
   }
 
-  static Future<bool> _save(
-    TrainingController controller,
-    ChatMessage message,
-    String title,
-  ) async {
-    try {
-      await controller.saveChatMaterial(
-        conversationId: message.conversationId,
-        messageId: message.id,
-        text: message.text,
-        title: title,
-        description: message.timestamp.toUtc().toIso8601String(),
-      );
-      return true;
-    } on Object {
-      return false;
-    }
-  }
-
-  /// Saves [message] as a material and reports the result.
-  static Future<void> saveAsMaterial(
-    BuildContext context, {
-    required ChatMessage message,
-    required String title,
-  }) async {
-    final controller = await _controller(context);
-    if (controller == null || !context.mounted) return;
-    final s = context.s;
-    // Never transform the practice text silently: characters Morse cannot
-    // key are listed and the learner confirms leaving them out.
-    final analysis = MaterialImport.analyze(message.text, MaterialKind.text);
-    if (analysis.items.isEmpty) {
-      showSnack(context, s.chatPracticeNothingTrainable);
-      return;
-    }
-    if (analysis.unsupported.isNotEmpty) {
-      final ok = await confirm(
-        context,
-        title: s.chatSaveAsMaterial,
-        body: s.chatPracticeUnsupported(analysis.unsupported.join(' ')),
-        confirmLabel: s.chatSaveMaterialConfirm,
-      );
-      if (!ok || !context.mounted) return;
-    }
-    final ok = await _save(controller, message, title);
-    if (context.mounted) {
-      showSnack(context, ok ? s.chatSavedAsMaterial : s.chatSaveMaterialFailed);
-    }
-  }
-
-  /// Clear-history confirmation text, mentioning saved material copies
-  /// (they are independent and stay until deleted in My materials).
-  static Future<String> clearHistoryBody(
-    BuildContext context,
-    String conversationId,
-  ) async {
-    final s = context.s;
-    final host = _host(context);
-    var saved = 0;
-    if (host != null) {
-      try {
-        final controller = await host.controller();
-        saved = await controller.materialsFromConversation(conversationId);
-      } on Object {
-        saved = 0;
-      }
-    }
-    return saved == 0
-        ? s.chatClearHistoryBody
-        : '${s.chatClearHistoryBody}\n\n${s.chatClearHistoryMaterials(saved)}';
-  }
 }
