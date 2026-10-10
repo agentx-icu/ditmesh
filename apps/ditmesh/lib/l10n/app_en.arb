@@ -636,6 +636,22 @@
   "@accountSectionAbout": {
     "description": "Me page: section header for app information (licence, source code, backend)"
   },
+  "meNoteBackgroundTitle": "Receiving on a phone",
+  "@meNoteBackgroundTitle": {
+    "description": "Me page, About section (Android/iOS only): title of the note that a backgrounded phone stops receiving"
+  },
+  "meNoteBackgroundBody": "DitMesh is peer-to-peer and has no push server, so keep it open to receive messages. In the background your phone soon pauses DitMesh: messages sent to you meanwhile can already look sent on your contact's screen, and arrive when you open DitMesh again.",
+  "@meNoteBackgroundBody": {
+    "description": "Me page, About section (Android/iOS only): DitMesh is P2P without push; a backgrounded phone is paused and messages arrive when it is opened again"
+  },
+  "meNoteScreenReaderTitle": "Screen readers and keying",
+  "@meNoteScreenReaderTitle": {
+    "description": "Me page, About section: title of the note about keying with a screen reader"
+  },
+  "meNoteScreenReaderBody": "Holding the straight key for timed dits and dahs does not work with a screen reader. In a chat, use the key's DIT and DAH actions instead, activate a paddle once per element, or key with a physical keyboard.",
+  "@meNoteScreenReaderBody": {
+    "description": "Me page, About section: timed straight-key keying has no screen-reader equivalent; DIT/DAH actions (same words as learnDitLabel/learnDahLabel), paddles and a physical keyboard work"
+  },
   "accountSectionDanger": "Danger zone",
   "@accountSectionDanger": {
     "description": "Me page: section header for destructive actions (delete identity)"

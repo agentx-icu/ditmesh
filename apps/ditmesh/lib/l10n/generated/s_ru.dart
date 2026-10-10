@@ -486,6 +486,18 @@ class SRu extends S {
   String get accountSectionAbout => 'О приложении';
 
   @override
+  String get meNoteBackgroundTitle => 'Приём на телефоне';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh работает напрямую между устройствами, без push-сервера, поэтому держите приложение открытым, чтобы получать сообщения. В фоне телефон быстро приостанавливает DitMesh: отправленные вам в это время сообщения у собеседника могут уже значиться отправленными и придут, когда вы снова откроете DitMesh.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Чтение с экрана и передача';
+
+  @override
+  String get meNoteScreenReaderBody => 'С программой чтения с экрана нельзя передавать вертикальным ключом, удерживая его нужное время. В чате используйте вместо этого действия ТОЧКА и ТИРЕ ключа, активируйте манипулятор по одному разу на элемент или передавайте с физической клавиатуры.';
+
+  @override
   String get accountSectionDanger => 'Опасные действия';
 
   @override

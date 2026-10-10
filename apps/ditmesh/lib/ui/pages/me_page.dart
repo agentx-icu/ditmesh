@@ -23,6 +23,7 @@ import '../keying/key_setup_page.dart';
 import '../moderation/blocked_people_page.dart';
 import '../moderation/site_links.dart';
 import '../network/bootstrap_page.dart';
+import 'me_notes.dart';
 
 /// Profile, account, progress and settings.
 class MePage extends StatelessWidget {
@@ -168,6 +169,7 @@ class _MeBody extends StatelessWidget {
           header: _SectionHeader(s.accountSectionNotifications),
         ),
         _SectionHeader(s.accountSectionAbout),
+        const MeNotes(),
         const SiteLinksSection(),
         ListTile(
           leading: const Icon(Icons.gavel_outlined),

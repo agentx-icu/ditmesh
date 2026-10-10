@@ -908,6 +908,30 @@ abstract class S {
   /// **'About'**
   String get accountSectionAbout;
 
+  /// Me page, About section (Android/iOS only): title of the note that a backgrounded phone stops receiving
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving on a phone'**
+  String get meNoteBackgroundTitle;
+
+  /// Me page, About section (Android/iOS only): DitMesh is P2P without push; a backgrounded phone is paused and messages arrive when it is opened again
+  ///
+  /// In en, this message translates to:
+  /// **'DitMesh is peer-to-peer and has no push server, so keep it open to receive messages. In the background your phone soon pauses DitMesh: messages sent to you meanwhile can already look sent on your contact\'s screen, and arrive when you open DitMesh again.'**
+  String get meNoteBackgroundBody;
+
+  /// Me page, About section: title of the note about keying with a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Screen readers and keying'**
+  String get meNoteScreenReaderTitle;
+
+  /// Me page, About section: timed straight-key keying has no screen-reader equivalent; DIT/DAH actions (same words as learnDitLabel/learnDahLabel), paddles and a physical keyboard work
+  ///
+  /// In en, this message translates to:
+  /// **'Holding the straight key for timed dits and dahs does not work with a screen reader. In a chat, use the key\'s DIT and DAH actions instead, activate a paddle once per element, or key with a physical keyboard.'**
+  String get meNoteScreenReaderBody;
+
   /// Me page: section header for destructive actions (delete identity)
   ///
   /// In en, this message translates to:

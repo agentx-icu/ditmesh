@@ -476,6 +476,18 @@ class SDe extends S {
   String get accountSectionAbout => 'Über';
 
   @override
+  String get meNoteBackgroundTitle => 'Empfang auf dem Smartphone';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh ist Peer-to-Peer und hat keinen Push-Server: Lass die App geöffnet, um Nachrichten zu empfangen. Im Hintergrund pausiert dein Smartphone DitMesh bald; Nachrichten an dich können beim Absender dann schon als gesendet erscheinen und kommen an, sobald du DitMesh wieder öffnest.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Screenreader und Morsetaste';
+
+  @override
+  String get meNoteScreenReaderBody => 'Mit einem Screenreader lassen sich Punkte und Striche nicht über die Haltedauer der Handtaste geben. Nutze im Chat stattdessen die Aktionen PUNKT und STRICH der Taste, löse ein Paddle einmal pro Element aus oder gib mit einer physischen Tastatur.';
+
+  @override
   String get accountSectionDanger => 'Gefahrenbereich';
 
   @override

@@ -476,6 +476,18 @@ class SEs extends S {
   String get accountSectionAbout => 'Acerca de';
 
   @override
+  String get meNoteBackgroundTitle => 'Recepción en el teléfono';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh es entre pares y no tiene servidor de notificaciones push, así que mantenlo abierto para recibir mensajes. En segundo plano el teléfono pronto pausa DitMesh: los mensajes que te envíen entonces pueden aparecer ya como enviados para tu contacto y llegan cuando vuelves a abrir DitMesh.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Lectores de pantalla y manipulación';
+
+  @override
+  String get meNoteScreenReaderBody => 'Con un lector de pantalla no se puede manipular con la llave vertical según el tiempo que la mantienes pulsada. En un chat, usa las acciones PUNTO y RAYA de la llave, activa una paleta una vez por elemento o manipula con un teclado físico.';
+
+  @override
   String get accountSectionDanger => 'Zona de peligro';
 
   @override
