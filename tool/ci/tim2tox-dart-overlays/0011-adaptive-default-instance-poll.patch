@@ -1,0 +1,58 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -2148,6 +2148,7 @@
+     required bool hasKnownInstances,
+     required bool isSharedInstance,
+     required Duration timeSinceActivity,
++    Duration idleInterval = const Duration(milliseconds: 1000),
+   }) {
+     if (avSessionActive) {
+       return const Duration(milliseconds: 20);
+@@ -2162,7 +2163,25 @@
+     }
+     return timeSinceActivity < const Duration(seconds: 2)
+         ? const Duration(milliseconds: 200)
+-        : const Duration(milliseconds: 1000);
++        : idleInterval;
++  }
++
++  // DitMesh overlay: a host whose only service runs on the default native
++  // instance may leave the shared-instance fast path and pick its idle
++  // cadence. tox_iterate runs on the native event thread; this loop only
++  // drains events (and toxav_iterate, covered by [setAvSessionActive]).
++  bool get pollDefaultInstanceAsShared => true;
++  Duration get idlePollInterval => const Duration(milliseconds: 1000);
++
++  /// Marks outbound work so replies are drained at the active cadence; an
++  /// idle timer is re-armed at once instead of waiting out the idle interval.
++  void notePollActivity() {
++    final last = _lastPollActivity;
++    final now = DateTime.now();
++    _lastPollActivity = now;
++    final wasIdle =
++        last == null || now.difference(last) >= const Duration(seconds: 2);
++    if (wasIdle && !_pollBusy) _scheduleNextPoll();
+   }
+ 
+   // Offline message queue - use persistence service cache
+@@ -4297,8 +4316,9 @@
+         avSessionActive: _avSessionActive,
+         hasActiveFileTransfer: hasActiveFileTransfer,
+         hasKnownInstances: hasKnownInstances,
+-        isSharedInstance: _instanceId == null,
++        isSharedInstance: _instanceId == null && pollDefaultInstanceAsShared,
+         timeSinceActivity: timeSinceActivity,
++        idleInterval: idlePollInterval,
+       );
+       _pollTimerCallback = () async {
+         // P2-19: drop overlapping invocations. See _pollBusy doc.
+--- a/lib/service/extension_transport.dart
++++ b/lib/service/extension_transport.dart
+@@ -25,6 +25,7 @@
+ extension FfiExtensionTransport on FfiChatService {
+   bool sendExtensionPacket(String target, String payload, {String? groupId}) {
+     if (_sessionClosed || _pollDisposed) return false;
++    notePollActivity();
+     final encodedId = 'dmr1:${base64Encode(utf8.encode(payload))}';
+     if (payload.length > 1300) return false;
+     if (groupId != null) {

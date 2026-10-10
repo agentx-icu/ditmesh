@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ditmesh_chat/ditmesh_chat.dart';
+import 'package:ditmesh_chat/src/engine/ditmesh_ffi_chat_service.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tencent_cloud_chat_sdk/native_im/bindings/native_library_manager.dart';
@@ -161,6 +162,9 @@ class _Peer {
 
   Future<void> bootstrap(int generation) async {
     final svc = engine.service!;
+    // N11: the production session leaves the 50 ms shared-instance poll.
+    expect(svc, isA<DitmeshFfiChatService>());
+    expect(svc.pollDefaultInstanceAsShared, isFalse);
     final port = svc.getUdpPort();
     final dht = svc.getDhtId();
     expect(port, greaterThan(0));

@@ -23,3 +23,14 @@ valid unpublished entries for other conversations remain available to recover.
 unwritable storage, repeated retry, writable recovery, silent durable duplicate,
 fresh-service disk reload, held-save teardown/reopen, history clear, and bounded
 unpublished state.
+
+`0011-adaptive-default-instance-poll.patch` lets a host whose only chat
+service runs on the default native instance leave the upstream 50 ms
+shared-instance poll. Upstream defaults are unchanged; `DitmeshFfiChatService`
+opts out and sets a 500 ms idle cadence (200 ms for 2 s after any event or
+send, 50 ms during file transfers or while probe instances are registered).
+`tox_iterate` runs on the native event thread, so only event draining is
+paced. Outbound sends and extension packets mark activity and re-arm an idle
+timer at once. `packages/ditmesh_chat/test/poll_cadence_test.dart` covers the
+policy and the session cadence; `native_two_peer_test.dart` checks the
+production engine builds the adaptive service.
