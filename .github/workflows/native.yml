@@ -602,8 +602,9 @@ jobs:
           set -euo pipefail
           apk=apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk
           [[ -f "$apk" ]] || { echo "::error::$apk missing"; exit 1; }
-          # llvm-readelf of the pinned NDK (installed above).
-          readelf="$(find "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -type f | head -n 1)"
+          # llvm-readelf of the pinned NDK (installed above). It is a symlink
+          # to llvm-readobj, so match links as well as files.
+          readelf="$(find "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' \( -type f -o -type l \) | head -n 1)"
           zipalign="$(find "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -n 1)"
           [[ -x "$readelf" && -x "$zipalign" ]] || { echo "::error::llvm-readelf ($readelf) or zipalign ($zipalign) not found"; exit 1; }
           tmp="$(mktemp -d)"
