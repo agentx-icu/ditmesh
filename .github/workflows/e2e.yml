@@ -1,9 +1,11 @@
 name: E2E
 
 # Top of the test pyramid (doc/testing/TEST_PYRAMID.md): the real app on
-# macOS, Linux and Windows runners — the real main() click-through and the
-# screenshot scene walk, then the screenshot pipeline itself with the frames
-# as an artifact (the only source of the Linux and Windows frames).
+# macOS, Linux and Windows runners, an Android emulator and an iOS simulator —
+# every integration test (the real main() click-through, real pointer and
+# keyboard keying, persistence and the screenshot scene walk); on the three
+# desktops then the screenshot pipeline itself with the frames as an artifact
+# (the only source of the Linux and Windows frames).
 # Opt-in: manual, or the `ci:e2e` label on a pull request.
 
 on:
@@ -230,3 +232,95 @@ jobs:
             build/screenshots
             build/shot_staging
           if-no-files-found: warn
+
+  # The same integration tests on an Android emulator (x86_64, KVM). No
+  # libtim2tox_ffi.so: the fake backend never loads it, and Gradle packages
+  # without it only when told so.
+  android:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    env:
+      ORG_GRADLE_PROJECT_ditmeshAllowMissingFfi: "true"
+      # Same pin as native.yml (Flutter's ndkVersion; flutter_soloud builds
+      # native code).
+      ANDROID_NDK_VERSION: "28.2.13676358"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install pinned Android NDK
+        run: bash tool/ci/install_android_ndk.sh
+
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      - name: Real-UI tests on the emulator (fake backend)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash tool/ci/run_integration_tests.sh emulator-5554
+
+  # The same integration tests on an iPhone simulator. Xcode 26 for the same
+  # reason as native.yml's app-ios job (device_info_plus needs the iOS 26 SDK).
+  ios:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:e2e')
+    timeout-minutes: 60
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+          pub-cache: false
+
+      - name: Bootstrap vendored dependencies
+        run: dart run tool/bootstrap_deps.dart
+
+      - name: Install dependencies
+        run: dart pub get --enforce-lockfile
+
+      - name: Drop flutter_soloud's cached CMake build
+        run: bash tool/ci/clean_apple_plugin_cache.sh ios
+
+      # No tim2tox_ffi.xcframework: the Podfile warns under
+      # DITMESH_ALLOW_MISSING_FFI and the app is UI-only.
+      - name: Real-UI tests on the simulator (fake backend)
+        run: |
+          set -euo pipefail
+          udid="$(bash tool/ci/boot_ios_simulator.sh)"
+          bash tool/ci/run_integration_tests.sh "$udid"

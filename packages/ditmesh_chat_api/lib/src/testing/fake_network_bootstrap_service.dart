@@ -64,6 +64,7 @@ class FakeNetworkBootstrapService implements NetworkBootstrapService {
         mode: _configuration.mode,
         current: node,
         lanNode: _configuration.lanNode,
+        lanPort: _configuration.lanPort,
         supportsLan: _configuration.supportsLan,
       ),
     );
@@ -77,6 +78,7 @@ class FakeNetworkBootstrapService implements NetworkBootstrapService {
         current: _configuration.current,
         supportsLan: _configuration.supportsLan,
         lanNode: _configuration.lanNode,
+        lanPort: _configuration.lanPort,
       ),
     );
   }
@@ -105,6 +107,8 @@ class FakeNetworkBootstrapService implements NetworkBootstrapService {
     _set(
       BootstrapConfiguration(
         mode: _configuration.mode,
+        // Like the real service: the chosen port is a persisted setting.
+        lanPort: _configuration.lanPort,
         supportsLan: _configuration.supportsLan,
       ),
     );

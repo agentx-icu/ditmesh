@@ -110,4 +110,117 @@ void main() {
       expect(LanAddresses.selectPreferredAddress([tailscale]), isNull);
     });
   });
+
+  group('LAN address edge cases', () {
+    LanAddressCandidate v4(String address, {String name = 'en0'}) =>
+        LanAddressCandidate(
+          interfaceName: name,
+          address: address,
+          type: InternetAddressType.IPv4,
+        );
+
+    test('only 172.16.0.0/12 counts as private in 172/8', () {
+      // A private address outranks any other real IPv4 on the host.
+      for (final private in ['172.16.0.1', '172.20.5.5', '172.31.255.254']) {
+        expect(
+          LanAddresses.selectPreferredAddress([
+            v4('8.8.4.4', name: 'en0'),
+            v4(private, name: 'en9'),
+          ]),
+          private,
+        );
+      }
+      // Just outside the block, or malformed: an ordinary (rank 1) address,
+      // ordered by interface name against another one.
+      for (final public in [
+        '172.15.0.1',
+        '172.32.0.1',
+        '172.x.0.1',
+        '172.16',
+      ]) {
+        expect(
+          LanAddresses.selectPreferredAddress([
+            v4('8.8.4.4', name: 'en1'),
+            v4(public, name: 'en0'),
+          ]),
+          public,
+          reason: public,
+        );
+      }
+    });
+
+    test('ties on one interface resolve by address, independent of order', () {
+      final a = v4('192.168.1.30');
+      final b = v4('192.168.1.4');
+      expect(LanAddresses.selectPreferredAddress([a, b]), '192.168.1.30');
+      expect(LanAddresses.selectPreferredAddress([b, a]), '192.168.1.30');
+    });
+
+    test('blank, padded and repeated addresses', () {
+      expect(LanAddresses.selectPreferredAddress([v4('   ')]), isNull);
+      expect(
+        LanAddresses.selectPreferredAddress([v4(' 10.1.2.3 '), v4('10.1.2.3')]),
+        '10.1.2.3',
+      );
+    });
+
+    test('IPv6 outside ULA and global unicast is never advertised', () {
+      for (final address in ['::1', 'FE80::1', 'ff02::1', '64:ff9b::1']) {
+        expect(
+          LanAddresses.selectPreferredAddress([
+            LanAddressCandidate(
+              interfaceName: 'en0',
+              address: address,
+              type: InternetAddressType.IPv6,
+            ),
+          ]),
+          isNull,
+          reason: address,
+        );
+      }
+      expect(
+        LanAddresses.selectPreferredAddress([
+          const LanAddressCandidate(
+            interfaceName: 'en0',
+            address: 'FD12::1',
+            type: InternetAddressType.IPv6,
+          ),
+        ]),
+        'FD12::1',
+      );
+    });
+
+    test('every listed virtual interface family is skipped', () {
+      for (final name in [
+        'docker0',
+        'veth1a2b',
+        'br-123abc',
+        'virbr0',
+        'vboxnet0',
+        'vmnet8',
+        'tun0',
+        'tap0',
+        'utun4',
+        'wg0',
+        'WG1',
+      ]) {
+        expect(
+          LanAddresses.selectPreferredAddress([v4('10.0.0.2', name: name)]),
+          isNull,
+          reason: name,
+        );
+      }
+    });
+
+    test(
+      'the host lookup answers a usable address or none, never throws',
+      () async {
+        final address = await LanAddresses.getLocalIPAddress();
+        if (address != null) {
+          expect(InternetAddress.tryParse(address), isNotNull);
+          expect(InternetAddress(address).isLoopback, isFalse);
+        }
+      },
+    );
+  });
 }
