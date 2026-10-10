@@ -27,9 +27,6 @@ class SDe extends S {
   String get navReference => 'Nachschlagen';
 
   @override
-  String get navLearnDescription => 'Lektionen nach der Koch-Methode, Gebeübungen und Hörtraining.';
-
-  @override
   String get navChatDescription => 'Direkte Morsegespräche über Tox P2P ohne Server.';
 
   @override
@@ -143,45 +140,6 @@ class SDe extends S {
   }
 
   @override
-  String learnCharsLearned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Zeichen gelernt',
-      one: '$count Zeichen gelernt',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String learnDailyGoalProgress(int done, int goal) {
-    return '$done / $goal Zeichen';
-  }
-
-  @override
-  String learnStreakDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days Tage in Folge',
-      one: '$days Tag in Folge',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String learnReviewDueCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Wiederholungen fällig',
-      one: '$count Wiederholung fällig',
-      zero: 'Keine Wiederholung fällig',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String learnRoundScore(int correct, int total) {
     return '$correct von $total richtig';
   }
@@ -244,49 +202,6 @@ class SDe extends S {
   }
 
   @override
-  String statsLessonOf(int lesson, int total) {
-    return '$lesson / $total';
-  }
-
-  @override
-  String statsCharsLearned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Zeichen gelernt',
-      one: '$count Zeichen gelernt',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsPercent(String percent) {
-    return '$percent%';
-  }
-
-  @override
-  String statsCharsCopied(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Zeichen aufgenommen',
-      one: '$count Zeichen aufgenommen',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsSessions(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Übungseinheiten',
-      one: '$count Übungseinheit',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String statsDays(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -298,136 +213,12 @@ class SDe extends S {
   }
 
   @override
-  String statsBestStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Rekord: $count Tage',
-      one: 'Rekord: $count Tag',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsGoalProgress(int done, int goal) {
-    return '$done / $goal Zeichen';
-  }
-
-  @override
-  String statsGoalRemaining(int remaining) {
-    String _temp0 = intl.Intl.pluralLogic(
-      remaining,
-      locale: localeName,
-      other: 'Noch $remaining Zeichen',
-      one: 'Noch $remaining Zeichen',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String statsTrendSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Letzte $count Übungseinheiten',
       one: 'Letzte Übungseinheit',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTooltipSession(int index, int total) {
-    return 'Übungseinheit $index von $total';
-  }
-
-  @override
-  String statsTooltipCopied(int correct, int total) {
-    return '$correct / $total richtig';
-  }
-
-  @override
-  String statsTooltipLesson(int lesson) {
-    return 'Lektion $lesson';
-  }
-
-  @override
-  String statsAttempts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Versuche',
-      one: '$count Versuch',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsCorrectOf(int correct, int attempts) {
-    return '$correct von $attempts richtig';
-  }
-
-  @override
-  String statsLessonIntroduced(int lesson) {
-    return 'In Lektion $lesson eingeführt';
-  }
-
-  @override
-  String statsSrsBox(int box, int maxBox) {
-    return 'Fach $box von $maxBox';
-  }
-
-  @override
-  String statsSrsDueIn(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'In $days Tagen fällig',
-      one: 'Morgen fällig',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTimes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count-mal',
-      one: '$count-mal',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsHeatmapCell(String target, String answered, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count-mal',
-      one: '$count-mal',
-    );
-    return '$target als $answered beantwortet, $_temp0';
-  }
-
-  @override
-  String statsCalendarDay(String date, int chars) {
-    String _temp0 = intl.Intl.pluralLogic(
-      chars,
-      locale: localeName,
-      other: '$chars Zeichen',
-      one: '$chars Zeichen',
-      zero: 'Nicht geübt',
-    );
-    return '$date: $_temp0';
-  }
-
-  @override
-  String statsActiveDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count aktive Tage',
-      one: '$count aktiver Tag',
     );
     return '$_temp0';
   }
@@ -1029,31 +820,7 @@ class SDe extends S {
   String get chatCopyChatId => 'Chat-ID kopieren';
 
   @override
-  String get learnLessonCardTitle => 'Koch-Lektion';
-
-  @override
-  String get learnCourseComplete => 'Kurs abgeschlossen – bleib dran!';
-
-  @override
-  String get learnDailyGoalTitle => 'Heute';
-
-  @override
-  String get learnDailyGoalMet => 'Tagesziel erreicht';
-
-  @override
-  String get learnNoStreak => 'Starte heute eine Serie';
-
-  @override
   String get learnContinueLesson => 'Lektion fortsetzen';
-
-  @override
-  String get learnReceivePractice => 'Hörtraining';
-
-  @override
-  String get learnSendPractice => 'Gebetraining';
-
-  @override
-  String get learnReviewDue => 'Fällige Zeichen wiederholen';
 
   @override
   String get learnSettings => 'Trainingseinstellungen';
@@ -1065,70 +832,7 @@ class SDe extends S {
   String get learnIdentityRequired => 'Erstelle oder entsperre deine Identität, um mit dem Training zu beginnen. Dein Fortschritt wird mit der Identität gespeichert und mit deiner Sicherung übertragen.';
 
   @override
-  String get learnLoadFailed => 'Dein gespeicherter Fortschritt konnte nicht gelesen werden. Du beginnst neu; die alte Datei wurde als .corrupt aufbewahrt.';
-
-  @override
   String get learnProgressSaveFailed => 'Fortschritt konnte nicht gespeichert werden. Das Ergebnis zählt, solange DitMesh geöffnet bleibt.';
-
-  @override
-  String get learnChooseDrill => 'Übung wählen';
-
-  @override
-  String get learnDrillGroups => 'Zufällige Gruppen';
-
-  @override
-  String get learnDrillWords => 'Wörter';
-
-  @override
-  String get learnDrillCallsigns => 'Rufzeichen';
-
-  @override
-  String get learnDrillQso => 'QSO';
-
-  @override
-  String get learnDrillCharacters => 'Einzelzeichen';
-
-  @override
-  String get learnDrillAbbreviations => 'Abkürzungen und Q-Gruppen';
-
-  @override
-  String get learnDrillNumbers => 'Zifferngruppen';
-
-  @override
-  String get learnDrillConfusables => 'Ähnliche Zeichen';
-
-  @override
-  String get learnDrillContest => 'Contest-Austausch';
-
-  @override
-  String get learnDrillGroupsHint => 'Zufällige Gruppen aus allen gelernten Buchstaben';
-
-  @override
-  String get learnDrillCharactersHint => 'Ein Zeichen nach dem anderen – sofort erkennen';
-
-  @override
-  String get learnDrillWordsHint => 'Häufige englische Wörter';
-
-  @override
-  String get learnDrillAbbreviationsHint => 'TNX, FB, QTH, QSL – Kurzformen im Funkverkehr';
-
-  @override
-  String get learnDrillNumbersHint => 'Fünfstellige Gruppen, wie in Telegrammen und laufenden Nummern';
-
-  @override
-  String get learnDrillCallsignsHint => 'Amateurfunkrufzeichen aus aller Welt';
-
-  @override
-  String get learnDrillConfusablesHint => 'Verwechselte Zeichenpaare wie S/H oder U/V direkt vergleichen';
-
-  @override
-  String get learnDrillQsoHint => 'Zeilen aus einer vollständigen Funkverbindung';
-
-  @override
-  String get learnDrillContestHint => 'Rufzeichen, 5NN und laufende Nummer oder Zone im Contest-Tempo';
-
-  @override
-  String get learnDrillReviewHint => 'Zeichen, deren Wiederholung fällig ist';
 
   @override
   String get toolsTitle => 'Funkwerkzeuge';
@@ -1440,30 +1144,6 @@ class SDe extends S {
   String get learnNoFeedbackWarning => 'Ton, Blinken und Vibration sind ausgeschaltet – stattdessen blinkt der Bildschirm.';
 
   @override
-  String get learnSendTitle => 'Senden';
-
-  @override
-  String get learnSendThis => 'Sende diesen Text';
-
-  @override
-  String get learnCopyFromMemory => 'Aus dem Gedächtnis';
-
-  @override
-  String get learnHiddenTarget => 'Verborgen – aus dem Gedächtnis morsen';
-
-  @override
-  String get learnDecoded => 'Decodiert';
-
-  @override
-  String get learnWaitingForKey => 'Beginne zu morsen, sobald du bereit bist';
-
-  @override
-  String get learnRestart => 'Neu starten';
-
-  @override
-  String get learnTryAnother => 'Anderen Text versuchen';
-
-  @override
   String get learnKeyerStraight => 'Handtaste';
 
   @override
@@ -1471,21 +1151,6 @@ class SDe extends S {
 
   @override
   String get learnKeyerIambicB => 'Iambic B';
-
-  @override
-  String get learnLegendStraight => 'Leertaste = Taste';
-
-  @override
-  String get learnLegendPaddles => 'Linke Ctrl = Punkt, rechte Ctrl = Strich';
-
-  @override
-  String get learnSendClean => 'Sauber gegeben – nichts zu verbessern.';
-
-  @override
-  String get learnSendIssues => 'Hinweise zum Rhythmus';
-
-  @override
-  String get learnYourSending => 'Decodiert als';
 
   @override
   String get learnStraightKeyLabel => 'TASTE';
@@ -1686,159 +1351,6 @@ class SDe extends S {
   String get referenceKeyPendingLabel => 'Tastung';
 
   @override
-  String get statsTitle => 'Statistik';
-
-  @override
-  String get statsLoading => 'Deine Statistik wird geladen…';
-
-  @override
-  String get statsLoadFailed => 'Dein Fortschritt konnte nicht geladen werden. Ziehe nach unten oder öffne die Seite erneut, um es noch einmal zu versuchen.';
-
-  @override
-  String get statsRetry => 'Erneut versuchen';
-
-  @override
-  String get statsEmptyTitle => 'Noch keine Übungseinheiten';
-
-  @override
-  String get statsEmptyBody => 'Schließe deine erste Hör- oder Gebeübung ab. Dann erscheinen hier dein Genauigkeitsverlauf, deine Stärken bei einzelnen Zeichen und ein Übungskalender.';
-
-  @override
-  String get statsEmptyCallToAction => 'Gehe zu „Lernen“ und drücke „Lektion fortsetzen“, um zu beginnen.';
-
-  @override
-  String get statsOverviewTitle => 'Übersicht';
-
-  @override
-  String get statsTileLesson => 'Koch-Lektion';
-
-  @override
-  String get statsTileAccuracy => 'Genauigkeit';
-
-  @override
-  String get statsNoData => '--';
-
-  @override
-  String get statsTilePractice => 'Übung';
-
-  @override
-  String get statsTileStreak => 'Serie';
-
-  @override
-  String get statsTileDailyGoal => 'Tagesziel';
-
-  @override
-  String get statsGoalMet => 'Heute erreicht';
-
-  @override
-  String get statsSummaryTitle => 'Deine Statistik';
-
-  @override
-  String get statsSummaryOpen => 'Statistik anzeigen';
-
-  @override
-  String get statsTrendTitle => 'Genauigkeitsverlauf';
-
-  @override
-  String get statsTrendHint => 'Tippe auf einen Punkt, um eine Übungseinheit anzusehen.';
-
-  @override
-  String get statsSeriesReceive => 'Empfangen';
-
-  @override
-  String get statsSeriesSend => 'Senden';
-
-  @override
-  String get statsAxisSessions => 'Übungseinheit';
-
-  @override
-  String get statsCharsTitle => 'Zeichen';
-
-  @override
-  String get statsCharsSubtitle => 'Koch-Reihenfolge. Tippe auf ein Zeichen für Details.';
-
-  @override
-  String get statsCharsNotStarted => 'Noch nicht geübt';
-
-  @override
-  String get statsNotInCourse => 'Nicht im Koch-Kurs enthalten';
-
-  @override
-  String get statsSrsTitle => 'Verteilte Wiederholung';
-
-  @override
-  String get statsSrsNotTracked => 'Noch nicht eingeplant';
-
-  @override
-  String get statsSrsDueNow => 'Jetzt fällig';
-
-  @override
-  String get statsConfusionsTitle => 'Am häufigsten verwechselt mit';
-
-  @override
-  String get statsConfusionsNone => 'Keine Verwechslungen aufgezeichnet';
-
-  @override
-  String get statsConfusionMissed => 'überhört';
-
-  @override
-  String get statsBucketLegendTitle => 'Genauigkeit';
-
-  @override
-  String get statsBucketNone => 'Keine';
-
-  @override
-  String get statsBucketWeak => '< 70%';
-
-  @override
-  String get statsBucketFair => '70-89%';
-
-  @override
-  String get statsBucketGood => '90-97%';
-
-  @override
-  String get statsBucketStrong => '>= 98%';
-
-  @override
-  String get statsHeatmapTitle => 'Verwechslungen';
-
-  @override
-  String get statsHeatmapSubtitle => 'Zeilen zeigen das gesendete Zeichen, Spalten deine Antwort. Dunkler bedeutet häufiger.';
-
-  @override
-  String get statsHeatmapEmpty => 'Noch keine Verwechslungen. Falsche Antworten erscheinen hier.';
-
-  @override
-  String get statsHeatmapLegendLow => 'Selten';
-
-  @override
-  String get statsHeatmapLegendHigh => 'Häufig';
-
-  @override
-  String get statsHeatmapAxisTarget => 'Gesendet';
-
-  @override
-  String get statsHeatmapAxisAnswered => 'Geantwortet';
-
-  @override
-  String get statsCalendarTitle => 'Übungskalender';
-
-  @override
-  String get statsCalendarSubtitle => 'Letzte 12 Wochen';
-
-  @override
-  String get statsCalendarLegendLess => 'Weniger';
-
-  @override
-  String get statsCalendarLegendMore => 'Mehr';
-
-  @override
-  String get statsStreakExplanation => 'Eine Serie zählt aufeinanderfolgende Kalendertage mit mindestens einer Übungseinheit. Ein ganzer Tag ohne Übung setzt sie zurück; zweimal an einem Tag zu üben zählt nur einmal.';
-
-  @override
-  String get learnStatistics => 'Statistik';
-
-  @override
   String get listenTitle => 'Mithören';
 
   @override
@@ -1958,36 +1470,6 @@ class SDe extends S {
   String get listenStoppedInBackground => 'Das Mithören wurde gestoppt, während die App im Hintergrund war.';
 
   @override
-  String get learnWpmUnknown => '-- WPM';
-
-  @override
-  String get learnTipDitTooLongTitle => 'Punkte zu lang';
-
-  @override
-  String get learnTipDahTooShortTitle => 'Striche zu kurz';
-
-  @override
-  String get learnTipIntraGapTooLongTitle => 'Elemente zu weit auseinander';
-
-  @override
-  String get learnTipCharGapTooShortTitle => 'Zeichen zu dicht beieinander';
-
-  @override
-  String get learnTipWordGapTooShortTitle => 'Wörter zu dicht beieinander';
-
-  @override
-  String get learnTipSpeedUnsteadyTitle => 'Ungleichmäßiges Tempo';
-
-  @override
-  String get learnSeverityMinor => 'leicht';
-
-  @override
-  String get learnSeverityModerate => 'merklich';
-
-  @override
-  String get learnSeveritySevere => 'stark';
-
-  @override
   String get notificationOpen => 'Öffnen';
 
   @override
@@ -2013,111 +1495,6 @@ class SDe extends S {
 
   @override
   String get notificationFriendRequestTitle => 'Neue Freundschaftsanfrage';
-
-  @override
-  String learnNewestCharIs(String char) {
-    return 'Neu in dieser Lektion: $char';
-  }
-
-  @override
-  String learnCharNewSemantics(String char) {
-    return '$char, neu';
-  }
-
-  @override
-  String learnPendingPattern(String pattern) {
-    return 'Tastung: $pattern';
-  }
-
-  @override
-  String learnIssueHeadline(String title, String severity) {
-    return '$title ($severity)';
-  }
-
-  @override
-  String learnRatioTimes(String ratio) {
-    return '${ratio}x';
-  }
-
-  @override
-  String learnTipDitTooLong(String ratio) {
-    return 'Deine Punkte sind zu lang (etwa $ratio einer Punktlänge). Denke an „di“, nicht „daaah“ – ein Punkt ist ein kurzes Antippen.';
-  }
-
-  @override
-  String learnTipDahTooShort(String ratio) {
-    return 'Deine Striche sind zu kurz (etwa $ratio einer Punktlänge; Ziel ist 3). Halte einen Strich so lang wie drei Punkte.';
-  }
-
-  @override
-  String learnTipIntraGapTooLong(String ratio) {
-    return 'Die Pausen innerhalb der Zeichen sind zu lang (etwa $ratio einer Punktlänge). Halte die Elemente eines Zeichens eng zusammen.';
-  }
-
-  @override
-  String learnTipCharGapTooShort(String ratio) {
-    return 'Die Zeichen laufen ineinander (Pausen etwa $ratio einer Punktlänge; Ziel ist 3). Lass nach jedem Zeichen eine deutliche Pause.';
-  }
-
-  @override
-  String learnTipWordGapTooShort(String ratio) {
-    return 'Die Wörter liegen zu dicht beieinander (Pausen etwa $ratio einer Punktlänge; Ziel ist 7). Halte eine lange Pause zwischen Wörtern.';
-  }
-
-  @override
-  String learnTipSpeedUnsteady(int percent) {
-    return 'Dein Tempo schwankt (Abweichung $percent %). Wähle ein Tempo und behalte es die ganze Zeile bei.';
-  }
-
-  @override
-  String learnIssueDetailDitTooLong(int offending, int total, String ratio) {
-    return '$offending von $total Punkten zu lang (Ø $ratio Punktlängen)';
-  }
-
-  @override
-  String learnIssueDetailDahTooShort(int offending, int total, String ratio) {
-    return '$offending von $total Strichen zu kurz (Ø $ratio Punktlängen)';
-  }
-
-  @override
-  String learnIssueDetailIntraGapTooLong(int offending, int total, String ratio) {
-    return '$offending von $total Pausen innerhalb der Zeichen zu lang (Ø $ratio Punktlängen)';
-  }
-
-  @override
-  String learnIssueDetailCharGapTooShort(int offending, int total, String ratio) {
-    return '$offending von $total Zeichenpausen zu kurz (Ø $ratio Punktlängen)';
-  }
-
-  @override
-  String learnIssueDetailWordGapTooShort(int offending, int total, String ratio) {
-    return '$offending von $total Wortpausen zu kurz (Ø $ratio Punktlängen)';
-  }
-
-  @override
-  String learnIssueDetailSpeedUnsteady(String cv) {
-    return 'Ungleichmäßiges Gebetempo (Variationskoeffizient $cv)';
-  }
-
-  @override
-  String statsAccuracyDetail(String allTime) {
-    return 'Letzte 7 Tage / $allTime insgesamt';
-  }
-
-  @override
-  String statsDurationHoursMinutes(int hours, int minutes) {
-    return '$hours Std. $minutes Min.';
-  }
-
-  @override
-  String statsDurationMinutes(int minutes) {
-    return '$minutes Min.';
-  }
-
-  @override
-  String statsDurationSeconds(int seconds) {
-    return '$seconds Sek.';
-  }
 
   @override
   String get accountNewPasswordRequired => 'Gib ein neues Passwort ein';
@@ -2348,11 +1725,6 @@ class SDe extends S {
   }
 
   @override
-  String learnShowAllChars(int count) {
-    return 'Alle $count Zeichen anzeigen';
-  }
-
-  @override
   String get chatSelfMe => 'Ich';
 
   @override
@@ -2360,9 +1732,6 @@ class SDe extends S {
 
   @override
   String get chatSelfContactSubtitle => 'Entwürfe, Übungen und Notizen · werden nie gesendet';
-
-  @override
-  String get learnShowFewerChars => 'Weniger Zeichen anzeigen';
 
   @override
   String get learnLeaveDrillTitle => 'Diese Übung verlassen?';
@@ -2383,349 +1752,9 @@ class SDe extends S {
   String get learnReplayAssistedNote => 'Wiederholt: Diese Übung zählt als Training, schaltet aber keine Lektion frei und ändert keine Wiederholungen.';
 
   @override
-  String get learnPlanTitle => 'Plan für heute';
-
-  @override
-  String learnPlanSummary(int minutes, int done, int total) {
-    return 'Etwa $minutes Min. · $done von $total Schritten';
-  }
-
-  @override
-  String get learnPlanBudget => 'Planlänge';
-
-  @override
-  String learnPlanBudgetMinutes(int minutes) {
-    return '$minutes Min.';
-  }
-
-  @override
-  String get learnPlanStart => 'Plan starten';
-
-  @override
-  String get learnPlanContinue => 'Plan fortsetzen';
-
-  @override
-  String get learnPlanStepReview => 'Fällige Zeichen wiederholen';
-
-  @override
-  String get learnPlanStepFocus => 'Gezieltes Üben';
-
-  @override
-  String learnPlanStepCourse(int lesson) {
-    return 'Lektion $lesson';
-  }
-
-  @override
-  String get learnPlanStepSend => 'Gebeübung';
-
-  @override
-  String learnPlanReasonDueReview(String symbols) {
-    return 'Zur Wiederholung fällig: $symbols';
-  }
-
-  @override
-  String learnPlanReasonConfusions(String symbols) {
-    return 'Oft verwechselt: $symbols';
-  }
-
-  @override
-  String learnPlanReasonWeak(String symbols) {
-    return 'Unter 90 %: $symbols';
-  }
-
-  @override
-  String learnPlanReasonChallenge(int count) {
-    return '$count Zeichen: kann die nächste Lektion freischalten';
-  }
-
-  @override
-  String learnPlanReasonExtended(int count) {
-    return 'Auf $count Zeichen verlängert, damit sie die nächste Lektion freischalten kann';
-  }
-
-  @override
-  String get learnPlanReasonConsolidate => 'Kurze Übung: festigt diese Lektion, schaltet die nächste nicht frei';
-
-  @override
-  String learnPlanReasonOutdated(int lesson) {
-    return 'Dein Kurs ist weiter: übt Lektion $lesson ohne Freischaltung';
-  }
-
-  @override
-  String learnPlanReasonSend(int count) {
-    return '$count kurze Ziele geben';
-  }
-
-  @override
-  String learnPlanStepDonePercent(int percent) {
-    return 'Erledigt · $percent %';
-  }
-
-  @override
-  String get learnPlanStepDone => 'Erledigt';
-
-  @override
-  String learnPlanSendProgress(int done, int total) {
-    return '$done von $total gegeben';
-  }
-
-  @override
-  String get learnPlanStale => 'Lektion oder Tempo haben sich geändert. Noch nicht begonnene Schritte aktualisieren?';
-
-  @override
-  String get learnPlanUpdate => 'Schritte aktualisieren';
-
-  @override
-  String get learnPlanComplete => 'Plan für heute erledigt';
-
-  @override
-  String learnPlanNeedsWork(String symbols) {
-    return 'Noch üben: $symbols';
-  }
-
-  @override
-  String get learnPlanAllGood => 'Heute keine schwachen Zeichen.';
-
-  @override
-  String get learnPlanTomorrow => 'Morgen gibt es einen neuen Plan. Freies Üben ist jederzeit möglich.';
-
-  @override
   String learnPlanNext(String step) {
     return 'Als Nächstes: $step';
   }
-
-  @override
-  String learnPlanEarlier(int done, int total) {
-    return 'Der frühere Plan endete bei $done von $total Schritten und zählt heute nicht mehr.';
-  }
-
-  @override
-  String learnSpeedAdviceRaise(int wpm) {
-    return 'Bereit für $wpm WpM effektives Tempo';
-  }
-
-  @override
-  String learnSpeedAdviceRaiseBoth(int wpm) {
-    return 'Bereit für $wpm WpM';
-  }
-
-  @override
-  String learnSpeedAdviceLower(int wpm) {
-    return 'Das Mitschreiben fällt bei diesem Tempo schwer. Versuch $wpm WpM effektiv oder eine gezielte Übung.';
-  }
-
-  @override
-  String learnSpeedAdviceBody(int count, int percent) {
-    return 'Basierend auf deinen letzten $count Übungen ohne Hilfe ($percent %). Nichts ändert sich, bevor du es übernimmst.';
-  }
-
-  @override
-  String get learnSpeedAdviceApply => 'Übernehmen';
-
-  @override
-  String get learnSpeedAdviceDismiss => 'Nicht jetzt';
-
-  @override
-  String get learnSpeedAdviceInsufficient => 'Für Tempo-Tipps braucht es 3 Übungen ohne Hilfe mit je 50+ Zeichen bei deinem aktuellen Tempo.';
-
-  @override
-  String get learnQsoAction => 'QSO-Simulator';
-
-  @override
-  String learnQsoLocked(int lesson) {
-    return 'Ab Lektion $lesson';
-  }
-
-  @override
-  String get learnQsoTitle => 'QSO-Simulator';
-
-  @override
-  String get learnQsoRespond => 'Auf CQ antworten';
-
-  @override
-  String get learnQsoRespondHint => 'Eine Station ruft CQ. Antworte und tauscht Rapporte aus.';
-
-  @override
-  String get learnQsoCall => 'CQ rufen';
-
-  @override
-  String get learnQsoCallHint => 'Du rufst CQ und eine Station antwortet.';
-
-  @override
-  String get learnQsoYourCall => 'Dein Rufzeichen';
-
-  @override
-  String get learnQsoYourName => 'Dein Name';
-
-  @override
-  String get learnQsoYourQth => 'Dein QTH';
-
-  @override
-  String get learnQsoInvalidCall => 'Gib ein Rufzeichen wie BD1XYZ ein';
-
-  @override
-  String get learnQsoInvalidWord => 'Ein Wort, nur Buchstaben A–Z';
-
-  @override
-  String get learnQsoOffline => 'Läuft komplett auf diesem Gerät. Es wird nichts gesendet.';
-
-  @override
-  String get learnQsoStart => 'QSO starten';
-
-  @override
-  String get learnQsoResume => 'Unterbrochenes QSO fortsetzen';
-
-  @override
-  String get learnQsoStageCallCq => 'Rufe CQ mit deinem Rufzeichen';
-
-  @override
-  String get learnQsoStageCallConfirm => 'Antworte: ihr Rufzeichen, DE, deins';
-
-  @override
-  String get learnQsoStageExchange => 'Rapport, Name und QTH senden';
-
-  @override
-  String get learnQsoStageConfirmInfo => 'Ihre Angaben bestätigen';
-
-  @override
-  String get learnQsoStageClosing => 'Mit 73 und <SK> beenden';
-
-  @override
-  String get learnQsoStageDone => 'QSO abgeschlossen';
-
-  @override
-  String learnQsoSpeed(int wpm) {
-    return 'Gegenstation gibt mit $wpm WpM effektiv';
-  }
-
-  @override
-  String learnQsoRemote(String call) {
-    return '$call gibt';
-  }
-
-  @override
-  String get learnQsoRemoteHidden => 'Nach Gehör mitschreiben – der Text ist verborgen.';
-
-  @override
-  String get learnQsoShowText => 'Text zeigen';
-
-  @override
-  String get learnQsoListen => 'Anhören';
-
-  @override
-  String get learnQsoAccepted => 'Angenommen';
-
-  @override
-  String get learnQsoRejected => 'Nicht angenommen';
-
-  @override
-  String get learnQsoRemoteSending => 'Die Gegenstation gibt …';
-
-  @override
-  String get learnQsoYourTurn => 'Du bist dran: gib deine Antwort und tippe auf Senden.';
-
-  @override
-  String get learnQsoDecoded => 'Deine Sendung';
-
-  @override
-  String get learnQsoNothingKeyed => 'Noch nichts gegeben';
-
-  @override
-  String get learnQsoPlayAgain => 'Wiederholung erbitten (AGN)';
-
-  @override
-  String get learnQsoSlower => 'Langsamer erbitten (QRS)';
-
-  @override
-  String get learnQsoHint => 'Tipp';
-
-  @override
-  String learnQsoHintLabel(String example) {
-    return 'Beispiel: $example';
-  }
-
-  @override
-  String get learnQsoPause => 'Pause';
-
-  @override
-  String get learnQsoSend => 'Senden';
-
-  @override
-  String get learnQsoClear => 'Löschen';
-
-  @override
-  String get learnQsoIssueEmpty => 'Es wurde nichts gegeben.';
-
-  @override
-  String get learnQsoIssueMissingCq => 'Beginne mit CQ.';
-
-  @override
-  String get learnQsoIssueMissingDe => 'Setze DE zwischen die Rufzeichen.';
-
-  @override
-  String get learnQsoIssueWrongLocalCall => 'Dein Rufzeichen fehlt oder ist falsch.';
-
-  @override
-  String get learnQsoIssueWrongRemoteCall => 'Das Rufzeichen der Gegenstation ist falsch.';
-
-  @override
-  String get learnQsoIssueReversedCalls => 'Rufzeichen vertauscht: zuerst ihres, dann DE und deins.';
-
-  @override
-  String get learnQsoIssueMissingEnding => 'Ende mit K oder KN.';
-
-  @override
-  String get learnQsoIssueMissingRst => 'Gib einen Rapport, z. B. UR RST 599.';
-
-  @override
-  String get learnQsoIssueInvalidRst => 'Dieser RST ist ungültig (R 1–5, S 1–9, T 1–9).';
-
-  @override
-  String get learnQsoIssueMissingName => 'Sende NAME und deinen Namen.';
-
-  @override
-  String get learnQsoIssueWrongName => 'Das ist nicht dein Name in diesem QSO.';
-
-  @override
-  String get learnQsoIssueMissingQth => 'Sende QTH und deinen Standort.';
-
-  @override
-  String get learnQsoIssueWrongQth => 'Das ist nicht dein QTH in diesem QSO.';
-
-  @override
-  String get learnQsoIssueMissingAck => 'Bestätige mit R oder QSL.';
-
-  @override
-  String get learnQsoIssueWrongRemoteName => 'Bestätige den Namen der Gegenstation.';
-
-  @override
-  String get learnQsoIssueMissing73 => '73 einfügen.';
-
-  @override
-  String get learnQsoIssueMissingSk => 'Beende die Verbindung mit <SK>.';
-
-  @override
-  String learnQsoSummaryFields(int count, int total) {
-    return 'Beim ersten Mal richtig: $count von $total Schritten';
-  }
-
-  @override
-  String learnQsoSummaryRepeats(int count) {
-    return 'Wiederholungen: $count';
-  }
-
-  @override
-  String learnQsoSummaryHints(int count) {
-    return 'Tipps: $count';
-  }
-
-  @override
-  String learnQsoSummaryRhythm(int wpm) {
-    return 'Dein Geben: etwa $wpm WpM';
-  }
-
-  @override
-  String get learnQsoSummaryNote => 'QSO-Ergebnisse zählen getrennt von der Mitschreib-Genauigkeit und schalten keine Lektionen frei.';
 
   @override
   String get messageStatusCancelled => 'Abgebrochen – nie gesendet';
@@ -2737,30 +1766,10 @@ class SDe extends S {
   String get chatPracticeMessage => 'Diese Nachricht mitschreiben';
 
   @override
-  String get chatSaveAsMaterial => 'Als Übungsmaterial speichern';
-
-  @override
-  String get chatSavedAsMaterial => 'In „Meine Materialien“ gespeichert';
-
-  @override
-  String get chatSaveMaterialFailed => 'Material konnte nicht gespeichert werden. Versuch es erneut.';
-
-  @override
   String get chatListenOnly => 'Nur-Hören-Training';
 
   @override
   String get chatListenOnlyHidden => 'Nur Hören: zum Anhören abspielen';
-
-  @override
-  String chatClearHistoryMaterials(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Nachrichten aus diesem Chat wurden als Übungsmaterial gespeichert. Die Kopien bleiben, bis du sie unter Lernen › Meine Materialien löschst.',
-      one: '1 Nachricht aus diesem Chat wurde als Übungsmaterial gespeichert. Die Kopie bleibt, bis du sie unter Lernen › Meine Materialien löschst.',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get chatPracticeTitle => 'Mitschreib-Übung';
@@ -2801,59 +1810,6 @@ class SDe extends S {
   String chatPracticeErrorsAction(String symbols) {
     return 'Fehler üben: $symbols';
   }
-
-  @override
-  String get learnTipDahTooLongTitle => 'Striche zu lang';
-
-  @override
-  String learnTipDahTooLong(String ratio) {
-    return 'Deine Striche sind zu lang (etwa $ratio eines Punkts; Ziel 3). Lass nach drei Punktlängen los.';
-  }
-
-  @override
-  String learnIssueDetailDahTooLong(int offending, int total, String ratio) {
-    return '$offending von $total Strichen zu lang (Ø $ratio Punkt)';
-  }
-
-  @override
-  String get learnRhythmTitle => 'Rhythmus';
-
-  @override
-  String get learnRhythmMine => 'Mein Rhythmus';
-
-  @override
-  String get learnRhythmStandard => 'Standardrhythmus (Zieltempo)';
-
-  @override
-  String learnRhythmNormalizedNote(int ms) {
-    return 'Probleme werden an deiner eigenen Punktlänge ($ms ms) gemessen; gleichmäßig, aber langsam ist in Ordnung. Die Standardspur zeigt das Zieltempo.';
-  }
-
-  @override
-  String get learnRhythmNotLocated => 'Deine Zeichen ließen sich nicht einzelnen Buchstaben zuordnen. Übe stattdessen das ganze Ziel.';
-
-  @override
-  String get learnRhythmPlayMine => 'Meins abspielen';
-
-  @override
-  String get learnRhythmPlayStandard => 'Standard abspielen';
-
-  @override
-  String learnRhythmPracticePart(int count) {
-    return 'Das üben ($count Versuche)';
-  }
-
-  @override
-  String get learnRhythmPracticeWhole => 'Ganzes Ziel üben';
-
-  @override
-  String get learnRhythmSymbolOk => 'Sieht gut aus';
-
-  @override
-  String get learnRhythmZoomIn => 'Vergrößern';
-
-  @override
-  String get learnRhythmZoomOut => 'Verkleinern';
 
   @override
   String get chatSearchMessages => 'Nachrichten suchen';
@@ -3096,219 +2052,6 @@ class SDe extends S {
   String get workbenchDelete => 'Löschen';
 
   @override
-  String get materialsTitle => 'Meine Materialien';
-
-  @override
-  String get materialsNew => 'Neues Material';
-
-  @override
-  String get materialsEdit => 'Bearbeiten';
-
-  @override
-  String get materialsSave => 'Speichern';
-
-  @override
-  String get materialsSaveFailed => 'Material konnte nicht gespeichert werden.';
-
-  @override
-  String get materialsTitleField => 'Titel';
-
-  @override
-  String get materialsTagsField => 'Schlagwörter';
-
-  @override
-  String get materialsTagsHelper => 'Schlagwörter durch Kommas trennen';
-
-  @override
-  String get materialsTextField => 'Text';
-
-  @override
-  String get materialsListField => 'Ein Eintrag pro Zeile';
-
-  @override
-  String get materialsKindText => 'Text';
-
-  @override
-  String get materialsKindWords => 'Wortliste';
-
-  @override
-  String get materialsKindCallsigns => 'Rufzeichen';
-
-  @override
-  String get materialsPreview => 'Vorschau';
-
-  @override
-  String materialsPreviewCounts(int items, int symbols, int prosigns) {
-    return '$items Einträge · $symbols Zeichen · $prosigns Betriebszeichen';
-  }
-
-  @override
-  String materialsPreviewUnsupported(String chars) {
-    return 'Ohne Morsecode, beim Üben ausgelassen: $chars';
-  }
-
-  @override
-  String materialsPreviewDuplicates(int count) {
-    return '$count doppelte Einträge werden einmal behalten';
-  }
-
-  @override
-  String get materialsProblemEmpty => 'Gib zuerst Text ein.';
-
-  @override
-  String get materialsProblemTooLarge => 'Zu groß: Materialien sind auf 1 MiB begrenzt.';
-
-  @override
-  String materialsProblemTooManyEntries(int count) {
-    return 'Zu viele Einträge: höchstens $count.';
-  }
-
-  @override
-  String materialsProblemEntryTooLong(int count) {
-    return 'Ein Eintrag ist zu lang: höchstens $count Zeichen.';
-  }
-
-  @override
-  String get materialsProblemNothingTrainable => 'Hier lässt sich nichts morsen.';
-
-  @override
-  String get materialsSearch => 'Materialien durchsuchen';
-
-  @override
-  String get materialsFavoritesOnly => 'Favoriten';
-
-  @override
-  String get materialsFavorite => 'Zu Favoriten';
-
-  @override
-  String get materialsUnfavorite => 'Aus Favoriten entfernen';
-
-  @override
-  String get materialsEmpty => 'Noch keine Materialien. Füge eigene Texte, Wortlisten oder Rufzeichen hinzu oder speichere eine Chatnachricht.';
-
-  @override
-  String materialsItems(int count) {
-    return '$count Einträge';
-  }
-
-  @override
-  String get materialsFromChat => 'Aus dem Chat';
-
-  @override
-  String get materialsActions => 'Aktionen';
-
-  @override
-  String get materialsPractise => 'Üben';
-
-  @override
-  String get materialsDelete => 'Löschen';
-
-  @override
-  String get materialsDeleteTitle => 'Material löschen?';
-
-  @override
-  String materialsDeleteBody(String title) {
-    return '„$title“ wird von diesem Gerät entfernt. Dein Übungsverlauf bleibt.';
-  }
-
-  @override
-  String get materialsImport => 'TXT oder JSON importieren';
-
-  @override
-  String get materialsImportDialogTitle => 'Materialdatei wählen';
-
-  @override
-  String get materialsSaveDialogTitle => 'Material speichern';
-
-  @override
-  String get materialsImportFailed => 'Import fehlgeschlagen. Deine Bibliothek ist unverändert.';
-
-  @override
-  String get materialsImportNotUtf8 => 'Nur UTF-8-Textdateien können importiert werden.';
-
-  @override
-  String get materialsImportInvalid => 'Keine gültige DitMesh-Materialdatei. Nichts importiert.';
-
-  @override
-  String materialsImported(int count) {
-    return '$count Materialien importiert.';
-  }
-
-  @override
-  String get materialsDuplicateTitle => 'Einige Materialien gibt es schon';
-
-  @override
-  String get materialsDuplicateOverwrite => 'Ersetzen';
-
-  @override
-  String get materialsDuplicateKeepCopy => 'Beide behalten (als Kopie)';
-
-  @override
-  String get materialsDuplicateSkip => 'Überspringen';
-
-  @override
-  String get materialsExportJson => 'Als JSON exportieren';
-
-  @override
-  String materialsExported(int count) {
-    return '$count Materialien exportiert.';
-  }
-
-  @override
-  String get materialsExportFailed => 'Export fehlgeschlagen.';
-
-  @override
-  String get materialsExportWav => 'Audio exportieren (WAV)';
-
-  @override
-  String materialsWavCharSpeed(int wpm) {
-    return 'Zeichentempo: $wpm WpM';
-  }
-
-  @override
-  String materialsWavEffSpeed(int wpm) {
-    return 'Effektives Tempo: $wpm WpM';
-  }
-
-  @override
-  String materialsWavTone(int hz) {
-    return 'Ton: $hz Hz';
-  }
-
-  @override
-  String get materialsWavWithAnswer => 'Lösungstext beilegen (.txt)';
-
-  @override
-  String get materialsWavFormat => '16-Bit-Mono-WAV, 48 kHz.';
-
-  @override
-  String materialsWavParts(int count) {
-    return 'Länger als 10 Minuten: wird als $count Dateien exportiert.';
-  }
-
-  @override
-  String materialsWavExported(int count) {
-    return '$count Audiodateien gespeichert.';
-  }
-
-  @override
-  String get materialsPracticeMode => 'Üben mit';
-
-  @override
-  String get materialsPracticeLearned => 'Nur gelernte Zeichen';
-
-  @override
-  String materialsPracticeLearnedPartial(int count) {
-    return 'Nur gelernte Zeichen ($count Einträge nicht verfügbar: noch nicht gelernte Zeichen)';
-  }
-
-  @override
-  String get materialsPracticeAll => 'Alle Morsezeichen';
-
-  @override
-  String get materialsPracticeNothing => 'In diesem Modus lässt sich kein Eintrag üben.';
-
-  @override
   String get guestTryLearning => 'Erst einmal lernen';
 
   @override
@@ -3351,65 +2094,6 @@ class SDe extends S {
   String get guestChoiceUseGuest => 'Gastfortschritt verwenden';
 
   @override
-  String get placementTitle => 'Mein Niveau prüfen';
-
-  @override
-  String get placementCheckLevel => 'Mein aktuelles Niveau prüfen';
-
-  @override
-  String get placementFromZero => 'Bei null anfangen';
-
-  @override
-  String get placementOfferTitle => 'Neu bei Morse oder schon geübt?';
-
-  @override
-  String get placementOfferBody => 'Ein kurzer Test kann einen Startpunkt vorschlagen. Er ist freiwillig und ändert nichts, bis du dich entscheidest.';
-
-  @override
-  String get placementIntro => 'Etwa 3–5 Minuten Mitschreiben in fünf Stufen: Koch-Zeichen in Gruppen mit steigendem Tempo, dann kurze Wörter. Eine grobe Orientierung aus wenigen Proben, kein Zertifikat. Jederzeit abbrechbar.';
-
-  @override
-  String get placementStart => 'Starten';
-
-  @override
-  String get placementSkip => 'Überspringen';
-
-  @override
-  String get placementStop => 'Beenden';
-
-  @override
-  String placementTierProgress(int step, int total, int wpm) {
-    return 'Stufe $step von $total · $wpm WpM effektiv';
-  }
-
-  @override
-  String get placementTierPassed => 'Gut mitgeschrieben. Die nächste Stufe ist schneller.';
-
-  @override
-  String get placementTierStopped => 'Diese Stufe lag unter 90 %, der Test endet hier.';
-
-  @override
-  String get placementNextTier => 'Nächste Stufe';
-
-  @override
-  String placementSuggestion(int lesson) {
-    return 'Vorgeschlagener Start: Lektion $lesson';
-  }
-
-  @override
-  String placementVerified(int count, int total) {
-    return '$count von $total Koch-Zeichen der Reihe nach bestätigt.';
-  }
-
-  @override
-  String get placementLimits => 'Auf Basis einer kleinen Probe: nicht geprüfte Zeichen bleiben ungeprüft, nichts wird als gelernt markiert. Die Lektion lässt sich jederzeit ändern.';
-
-  @override
-  String placementAdopt(int lesson) {
-    return 'Mit Lektion $lesson beginnen';
-  }
-
-  @override
   String get chatJumpToLatest => 'Neueste Nachrichten';
 
   @override
@@ -3417,17 +2101,6 @@ class SDe extends S {
 
   @override
   String get chatListenOnlyPreview => 'Neue Nachricht – zum Mitschreiben anhören';
-
-  @override
-  String get chatSaveMaterialConfirm => 'Den Rest speichern';
-
-  @override
-  String materialsImportConfirm(int count) {
-    return '$count Materialien importieren?';
-  }
-
-  @override
-  String get materialsExportTxt => 'Als Text exportieren (TXT)';
 
   @override
   String get accountBackupMediaTitle => 'Gespeicherte Aufnahmen einschließen?';
@@ -3846,9 +2519,6 @@ class SDe extends S {
   String get backupXMeSubtitle => 'Eine verschlüsselte Datei mit Identität, Chats und Fortschritt – zum Aufbewahren oder für ein anderes Gerät';
 
   @override
-  String get conditionsTitle => 'Bedingungen';
-
-  @override
   String get conditionsClear => 'Klar';
 
   @override
@@ -3865,9 +2535,6 @@ class SDe extends S {
 
   @override
   String get conditionsRadioHint => 'Rauschen, tiefes Fading, eine Nachbarstation und leicht ungleichmäßiges Timing. Ergebnisse bleiben getrennt vom klaren Training.';
-
-  @override
-  String get conditionsPreview => 'Probe hören';
 
   @override
   String conditionsActive(String name) {
@@ -4002,12 +2669,6 @@ class SDe extends S {
   }
 
   @override
-  String get telegraphTitle => 'Chinesischer Telegrafencode';
-
-  @override
-  String get telegraphIntro => 'Jedes chinesische Zeichen wird als vierstelliger Code gesendet. Übe das Hören der Ziffern und, getrennt davon, welcher Code für welches Zeichen steht.';
-
-  @override
   String get telegraphCodebook => 'Codebuch';
 
   @override
@@ -4015,77 +2676,6 @@ class SDe extends S {
 
   @override
   String get telegraphCodebookTaiwan => 'Taiwan';
-
-  @override
-  String get telegraphDigitsTitle => 'Codegruppen mitschreiben';
-
-  @override
-  String get telegraphDigitsHint => 'Höre vierstellige Gruppen echter Codes und tippe die Ziffern.';
-
-  @override
-  String telegraphDigitsResults(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Durchgänge: $accuracy % der Ziffern',
-      one: '1 Durchgang: $accuracy % der Ziffern',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get telegraphRecallTitle => 'Codes abrufen';
-
-  @override
-  String get telegraphRecallHint => 'Zeichen zu Code und Code zu Zeichen. Getrennt vom Morse-Fortschritt.';
-
-  @override
-  String telegraphRecallResults(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Karten beantwortet: $accuracy % gewusst',
-      one: '1 Karte beantwortet: $accuracy % gewusst',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get telegraphSeparateNote => 'Code-Abruf schaltet nie Morse-Lektionen frei und ändert keine Tempo-Empfehlung; Ziffern-Mitschreiben zählt wie anderes Morse-Mitschreiben.';
-
-  @override
-  String get telegraphRecallCharPrompt => 'Tippe den Code dieses Zeichens';
-
-  @override
-  String get telegraphRecallCodePrompt => 'Wähle das Zeichen zu diesem Code';
-
-  @override
-  String get telegraphReveal => 'Lösung zeigen';
-
-  @override
-  String get telegraphRevealAssisted => 'Angezeigt: Diese Karte zählt als unterstützt.';
-
-  @override
-  String get telegraphCorrect => 'Richtig';
-
-  @override
-  String get telegraphIncorrect => 'Nicht ganz';
-
-  @override
-  String telegraphRecallSummary(int correct, int total) {
-    return '$correct von $total gewusst';
-  }
-
-  @override
-  String telegraphRecallAssisted(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Karten mit angezeigter Lösung',
-      one: '1 Karte mit angezeigter Lösung',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get telegraphInterpretAction => 'Als chinesischen Telegrafencode deuten';

@@ -362,15 +362,10 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
 
   Future<void> _clearHistory() async {
     final S s = context.s;
-    final String body = await ConversationLearning.clearHistoryBody(
-      context,
-      _id,
-    );
-    if (!mounted) return;
     final bool ok = await confirm(
       context,
       title: s.chatClearHistory,
-      body: body,
+      body: s.chatClearHistoryBody,
       confirmLabel: s.chatClearHistory,
     );
     if (!ok || !mounted || _clearing) return;

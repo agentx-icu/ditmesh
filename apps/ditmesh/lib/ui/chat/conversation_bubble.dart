@@ -88,14 +88,5 @@ Widget conversationBubble(
               title: title,
             ),
           ),
-    onSaveMaterial: m.isMine
-        ? null
-        : () => unawaited(
-            ConversationLearning.saveAsMaterial(
-              context,
-              message: m,
-              title: title,
-            ),
-          ),
   );
 }

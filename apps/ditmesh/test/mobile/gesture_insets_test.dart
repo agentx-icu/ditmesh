@@ -6,16 +6,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
-import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../chat/test_support.dart' as chat;
-import '../learn/helpers/fake_playback.dart';
-import '../learn/helpers/l10n.dart';
-import '../learn/helpers/test_controller.dart';
 import 'phone_support.dart';
 
 /// The two paddle surfaces (raw listeners inside [PaddleButtons]).
@@ -63,28 +58,6 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip(chat.s.chatModePaddles));
-      await tester.pumpAndSettle();
-      expectPaddlesClearOfGestureZones(tester, size);
-    });
-
-    testWidgets('send-practice paddles avoid the back-gesture zones at $size', (
-      tester,
-    ) async {
-      setPhone(tester, size, gestureInsets: kGestureNavInsets);
-      final t = await TestTraining.create(
-        settings: const TrainingSettings(keyerMode: KeyerMode.iambicB),
-      );
-      addTearDown(t.controller.dispose);
-      await tester.pumpWidget(
-        l10nApp(
-          home: SendPracticeScreen(
-            controller: t.controller,
-            playback: FakeLearnPlaybackFactory(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byType(PaddleButtons));
       await tester.pumpAndSettle();
       expectPaddlesClearOfGestureZones(tester, size);
     });

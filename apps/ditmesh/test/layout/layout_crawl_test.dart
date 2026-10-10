@@ -5,9 +5,10 @@
 // collecting every layout error (overflow, unbounded constraints, ...), text
 // under a notch or the home indicator, and controls stretched across a wide
 // window, each with the scene that produced it. Two roots per profile: the
-// shell (its four tabs) and the training home with its drills, which the
-// chat app reaches from deeper flows only. One test per root and profile so
-// a failure names both.
+// shell (its four tabs), and the training screens chat reaches only three
+// levels down (copy practice of a received message, group practice), opened
+// directly over the seeded app. One test per root and profile so a failure
+// names both.
 //
 // Opt-in (it taps a few thousand controls); the Layout workflow runs it
 // sharded, with Noto as the UI font. Measured with the test font's square
@@ -27,16 +28,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:morse_core/morse_core.dart';
+import 'package:provider/provider.dart';
+import 'package:ditmesh/training/chat_copy_session.dart';
+import 'package:ditmesh/training/training_controller.dart';
+import 'package:ditmesh/training/training_controller_host.dart';
 import 'package:ditmesh/ui/chat/conversation_header.dart';
 import 'package:ditmesh/ui/chat/conversation_route.dart';
-import 'package:ditmesh/ui/learn/learn_home.dart';
+import 'package:ditmesh/ui/groups/practice/group_practice_page.dart';
+import 'package:ditmesh/ui/learn/chat_copy/chat_copy_screen.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
-import 'package:ditmesh/ui/theme.dart';
 
-import '../account/test_app.dart' show settle;
+import '../../integration_test/support/seed_data.dart' show SeededBackend;
 import '../learn/helpers/fake_playback.dart';
-import '../learn/helpers/l10n.dart';
-import '../learn/helpers/test_controller.dart';
 import 'layout_profiles.dart';
 import 'seeded_app.dart';
 
@@ -64,8 +68,9 @@ const int _maxReopen = 12;
 /// One gesture on one control of the top route.
 typedef _Control = ({Finder finder, String id, String label, bool long});
 
-/// Where a crawl starts: the app shell with its tabs, or the training home.
-enum CrawlRoot { shell, learn }
+/// Where a crawl starts: the app shell with its tabs, or the training
+/// screens chat opens (copy practice, group practice).
+enum CrawlRoot { shell, practice }
 
 void main() {
   setUpAll(() async {
@@ -162,7 +167,9 @@ class _Crawler {
 
   Future<void> _walk() async {
     await _boot();
-    final int entries = root == CrawlRoot.shell ? kShellDestinations.length : 1;
+    final int entries = root == CrawlRoot.shell
+        ? kShellDestinations.length
+        : _practiceEntries;
     for (var tab = 0; tab < entries; tab++) {
       scene = 'tab $tab';
       await _ensureShell(tab);
@@ -170,7 +177,7 @@ class _Crawler {
     }
     scene = 'teardown';
     await tester.pumpWidget(const SizedBox());
-    await settle(tester);
+    await _settle();
   }
 
   /// Layout failures fail the profile; anything else (a plugin the test
@@ -211,45 +218,76 @@ class _Crawler {
   bool _isBase(Route<dynamic> route) =>
       _base == null ? route.isFirst : route == _base || route.isFirst;
 
-  /// The widget that marks the crawl's root screen.
-  Type get _rootType => root == CrawlRoot.shell ? AppShell : LearnHome;
-
   bool get _rootGone =>
-      find.byType(_rootType, skipOffstage: false).evaluate().isEmpty;
+      find.byType(AppShell, skipOffstage: false).evaluate().isEmpty;
+
+  /// The seeded data of the current boot.
+  late SeededBackend _seed;
+
+  /// Copy practice of a received message, and group practice.
+  static const int _practiceEntries = 2;
+
+  /// Opens practice entry [entry] the way chat does, over the shell.
+  Future<void> _openPractice(int entry) async {
+    final BuildContext context = tester.element(find.byType(AppShell));
+    final Widget page;
+    if (entry == 0) {
+      final TrainingController? controller = await tester.runAsync(
+        () => context.read<TrainingControllerHost>().controller(),
+      );
+      page = ChatCopyScreen(
+        controller: controller!,
+        playback: FakeLearnPlaybackFactory(),
+        session: ChatCopySession(
+          text: _seed.copy.qso.first.text,
+          conversationId: _seed.qsoConversationId,
+          messageId: 'crawl',
+          profileKey: controller.profileKey,
+          timing: const MorseTiming(wpm: 20),
+          toneHz: 700,
+        ),
+      );
+    } else {
+      page = GroupPracticePage(
+        conversationId: _seed.groupConversationId,
+        groupTitle: _seed.copy.groupName,
+      );
+    }
+    final route = MaterialPageRoute<void>(builder: (_) => page);
+    _base = route;
+    unawaited(_rootNavigator.push(route));
+    await _settle();
+  }
 
   Future<void> _boot() async {
     boots++;
-    if (root == CrawlRoot.learn) {
-      final training = await TestTraining.create(settings: kShortSettings);
-      addTearDown(training.controller.dispose);
-      await tester.pumpWidget(
-        KeyedSubtree(
-          key: ValueKey<int>(boots),
-          child: l10nApp(
-            theme: DitmeshTheme.light(),
-            locale: Locale(profile.locale),
-            home: const Scaffold(),
-          ),
-        ),
-      );
-      // Pushed like every training screen the app opens, not as the root
-      // route (DitMesh never shows it as one).
-      final route = MaterialPageRoute<void>(
-        builder: (_) => LearnHome(
-          controller: training.controller,
-          playback: FakeLearnPlaybackFactory(),
-        ),
-      );
-      _base = route;
-      unawaited(_rootNavigator.push(route));
-      await settle(tester);
-      return;
-    }
-    await pumpSeededApp(
+    _base = null;
+    _seed = await pumpSeededApp(
       tester,
       locale: profile.locale,
       key: ValueKey<int>(boots),
     );
+  }
+
+  /// Lets file I/O finish and animations settle, except that a screen animating for ever (a playback
+  /// indicator waiting on a fake clock) counts as settled after a few
+  /// seconds instead of failing the crawl: the frame is still checked.
+  Future<void> _settle() async {
+    await tester.runAsync(() async {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    });
+    try {
+      await tester.pumpAndSettle(
+        const Duration(milliseconds: 100),
+        EnginePhase.sendSemanticsUpdate,
+        const Duration(seconds: 5),
+      );
+    } on FlutterError catch (e) {
+      if (!e.message.startsWith('pumpAndSettle timed out')) rethrow;
+    }
   }
 
   NavigatorState get _rootNavigator =>
@@ -264,22 +302,27 @@ class _Crawler {
   /// (locked the identity, deleted it, ...).
   Future<void> _ensureShell(int tab) async {
     if (_rootGone) await _boot();
-    _rootNavigator.popUntil(_isBase);
-    await settle(tester);
-    if (_rootGone) await _boot();
-    if (root == CrawlRoot.learn) {
+    if (root == CrawlRoot.practice) {
+      _base = null;
+      _rootNavigator.popUntil((r) => r.isFirst);
+      await _settle();
+      if (_rootGone) await _boot();
+      await _openPractice(tab);
       _checkSafeArea();
       _checkStretch();
       _checkTruncated();
       return;
     }
+    _rootNavigator.popUntil(_isBase);
+    await _settle();
+    if (_rootGone) await _boot();
     final d = kShellDestinations[tab];
     for (final icon in [d.icon, d.selectedIcon]) {
       final f = find.descendant(of: _navHost, matching: find.byIcon(icon));
       if (f.evaluate().isNotEmpty) {
         await tester.ensureVisible(f.first);
         await tester.tap(f.first, warnIfMissed: false);
-        await settle(tester);
+        await _settle();
         _checkSafeArea();
         _checkStretch();
         _checkTruncated();
@@ -350,7 +393,7 @@ class _Crawler {
       } else {
         await tester.tap(hit.first);
       }
-      await settle(tester);
+      await _settle();
       _checkSafeArea();
       _checkStretch();
       _checkTruncated();
@@ -377,7 +420,7 @@ class _Crawler {
     } else {
       nav.popUntil(_isBase);
     }
-    await settle(tester);
+    await _settle();
     if (_rootGone) {
       await _ensureShell(tab ?? 0);
     }

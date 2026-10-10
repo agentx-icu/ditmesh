@@ -7,23 +7,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/l10n/generated/s.dart';
-import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/training/training_controller.dart';
 import 'package:ditmesh/ui/learn/learn_scope.dart';
 import 'package:ditmesh/ui/account/identity_card.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
-import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
 import 'package:ditmesh/ui/reference/reference_screen.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../account/test_app.dart';
 import '../chat/test_support.dart' as chat;
-import '../learn/helpers/fake_playback.dart';
 import '../learn/helpers/l10n.dart';
-import '../learn/helpers/test_controller.dart';
 import '../reference/reference_test_support.dart';
 import 'phone_support.dart';
 
@@ -106,94 +101,6 @@ void main() {
         expect(
           find.text(en.learnIdentityRequired),
           loading ? findsOneWidget : findsNWidgets(2),
-        );
-      });
-    }
-  });
-
-  group('send practice', () {
-    for (final KeyerMode mode in <KeyerMode>[
-      KeyerMode.straight,
-      KeyerMode.iambicB,
-    ]) {
-      testWidgets('$mode app bar fits a 320 px phone at 2x text', (
-        tester,
-      ) async {
-        setPhone(tester, kSmallPhone, textScale: 2);
-        final t = await TestTraining.create(
-          settings: TrainingSettings(keyerMode: mode),
-        );
-        addTearDown(t.controller.dispose);
-        await tester.pumpWidget(
-          l10nApp(
-            home: SendPracticeScreen(
-              controller: t.controller,
-              playback: FakeLearnPlaybackFactory(),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull);
-        // The switch keeps its name even when the label becomes an icon.
-        expect(
-          tester.getSemantics(find.byType(Switch)),
-          matchesSemantics(
-            label: en.learnCopyFromMemory,
-            hasToggledState: true,
-            hasEnabledState: true,
-            isEnabled: true,
-            isFocusable: true,
-            hasTapAction: true,
-            hasFocusAction: true,
-          ),
-        );
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
-        expect(find.text(en.learnHiddenTarget), findsOneWidget);
-      });
-    }
-  });
-
-  group('send practice label', () {
-    // Widget tests render Ahem (every glyph 1 em wide), so the cases keep a
-    // clear margin; real-font frames come from tool/screenshots.
-    final cases = <(String, Size, double, bool)>[
-      // Regression: the fixed 420 threshold dropped the label on a 402 pt
-      // iPhone although it fit.
-      ('zh', const Size(402, 874), 1, true),
-      ('en', const Size(600, 874), 1, true),
-      ('de', kSmallPhone, 1.3, false),
-      // Landscape: setPhone adds 47 pt notch insets per side; the label must
-      // fit what is left, not the full width (else the title ellipsizes).
-      ('en', const Size(560, 375), 1, true),
-      ('en', const Size(450, 375), 1, false),
-      ('en', kSmallPhone, 2, false),
-    ];
-    for (final (String lang, Size size, double scale, bool label) in cases) {
-      testWidgets('$lang $size at ${scale}x shows '
-          '${label ? 'the label' : 'the icon'}', (tester) async {
-        setPhone(tester, size, textScale: scale);
-        final t = await TestTraining.create();
-        addTearDown(t.controller.dispose);
-        await tester.pumpWidget(
-          l10nApp(
-            locale: Locale(lang),
-            home: SendPracticeScreen(
-              controller: t.controller,
-              playback: FakeLearnPlaybackFactory(),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull);
-        final s = lookupS(Locale(lang));
-        expect(
-          find.text(s.learnCopyFromMemory),
-          label ? findsOneWidget : findsNothing,
-        );
-        expect(
-          find.byIcon(Icons.visibility_off_outlined),
-          label ? findsNothing : findsOneWidget,
         );
       });
     }

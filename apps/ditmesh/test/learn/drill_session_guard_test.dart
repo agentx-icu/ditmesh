@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh/training/receive_session.dart';
-import 'package:ditmesh/training/send_session.dart';
-import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/ui/learn/receive/receive_drill_screen.dart';
 import 'package:ditmesh/ui/learn/receive/receive_summary_view.dart';
-import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
-import 'package:ditmesh/ui/learn/send/send_result_view.dart';
 
 import 'helpers/fake_playback.dart';
 import 'helpers/l10n.dart';
@@ -211,116 +206,6 @@ void main() {
       await pump(tester);
       await _systemBack(tester);
       expect(wake.calls, <bool>[true, false]);
-    });
-  });
-
-  group('send practice', () {
-    late TestTraining t;
-    late FakeLearnPlaybackFactory playback;
-    late _FakeWake wake;
-
-    Future<void> pump(WidgetTester tester) async {
-      t = await TestTraining.create(
-        settings: const TrainingSettings(keyerMode: KeyerMode.straight),
-      );
-      addTearDown(t.controller.dispose);
-      playback = FakeLearnPlaybackFactory();
-      wake = _FakeWake();
-      await _open(
-        tester,
-        SendPracticeScreen(
-          controller: t.controller,
-          playback: playback,
-          session: SendSession(
-            target: 'E',
-            timing: const MorseTiming(wpm: 20),
-            now: () => t.clock.now,
-            lesson: 1,
-          ),
-          screenWake: wake,
-        ),
-      );
-    }
-
-    Future<void> keyOneMark(WidgetTester tester) async {
-      final gesture = await tester.startGesture(
-        tester.getCenter(find.byType(StraightKeyButton)),
-      );
-      await tester.pump();
-      playback.clock.advance(const Duration(milliseconds: 60));
-      await tester.pump();
-      await gesture.up();
-      await tester.pump();
-    }
-
-    testWidgets('back before keying leaves without asking', (tester) async {
-      await pump(tester);
-      await _systemBack(tester);
-      expect(_dialog, findsNothing);
-      expect(find.byType(SendPracticeScreen), findsNothing);
-    });
-
-    testWidgets('back with keyed input asks; confirm leaves unsaved', (
-      tester,
-    ) async {
-      await pump(tester);
-      await keyOneMark(tester);
-
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(_dialog, findsOneWidget);
-      await tester.tap(find.text(en.actionCancel));
-      await tester.pumpAndSettle();
-      expect(find.byType(SendPracticeScreen), findsOneWidget);
-
-      await _systemBack(tester);
-      expect(_dialog, findsOneWidget);
-      await tester.tap(find.text(en.learnLeaveDrillConfirm));
-      await tester.pumpAndSettle();
-      expect(find.byType(SendPracticeScreen), findsNothing);
-      expect(t.controller.progress.history, isEmpty);
-    });
-
-    testWidgets('restart clears the guard; the result view never asks', (
-      tester,
-    ) async {
-      await pump(tester);
-      await keyOneMark(tester);
-      await tester.tap(find.text(en.learnRestart));
-      await tester.pumpAndSettle();
-      await keyOneMark(tester);
-      await tester.tap(find.text(en.learnDone));
-      await tester.pumpAndSettle();
-      expect(find.byType(SendResultView), findsOneWidget);
-      await _systemBack(tester);
-      expect(_dialog, findsNothing);
-      expect(find.byType(SendPracticeScreen), findsNothing);
-    });
-
-    testWidgets('keeps the screen on while practising', (tester) async {
-      await pump(tester);
-      expect(wake.calls, <bool>[true]);
-      await _setLifecycle(tester, AppLifecycleState.hidden);
-      await _setLifecycle(tester, AppLifecycleState.paused);
-      expect(wake.calls, <bool>[true, false]);
-      await _setLifecycle(tester, AppLifecycleState.hidden);
-      await _setLifecycle(tester, AppLifecycleState.inactive);
-      await _setLifecycle(tester, AppLifecycleState.resumed);
-      expect(wake.calls, <bool>[true, false, true]);
-
-      await keyOneMark(tester);
-      await tester.tap(find.text(en.learnDone));
-      await tester.pumpAndSettle();
-      expect(wake.calls, <bool>[true, false, true, false]);
-      // The result (with the rhythm timeline) is taller than the phone.
-      await tester.ensureVisible(find.text(en.learnTryAnother));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(en.learnTryAnother));
-      await tester.pumpAndSettle();
-      expect(wake.calls, <bool>[true, false, true, false, true]);
-      await _systemBack(tester);
-      expect(find.byType(SendPracticeScreen), findsNothing);
-      expect(wake.calls, <bool>[true, false, true, false, true, false]);
     });
   });
 }

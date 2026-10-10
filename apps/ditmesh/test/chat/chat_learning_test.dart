@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_trainer/morse_trainer.dart';
-import 'package:ditmesh/training/material_store.dart';
 import 'package:ditmesh/training/training_controller_host.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
@@ -119,27 +118,5 @@ void main() {
     expect(record.assistance, contains(Assistance.reveal));
     expect(t.controller.progress.srs.cards, isEmpty);
     expect(t.controller.progress.charStats, isEmpty);
-  });
-
-  testWidgets('saving twice keeps one material; clearing history explains it', (
-    tester,
-  ) async {
-    final (_, t) = await _pump(tester);
-    await _openMenu(tester, s.chatSaveAsMaterial);
-    await _openMenu(tester, s.chatSaveAsMaterial);
-    final materials = await t.controller.loadMaterials();
-    expect(materials, hasLength(1));
-    expect(materials.single.originalText, 'CQ CQ DE ANN');
-    expect(materials.single.source!.localRef, contains('c2c_$kPeerKey'));
-
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(s.chatClearHistory));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Learn › My materials'), findsOneWidget);
-    await tester.tap(find.text(s.chatClearHistory).last);
-    await tester.pumpAndSettle();
-    // The material copy is independent of the cleared history.
-    expect(await t.controller.loadMaterials(), hasLength(1));
   });
 }

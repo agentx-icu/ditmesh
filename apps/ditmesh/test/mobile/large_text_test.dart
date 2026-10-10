@@ -8,20 +8,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh/training/training_controller.dart';
-import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/ui/account/identity_card.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/learn/learn_scope.dart';
-import 'package:ditmesh/ui/learn/send/send_practice_screen.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../account/test_app.dart';
 import '../chat/test_support.dart' as chat;
-import '../learn/helpers/fake_playback.dart';
 import '../learn/helpers/l10n.dart';
-import '../learn/helpers/test_controller.dart';
 import '../reference/reference_test_support.dart';
 import 'phone_support.dart';
 
@@ -81,34 +77,6 @@ void main() {
         await tester.pump();
         expect(tester.takeException(), isNull);
       });
-    }
-  });
-
-  group('send practice at 3x', () {
-    for (final KeyerMode mode in <KeyerMode>[
-      KeyerMode.straight,
-      KeyerMode.iambicB,
-    ]) {
-      for (final Size size in <Size>[kSmallPhone, kLandscapeSmallPhone]) {
-        testWidgets('$mode fits $size', (tester) async {
-          setPhone(tester, size, textScale: kAccessibilityScale);
-          final t = await TestTraining.create(
-            settings: TrainingSettings(keyerMode: mode),
-          );
-          addTearDown(t.controller.dispose);
-          await tester.pumpWidget(
-            l10nApp(
-              home: SendPracticeScreen(
-                controller: t.controller,
-                playback: FakeLearnPlaybackFactory(),
-              ),
-            ),
-          );
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-          expect(find.byType(Switch), findsOneWidget);
-        });
-      }
     }
   });
 

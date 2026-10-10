@@ -29,7 +29,6 @@ class MessageBubble extends StatelessWidget {
     this.showSender = false,
     this.listenOnly = false,
     this.onPractice,
-    this.onSaveMaterial,
     this.onBookmark,
     this.bookmarked = false,
     this.onRetry,
@@ -54,7 +53,6 @@ class MessageBubble extends StatelessWidget {
       onPlaybackSettings != null ||
       _canInterpret ||
       onPractice != null ||
-      onSaveMaterial != null ||
       onBookmark != null ||
       onRetry != null ||
       onCancelSend != null;
@@ -62,9 +60,8 @@ class MessageBubble extends StatelessWidget {
   /// Listen-only training: also hide the dots and dashes until revealed.
   final bool listenOnly;
 
-  /// Received messages: open copy practice / keep a material copy.
+  /// Received messages: open copy practice.
   final VoidCallback? onPractice;
-  final VoidCallback? onSaveMaterial;
 
   final ChatMessage message;
   final bool trainingMode;
@@ -169,7 +166,6 @@ class MessageBubble extends StatelessWidget {
                                 message.text,
                               ),
                             _LearnAction.practice => onPractice,
-                            _LearnAction.save => onSaveMaterial,
                             _LearnAction.bookmark => onBookmark,
                             _LearnAction.retry => onRetry,
                             _LearnAction.cancel => onCancelSend,
@@ -203,11 +199,6 @@ class MessageBubble extends StatelessWidget {
                               PopupMenuItem(
                                 value: _LearnAction.practice,
                                 child: Text(s.chatPracticeMessage),
-                              ),
-                            if (onSaveMaterial != null)
-                              PopupMenuItem(
-                                value: _LearnAction.save,
-                                child: Text(s.chatSaveAsMaterial),
                               ),
                             if (_canInterpret)
                               PopupMenuItem(
@@ -271,7 +262,6 @@ class MessageBubble extends StatelessWidget {
 enum _LearnAction {
   playback,
   practice,
-  save,
   bookmark,
   retry,
   cancel,

@@ -27,9 +27,6 @@ class SJa extends S {
   String get navReference => '資料';
 
   @override
-  String get navLearnDescription => 'Koch 法のレッスン、送信練習、受信練習。';
-
-  @override
   String get navChatDescription => 'Tox P2P による、サーバーを使わない 1 対 1 のモールス通信。';
 
   @override
@@ -143,42 +140,6 @@ class SJa extends S {
   }
 
   @override
-  String learnCharsLearned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 文字を習得',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String learnDailyGoalProgress(int done, int goal) {
-    return '$done / $goal 文字';
-  }
-
-  @override
-  String learnStreakDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days 日連続で練習',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String learnReviewDueCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '復習する文字：$count 文字',
-      zero: '復習する文字はありません',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String learnRoundScore(int correct, int total) {
     return '$total 文字中 $correct 文字正解';
   }
@@ -239,76 +200,11 @@ class SJa extends S {
   }
 
   @override
-  String statsLessonOf(int lesson, int total) {
-    return '$lesson / $total';
-  }
-
-  @override
-  String statsCharsLearned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 文字を習得',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsPercent(String percent) {
-    return '$percent%';
-  }
-
-  @override
-  String statsCharsCopied(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 文字を受信記録',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsSessions(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 回の練習',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String statsDays(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: '$count 日',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsBestStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '最長 $count 日連続',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsGoalProgress(int done, int goal) {
-    return '$done / $goal 文字';
-  }
-
-  @override
-  String statsGoalRemaining(int remaining) {
-    String _temp0 = intl.Intl.pluralLogic(
-      remaining,
-      locale: localeName,
-      other: 'あと $remaining 文字',
     );
     return '$_temp0';
   }
@@ -320,98 +216,6 @@ class SJa extends S {
       locale: localeName,
       other: '最近 $count 回の練習',
       one: '前回の練習',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTooltipSession(int index, int total) {
-    return '練習 $index / $total';
-  }
-
-  @override
-  String statsTooltipCopied(int correct, int total) {
-    return '$correct / $total 正解';
-  }
-
-  @override
-  String statsTooltipLesson(int lesson) {
-    return 'レッスン $lesson';
-  }
-
-  @override
-  String statsAttempts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 回の試行',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsCorrectOf(int correct, int attempts) {
-    return '$attempts 回中 $correct 回正解';
-  }
-
-  @override
-  String statsLessonIntroduced(int lesson) {
-    return 'レッスン $lesson で登場';
-  }
-
-  @override
-  String statsSrsBox(int box, int maxBox) {
-    return 'ボックス $box / $maxBox';
-  }
-
-  @override
-  String statsSrsDueIn(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days 日後に復習',
-      one: '明日復習',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsTimes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 回',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String statsHeatmapCell(String target, String answered, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 回',
-    );
-    return '$target を $answered と回答：$_temp0';
-  }
-
-  @override
-  String statsCalendarDay(String date, int chars) {
-    String _temp0 = intl.Intl.pluralLogic(
-      chars,
-      locale: localeName,
-      other: '$chars 文字',
-      zero: '練習なし',
-    );
-    return '$date：$_temp0';
-  }
-
-  @override
-  String statsActiveDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '練習した日：$count 日',
     );
     return '$_temp0';
   }
@@ -1012,31 +816,7 @@ class SJa extends S {
   String get chatCopyChatId => 'チャット ID をコピー';
 
   @override
-  String get learnLessonCardTitle => 'Koch 法のレッスン';
-
-  @override
-  String get learnCourseComplete => 'コース完了！引き続き腕を磨きましょう。';
-
-  @override
-  String get learnDailyGoalTitle => '今日';
-
-  @override
-  String get learnDailyGoalMet => '今日の目標を達成';
-
-  @override
-  String get learnNoStreak => '今日から毎日練習しましょう';
-
-  @override
   String get learnContinueLesson => 'レッスンを続ける';
-
-  @override
-  String get learnReceivePractice => '受信練習';
-
-  @override
-  String get learnSendPractice => '送信練習';
-
-  @override
-  String get learnReviewDue => '復習の時期が来た文字';
 
   @override
   String get learnSettings => '練習設定';
@@ -1048,70 +828,7 @@ class SJa extends S {
   String get learnIdentityRequired => '練習を始めるには ID 情報を作成するか、ロックを解除してください。進捗は ID 情報と一緒に保存され、バックアップにも含まれます。';
 
   @override
-  String get learnLoadFailed => '保存済みの進捗を読み取れませんでした。最初から始めます。元のファイルは .corrupt として保存されています。';
-
-  @override
   String get learnProgressSaveFailed => '進捗を保存できませんでした。DitMesh を閉じるまでは今回の結果が有効です。';
-
-  @override
-  String get learnChooseDrill => '練習を選択';
-
-  @override
-  String get learnDrillGroups => 'ランダムな文字列';
-
-  @override
-  String get learnDrillWords => '単語';
-
-  @override
-  String get learnDrillCallsigns => 'コールサイン';
-
-  @override
-  String get learnDrillQso => '交信（QSO）';
-
-  @override
-  String get learnDrillCharacters => '1 文字ずつ';
-
-  @override
-  String get learnDrillAbbreviations => '略語と Q 符号';
-
-  @override
-  String get learnDrillNumbers => '数字のグループ';
-
-  @override
-  String get learnDrillConfusables => '聞き違えやすい文字';
-
-  @override
-  String get learnDrillContest => 'コンテストの交信';
-
-  @override
-  String get learnDrillGroupsHint => '学習済みの文字から作るランダムな文字列';
-
-  @override
-  String get learnDrillCharactersHint => '1 文字ずつ聞いて、すぐに答えましょう';
-
-  @override
-  String get learnDrillWordsHint => 'よく使う英単語';
-
-  @override
-  String get learnDrillAbbreviationsHint => 'TNX、FB、QTH、QSL など、無線交信で使う略語';
-
-  @override
-  String get learnDrillNumbersHint => '電文や通し番号で使う 5 桁の数字グループ';
-
-  @override
-  String get learnDrillCallsignsHint => '世界各地のアマチュア無線のコールサイン';
-
-  @override
-  String get learnDrillConfusablesHint => 'S/H、U/V など、聞き違えやすい文字をペアで練習';
-
-  @override
-  String get learnDrillQsoHint => '一連の交信で使う文章';
-
-  @override
-  String get learnDrillContestHint => 'コンテストの速度でコールサイン、5NN、通し番号やゾーンを受信';
-
-  @override
-  String get learnDrillReviewHint => '復習の時期が来た文字';
 
   @override
   String get toolsTitle => '無線のツール';
@@ -1423,30 +1140,6 @@ class SJa extends S {
   String get learnNoFeedbackWarning => '音、画面点滅、振動がすべて無効です。代わりに画面を点滅させます。';
 
   @override
-  String get learnSendTitle => '送信';
-
-  @override
-  String get learnSendThis => 'これを送信';
-
-  @override
-  String get learnCopyFromMemory => '記憶を頼りに';
-
-  @override
-  String get learnHiddenTarget => '非表示 — 記憶を頼りに送信';
-
-  @override
-  String get learnDecoded => '解読結果';
-
-  @override
-  String get learnWaitingForKey => '準備ができたら送信を始めてください';
-
-  @override
-  String get learnRestart => '最初から';
-
-  @override
-  String get learnTryAnother => '別の問題に挑戦';
-
-  @override
   String get learnKeyerStraight => '縦振れ電鍵';
 
   @override
@@ -1454,21 +1147,6 @@ class SJa extends S {
 
   @override
   String get learnKeyerIambicB => 'アイアンビック B';
-
-  @override
-  String get learnLegendStraight => 'スペースキー = 電鍵';
-
-  @override
-  String get learnLegendPaddles => '左 Ctrl = 短点、右 Ctrl = 長点';
-
-  @override
-  String get learnSendClean => '正確な送信です。修正点はありません。';
-
-  @override
-  String get learnSendIssues => 'リズムのアドバイス';
-
-  @override
-  String get learnYourSending => '解読結果';
 
   @override
   String get learnStraightKeyLabel => '電鍵';
@@ -1669,159 +1347,6 @@ class SJa extends S {
   String get referenceKeyPendingLabel => '送信中';
 
   @override
-  String get statsTitle => '統計';
-
-  @override
-  String get statsLoading => '統計を読み込み中…';
-
-  @override
-  String get statsLoadFailed => '学習の進捗を読み込めませんでした。下に引くか、開き直して再試行してください。';
-
-  @override
-  String get statsRetry => '再試行';
-
-  @override
-  String get statsEmptyTitle => 'まだ練習記録がありません';
-
-  @override
-  String get statsEmptyBody => '初めての受信練習または送信練習を終えると、正答率の推移、文字ごとの習熟度、練習カレンダーがここに表示されます。';
-
-  @override
-  String get statsEmptyCallToAction => '「学習」で「レッスンを続ける」を押すと始められます。';
-
-  @override
-  String get statsOverviewTitle => '概要';
-
-  @override
-  String get statsTileLesson => 'Koch 法のレッスン';
-
-  @override
-  String get statsTileAccuracy => '正答率';
-
-  @override
-  String get statsNoData => '--';
-
-  @override
-  String get statsTilePractice => '練習量';
-
-  @override
-  String get statsTileStreak => '連続日数';
-
-  @override
-  String get statsTileDailyGoal => '毎日の目標';
-
-  @override
-  String get statsGoalMet => '今日の目標達成';
-
-  @override
-  String get statsSummaryTitle => '自分の統計';
-
-  @override
-  String get statsSummaryOpen => '統計を見る';
-
-  @override
-  String get statsTrendTitle => '正答率の推移';
-
-  @override
-  String get statsTrendHint => '点をタップすると練習の詳細を確認できます。';
-
-  @override
-  String get statsSeriesReceive => '受信';
-
-  @override
-  String get statsSeriesSend => '送信';
-
-  @override
-  String get statsAxisSessions => '練習';
-
-  @override
-  String get statsCharsTitle => '文字';
-
-  @override
-  String get statsCharsSubtitle => 'Koch 法の順番です。文字をタップすると詳細を表示します。';
-
-  @override
-  String get statsCharsNotStarted => 'まだ練習していません';
-
-  @override
-  String get statsNotInCourse => 'Koch 法のコースに含まれていません';
-
-  @override
-  String get statsSrsTitle => '間隔反復学習';
-
-  @override
-  String get statsSrsNotTracked => 'まだ予定がありません';
-
-  @override
-  String get statsSrsDueNow => '今すぐ復習';
-
-  @override
-  String get statsConfusionsTitle => 'よく聞き違える文字';
-
-  @override
-  String get statsConfusionsNone => '聞き違いの記録はありません';
-
-  @override
-  String get statsConfusionMissed => '聞き逃し';
-
-  @override
-  String get statsBucketLegendTitle => '正答率';
-
-  @override
-  String get statsBucketNone => 'なし';
-
-  @override
-  String get statsBucketWeak => '< 70%';
-
-  @override
-  String get statsBucketFair => '70-89%';
-
-  @override
-  String get statsBucketGood => '90-97%';
-
-  @override
-  String get statsBucketStrong => '>= 98%';
-
-  @override
-  String get statsHeatmapTitle => '聞き違いの一覧';
-
-  @override
-  String get statsHeatmapSubtitle => '行は送信された文字、列は回答した文字です。色が濃いほど回数が多いことを示します。';
-
-  @override
-  String get statsHeatmapEmpty => 'まだ聞き違いの記録がありません。間違えた回答がここに表示されます。';
-
-  @override
-  String get statsHeatmapLegendLow => '少ない';
-
-  @override
-  String get statsHeatmapLegendHigh => '多い';
-
-  @override
-  String get statsHeatmapAxisTarget => '送信内容';
-
-  @override
-  String get statsHeatmapAxisAnswered => '回答内容';
-
-  @override
-  String get statsCalendarTitle => '練習カレンダー';
-
-  @override
-  String get statsCalendarSubtitle => '最近 12 週間';
-
-  @override
-  String get statsCalendarLegendLess => '少ない';
-
-  @override
-  String get statsCalendarLegendMore => '多い';
-
-  @override
-  String get statsStreakExplanation => '1 回以上練習した日が何日続いたかを数えます。丸 1 日練習を休むとリセットされます。同じ日に 2 回練習しても 1 日として数えます。';
-
-  @override
-  String get learnStatistics => '統計';
-
-  @override
   String get listenTitle => '受信する';
 
   @override
@@ -1941,36 +1466,6 @@ class SJa extends S {
   String get listenStoppedInBackground => 'アプリがバックグラウンドに移ったため、受信を停止しました。';
 
   @override
-  String get learnWpmUnknown => '-- WPM';
-
-  @override
-  String get learnTipDitTooLongTitle => '短点が長すぎます';
-
-  @override
-  String get learnTipDahTooShortTitle => '長点が短すぎます';
-
-  @override
-  String get learnTipIntraGapTooLongTitle => '符号要素が離れすぎています';
-
-  @override
-  String get learnTipCharGapTooShortTitle => '文字間が詰まっています';
-
-  @override
-  String get learnTipWordGapTooShortTitle => '単語間が詰まっています';
-
-  @override
-  String get learnTipSpeedUnsteadyTitle => '速度が不安定です';
-
-  @override
-  String get learnSeverityMinor => '軽微';
-
-  @override
-  String get learnSeverityModerate => '目立つ';
-
-  @override
-  String get learnSeveritySevere => '大きい';
-
-  @override
   String get notificationOpen => '開く';
 
   @override
@@ -1996,111 +1491,6 @@ class SJa extends S {
 
   @override
   String get notificationFriendRequestTitle => '新しい友達リクエスト';
-
-  @override
-  String learnNewestCharIs(String char) {
-    return 'このレッスンの新しい文字：$char';
-  }
-
-  @override
-  String learnCharNewSemantics(String char) {
-    return '$char、新しい文字';
-  }
-
-  @override
-  String learnPendingPattern(String pattern) {
-    return '送信中：$pattern';
-  }
-
-  @override
-  String learnIssueHeadline(String title, String severity) {
-    return '$title（$severity）';
-  }
-
-  @override
-  String learnRatioTimes(String ratio) {
-    return '$ratio 倍';
-  }
-
-  @override
-  String learnTipDitTooLong(String ratio) {
-    return '短点が長すぎます（短点の約 $ratio）。「ツー」ではなく「トン」と短く、押し続けずに軽くたたく感覚で送信してください。';
-  }
-
-  @override
-  String learnTipDahTooShort(String ratio) {
-    return '長点が短すぎます（短点の約 $ratio、目標は 3 倍）。短点 3 つ分の長さで押し続けてください。';
-  }
-
-  @override
-  String learnTipIntraGapTooLong(String ratio) {
-    return '文字内の間隔が広すぎます（短点の約 $ratio）。1 文字の符号要素は間隔を詰めて送信してください。';
-  }
-
-  @override
-  String learnTipCharGapTooShort(String ratio) {
-    return '文字同士がつながっています（間隔は短点の約 $ratio、目標は 3 倍）。文字の後に明確な休止を入れてください。';
-  }
-
-  @override
-  String learnTipWordGapTooShort(String ratio) {
-    return '単語同士が近すぎます（間隔は短点の約 $ratio、目標は 7 倍）。単語の間には長めの休止を入れてください。';
-  }
-
-  @override
-  String learnTipSpeedUnsteady(int percent) {
-    return '速度が変動しています（変動 $percent%）。一定のテンポを決め、行の最後まで保ちましょう。';
-  }
-
-  @override
-  String learnIssueDetailDitTooLong(int offending, int total, String ratio) {
-    return '短点 $total 個中 $offending 個が長すぎます（平均：短点の $ratio）';
-  }
-
-  @override
-  String learnIssueDetailDahTooShort(int offending, int total, String ratio) {
-    return '長点 $total 個中 $offending 個が短すぎます（平均：短点の $ratio）';
-  }
-
-  @override
-  String learnIssueDetailIntraGapTooLong(int offending, int total, String ratio) {
-    return '文字内の間隔 $total 個中 $offending 個が長すぎます（平均：短点の $ratio）';
-  }
-
-  @override
-  String learnIssueDetailCharGapTooShort(int offending, int total, String ratio) {
-    return '文字間隔 $total 個中 $offending 個が短すぎます（平均：短点の $ratio）';
-  }
-
-  @override
-  String learnIssueDetailWordGapTooShort(int offending, int total, String ratio) {
-    return '単語間隔 $total 個中 $offending 個が短すぎます（平均：短点の $ratio）';
-  }
-
-  @override
-  String learnIssueDetailSpeedUnsteady(String cv) {
-    return '送信速度が不安定です（変動係数 $cv）';
-  }
-
-  @override
-  String statsAccuracyDetail(String allTime) {
-    return '最近 7 日間 / 全期間 $allTime';
-  }
-
-  @override
-  String statsDurationHoursMinutes(int hours, int minutes) {
-    return '$hours 時間 $minutes 分';
-  }
-
-  @override
-  String statsDurationMinutes(int minutes) {
-    return '$minutes 分';
-  }
-
-  @override
-  String statsDurationSeconds(int seconds) {
-    return '$seconds 秒';
-  }
 
   @override
   String get accountNewPasswordRequired => '新しいパスワードを入力してください';
@@ -2327,11 +1717,6 @@ class SJa extends S {
   }
 
   @override
-  String learnShowAllChars(int count) {
-    return '全 $count 文字を表示';
-  }
-
-  @override
   String get chatSelfMe => '自分';
 
   @override
@@ -2339,9 +1724,6 @@ class SJa extends S {
 
   @override
   String get chatSelfContactSubtitle => '下書き、練習、メモ · 送信されません';
-
-  @override
-  String get learnShowFewerChars => '文字を折りたたむ';
 
   @override
   String get learnLeaveDrillTitle => 'このセッションを終了しますか？';
@@ -2362,349 +1744,9 @@ class SJa extends S {
   String get learnReplayAssistedNote => '再生し直しました：練習には数えますが、レッスンの解放や復習の更新は行いません。';
 
   @override
-  String get learnPlanTitle => '今日のプラン';
-
-  @override
-  String learnPlanSummary(int minutes, int done, int total) {
-    return '約$minutes分 · $totalステップ中$done完了';
-  }
-
-  @override
-  String get learnPlanBudget => 'プランの長さ';
-
-  @override
-  String learnPlanBudgetMinutes(int minutes) {
-    return '$minutes分';
-  }
-
-  @override
-  String get learnPlanStart => 'プランを始める';
-
-  @override
-  String get learnPlanContinue => 'プランを続ける';
-
-  @override
-  String get learnPlanStepReview => '復習期限の文字';
-
-  @override
-  String get learnPlanStepFocus => '重点練習';
-
-  @override
-  String learnPlanStepCourse(int lesson) {
-    return 'レッスン$lesson';
-  }
-
-  @override
-  String get learnPlanStepSend => '送信練習';
-
-  @override
-  String learnPlanReasonDueReview(String symbols) {
-    return '復習時期：$symbols';
-  }
-
-  @override
-  String learnPlanReasonConfusions(String symbols) {
-    return 'よく取り違える：$symbols';
-  }
-
-  @override
-  String learnPlanReasonWeak(String symbols) {
-    return '正答率90%未満：$symbols';
-  }
-
-  @override
-  String learnPlanReasonChallenge(int count) {
-    return '$count文字：次のレッスンを解放できます';
-  }
-
-  @override
-  String learnPlanReasonExtended(int count) {
-    return '次のレッスンを解放できるよう$count文字に延長しました';
-  }
-
-  @override
-  String get learnPlanReasonConsolidate => '短い練習：このレッスンの定着用で、次は解放されません';
-
-  @override
-  String learnPlanReasonOutdated(int lesson) {
-    return 'コースが進みました：レッスン$lessonを練習しますが解放はしません';
-  }
-
-  @override
-  String learnPlanReasonSend(int count) {
-    return '短い課題を$count回送信';
-  }
-
-  @override
-  String learnPlanStepDonePercent(int percent) {
-    return '完了 · $percent%';
-  }
-
-  @override
-  String get learnPlanStepDone => '完了';
-
-  @override
-  String learnPlanSendProgress(int done, int total) {
-    return '$total中$done送信済み';
-  }
-
-  @override
-  String get learnPlanStale => 'レッスンまたは速度が変わりました。未開始のステップを更新しますか？';
-
-  @override
-  String get learnPlanUpdate => 'ステップを更新';
-
-  @override
-  String get learnPlanComplete => '今日のプランは完了です';
-
-  @override
-  String learnPlanNeedsWork(String symbols) {
-    return '要練習：$symbols';
-  }
-
-  @override
-  String get learnPlanAllGood => '今日は苦手な文字はありません。';
-
-  @override
-  String get learnPlanTomorrow => '明日は新しいプランです。自由練習はいつでもできます。';
-
-  @override
   String learnPlanNext(String step) {
     return '次：$step';
   }
-
-  @override
-  String learnPlanEarlier(int done, int total) {
-    return '前回のプランは$totalステップ中$doneで止まりました。今日の分には数えません。';
-  }
-
-  @override
-  String learnSpeedAdviceRaise(int wpm) {
-    return '実効速度$wpm WPMに進めます';
-  }
-
-  @override
-  String learnSpeedAdviceRaiseBoth(int wpm) {
-    return '$wpm WPMに進めます';
-  }
-
-  @override
-  String learnSpeedAdviceLower(int wpm) {
-    return 'この速度では受信が難しいようです。実効$wpm WPMか重点練習を試しましょう。';
-  }
-
-  @override
-  String learnSpeedAdviceBody(int count, int percent) {
-    return '直近の補助なし練習$count回（$percent%）に基づきます。適用するまで設定は変わりません。';
-  }
-
-  @override
-  String get learnSpeedAdviceApply => '適用';
-
-  @override
-  String get learnSpeedAdviceDismiss => '今はしない';
-
-  @override
-  String get learnSpeedAdviceInsufficient => '速度アドバイスには、現在の速度で50文字以上の補助なし練習が3回必要です。';
-
-  @override
-  String get learnQsoAction => 'QSOシミュレーター';
-
-  @override
-  String learnQsoLocked(int lesson) {
-    return 'レッスン$lessonから';
-  }
-
-  @override
-  String get learnQsoTitle => 'QSOシミュレーター';
-
-  @override
-  String get learnQsoRespond => 'CQに応答する';
-
-  @override
-  String get learnQsoRespondHint => '局がCQを出しています。応答してレポートを交換します。';
-
-  @override
-  String get learnQsoCall => 'CQを出す';
-
-  @override
-  String get learnQsoCallHint => 'あなたがCQを出し、局が応答します。';
-
-  @override
-  String get learnQsoYourCall => 'あなたのコールサイン';
-
-  @override
-  String get learnQsoYourName => 'あなたの名前';
-
-  @override
-  String get learnQsoYourQth => 'あなたのQTH';
-
-  @override
-  String get learnQsoInvalidCall => 'BD1XYZのようなコールサインを入力してください';
-
-  @override
-  String get learnQsoInvalidWord => '1語、A–Zの文字のみ';
-
-  @override
-  String get learnQsoOffline => 'すべてこの端末内で動作し、誰にも送信しません。';
-
-  @override
-  String get learnQsoStart => 'QSOを始める';
-
-  @override
-  String get learnQsoResume => '途中のQSOを再開';
-
-  @override
-  String get learnQsoStageCallCq => '自分のコールサインでCQを出す';
-
-  @override
-  String get learnQsoStageCallConfirm => '応答：相手のコール、DE、自分のコール';
-
-  @override
-  String get learnQsoStageExchange => 'レポート・名前・QTHを送る';
-
-  @override
-  String get learnQsoStageConfirmInfo => '相手の情報を確認する';
-
-  @override
-  String get learnQsoStageClosing => '73と<SK>で終える';
-
-  @override
-  String get learnQsoStageDone => 'QSO完了';
-
-  @override
-  String learnQsoSpeed(int wpm) {
-    return '相手は実効$wpm WPMで送信';
-  }
-
-  @override
-  String learnQsoRemote(String call) {
-    return '$callの送信';
-  }
-
-  @override
-  String get learnQsoRemoteHidden => '耳で受信してください（テキストは非表示）。';
-
-  @override
-  String get learnQsoShowText => 'テキストを表示';
-
-  @override
-  String get learnQsoListen => '聴く';
-
-  @override
-  String get learnQsoAccepted => '受理';
-
-  @override
-  String get learnQsoRejected => '不受理';
-
-  @override
-  String get learnQsoRemoteSending => '相手局が送信中…';
-
-  @override
-  String get learnQsoYourTurn => 'あなたの番です：返信を打鍵して「送信」。';
-
-  @override
-  String get learnQsoDecoded => 'あなたの送信内容';
-
-  @override
-  String get learnQsoNothingKeyed => 'まだ打鍵していません';
-
-  @override
-  String get learnQsoPlayAgain => '再送を頼む（AGN）';
-
-  @override
-  String get learnQsoSlower => '減速を頼む（QRS）';
-
-  @override
-  String get learnQsoHint => 'ヒント';
-
-  @override
-  String learnQsoHintLabel(String example) {
-    return '例：$example';
-  }
-
-  @override
-  String get learnQsoPause => '一時停止';
-
-  @override
-  String get learnQsoSend => '送信';
-
-  @override
-  String get learnQsoClear => '消去';
-
-  @override
-  String get learnQsoIssueEmpty => '何も打鍵されていません。';
-
-  @override
-  String get learnQsoIssueMissingCq => 'CQで始めてください。';
-
-  @override
-  String get learnQsoIssueMissingDe => 'コールサインの間にDEを入れてください。';
-
-  @override
-  String get learnQsoIssueWrongLocalCall => '自分のコールサインがないか誤っています。';
-
-  @override
-  String get learnQsoIssueWrongRemoteCall => '相手局のコールサインが違います。';
-
-  @override
-  String get learnQsoIssueReversedCalls => '順序が逆です：相手、DE、自分の順です。';
-
-  @override
-  String get learnQsoIssueMissingEnding => 'KまたはKNで終えてください。';
-
-  @override
-  String get learnQsoIssueMissingRst => 'レポートを送ってください（例：UR RST 599）。';
-
-  @override
-  String get learnQsoIssueInvalidRst => 'RSTが範囲外です（R 1–5、S 1–9、T 1–9）。';
-
-  @override
-  String get learnQsoIssueMissingName => 'NAMEと名前を送ってください。';
-
-  @override
-  String get learnQsoIssueWrongName => 'このQSOでのあなたの名前ではありません。';
-
-  @override
-  String get learnQsoIssueMissingQth => 'QTHと場所を送ってください。';
-
-  @override
-  String get learnQsoIssueWrongQth => 'このQSOでのあなたのQTHではありません。';
-
-  @override
-  String get learnQsoIssueMissingAck => 'RまたはQSLで了解を伝えてください。';
-
-  @override
-  String get learnQsoIssueWrongRemoteName => '相手のオペレーター名を確認してください。';
-
-  @override
-  String get learnQsoIssueMissing73 => '73を入れてください。';
-
-  @override
-  String get learnQsoIssueMissingSk => '<SK>で交信を終えてください。';
-
-  @override
-  String learnQsoSummaryFields(int count, int total) {
-    return '一度で正解：$totalステップ中$count';
-  }
-
-  @override
-  String learnQsoSummaryRepeats(int count) {
-    return '再送：$count';
-  }
-
-  @override
-  String learnQsoSummaryHints(int count) {
-    return 'ヒント：$count';
-  }
-
-  @override
-  String learnQsoSummaryRhythm(int wpm) {
-    return 'あなたの送信：約$wpm WPM';
-  }
-
-  @override
-  String get learnQsoSummaryNote => 'QSOの結果は受信正答率とは別に扱い、レッスンは解放しません。';
 
   @override
   String get messageStatusCancelled => 'キャンセル済み（未送信）';
@@ -2716,24 +1758,10 @@ class SJa extends S {
   String get chatPracticeMessage => 'このメッセージを受信練習';
 
   @override
-  String get chatSaveAsMaterial => '練習素材として保存';
-
-  @override
-  String get chatSavedAsMaterial => '「マイ素材」に保存しました';
-
-  @override
-  String get chatSaveMaterialFailed => '素材を保存できませんでした。もう一度お試しください。';
-
-  @override
   String get chatListenOnly => '聞き取り専用トレーニング';
 
   @override
   String get chatListenOnlyHidden => '聞き取り専用：再生して聴いてください';
-
-  @override
-  String chatClearHistoryMaterials(int count) {
-    return 'このチャットの$count件のメッセージが練習素材として保存されています。コピーは「学習 › マイ素材」で削除するまで残ります。';
-  }
 
   @override
   String get chatPracticeTitle => '受信練習';
@@ -2774,59 +1802,6 @@ class SJa extends S {
   String chatPracticeErrorsAction(String symbols) {
     return '間違えた文字を練習：$symbols';
   }
-
-  @override
-  String get learnTipDahTooLongTitle => '長点が長すぎる';
-
-  @override
-  String learnTipDahTooLong(String ratio) {
-    return '長点が長すぎます（短点の約$ratio、目標は3倍）。短点3つ分で離しましょう。';
-  }
-
-  @override
-  String learnIssueDetailDahTooLong(int offending, int total, String ratio) {
-    return '長点$total個中$offending個が長すぎ（平均$ratio短点）';
-  }
-
-  @override
-  String get learnRhythmTitle => 'リズム';
-
-  @override
-  String get learnRhythmMine => '自分のリズム';
-
-  @override
-  String get learnRhythmStandard => '標準のリズム（目標速度）';
-
-  @override
-  String learnRhythmNormalizedNote(int ms) {
-    return '問題は自分の短点（$ms ms）を基準に判断します。遅くても均等なら問題ありません。標準は目標速度です。';
-  }
-
-  @override
-  String get learnRhythmNotLocated => '打鍵を1文字ずつ対応付けられませんでした。課題全体を練習してください。';
-
-  @override
-  String get learnRhythmPlayMine => '自分のを再生';
-
-  @override
-  String get learnRhythmPlayStandard => '標準を再生';
-
-  @override
-  String learnRhythmPracticePart(int count) {
-    return 'これを練習（$count回）';
-  }
-
-  @override
-  String get learnRhythmPracticeWhole => '課題全体を練習';
-
-  @override
-  String get learnRhythmSymbolOk => '良好';
-
-  @override
-  String get learnRhythmZoomIn => '拡大';
-
-  @override
-  String get learnRhythmZoomOut => '縮小';
 
   @override
   String get chatSearchMessages => 'メッセージを検索';
@@ -3069,219 +2044,6 @@ class SJa extends S {
   String get workbenchDelete => '削除';
 
   @override
-  String get materialsTitle => 'マイ素材';
-
-  @override
-  String get materialsNew => '新しい素材';
-
-  @override
-  String get materialsEdit => '編集';
-
-  @override
-  String get materialsSave => '保存';
-
-  @override
-  String get materialsSaveFailed => '素材を保存できませんでした。';
-
-  @override
-  String get materialsTitleField => 'タイトル';
-
-  @override
-  String get materialsTagsField => 'タグ';
-
-  @override
-  String get materialsTagsHelper => 'タグはカンマで区切ります';
-
-  @override
-  String get materialsTextField => 'テキスト';
-
-  @override
-  String get materialsListField => '1行に1項目';
-
-  @override
-  String get materialsKindText => 'テキスト';
-
-  @override
-  String get materialsKindWords => '単語リスト';
-
-  @override
-  String get materialsKindCallsigns => 'コールサイン';
-
-  @override
-  String get materialsPreview => 'プレビュー';
-
-  @override
-  String materialsPreviewCounts(int items, int symbols, int prosigns) {
-    return '$items項目 · $symbols文字 · $prosigns略符号';
-  }
-
-  @override
-  String materialsPreviewUnsupported(String chars) {
-    return 'モールス符号がなく練習で省く文字：$chars';
-  }
-
-  @override
-  String materialsPreviewDuplicates(int count) {
-    return '重複$count件は1つにまとめます';
-  }
-
-  @override
-  String get materialsProblemEmpty => '先にテキストを入力してください。';
-
-  @override
-  String get materialsProblemTooLarge => '大きすぎます（上限1 MiB）。';
-
-  @override
-  String materialsProblemTooManyEntries(int count) {
-    return '項目が多すぎます（最大$count）。';
-  }
-
-  @override
-  String materialsProblemEntryTooLong(int count) {
-    return '長すぎる項目があります（各$count文字まで）。';
-  }
-
-  @override
-  String get materialsProblemNothingTrainable => 'モールスで練習できる内容がありません。';
-
-  @override
-  String get materialsSearch => '素材を検索';
-
-  @override
-  String get materialsFavoritesOnly => 'お気に入り';
-
-  @override
-  String get materialsFavorite => 'お気に入りに追加';
-
-  @override
-  String get materialsUnfavorite => 'お気に入りから削除';
-
-  @override
-  String get materialsEmpty => '素材はまだありません。テキスト・単語リスト・コールサインを追加するか、チャットのメッセージを保存してください。';
-
-  @override
-  String materialsItems(int count) {
-    return '$count項目';
-  }
-
-  @override
-  String get materialsFromChat => 'チャットから';
-
-  @override
-  String get materialsActions => '素材の操作';
-
-  @override
-  String get materialsPractise => '練習';
-
-  @override
-  String get materialsDelete => '削除';
-
-  @override
-  String get materialsDeleteTitle => '素材を削除しますか？';
-
-  @override
-  String materialsDeleteBody(String title) {
-    return '「$title」をこの端末から削除します。練習履歴は残ります。';
-  }
-
-  @override
-  String get materialsImport => 'TXT/JSONを読み込む';
-
-  @override
-  String get materialsImportDialogTitle => '素材ファイルを選択';
-
-  @override
-  String get materialsSaveDialogTitle => '素材を保存';
-
-  @override
-  String get materialsImportFailed => '読み込みに失敗しました。ライブラリは変更されていません。';
-
-  @override
-  String get materialsImportNotUtf8 => 'UTF-8のテキストファイルのみ読み込めます。';
-
-  @override
-  String get materialsImportInvalid => '有効なDitMesh素材ファイルではありません。何も読み込んでいません。';
-
-  @override
-  String materialsImported(int count) {
-    return '$count件の素材を読み込みました。';
-  }
-
-  @override
-  String get materialsDuplicateTitle => '一部の素材はすでにあります';
-
-  @override
-  String get materialsDuplicateOverwrite => '置き換える';
-
-  @override
-  String get materialsDuplicateKeepCopy => '両方残す（コピーとして）';
-
-  @override
-  String get materialsDuplicateSkip => 'スキップ';
-
-  @override
-  String get materialsExportJson => 'JSONで書き出す';
-
-  @override
-  String materialsExported(int count) {
-    return '$count件の素材を書き出しました。';
-  }
-
-  @override
-  String get materialsExportFailed => '書き出しに失敗しました。';
-
-  @override
-  String get materialsExportWav => '音声を書き出す（WAV）';
-
-  @override
-  String materialsWavCharSpeed(int wpm) {
-    return '文字速度：$wpm WPM';
-  }
-
-  @override
-  String materialsWavEffSpeed(int wpm) {
-    return '実効速度：$wpm WPM';
-  }
-
-  @override
-  String materialsWavTone(int hz) {
-    return '音程：$hz Hz';
-  }
-
-  @override
-  String get materialsWavWithAnswer => '答えのテキストも付ける（.txt）';
-
-  @override
-  String get materialsWavFormat => '16ビット・モノラルWAV、48 kHz。';
-
-  @override
-  String materialsWavParts(int count) {
-    return '10分を超えるため$count個のファイルに分けて書き出します。';
-  }
-
-  @override
-  String materialsWavExported(int count) {
-    return '音声ファイルを$count個保存しました。';
-  }
-
-  @override
-  String get materialsPracticeMode => '練習の範囲';
-
-  @override
-  String get materialsPracticeLearned => '習得済みの文字のみ';
-
-  @override
-  String materialsPracticeLearnedPartial(int count) {
-    return '習得済みのみ（$count項目は未習得の文字を含むため使えません）';
-  }
-
-  @override
-  String get materialsPracticeAll => 'すべてのモールス文字';
-
-  @override
-  String get materialsPracticeNothing => 'このモードで練習できる項目はありません。';
-
-  @override
   String get guestTryLearning => 'まず学習を試す';
 
   @override
@@ -3324,65 +2086,6 @@ class SJa extends S {
   String get guestChoiceUseGuest => 'ゲストの進捗を使う';
 
   @override
-  String get placementTitle => 'レベルチェック';
-
-  @override
-  String get placementCheckLevel => '今のレベルをチェック';
-
-  @override
-  String get placementFromZero => 'ゼロから始める';
-
-  @override
-  String get placementOfferTitle => 'モールスは初めて？それとも受信できる？';
-
-  @override
-  String get placementOfferBody => '短いチェックで開始位置を提案できます。任意で、選ぶまで何も変わりません。';
-
-  @override
-  String get placementIntro => '約3〜5分、5段階で受信します。速度を上げながらコッホ順の文字グループ、最後に短い単語。少ないサンプルによる目安で、認定ではありません。いつでも中止できます。';
-
-  @override
-  String get placementStart => '開始';
-
-  @override
-  String get placementSkip => 'スキップ';
-
-  @override
-  String get placementStop => '中止';
-
-  @override
-  String placementTierProgress(int step, int total, int wpm) {
-    return '$total段階中$step · 実効 $wpm WPM';
-  }
-
-  @override
-  String get placementTierPassed => 'よく受信できました。次はもっと速くなります。';
-
-  @override
-  String get placementTierStopped => 'この段階は90%未満だったため、ここで終了します。';
-
-  @override
-  String get placementNextTier => '次の段階';
-
-  @override
-  String placementSuggestion(int lesson) {
-    return 'おすすめの開始：レッスン$lesson';
-  }
-
-  @override
-  String placementVerified(int count, int total) {
-    return 'コッホ順の$total文字中$count文字を順に確認しました。';
-  }
-
-  @override
-  String get placementLimits => '少ないサンプルに基づきます。テストしていない文字は未テストのままで、習得済みにはなりません。レッスンはいつでも変えられます。';
-
-  @override
-  String placementAdopt(int lesson) {
-    return 'レッスン$lessonから始める';
-  }
-
-  @override
   String get chatJumpToLatest => '最新のメッセージ';
 
   @override
@@ -3390,17 +2093,6 @@ class SJa extends S {
 
   @override
   String get chatListenOnlyPreview => '新着メッセージ — 聴いて受信してください';
-
-  @override
-  String get chatSaveMaterialConfirm => '残りを保存';
-
-  @override
-  String materialsImportConfirm(int count) {
-    return '$count件の素材を読み込みますか？';
-  }
-
-  @override
-  String get materialsExportTxt => 'テキストで書き出す（TXT）';
 
   @override
   String get accountBackupMediaTitle => '保存した録音を含めますか？';
@@ -3810,9 +2502,6 @@ class SJa extends S {
   String get backupXMeSubtitle => 'ID・チャット・進捗をまとめた暗号化ファイル。保管用にも、別の端末への移行にも';
 
   @override
-  String get conditionsTitle => '受信環境';
-
-  @override
   String get conditionsClear => 'クリア';
 
   @override
@@ -3829,9 +2518,6 @@ class SJa extends S {
 
   @override
   String get conditionsRadioHint => '雑音、深いフェージング、近くの局、少し不揃いなタイミング。結果はクリアな練習とは別に記録します。';
-
-  @override
-  String get conditionsPreview => '試聴';
 
   @override
   String conditionsActive(String name) {
@@ -3965,12 +2651,6 @@ class SJa extends S {
   }
 
   @override
-  String get telegraphTitle => '中文電碼';
-
-  @override
-  String get telegraphIntro => '漢字は 1 文字ずつ 4 桁の番号で送られます。数字を聞き取る練習と、どの番号がどの字かを覚える練習を別々に行います。';
-
-  @override
   String get telegraphCodebook => '電碼本';
 
   @override
@@ -3978,74 +2658,6 @@ class SJa extends S {
 
   @override
   String get telegraphCodebookTaiwan => '台湾';
-
-  @override
-  String get telegraphDigitsTitle => '電碼を聞き取る';
-
-  @override
-  String get telegraphDigitsHint => '実在する電碼の 4 桁を聞いて、数字を入力します。';
-
-  @override
-  String telegraphDigitsResults(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 回：数字の正答率 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get telegraphRecallTitle => '電碼を思い出す';
-
-  @override
-  String get telegraphRecallHint => '字から番号、番号から字。モールスの進捗とは別に記録します。';
-
-  @override
-  String telegraphRecallResults(int count, int accuracy) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 枚回答：正答率 $accuracy%',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get telegraphSeparateNote => '電碼の暗記がモールスのレッスン解放や速度のおすすめに影響することはありません。数字の聞き取りは他のモールス受信と同じ扱いです。';
-
-  @override
-  String get telegraphRecallCharPrompt => 'この字の電碼を入力';
-
-  @override
-  String get telegraphRecallCodePrompt => 'この電碼の字を選ぶ';
-
-  @override
-  String get telegraphReveal => '答えを見る';
-
-  @override
-  String get telegraphRevealAssisted => '表示済み：このカードは補助ありとして記録します。';
-
-  @override
-  String get telegraphCorrect => '正解';
-
-  @override
-  String get telegraphIncorrect => '不正解';
-
-  @override
-  String telegraphRecallSummary(int correct, int total) {
-    return '$total 問中 $correct 問正解';
-  }
-
-  @override
-  String telegraphRecallAssisted(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '答えを見たカード $count 枚',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get telegraphInterpretAction => '中文電碼として解釈';
