@@ -31,6 +31,19 @@ class DitmeshFfiChatService extends FfiChatService {
 
   bool supportsRecordedPeer(String peer) => _rhythm.supportsPeer(peer);
 
+  /// DitMesh runs one chat service on the default native instance; probes
+  /// register their own instance ids, which keep the fast path while live.
+  /// tox_iterate runs on the native event thread, so this only paces the
+  /// event drain: 200 ms after activity, [idleCadence] when quiet.
+  @override
+  bool get pollDefaultInstanceAsShared => false;
+
+  /// Bounds the added receive latency after a quiet period.
+  static const idleCadence = Duration(milliseconds: 500);
+
+  @override
+  Duration get idlePollInterval => idleCadence;
+
   @override
   void onFriendWireState(String peer, bool online) =>
       _rhythm.presence(peer, online);
@@ -42,7 +55,11 @@ class DitmeshFfiChatService extends FfiChatService {
     String? metadata, {
     String? durableId,
     required ChatMessageContentKind kind,
-  }) => _rhythm.send(peer, text, metadata, durableId: durableId, kind: kind);
+  }) {
+    // Delivery receipts follow; drain them at the active cadence.
+    notePollActivity();
+    return _rhythm.send(peer, text, metadata, durableId: durableId, kind: kind);
+  }
 
   @override
   bool consumeCustomExtension(String peer, String payload, {String? groupId}) =>
@@ -54,7 +71,10 @@ class DitmeshFfiChatService extends FfiChatService {
     String text,
     String? metadata,
     String? alias,
-  ) => _rhythm.groupSent(groupId, text, metadata, alias);
+  ) {
+    notePollActivity();
+    _rhythm.groupSent(groupId, text, metadata, alias);
+  }
 
   @override
   ChatMessage enrichGroupExtension(ChatMessage row) => _rhythm.enrich(row);
