@@ -14,6 +14,15 @@ import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 
 import 'helpers/fakes.dart';
 
+/// Waits until [condition] holds, polling the refresh rounds instead of
+/// sleeping a fixed time: a loaded CI runner can miss a short window.
+Future<void> _settles(bool Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 5));
+  while (!condition() && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+}
+
 /// Tim2Tox whose next [failCancels] withdrawals cannot be persisted.
 class _FlakyCancel extends DitmeshFfiChatService {
   _FlakyCancel({
@@ -257,7 +266,7 @@ void main() {
       expect(queue.getMessages(kPeerKey), hasLength(1));
       // The next refresh rounds withdraw it (the native delete is still
       // running: Tim2Tox's removeFriend takes over half a second).
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await _settles(() => queue.getMessages(kPeerKey).isEmpty);
       expect(queue.getMessages(kPeerKey), isEmpty);
       await removal;
     });
@@ -284,8 +293,7 @@ void main() {
       await pumpEventQueue();
       flaky.failCancels = 0;
       engine.bind(flaky);
-      await pumpEventQueue();
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await _settles(() => queue.getMessages(kPeerKey).isEmpty);
       expect(queue.getMessages(kPeerKey), isEmpty);
     });
 
@@ -324,7 +332,9 @@ void main() {
       expect(queue.getMessages(kPeerKey), hasLength(1));
       store.failKey = null;
       flaky.failCancels = 0;
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await _settles(
+        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
+      );
       expect(queue.getMessages(kPeerKey), isEmpty);
       expect(recorded(), isEmpty);
     });
@@ -338,7 +348,9 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 60));
       expect(queue.getMessages(kPeerKey), hasLength(1));
       expect(recorded(), hasLength(1));
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await _settles(
+        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
+      );
       expect(queue.getMessages(kPeerKey), isEmpty);
       expect(recorded(), isEmpty);
     });
@@ -383,7 +395,9 @@ void main() {
       await chat.removeFriend(kPeerKey);
       final queue = flaky.offlineMessageQueuePersistence;
       expect(recorded(), hasLength(1));
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await _settles(
+        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
+      );
       expect(queue.getMessages(kPeerKey), isEmpty);
       expect(recorded(), isEmpty);
     });

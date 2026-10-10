@@ -35,7 +35,7 @@ flutter build ios --release --no-codesign
 
 桌面在 `build/native/` 查找库，Android 放入 jniLibs，iOS 放入 XCFramework。应用构建前需放置对应的原生库。
 
-Android SDK 级别在 `apps/ditmesh/android/app/build.gradle.kts` 中显式钉住（`compileSdk` 36、`minSdk` 24、`targetSdk` 36），不再从 Flutter Gradle 插件继承，Flutter 升级不会悄悄改动它们；`ndkVersion` 跟随 Flutter，但不得低于 r28。Android 原生构建对每个库都加 16 KB 页对齐链接标志，`libtim2tox_ffi.so` 或 `libc++_shared.so` 的 `PT_LOAD` 段若未按 16 KB 对齐则拒绝放入 jniLibs（Google Play 对面向 Android 15+ 应用的要求）。CI 会对发布 APK 再查一遍，包括 Flutter 与插件的库，并用 `zipalign -c -P 16` 校验 APK 的 zip 对齐。
+Android SDK 级别在 `apps/ditmesh/android/app/build.gradle.kts` 中显式钉住（`compileSdk` 36、`minSdk` 24、`targetSdk` 36），不再从 Flutter Gradle 插件继承，Flutter 升级不会悄悄改动它们；`ndkVersion` 跟随 Flutter，但不得低于 r28。CI 钉住同一个 NDK（`.github/workflows/native.yml` 中的 `ANDROID_NDK_VERSION`，Flutter 3.41.9 对应 28.2.13676358），不使用 runner 镜像的最新版；`tool/ci/install_android_ndk.sh` 负责安装，并在它与 Flutter SDK 的 `ndkVersion` 不一致时失败，因此两者须一起升级。Android 原生构建对每个库都加 16 KB 页对齐链接标志，`libtim2tox_ffi.so` 或 `libc++_shared.so` 的 `PT_LOAD` 段若未按 16 KB 对齐则拒绝放入 jniLibs（Google Play 对面向 Android 15+ 应用的要求）。CI 会对发布 APK 再查一遍，包括 Flutter 与插件的库，并用 `zipalign -c -P 16` 校验 APK 的 zip 对齐。
 
 应用构建后回到根目录运行：
 

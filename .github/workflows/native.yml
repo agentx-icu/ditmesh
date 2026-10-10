@@ -64,6 +64,12 @@ env:
   # its include/ (dart_api_dl.[ch]), and the version must match the VM the
   # Flutter engine embeds. Bump both together.
   DART_VERSION: "3.11.5"
+  # The Android NDK every Android job builds and verifies with: the
+  # ndkVersion of FLUTTER_VERSION (flutter.ndkVersion, which the app's
+  # build.gradle.kts uses), so libtim2tox_ffi.so and the plugin code are
+  # linked by the same r28+ NDK. tool/ci/install_android_ndk.sh refuses a pin
+  # that differs from the Flutter SDK's. Bump both together.
+  ANDROID_NDK_VERSION: "28.2.13676358"
 
 jobs:
   quality:
@@ -143,7 +149,7 @@ jobs:
           # compiles dart_api_dl.c from the SDK headers, so a pin bump must not
           # restore a cache entry built against older headers (the Dart-only
           # arm64 rows read DART_VERSION, the others get Dart via FLUTTER_VERSION).
-          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/build_ios_ffi.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/tim2tox-overlays/*.patch') }}
+          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/ci/install_android_ndk.sh', 'tool/build_ios_ffi.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/tim2tox-overlays/*.patch') }}
 
       - name: Cache libsodium prefix
         if: steps.cache_native.outputs.cache-hit != 'true' && !startsWith(matrix.target, 'windows')
@@ -216,13 +222,17 @@ jobs:
           VCPKG_ROOT: ${{ runner.os == 'Windows' && format('{0}/vcpkg', runner.temp) || '' }}
         run: bash tool/ci/build_tim2tox.sh --target "${{ matrix.target }}" --mode release --no-stage-app
 
-      # The ubuntu image exports ANDROID_NDK_LATEST_HOME / ANDROID_HOME as
-      # process env (not in the `env` context), so resolve the NDK in the shell.
-      # find_android_ndk() also scans $ANDROID_HOME/ndk/* as a fallback.
+      # Never the image's ANDROID_NDK_LATEST_HOME: an image refresh would move
+      # the toolchain without a commit. The script installs the pinned NDK if
+      # the image lacks it and exports it as ANDROID_NDK_HOME, which
+      # find_android_ndk() takes first.
+      - name: Install pinned Android NDK
+        if: steps.cache_native.outputs.cache-hit != 'true' && matrix.target == 'android'
+        run: bash tool/ci/install_android_ndk.sh
+
       - name: Build libtim2tox_ffi (Android, all ABIs)
         if: steps.cache_native.outputs.cache-hit != 'true' && matrix.target == 'android'
         run: |
-          export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}"
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME ANDROID_HOME=${ANDROID_HOME:-}"
           bash tool/ci/build_tim2tox.sh --target android --android-abis arm64-v8a,armeabi-v7a,x86_64 --mode release --no-stage-app
 
@@ -539,6 +549,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      # Gradle would otherwise download flutter.ndkVersion itself; installing
+      # the same pin here also gives the alignment check below its readelf.
+      - name: Install pinned Android NDK
+        run: bash tool/ci/install_android_ndk.sh
       - name: Download libtim2tox_ffi (all ABIs)
         uses: actions/download-artifact@v5
         with:
@@ -588,17 +602,9 @@ jobs:
           set -euo pipefail
           apk=apps/ditmesh/build/app/outputs/flutter-apk/app-release.apk
           [[ -f "$apk" ]] || { echo "::error::$apk missing"; exit 1; }
-          # This job has no NDK step of its own: take the NDK the image
-          # exports, else any NDK under the SDK, else the host's readelf
-          # (GNU readelf -lW prints the same columns).
-          ndk="${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}"
-          readelf=""
-          for dir in ${ndk:+"$ndk"} "$ANDROID_HOME"/ndk/*; do
-            [[ -d "$dir/toolchains/llvm/prebuilt" ]] || continue
-            readelf="$(find "$dir/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -type f | head -n 1)"
-            [[ -n "$readelf" ]] && break
-          done
-          [[ -n "$readelf" ]] || readelf="$(command -v llvm-readelf || command -v readelf || true)"
+          # llvm-readelf of the pinned NDK (installed above). It is a symlink
+          # to llvm-readobj, so match links as well as files.
+          readelf="$(find "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' \( -type f -o -type l \) | head -n 1)"
           zipalign="$(find "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -n 1)"
           [[ -x "$readelf" && -x "$zipalign" ]] || { echo "::error::llvm-readelf ($readelf) or zipalign ($zipalign) not found"; exit 1; }
           tmp="$(mktemp -d)"
