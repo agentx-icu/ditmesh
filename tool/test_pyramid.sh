@@ -7,7 +7,8 @@
 #   unit    packages/*  — pure-Dart engines and the chat contract/transport
 #   widget  apps/ditmesh/test — hermetic widget tests (fake backend, no host)
 #   e2e     apps/ditmesh/integration_test on a real device/desktop window:
-#           the real main() click-through + the screenshot scene walk
+#           the real main() click-through, real keying input, persistence
+#           and the screenshot scene walk (every *_test.dart, one per launch)
 #   all     every level in that order (default)
 #
 # Tests tagged needs-native are excluded at the unit/widget levels (they need
@@ -24,7 +25,7 @@ while [[ $# -gt 0 ]]; do
     --level=*) LEVEL="${1#*=}"; shift ;;
     --device) DEVICE="${2:-}"; shift 2 ;;
     --device=*) DEVICE="${1#*=}"; shift ;;
-    --help|-h) sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --help|-h) sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $1" >&2; exit 64 ;;
   esac
 done
@@ -83,9 +84,13 @@ level_e2e() {
   local device="$DEVICE"
   [[ -z "$device" ]] && device="$(host_device)"
   [[ -z "$device" ]] && { echo "e2e: no device (use --device)" >&2; return 1; }
-  run_step "e2e launch [$device]" bash -c "cd apps/ditmesh && flutter test integration_test/app_launch_test.dart -d '$device' --dart-define=DITMESH_FAKE_BACKEND=true"
-  run_step "e2e persistence [$device]" bash -c "cd apps/ditmesh && flutter test integration_test/persistence_test.dart -d '$device' --dart-define=DITMESH_FAKE_BACKEND=true"
-  run_step "e2e scenes [$device]" bash -c "cd apps/ditmesh && flutter test integration_test/screenshots_test.dart -d '$device' --dart-define=DITMESH_FAKE_BACKEND=true"
+  # One app launch per file (a desktop device does not attach to a second
+  # launch in the same run).
+  local f
+  for f in apps/ditmesh/integration_test/*_test.dart; do
+    f="${f#apps/ditmesh/}"
+    run_step "e2e $(basename "$f" _test.dart) [$device]" bash -c "cd apps/ditmesh && flutter test '$f' -d '$device' --dart-define=DITMESH_FAKE_BACKEND=true"
+  done
 }
 
 case "$LEVEL" in

@@ -10,8 +10,13 @@ import 'rhythm_protocol.dart';
 /// Direct replay uses a negotiated envelope because standard C2C text has no
 /// cross-peer ID. NGC keeps its ordinary text and attaches by native gmid.
 final class RhythmTransport {
-  RhythmTransport(this.service);
+  RhythmTransport(this.service, {RecordedTextReceiver? receiveText})
+    : _receiveText = receiveText ?? service.receiveExtensionText;
   final FfiChatService service;
+
+  /// Persists and publishes one recorded arrival; the service's own receive
+  /// path, replaceable in tests to control its timing.
+  final RecordedTextReceiver _receiveText;
   final String _session = RhythmProtocol.freshId();
   final _assembler = RhythmPacketAssembler();
   final Map<String, String> _challenges = {};
@@ -20,6 +25,12 @@ final class RhythmTransport {
   final Map<String, Completer<void>> _ready = {};
   final Set<String> _receiving = {};
   final Map<String, String> _groupMetadata = {};
+
+  /// The tail of each peer's direct-arrival chain. The receive path awaits
+  /// disk work before it stamps and appends a row, so two arrivals handled
+  /// concurrently could be stored, and shown, in reverse order; each one
+  /// waits for the previous one from the same peer instead.
+  final Map<String, Future<void>> _directArrivals = {};
 
   bool supportsPeer(String peer) =>
       _peerSessions.containsKey(peer.toUpperCase());
@@ -148,13 +159,28 @@ final class RhythmTransport {
       final envelope = _assembler.add(peer, groupId ?? '', payload);
       if (envelope != null && envelope['transferId'] == packet['id']) {
         if (groupId == null) {
-          unawaited(_receiveDirect(peer, envelope).catchError((Object _) {}));
+          _queueDirect(peer, envelope);
         } else {
           _receiveGroup(peer, groupId, envelope);
         }
       }
     }
     return true;
+  }
+
+  void _queueDirect(String peer, Map<String, dynamic> envelope) {
+    final previous = _directArrivals[peer] ?? Future<void>.value();
+    final next = previous.then(
+      (_) => _receiveDirect(peer, envelope).catchError((Object _) {}),
+    );
+    _directArrivals[peer] = next;
+    unawaited(
+      next.whenComplete(() {
+        if (identical(_directArrivals[peer], next)) {
+          _directArrivals.remove(peer);
+        }
+      }),
+    );
   }
 
   Future<void> _receiveDirect(
@@ -181,7 +207,7 @@ final class RhythmTransport {
       final recording = envelope['version'] == 1
           ? KeyedRecording.fromJson(envelope['recording'])
           : null;
-      await service.receiveExtensionText(
+      await _receiveText(
         peer,
         alias,
         text,
@@ -287,3 +313,13 @@ final class RhythmTransport {
     return row;
   }
 }
+
+/// Signature of `FfiChatService.receiveExtensionText`.
+typedef RecordedTextReceiver =
+    Future<bool> Function(
+      String sender,
+      String alias,
+      String text, {
+      String? metadata,
+      ChatMessageContentKind kind,
+    });

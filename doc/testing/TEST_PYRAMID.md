@@ -17,9 +17,9 @@ bash tool/test_pyramid.sh --level e2e --device macos
 | Unit | Morse engines, audio I/O, chat contracts, queues and transport services | `packages/*/test` |
 | Widget and service integration | Startup, identities, direct/group chat, network settings, reference, notifications, desktop shell and appearance | `apps/ditmesh/test` |
 | Native integration | Encrypted profiles, backup restore, persistence, LAN nodes and isolated probes | `packages/ditmesh_chat/test` |
-| Platform E2E | Actual startup, plugin initialization, navigation, persistence and 13 scenes in English/Chinese | `apps/ditmesh/integration_test` |
+| Platform E2E | Actual startup, plugin initialization, navigation, keying by real touch and hardware-keyboard events, group creation, appearance, identity deletion, persistence and 13 scenes in English/Chinese | `apps/ditmesh/integration_test` |
 
-The E2E workflow runs on macOS, Linux and Windows when enabled by the `ci:e2e` PR label or manual dispatch. UI walks use `DITMESH_FAKE_BACKEND=true` and seeded conversations. The persistence test reopens real application-support stores and platform secure storage using disposable files and keys.
+The E2E workflow runs every integration test on macOS, Linux and Windows, an Android emulator (API 34, x86_64) and an iPhone simulator when enabled by the `ci:e2e` PR label or manual dispatch; `tool/ci/run_integration_tests.sh <device>` runs the same set on any device, one app launch per file. UI walks use `DITMESH_FAKE_BACKEND=true` and seeded conversations. The persistence test reopens real application-support stores and platform secure storage using disposable files and keys.
 
 Required Linux and both macOS native jobs run:
 
