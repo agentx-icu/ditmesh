@@ -21,7 +21,7 @@ abstract interface class MorseSink {
 /// Fans every call out to a list of sinks, in order.
 final class CompositeSink implements MorseSink {
   CompositeSink(Iterable<MorseSink> sinks)
-      : sinks = List<MorseSink>.unmodifiable(sinks);
+    : sinks = List<MorseSink>.unmodifiable(sinks);
 
   final List<MorseSink> sinks;
 

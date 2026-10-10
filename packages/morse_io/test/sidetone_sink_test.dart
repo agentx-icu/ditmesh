@@ -177,21 +177,23 @@ void main() {
     ]);
   });
 
-  test('on / off ramp the running voice with the configured envelope',
-      () async {
-    await sink.prepare();
-    api.calls.clear();
-    sink.on();
-    expect(sink.isOn, isTrue);
-    sink.on(); // ignored
-    sink.off();
-    sink.off(); // ignored
-    expect(api.calls, <String>[
-      'resume(101)',
-      'fade(101, 0.5, 5)',
-      'fade(101, 0.0, 5)',
-    ]);
-  });
+  test(
+    'on / off ramp the running voice with the configured envelope',
+    () async {
+      await sink.prepare();
+      api.calls.clear();
+      sink.on();
+      expect(sink.isOn, isTrue);
+      sink.on(); // ignored
+      sink.off();
+      sink.off(); // ignored
+      expect(api.calls, <String>[
+        'resume(101)',
+        'fade(101, 0.5, 5)',
+        'fade(101, 0.0, 5)',
+      ]);
+    },
+  );
 
   test('on / off before prepare are ignored (no engine access)', () {
     sink.on();
@@ -228,33 +230,37 @@ void main() {
     expect(api.calls.length, 3);
   });
 
-  test('dispose while init is pending creates no voice and deinits once',
-      () async {
-    api.initGate = Completer<void>();
-    final prepare = sink.prepare();
-    await pumpEventQueue();
-    final dispose = sink.dispose();
-    api.initGate!.complete();
-    await Future.wait(<Future<void>>[prepare, dispose]);
-    expect(api.calls, <String>['init', 'deinit']);
-    expect(sink.isPrepared, isFalse);
-  });
+  test(
+    'dispose while init is pending creates no voice and deinits once',
+    () async {
+      api.initGate = Completer<void>();
+      final prepare = sink.prepare();
+      await pumpEventQueue();
+      final dispose = sink.dispose();
+      api.initGate!.complete();
+      await Future.wait(<Future<void>>[prepare, dispose]);
+      expect(api.calls, <String>['init', 'deinit']);
+      expect(sink.isPrepared, isFalse);
+    },
+  );
 
-  test('dispose while the source loads frees it without starting a voice',
-      () async {
-    api.loadGate = Completer<void>();
-    final prepare = sink.prepare();
-    await pumpEventQueue();
-    final dispose = sink.dispose();
-    api.loadGate!.complete();
-    await Future.wait(<Future<void>>[prepare, dispose]);
-    expect(api.calls, <String>[
-      'init',
-      'loadSineWaveform',
-      'disposeSource(1)',
-      'deinit',
-    ]);
-  });
+  test(
+    'dispose while the source loads frees it without starting a voice',
+    () async {
+      api.loadGate = Completer<void>();
+      final prepare = sink.prepare();
+      await pumpEventQueue();
+      final dispose = sink.dispose();
+      api.loadGate!.complete();
+      await Future.wait(<Future<void>>[prepare, dispose]);
+      expect(api.calls, <String>[
+        'init',
+        'loadSineWaveform',
+        'disposeSource(1)',
+        'deinit',
+      ]);
+    },
+  );
 
   test('dispose is single-flight and prepare after it fails', () async {
     await sink.prepare();
@@ -321,8 +327,7 @@ void main() {
     expect(sink.isPrepared, isTrue);
   });
 
-  test('dispose still frees the source and deinits when stop throws',
-      () async {
+  test('dispose still frees the source and deinits when stop throws', () async {
     await sink.prepare();
     api.calls.clear();
     api.stopError = StateError('engine gone');
@@ -398,20 +403,22 @@ void main() {
       expect(api.calls.last, 'fade(102, 0.0, 5)');
     });
 
-    test('output refused (call in progress) is retried on the next on()',
-        () async {
-      await sink.prepare();
-      api.resumeError = StateError('session not active');
-      api.playError = StateError('session not active');
-      sink.on();
-      expect(sink.isOn, isFalse);
-      api.resumeError = null;
-      api.playError = null;
-      api.calls.clear();
-      sink.on();
-      expect(sink.isOn, isTrue);
-      expect(api.calls, <String>['playLooping(1, 0.0)', 'fade(102, 0.5, 5)']);
-    });
+    test(
+      'output refused (call in progress) is retried on the next on()',
+      () async {
+        await sink.prepare();
+        api.resumeError = StateError('session not active');
+        api.playError = StateError('session not active');
+        sink.on();
+        expect(sink.isOn, isFalse);
+        api.resumeError = null;
+        api.playError = null;
+        api.calls.clear();
+        sink.on();
+        expect(sink.isOn, isTrue);
+        expect(api.calls, <String>['playLooping(1, 0.0)', 'fade(102, 0.5, 5)']);
+      },
+    );
 
     test('backgrounding stops the idle voice and mutes keying until the '
         'app returns', () async {
@@ -439,15 +446,17 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
-    test('prepared in the background starts no voice until foreground',
-        () async {
-      foreground.isForeground = false;
-      await sink.prepare();
-      expect(api.calls.where((c) => c.startsWith('playLooping')), isEmpty);
-      expect(sink.isPrepared, isTrue);
-      foreground.set(true);
-      expect(api.calls.last, 'playLooping(1, 0.0)');
-    });
+    test(
+      'prepared in the background starts no voice until foreground',
+      () async {
+        foreground.isForeground = false;
+        await sink.prepare();
+        expect(api.calls.where((c) => c.startsWith('playLooping')), isEmpty);
+        expect(sink.isPrepared, isTrue);
+        foreground.set(true);
+        expect(api.calls.last, 'playLooping(1, 0.0)');
+      },
+    );
 
     test('dispose stops listening to the lifecycle', () async {
       await sink.prepare();
@@ -465,9 +474,14 @@ void main() {
         'only when it starts it', () async {
       final log = <String>[];
       final engine = _FakeSoLoud(log);
-      final first = FlutterSoloudApi(engine: engine, session: _FakeSession(log));
-      final second =
-          FlutterSoloudApi(engine: engine, session: _FakeSession(log));
+      final first = FlutterSoloudApi(
+        engine: engine,
+        session: _FakeSession(log),
+      );
+      final second = FlutterSoloudApi(
+        engine: engine,
+        session: _FakeSession(log),
+      );
       await first.init();
       await second.init();
       expect(log, <String>['session', 'engine.init']);
@@ -476,15 +490,17 @@ void main() {
       expect(log.last, 'engine.deinit');
     });
 
-    test('resumeVoice unpauses the handle, which restarts the device',
-        () async {
-      final log = <String>[];
-      final api = FlutterSoloudApi(
-        engine: _FakeSoLoud(log),
-        session: _FakeSession(log),
-      );
-      api.resumeVoice(const SidetoneVoice(7));
-      expect(log, <String>['setPause(7, false)']);
-    });
+    test(
+      'resumeVoice unpauses the handle, which restarts the device',
+      () async {
+        final log = <String>[];
+        final api = FlutterSoloudApi(
+          engine: _FakeSoLoud(log),
+          session: _FakeSession(log),
+        );
+        api.resumeVoice(const SidetoneVoice(7));
+        expect(log, <String>['setPause(7, false)']);
+      },
+    );
   });
 }

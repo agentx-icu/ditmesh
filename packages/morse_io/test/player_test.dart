@@ -61,8 +61,13 @@ void main() {
     ]);
     expect(player.isPlaying, isFalse);
     expect(player.currentIndex, -1);
-    expect(events.whereType<PlayerElementStarted>().map((e) => e.index),
-        <int>[0, 1, 2, 3, 4]);
+    expect(events.whereType<PlayerElementStarted>().map((e) => e.index), <int>[
+      0,
+      1,
+      2,
+      3,
+      4,
+    ]);
     expect(events.last, isA<PlayerCompleted>());
     expect(clock.pendingTimers, 0);
   });

@@ -18,12 +18,12 @@ void main() {
   late RecordingKeyTarget target;
 
   IambicKeyer keyer(IambicMode mode) => IambicKeyer(
-        timing: _timing,
-        target: target,
-        sink: sink,
-        clock: clock,
-        mode: mode,
-      );
+    timing: _timing,
+    target: target,
+    sink: sink,
+    clock: clock,
+    mode: mode,
+  );
 
   setUp(() {
     clock = FakeClock();
@@ -50,20 +50,22 @@ void main() {
     expect(clock.pendingTimers, 0);
   });
 
-  test('finish keeps the element in flight whole and keys nothing more',
-      () async {
-    final k = keyer(IambicMode.b);
-    addTearDown(k.dispose);
-    k.dahPaddle(true, clock.now()); // held: would repeat dahs
-    clock.advance(_ms * 60);
-    k.finish();
-    // The dah reports its full 300 ms, not the 60 ms that had passed.
-    expect(target.log, <(bool, int)>[(true, 0), (false, 300)]);
-    expect(k.isKeying, isFalse);
-    clock.advance(_ms * 2000);
-    expect(target.log, hasLength(2));
-    expect(clock.pendingTimers, 0);
-  });
+  test(
+    'finish keeps the element in flight whole and keys nothing more',
+    () async {
+      final k = keyer(IambicMode.b);
+      addTearDown(k.dispose);
+      k.dahPaddle(true, clock.now()); // held: would repeat dahs
+      clock.advance(_ms * 60);
+      k.finish();
+      // The dah reports its full 300 ms, not the 60 ms that had passed.
+      expect(target.log, <(bool, int)>[(true, 0), (false, 300)]);
+      expect(k.isKeying, isFalse);
+      clock.advance(_ms * 2000);
+      expect(target.log, hasLength(2));
+      expect(clock.pendingTimers, 0);
+    },
+  );
 
   test('squeezing both paddles alternates dit / dah', () async {
     final k = keyer(IambicMode.b);
@@ -148,19 +150,21 @@ void main() {
     expect(k.isKeying, isFalse);
   });
 
-  test('mode A keeps single-paddle memory (a tap during a dah is sent)',
-      () async {
-    final k = keyer(IambicMode.a);
-    addTearDown(k.dispose);
-    k.dahPaddle(true, clock.now()); // dah 0-300
-    clock.advance(_ms * 50);
-    k.ditPaddle(true, clock.now());
-    clock.advance(_ms * 20);
-    k.ditPaddle(false, clock.now()); // dah still held: not a squeeze release
-    clock.advance(_ms * 330); // t = 400: gap ended, dit should start
-    expect(target.log.last, (true, 400));
-    k.reset(clock.now());
-  });
+  test(
+    'mode A keeps single-paddle memory (a tap during a dah is sent)',
+    () async {
+      final k = keyer(IambicMode.a);
+      addTearDown(k.dispose);
+      k.dahPaddle(true, clock.now()); // dah 0-300
+      clock.advance(_ms * 50);
+      k.ditPaddle(true, clock.now());
+      clock.advance(_ms * 20);
+      k.ditPaddle(false, clock.now()); // dah still held: not a squeeze release
+      clock.advance(_ms * 330); // t = 400: gap ended, dit should start
+      expect(target.log.last, (true, 400));
+      k.reset(clock.now());
+    },
+  );
 
   test('emitted events and timing setter', () async {
     final k = keyer(IambicMode.b);
@@ -184,8 +188,14 @@ void main() {
   });
 
   test('KeyerTiming helpers', () {
-    expect(KeyerTiming.standard(_ms * 60),
-        const KeyerTiming(dit: Duration(milliseconds: 60), dah: Duration(milliseconds: 180), gap: Duration(milliseconds: 60)));
+    expect(
+      KeyerTiming.standard(_ms * 60),
+      const KeyerTiming(
+        dit: Duration(milliseconds: 60),
+        dah: Duration(milliseconds: 180),
+        gap: Duration(milliseconds: 60),
+      ),
+    );
     expect(KeyerTiming.fromWpm(20).dit, _ms * 60);
     expect(_timing.durationOf(MorseElementKind.wordGap), _ms * 700);
   });

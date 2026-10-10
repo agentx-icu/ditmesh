@@ -51,7 +51,9 @@ void _setView(WidgetTester tester, {bool gestureNav = false}) {
 }
 
 Widget _host(Widget child) => MaterialApp(
-  home: Scaffold(body: Align(alignment: Alignment.topLeft, child: child)),
+  home: Scaffold(
+    body: Align(alignment: Alignment.topLeft, child: child),
+  ),
 );
 
 /// The two paddle surfaces (raw listeners inside [PaddleButtons]).

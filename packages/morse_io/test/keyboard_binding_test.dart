@@ -80,16 +80,19 @@ void main() {
     expect(b.dah, isEmpty);
   });
 
-  test('a gated sink drops on() while closed but always passes off()', () async {
-    final inner = RecordingSink(clock: FakeClock());
-    var open = true;
-    final gate = GatedSink(inner, () => open);
-    gate.on();
-    open = false; // switched off mid-mark
-    gate.off();
-    gate.on();
-    gate.off();
-    expect(inner.events.map((e) => e.on), [true, false, false]);
-    expect(inner.isOn, isFalse, reason: 'no stuck tone');
-  });
+  test(
+    'a gated sink drops on() while closed but always passes off()',
+    () async {
+      final inner = RecordingSink(clock: FakeClock());
+      var open = true;
+      final gate = GatedSink(inner, () => open);
+      gate.on();
+      open = false; // switched off mid-mark
+      gate.off();
+      gate.on();
+      gate.off();
+      expect(inner.events.map((e) => e.on), [true, false, false]);
+      expect(inner.isOn, isFalse, reason: 'no stuck tone');
+    },
+  );
 }

@@ -35,22 +35,24 @@ void main() {
     await sink.dispose();
   });
 
-  test('torch follows the key on mobile when requested and available',
-      () async {
-    final torch = _FakeTorch();
-    final sink = FlashSink(
-      useTorch: true,
-      torchApi: torch,
-      platformOverride: TargetPlatform.android,
-    );
-    await sink.prepare();
-    expect(sink.torchActive, isTrue);
-    sink.on();
-    sink.off();
-    await Future<void>.delayed(Duration.zero);
-    expect(torch.calls, <String>['isAvailable', 'enable', 'disable']);
-    await sink.dispose();
-  });
+  test(
+    'torch follows the key on mobile when requested and available',
+    () async {
+      final torch = _FakeTorch();
+      final sink = FlashSink(
+        useTorch: true,
+        torchApi: torch,
+        platformOverride: TargetPlatform.android,
+      );
+      await sink.prepare();
+      expect(sink.torchActive, isTrue);
+      sink.on();
+      sink.off();
+      await Future<void>.delayed(Duration.zero);
+      expect(torch.calls, <String>['isAvailable', 'enable', 'disable']);
+      await sink.dispose();
+    },
+  );
 
   test('torch is not probed on desktop even when requested', () async {
     final torch = _FakeTorch();

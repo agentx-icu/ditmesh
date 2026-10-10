@@ -13,12 +13,15 @@ final class KeyboardKeyBinding {
     Set<LogicalKeyboardKey>? straight,
     Set<LogicalKeyboardKey>? dit,
     Set<LogicalKeyboardKey>? dah,
-  })  : straight = Set<LogicalKeyboardKey>.unmodifiable(
-            straight ?? <LogicalKeyboardKey>{LogicalKeyboardKey.space}),
-        dit = Set<LogicalKeyboardKey>.unmodifiable(
-            dit ?? <LogicalKeyboardKey>{LogicalKeyboardKey.controlLeft}),
-        dah = Set<LogicalKeyboardKey>.unmodifiable(
-            dah ?? <LogicalKeyboardKey>{LogicalKeyboardKey.controlRight});
+  }) : straight = Set<LogicalKeyboardKey>.unmodifiable(
+         straight ?? <LogicalKeyboardKey>{LogicalKeyboardKey.space},
+       ),
+       dit = Set<LogicalKeyboardKey>.unmodifiable(
+         dit ?? <LogicalKeyboardKey>{LogicalKeyboardKey.controlLeft},
+       ),
+       dah = Set<LogicalKeyboardKey>.unmodifiable(
+         dah ?? <LogicalKeyboardKey>{LogicalKeyboardKey.controlRight},
+       );
 
   /// Space / left Ctrl / right Ctrl.
   static final KeyboardKeyBinding defaults = KeyboardKeyBinding();
@@ -74,10 +77,9 @@ final class KeyboardKeyBinding {
     Set<LogicalKeyboardKey>? straight,
     Set<LogicalKeyboardKey>? dit,
     Set<LogicalKeyboardKey>? dah,
-  }) =>
-      KeyboardKeyBinding(
-        straight: straight ?? this.straight,
-        dit: dit ?? this.dit,
-        dah: dah ?? this.dah,
-      );
+  }) => KeyboardKeyBinding(
+    straight: straight ?? this.straight,
+    dit: dit ?? this.dit,
+    dah: dah ?? this.dah,
+  );
 }

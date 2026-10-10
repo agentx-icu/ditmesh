@@ -50,9 +50,9 @@ final class IambicKeyer implements PaddleInput {
     MorseSink? sink,
     Clock? clock,
     this.mode = IambicMode.b,
-  })  : _target = target,
-        _sink = sink,
-        _clock = clock ?? SystemClock.shared;
+  }) : _target = target,
+       _sink = sink,
+       _clock = clock ?? SystemClock.shared;
 
   final IambicMode mode;
   final KeyTarget? _target;
@@ -226,6 +226,9 @@ final class IambicKeyer implements PaddleInput {
   void _scheduleAt(Duration absolute, void Function() callback) {
     _timer?.cancel();
     final delay = absolute - _clock.now();
-    _timer = _clock.schedule(delay.isNegative ? Duration.zero : delay, callback);
+    _timer = _clock.schedule(
+      delay.isNegative ? Duration.zero : delay,
+      callback,
+    );
   }
 }

@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
 
 void main() {
-  testWidgets('reports background on mobile and inactive as foreground',
-      (tester) async {
+  testWidgets('reports background on mobile and inactive as foreground', (
+    tester,
+  ) async {
     const foreground = BindingAppForeground(
       platformOverride: TargetPlatform.iOS,
     );
