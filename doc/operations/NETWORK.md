@@ -8,7 +8,7 @@ Open network settings from **Me**, or from the welcome/unlock screen before open
 
 | Mode | Behavior |
 |---|---|
-| Automatic | Starts immediately with saved selection and numeric fallback seeds; refreshes the official HTTPS catalogue in the background and applies several valid online entries. |
+| Automatic | Starts immediately with saved selection and numeric fallback seeds (IPv4, plus IPv6 where the node publishes it, so IPv6-only/NAT64 networks can start before the catalogue loads); refreshes the official HTTPS catalogue in the background and applies several valid online entries. |
 | Manual | Uses the saved host, UDP port and public key. Public catalogue refresh does not replace the chosen node. A LAN peer can be configured this way on any platform. |
 | LAN hosting | Desktop-only hosting of an independent UDP/DHT node; share its displayed address, actual bound UDP port and full DHT public key with other devices. |
 

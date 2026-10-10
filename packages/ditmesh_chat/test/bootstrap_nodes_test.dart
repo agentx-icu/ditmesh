@@ -5,6 +5,12 @@ import 'package:ditmesh_chat/src/adapters/bootstrap_adapter.dart';
 import 'package:ditmesh_chat/src/adapters/bootstrap_nodes.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Every bundled address, IPv4 and the IPv6 alternates, is one attempt.
+final _seedHosts = BootstrapNodes.seeds.fold<int>(
+  0,
+  (sum, node) => sum + 1 + node.alternateHosts.length,
+);
+
 void main() {
   test('bundled nodes use numeric addresses without hostname resolution', () {
     expect(BootstrapNodes.seeds, hasLength(4));
@@ -12,6 +18,10 @@ void main() {
       final address = InternetAddress.tryParse(node.host);
       expect(address, isNotNull, reason: node.host);
       expect(address!.type, InternetAddressType.IPv4);
+      for (final alternate in node.alternateHosts) {
+        final v6 = InternetAddress.tryParse(alternate);
+        expect(v6?.type, InternetAddressType.IPv6, reason: alternate);
+      }
       expect(node.publicKey, matches(RegExp(r'^[0-9A-F]{64}$')));
       expect(node.port, inInclusiveRange(1, 65535));
     }
@@ -58,8 +68,9 @@ void main() {
       expect(await adapter.getBootstrapHost(), 'selected.example');
       expect(await adapter.getBootstrapPort(), 443);
       expect(await adapter.getBootstrapPublicKey(), 'A' * 64);
-      expect(applied, hasLength(4));
-      expect(applied.toSet(), hasLength(4));
+      expect(applied, hasLength(_seedHosts));
+      expect(applied.toSet(), hasLength(_seedHosts));
+      expect(applied.where((host) => host.contains(':')), isNotEmpty);
     },
   );
 
@@ -106,7 +117,7 @@ void main() {
         if (calls == 1) throw StateError('first node unavailable');
         return calls > 2;
       });
-      expect(calls, 4);
+      expect(calls, _seedHosts);
       expect(
         logger.records.where((record) => record.level == ChatLogLevel.warning),
         hasLength(2),
