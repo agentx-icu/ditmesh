@@ -61,6 +61,7 @@ class _Peer {
   late String remoteKey;
   late String groupChatId;
   String? queuedId;
+  String? earlyGroupId;
   String? lastMembers;
   KeyedRecording rhythm(String sender, String text) =>
       realPeerRhythm(sender, text);
@@ -371,6 +372,17 @@ class _Peer {
     if (role == 'alice') {
       final created = await chat.createGroup('Local Morse Net');
       groupChatId = created.chatId!;
+      // Alone in the new group, no confirmed peer can receive a send. Tox
+      // reports it sent anyway, so it must stay queued (Tim2Tox #28) and
+      // drain once the invitee is confirmed.
+      final early = await chat.sendText('group_${created.id}', 'QRV NET ALICE');
+      expect(
+        (await chat.loadHistory(
+          'group_${created.id}',
+        )).singleWhere((message) => message.id == early.id).status,
+        MessageStatus.pending,
+      );
+      earlyGroupId = early.id;
       await mark('group', {'chatId': groupChatId});
       await chat.inviteToGroup(created.id, remoteKey);
     } else {
@@ -381,6 +393,19 @@ class _Peer {
     }
     await groupOnline();
     await barrier('group-joined');
+    if (role == 'alice') {
+      await wait(
+        'queued group text delivered after the first confirmed peer',
+        () async => (await chat.loadHistory('group_${group!.id}')).any(
+          (message) =>
+              message.id == earlyGroupId &&
+              message.status == MessageStatus.delivered,
+        ),
+      );
+      await note('group text queued while alone delivered after join');
+    } else {
+      await incoming('group_${group!.id}', 'QRV NET ALICE');
+    }
     await exchange(
       'group_${group!.id}',
       'CQ NET ${role.toUpperCase()}',
