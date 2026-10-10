@@ -477,6 +477,18 @@ class SPt extends S {
   String get accountSectionAbout => 'Sobre';
 
   @override
+  String get meNoteBackgroundTitle => 'Recebimento no celular';
+
+  @override
+  String get meNoteBackgroundBody => 'O DitMesh é ponto a ponto e não tem servidor de notificações push, então mantenha-o aberto para receber mensagens. Em segundo plano, o celular logo pausa o DitMesh: mensagens enviadas a você nesse período podem já aparecer como enviadas para o seu contato e chegam quando você abre o DitMesh de novo.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Leitores de tela e manipulação';
+
+  @override
+  String get meNoteScreenReaderBody => 'Com um leitor de tela não dá para manipular a chave manual pelo tempo em que ela fica pressionada. Em um chat, use as ações PONTO e TRAÇO da chave, ative uma palheta uma vez por elemento ou manipule com um teclado físico.';
+
+  @override
   String get accountSectionDanger => 'Zona de perigo';
 
   @override

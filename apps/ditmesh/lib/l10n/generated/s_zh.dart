@@ -472,6 +472,18 @@ class SZh extends S {
   String get accountSectionAbout => '关于';
 
   @override
+  String get meNoteBackgroundTitle => '在手机上接收消息';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh 是点对点应用，没有推送服务器，要接收消息请保持它打开。切到后台后手机很快会暂停 DitMesh：期间发给你的消息在对方那里可能已显示为已发送，等你重新打开 DitMesh 后才会送达。';
+
+  @override
+  String get meNoteScreenReaderTitle => '读屏软件与发报';
+
+  @override
+  String get meNoteScreenReaderBody => '使用读屏软件时无法按住直键、靠按压时长发出点和划。在聊天中请改用直键的“点”“划”操作，每激活一次双桨发一个码元，或用实体键盘发报。';
+
+  @override
   String get accountSectionDanger => '危险操作';
 
   @override
@@ -3694,6 +3706,18 @@ class SZhHant extends SZh {
 
   @override
   String get accountSectionAbout => '關於';
+
+  @override
+  String get meNoteBackgroundTitle => '在手機上接收訊息';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh 是點對點應用程式，沒有推播伺服器，要接收訊息請保持它開啟。切到背景後手機很快會暫停 DitMesh：期間傳給你的訊息在對方那裡可能已顯示為已傳送，等你重新開啟 DitMesh 後才會送達。';
+
+  @override
+  String get meNoteScreenReaderTitle => '螢幕閱讀器與發報';
+
+  @override
+  String get meNoteScreenReaderBody => '使用螢幕閱讀器時無法按住直鍵、靠按壓時長發出點和劃。在聊天中請改用直鍵的「點」「劃」動作，每啟動一次雙槳發一個碼元，或用實體鍵盤發報。';
 
   @override
   String get accountSectionDanger => '危險操作';

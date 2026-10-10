@@ -472,6 +472,18 @@ class SJa extends S {
   String get accountSectionAbout => 'アプリについて';
 
   @override
+  String get meNoteBackgroundTitle => 'スマートフォンでの受信';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh はプッシュサーバーのないピアツーピアのアプリなので、メッセージを受け取るには開いたままにしてください。バックグラウンドではまもなく端末が DitMesh を一時停止します。その間に送られたメッセージは相手の画面で送信済みと表示されることがあり、DitMesh を再び開くと届きます。';
+
+  @override
+  String get meNoteScreenReaderTitle => 'スクリーンリーダーと打鍵';
+
+  @override
+  String get meNoteScreenReaderBody => 'スクリーンリーダーでは、縦振れ電鍵を押す長さで短点と長点を打つことはできません。チャットでは電鍵の「短点」「長点」アクションを使うか、パドルを 1 回操作するごとに 1 符号ずつ打つか、物理キーボードで打鍵してください。';
+
+  @override
   String get accountSectionDanger => '危険な操作';
 
   @override

@@ -472,6 +472,18 @@ class SKo extends S {
   String get accountSectionAbout => '앱 정보';
 
   @override
+  String get meNoteBackgroundTitle => '휴대폰에서 메시지 받기';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh는 푸시 서버가 없는 P2P 앱이므로 메시지를 받으려면 앱을 열어 두세요. 백그라운드에서는 휴대폰이 곧 DitMesh를 일시 중지합니다. 그동안 보낸 메시지는 상대 화면에 이미 전송됨으로 보일 수 있으며, DitMesh를 다시 열면 도착합니다.';
+
+  @override
+  String get meNoteScreenReaderTitle => '스크린 리더와 키잉';
+
+  @override
+  String get meNoteScreenReaderBody => '스크린 리더로는 수동 전건을 누르는 시간으로 단점과 장점을 칠 수 없습니다. 채팅에서는 전건의 \'단점\'·\'장점\' 동작을 쓰거나, 패들을 한 번 활성화할 때마다 한 요소씩 치거나, 물리 키보드로 키잉하세요.';
+
+  @override
   String get accountSectionDanger => '위험한 작업';
 
   @override

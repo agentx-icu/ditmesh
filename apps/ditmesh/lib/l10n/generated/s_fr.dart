@@ -477,6 +477,18 @@ class SFr extends S {
   String get accountSectionAbout => 'À propos';
 
   @override
+  String get meNoteBackgroundTitle => 'Réception sur téléphone';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh est pair-à-pair et n\'a pas de serveur de notifications push : gardez l\'app ouverte pour recevoir des messages. En arrière-plan, votre téléphone met vite DitMesh en pause ; les messages qu\'on vous envoie alors peuvent déjà apparaître comme envoyés chez votre contact et arrivent quand vous rouvrez DitMesh.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Lecteurs d\'écran et manipulation';
+
+  @override
+  String get meNoteScreenReaderBody => 'Avec un lecteur d\'écran, impossible de manipuler à la pioche en la tenant plus ou moins longtemps. Dans une discussion, utilisez plutôt les actions POINT et TRAIT de la touche, activez une palette une fois par élément ou manipulez avec un clavier physique.';
+
+  @override
   String get accountSectionDanger => 'Zone de danger';
 
   @override

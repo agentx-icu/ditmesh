@@ -476,6 +476,18 @@ class SEn extends S {
   String get accountSectionAbout => 'About';
 
   @override
+  String get meNoteBackgroundTitle => 'Receiving on a phone';
+
+  @override
+  String get meNoteBackgroundBody => 'DitMesh is peer-to-peer and has no push server, so keep it open to receive messages. In the background your phone soon pauses DitMesh: messages sent to you meanwhile can already look sent on your contact\'s screen, and arrive when you open DitMesh again.';
+
+  @override
+  String get meNoteScreenReaderTitle => 'Screen readers and keying';
+
+  @override
+  String get meNoteScreenReaderBody => 'Holding the straight key for timed dits and dahs does not work with a screen reader. In a chat, use the key\'s DIT and DAH actions instead, activate a paddle once per element, or key with a physical keyboard.';
+
+  @override
   String get accountSectionDanger => 'Danger zone';
 
   @override
