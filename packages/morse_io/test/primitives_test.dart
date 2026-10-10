@@ -7,8 +7,14 @@ import 'package:morse_io/morse_io.dart';
 void main() {
   group('MorseKeyEvent', () {
     test('names the edge and the time', () {
-      expect(const MorseKeyEvent.down(Duration(milliseconds: 10)).toString(), 'down@10ms');
-      expect(const MorseKeyEvent.up(Duration(milliseconds: 70)).toString(), 'up@70ms');
+      expect(
+        const MorseKeyEvent.down(Duration(milliseconds: 10)).toString(),
+        'down@10ms',
+      );
+      expect(
+        const MorseKeyEvent.up(Duration(milliseconds: 70)).toString(),
+        'up@70ms',
+      );
     });
 
     test('equality and hash follow the edge and the time', () {
@@ -68,11 +74,26 @@ void main() {
 
     test('durationOf scales gaps for characters and words', () {
       final t = KeyerTiming.standard(const Duration(milliseconds: 50));
-      expect(t.durationOf(MorseElementKind.dit), const Duration(milliseconds: 50));
-      expect(t.durationOf(MorseElementKind.dah), const Duration(milliseconds: 150));
-      expect(t.durationOf(MorseElementKind.intraGap), const Duration(milliseconds: 50));
-      expect(t.durationOf(MorseElementKind.charGap), const Duration(milliseconds: 150));
-      expect(t.durationOf(MorseElementKind.wordGap), const Duration(milliseconds: 350));
+      expect(
+        t.durationOf(MorseElementKind.dit),
+        const Duration(milliseconds: 50),
+      );
+      expect(
+        t.durationOf(MorseElementKind.dah),
+        const Duration(milliseconds: 150),
+      );
+      expect(
+        t.durationOf(MorseElementKind.intraGap),
+        const Duration(milliseconds: 50),
+      );
+      expect(
+        t.durationOf(MorseElementKind.charGap),
+        const Duration(milliseconds: 150),
+      );
+      expect(
+        t.durationOf(MorseElementKind.wordGap),
+        const Duration(milliseconds: 350),
+      );
     });
   });
 
@@ -109,12 +130,18 @@ void main() {
     test('schedule fires once, and a negative delay fires at once', () async {
       final clock = SystemClock();
       final fired = Completer<void>();
-      final timer = clock.schedule(const Duration(milliseconds: -5), fired.complete);
+      final timer = clock.schedule(
+        const Duration(milliseconds: -5),
+        fired.complete,
+      );
       await fired.future.timeout(const Duration(seconds: 1));
       expect(timer.isActive, isFalse);
 
       var count = 0;
-      final later = clock.schedule(const Duration(milliseconds: 80), () => count++);
+      final later = clock.schedule(
+        const Duration(milliseconds: 80),
+        () => count++,
+      );
       expect(later.isActive, isTrue);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(count, 0, reason: 'a positive delay is not collapsed to zero');
@@ -126,7 +153,9 @@ void main() {
     test('a cancelled timer never fires', () async {
       final clock = SystemClock();
       var fired = false;
-      clock.schedule(const Duration(milliseconds: 5), () => fired = true).cancel();
+      clock
+          .schedule(const Duration(milliseconds: 5), () => fired = true)
+          .cancel();
       await Future<void>.delayed(const Duration(milliseconds: 20));
       expect(fired, isFalse);
     });

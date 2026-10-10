@@ -30,8 +30,7 @@ final class BindingAppForeground implements AppForeground {
   bool get _mobile {
     if (kIsWeb) return false;
     final platform = platformOverride ?? defaultTargetPlatform;
-    return platform == TargetPlatform.android ||
-        platform == TargetPlatform.iOS;
+    return platform == TargetPlatform.android || platform == TargetPlatform.iOS;
   }
 
   static WidgetsBinding? get _binding {

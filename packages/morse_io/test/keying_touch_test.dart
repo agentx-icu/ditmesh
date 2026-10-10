@@ -35,7 +35,11 @@ void main() {
   testWidgets('a cancelled pointer releases the straight key', (tester) async {
     final key = _FakeStraightKey();
     await tester.pumpWidget(
-      _host(Center(child: StraightKeyButton(input: key, clock: FakeClock()))),
+      _host(
+        Center(
+          child: StraightKeyButton(input: key, clock: FakeClock()),
+        ),
+      ),
     );
     final gesture = await tester.startGesture(
       tester.getCenter(find.byType(StraightKeyButton)),
@@ -75,8 +79,9 @@ void main() {
     expect(paddles.log.last, 'dah up');
   });
 
-  testWidgets('a scroll view winning the drag does not release the key early',
-      (tester) async {
+  testWidgets('a scroll view winning the drag does not release the key early', (
+    tester,
+  ) async {
     final key = _FakeStraightKey();
     final scroll = ScrollController();
     addTearDown(scroll.dispose);
@@ -86,7 +91,9 @@ void main() {
           controller: scroll,
           children: <Widget>[
             const SizedBox(height: 200),
-            Center(child: StraightKeyButton(input: key, clock: FakeClock())),
+            Center(
+              child: StraightKeyButton(input: key, clock: FakeClock()),
+            ),
             const SizedBox(height: 2000),
           ],
         ),

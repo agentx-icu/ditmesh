@@ -23,11 +23,8 @@ final class KeyerTiming {
 
   /// Element timing of [timing]; Farnsworth stretching does not affect the
   /// keyer because it only spaces characters, which a keyer never does.
-  factory KeyerTiming.fromMorseTiming(MorseTiming timing) => KeyerTiming(
-        dit: timing.dit,
-        dah: timing.dah,
-        gap: timing.intraGap,
-      );
+  factory KeyerTiming.fromMorseTiming(MorseTiming timing) =>
+      KeyerTiming(dit: timing.dit, dah: timing.dah, gap: timing.intraGap);
 
   final Duration dit;
   final Duration dah;
@@ -36,15 +33,16 @@ final class KeyerTiming {
   final Duration gap;
 
   Duration durationOf(MorseElementKind kind) => switch (kind) {
-        MorseElementKind.dit => dit,
-        MorseElementKind.dah => dah,
-        MorseElementKind.intraGap => gap,
-        MorseElementKind.charGap => gap * 3,
-        MorseElementKind.wordGap => gap * 7,
-      };
+    MorseElementKind.dit => dit,
+    MorseElementKind.dah => dah,
+    MorseElementKind.intraGap => gap,
+    MorseElementKind.charGap => gap * 3,
+    MorseElementKind.wordGap => gap * 7,
+  };
 
   @override
-  String toString() => 'KeyerTiming(dit: ${dit.inMilliseconds}ms, '
+  String toString() =>
+      'KeyerTiming(dit: ${dit.inMilliseconds}ms, '
       'dah: ${dah.inMilliseconds}ms, gap: ${gap.inMilliseconds}ms)';
 
   @override

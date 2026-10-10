@@ -26,12 +26,15 @@ final class _FakePaddles implements PaddleInput {
       log.add('dah ${down ? 'down' : 'up'} @${at.inMilliseconds}');
 }
 
-Widget _host(Widget child) => MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget _host(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   group('StraightKeyButton', () {
-    testWidgets('pointer down / up drives the key with clock times',
-        (tester) async {
+    testWidgets('pointer down / up drives the key with clock times', (
+      tester,
+    ) async {
       final clock = FakeClock();
       final key = _FakeStraightKey();
       await tester.pumpWidget(
@@ -47,16 +50,19 @@ void main() {
       expect(key.log, <(bool, int)>[(true, 0), (false, 80)]);
     });
 
-    testWidgets('stays down until the last of two fingers lifts',
-        (tester) async {
+    testWidgets('stays down until the last of two fingers lifts', (
+      tester,
+    ) async {
       final key = _FakeStraightKey();
       await tester.pumpWidget(
         _host(StraightKeyButton(input: key, clock: FakeClock())),
       );
       final center = tester.getCenter(find.byType(StraightKeyButton));
       final first = await tester.startGesture(center, pointer: 1);
-      final second =
-          await tester.startGesture(center + const Offset(10, 10), pointer: 2);
+      final second = await tester.startGesture(
+        center + const Offset(10, 10),
+        pointer: 2,
+      );
       await first.up();
       await tester.pump();
       expect(key.log, <(bool, int)>[(true, 0)]);
@@ -65,15 +71,14 @@ void main() {
       expect(key.log, <(bool, int)>[(true, 0), (false, 0)]);
     });
 
-    testWidgets('space bar keys it when focused; repeats are ignored',
-        (tester) async {
+    testWidgets('space bar keys it when focused; repeats are ignored', (
+      tester,
+    ) async {
       final key = _FakeStraightKey();
       await tester.pumpWidget(
-        _host(StraightKeyButton(
-          input: key,
-          clock: FakeClock(),
-          autofocus: true,
-        )),
+        _host(
+          StraightKeyButton(input: key, clock: FakeClock(), autofocus: true),
+        ),
       );
       await tester.pump();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
@@ -84,19 +89,29 @@ void main() {
       expect(key.log, <(bool, int)>[(true, 0), (false, 0)]);
     });
 
-    testWidgets('losing focus while the space bar is held releases the key',
-        (tester) async {
+    testWidgets('losing focus while the space bar is held releases the key', (
+      tester,
+    ) async {
       final key = _FakeStraightKey();
       final other = FocusNode();
       addTearDown(other.dispose);
       await tester.pumpWidget(
-        _host(Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StraightKeyButton(input: key, clock: FakeClock(), autofocus: true),
-            Focus(focusNode: other, child: const SizedBox(width: 10, height: 10)),
-          ],
-        )),
+        _host(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StraightKeyButton(
+                input: key,
+                clock: FakeClock(),
+                autofocus: true,
+              ),
+              Focus(
+                focusNode: other,
+                child: const SizedBox(width: 10, height: 10),
+              ),
+            ],
+          ),
+        ),
       );
       await tester.pump();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
@@ -109,11 +124,14 @@ void main() {
       expect(key.log, hasLength(2));
     });
 
-    testWidgets('backgrounding releases a held key (touch or keyboard)',
-        (tester) async {
+    testWidgets('backgrounding releases a held key (touch or keyboard)', (
+      tester,
+    ) async {
       final key = _FakeStraightKey();
       await tester.pumpWidget(
-        _host(StraightKeyButton(input: key, clock: FakeClock(), autofocus: true)),
+        _host(
+          StraightKeyButton(input: key, clock: FakeClock(), autofocus: true),
+        ),
       );
       await tester.pump();
       final gesture = await tester.press(find.byType(StraightKeyButton));
@@ -138,13 +156,18 @@ void main() {
       final other = FocusNode();
       addTearDown(other.dispose);
       await tester.pumpWidget(
-        _host(Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StraightKeyButton(input: key, clock: FakeClock()),
-            Focus(focusNode: other, child: const SizedBox(width: 10, height: 10)),
-          ],
-        )),
+        _host(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StraightKeyButton(input: key, clock: FakeClock()),
+              Focus(
+                focusNode: other,
+                child: const SizedBox(width: 10, height: 10),
+              ),
+            ],
+          ),
+        ),
       );
       other.requestFocus();
       await tester.pump();
@@ -166,15 +189,18 @@ void main() {
   });
 
   group('PaddleButtons', () {
-    testWidgets('two simultaneous pointers squeeze both paddles',
-        (tester) async {
+    testWidgets('two simultaneous pointers squeeze both paddles', (
+      tester,
+    ) async {
       final clock = FakeClock();
       final paddles = _FakePaddles();
       await tester.pumpWidget(
-        _host(SizedBox(
-          width: 400,
-          child: PaddleButtons(input: paddles, clock: clock),
-        )),
+        _host(
+          SizedBox(
+            width: 400,
+            child: PaddleButtons(input: paddles, clock: clock),
+          ),
+        ),
       );
       final rect = tester.getRect(find.byType(PaddleButtons));
       final left = Offset(rect.left + rect.width * 0.25, rect.center.dy);
@@ -202,14 +228,16 @@ void main() {
     testWidgets('swapPaddles puts dah on the left', (tester) async {
       final paddles = _FakePaddles();
       await tester.pumpWidget(
-        _host(SizedBox(
-          width: 400,
-          child: PaddleButtons(
-            input: paddles,
-            clock: FakeClock(),
-            swapPaddles: true,
+        _host(
+          SizedBox(
+            width: 400,
+            child: PaddleButtons(
+              input: paddles,
+              clock: FakeClock(),
+              swapPaddles: true,
+            ),
           ),
-        )),
+        ),
       );
       final rect = tester.getRect(find.byType(PaddleButtons));
       final gesture = await tester.startGesture(
@@ -223,14 +251,16 @@ void main() {
     testWidgets('ctrl keys drive dit / dah when focused', (tester) async {
       final paddles = _FakePaddles();
       await tester.pumpWidget(
-        _host(SizedBox(
-          width: 400,
-          child: PaddleButtons(
-            input: paddles,
-            clock: FakeClock(),
-            autofocus: true,
+        _host(
+          SizedBox(
+            width: 400,
+            child: PaddleButtons(
+              input: paddles,
+              clock: FakeClock(),
+              autofocus: true,
+            ),
           ),
-        )),
+        ),
       );
       await tester.pump();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -250,20 +280,25 @@ void main() {
       final other = FocusNode();
       addTearDown(other.dispose);
       await tester.pumpWidget(
-        _host(Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 400,
-              child: PaddleButtons(
-                input: paddles,
-                clock: FakeClock(),
-                autofocus: true,
+        _host(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 400,
+                child: PaddleButtons(
+                  input: paddles,
+                  clock: FakeClock(),
+                  autofocus: true,
+                ),
               ),
-            ),
-            Focus(focusNode: other, child: const SizedBox(width: 10, height: 10)),
-          ],
-        )),
+              Focus(
+                focusNode: other,
+                child: const SizedBox(width: 10, height: 10),
+              ),
+            ],
+          ),
+        ),
       );
       await tester.pump();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -280,22 +315,24 @@ void main() {
       final sink = FlashSink(platformOverride: TargetPlatform.linux);
       addTearDown(sink.dispose);
       await tester.pumpWidget(
-        _host(SizedBox(
-          width: 100,
-          height: 100,
-          child: FlashOverlay(
-            isOn: sink.isOn,
-            onColor: const Color(0xFFFF0000),
-            child: const SizedBox.expand(),
+        _host(
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: FlashOverlay(
+              isOn: sink.isOn,
+              onColor: const Color(0xFFFF0000),
+              child: const SizedBox.expand(),
+            ),
           ),
-        )),
+        ),
       );
       ColoredBox box() => tester.widget<ColoredBox>(
-            find.descendant(
-              of: find.byType(FlashOverlay),
-              matching: find.byType(ColoredBox),
-            ),
-          );
+        find.descendant(
+          of: find.byType(FlashOverlay),
+          matching: find.byType(ColoredBox),
+        ),
+      );
       expect(box().color, const Color(0x00000000));
       sink.on();
       await tester.pump();

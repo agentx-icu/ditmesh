@@ -80,10 +80,11 @@ final class HapticSink implements MorseSink {
     TargetPlatform? platformOverride,
     this.preferContinuous = true,
     this.maxPulse = const Duration(seconds: 3),
-  })  : _api = api ?? const FlutterHapticApi(),
-        _foreground =
-            foreground ?? BindingAppForeground(platformOverride: platformOverride),
-        _platformOverride = platformOverride;
+  }) : _api = api ?? const FlutterHapticApi(),
+       _foreground =
+           foreground ??
+           BindingAppForeground(platformOverride: platformOverride),
+       _platformOverride = platformOverride;
 
   final HapticApi _api;
   final AppForeground _foreground;

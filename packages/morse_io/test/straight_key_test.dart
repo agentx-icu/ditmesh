@@ -57,14 +57,16 @@ void main() {
     expect(sink.events.length, 2);
   });
 
-  test('dispose while down silences the sink without a decoder key-up',
-      () async {
-    key.press(_ms * 1);
-    await key.dispose();
-    expect(sink.isOn, isFalse);
-    expect(target.log, <(bool, int)>[(true, 1)]);
-    key = StraightKey(target: target); // so tearDown has something to dispose
-  });
+  test(
+    'dispose while down silences the sink without a decoder key-up',
+    () async {
+      key.press(_ms * 1);
+      await key.dispose();
+      expect(sink.isOn, isFalse);
+      expect(target.log, <(bool, int)>[(true, 1)]);
+      key = StraightKey(target: target); // so tearDown has something to dispose
+    },
+  );
 
   test('works without a sink', () {
     final silent = StraightKey(target: target);

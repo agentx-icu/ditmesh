@@ -17,8 +17,8 @@ abstract interface class StraightKeyInput {
 /// cannot desynchronise sink and decoder.
 final class StraightKey implements StraightKeyInput {
   StraightKey({required KeyTarget target, MorseSink? sink})
-      : _target = target,
-        _sink = sink;
+    : _target = target,
+      _sink = sink;
 
   final KeyTarget _target;
   final MorseSink? _sink;

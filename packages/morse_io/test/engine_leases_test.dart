@@ -34,18 +34,20 @@ void main() {
 
   setUp(() => engine = _Engine());
 
-  test('overlapping holders: the engine stops only with the last lease',
-      () async {
-    await engine.leases.acquire(engine.init); // A
-    await engine.leases.acquire(engine.init); // B
-    expect(engine.inits, 1);
-    await engine.leases.release(); // A leaves while B still plays
-    expect(engine.running, isTrue);
-    expect(engine.deinits, 0);
-    await engine.leases.release(); // B
-    expect(engine.running, isFalse);
-    expect(engine.deinits, 1);
-  });
+  test(
+    'overlapping holders: the engine stops only with the last lease',
+    () async {
+      await engine.leases.acquire(engine.init); // A
+      await engine.leases.acquire(engine.init); // B
+      expect(engine.inits, 1);
+      await engine.leases.release(); // A leaves while B still plays
+      expect(engine.running, isTrue);
+      expect(engine.deinits, 0);
+      await engine.leases.release(); // B
+      expect(engine.running, isFalse);
+      expect(engine.deinits, 1);
+    },
+  );
 
   test('concurrent acquires start the engine exactly once', () async {
     engine.initGate = Completer<void>();

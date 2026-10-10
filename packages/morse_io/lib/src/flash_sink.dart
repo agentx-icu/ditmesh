@@ -46,8 +46,8 @@ final class FlashSink implements MorseSink {
     this.useTorch = false,
     TorchApi? torchApi,
     TargetPlatform? platformOverride,
-  })  : _torch = torchApi ?? const TorchLightApi(),
-        _platformOverride = platformOverride;
+  }) : _torch = torchApi ?? const TorchLightApi(),
+       _platformOverride = platformOverride;
 
   /// Ask for the camera torch in addition to the screen flash.
   final bool useTorch;

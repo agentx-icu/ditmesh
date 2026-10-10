@@ -13,7 +13,7 @@ import '../clock.dart';
 /// schedules from absolute times instead of chaining relative delays.
 final class FakeClock implements Clock {
   FakeClock({Duration start = Duration.zero, this.timerLatency = Duration.zero})
-      : _now = start;
+    : _now = start;
 
   final Duration timerLatency;
   Duration _now;
