@@ -1,7 +1,7 @@
 /// Reference-counted ownership of one shared audio engine.
 ///
 /// `flutter_soloud` has a single engine per isolate, but every
-/// [SidetoneSink] (drill, send practice, chat playback, reference player)
+/// [SidetoneSink] (drills, send practice, chat playback, reference player)
 /// initialises and later shuts it down on its own. Without coordination the
 /// first sink to be disposed deinitialises the engine under the others, and
 /// two overlapping `init` calls make the engine rebuild itself, stopping
