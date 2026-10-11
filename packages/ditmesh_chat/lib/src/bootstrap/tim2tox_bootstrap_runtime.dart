@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 import '../logging/chat_logger.dart';
+import 'address_family_order.dart';
 import 'bootstrap_runtime.dart';
 import 'host_resolver.dart';
 import 'lan_bootstrap_host.dart';
@@ -12,7 +13,11 @@ class Tim2ToxBootstrapRuntime implements BootstrapRuntime {
     required FfiChatService? Function() session,
     required String profileRoot,
     ChatLogger logger = const SilentChatLogger(),
+    PreferIpv6 preferIpv6 = deviceIsIpv6Only,
+    BootstrapHostResolver? resolver,
   }) : _session = session,
+       _preferIpv6 = preferIpv6,
+       _resolver = resolver ?? BootstrapHostResolver(),
        _host = LanBootstrapHost(
          profileDirectory: '$profileRoot/lan',
          logger: logger,
@@ -21,7 +26,8 @@ class Tim2ToxBootstrapRuntime implements BootstrapRuntime {
   final FfiChatService? Function() _session;
   final LanBootstrapHost _host;
   final NativeNodeProbe _probe;
-  final _resolver = BootstrapHostResolver();
+  final PreferIpv6 _preferIpv6;
+  final BootstrapHostResolver _resolver;
   @override
   bool get supportsLan =>
       Platform.isMacOS || Platform.isLinux || Platform.isWindows;
@@ -35,20 +41,24 @@ class Tim2ToxBootstrapRuntime implements BootstrapRuntime {
     if (session == null || !node.isValid) return false;
     bool live() =>
         identical(_session(), session) && (isCurrent?.call() ?? true);
-    var accepted = false;
+    // Resolve every host first: native keeps only the first onion/TCP-relay
+    // address per key, so the order is chosen across the whole node.
+    final resolved = <String>[];
     for (final host in node.hosts) {
       if (!live()) return false;
-      final addresses = await _resolver.addresses(host);
-      for (final address in addresses) {
-        if (!live()) return false;
-        accepted =
-            await session.tryBootstrapNode(
-              address,
-              node.port,
-              node.publicKey,
-            ) ||
-            accepted;
-      }
+      resolved.addAll(await _resolver.addresses(host));
+    }
+    if (!live()) return false;
+    final addresses = orderAddressesByFamily(
+      resolved,
+      preferIpv6: await resolvePreferIpv6(_preferIpv6),
+    );
+    var accepted = false;
+    for (final address in addresses) {
+      if (!live()) return false;
+      accepted =
+          await session.tryBootstrapNode(address, node.port, node.publicKey) ||
+          accepted;
     }
     return accepted;
   }
