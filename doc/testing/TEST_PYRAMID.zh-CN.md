@@ -19,7 +19,7 @@ bash tool/test_pyramid.sh --level e2e --device macos
 | 原生集成 | 加密资料、备份恢复、持久化、局域网节点及隔离探测 | `packages/ditmesh_chat/test` |
 | 平台端到端 | 实际启动、插件初始化、导航、真实触摸与实体键盘事件拍发、建群、外观、删除身份、持久化及中英文 13 个场景 | `apps/ditmesh/integration_test` |
 
-E2E 工作流通过 PR 的 `ci:e2e` 标签或手动执行，在 macOS、Linux、Windows、Android 模拟器（API 34，x86_64）和 iPhone 模拟器上运行全部集成测试；`tool/ci/run_integration_tests.sh <device>` 可在任意设备上运行同一组测试，每个文件单独启动一次应用。界面走查使用 `DITMESH_FAKE_BACKEND=true` 与预置会话；持久化测试通过临时文件及键，重新打开真实应用支持目录存储和平台安全存储。
+E2E 工作流通过 PR 的 `ci:e2e` 标签或手动执行，在 macOS、Linux、Windows、Android 模拟器（API 34，x86_64）和 iPhone 模拟器上运行全部假后端集成测试；`tool/ci/run_integration_tests.sh <device>` 可在任意设备上运行同一组测试，每个文件单独启动一次应用。界面走查使用 `DITMESH_FAKE_BACKEND=true` 与预置会话；持久化测试通过临时文件及键，重新打开真实应用支持目录存储和平台安全存储。手动真实后端探针 `integration_test/device_matrix_test.dart` 不在其中；手动运行方法见 `doc/VALIDATION.zh-CN.md` §“模拟器 / 仿真器证据”。
 
 必需的 Linux 和两种 macOS 原生任务运行：
 

@@ -18,6 +18,10 @@ for runtime in sorted((r for r in devices if version(r)), key=version, reverse=T
 sys.exit("no available iPhone simulator")
 ')"
 echo "booting simulator $udid" >&2
-xcrun simctl boot "$udid" 2>/dev/null || true  # already booted is fine
+# Already booted is fine; surface any other boot failure on stderr.
+out=$(xcrun simctl boot "$udid" 2>&1) || case "$out" in
+  *"current state: Booted"*) ;;
+  *) echo "$out" >&2 ;;
+esac
 xcrun simctl bootstatus "$udid" -b >&2
 echo "$udid"

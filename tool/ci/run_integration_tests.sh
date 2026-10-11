@@ -30,4 +30,4 @@ if [[ ${#failed[@]} -gt 0 ]]; then
   echo "failed on $device: ${failed[*]}" >&2
   exit 1
 fi
-echo "every integration test passed on $device"
+echo "every fake-backend integration test passed on $device"

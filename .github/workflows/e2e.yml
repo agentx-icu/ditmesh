@@ -2,8 +2,9 @@ name: E2E
 
 # Top of the test pyramid (doc/testing/TEST_PYRAMID.md): the real app on
 # macOS, Linux and Windows runners, an Android emulator and an iOS simulator —
-# every integration test (the real main() click-through, real pointer and
-# keyboard keying, persistence and the screenshot scene walk); on the three
+# every fake-backend integration test (the real main() click-through, real
+# pointer and keyboard keying, persistence and the screenshot scene walk; the
+# manual real-backend device_matrix_test.dart probe is excluded); on the three
 # desktops then the screenshot pipeline itself with the frames as an artifact
 # (the only source of the Linux and Windows frames).
 # Opt-in: manual, or the `ci:e2e` label on a pull request.
