@@ -280,4 +280,102 @@ void main() {
       expect(player.elapsed, _ms * 50);
     });
   });
+
+  group('paused start events', () {
+    List<int> started() =>
+        events.whereType<PlayerElementStarted>().map((e) => e.index).toList();
+
+    test('reports the first element only when resume makes it sound', () {
+      final soundingAtStart = <bool>[];
+      player.events.listen((event) {
+        if (event is PlayerElementStarted) soundingAtStart.add(sink.isOn);
+      });
+      player.play(_timeline, paused: true);
+      clock.advance(_ms * 500);
+      expect(events, isEmpty, reason: 'nothing sounds while paused');
+
+      player.resume();
+      expect(started(), <int>[0]);
+      expect(soundingAtStart, <bool>[true]);
+      expect(sink.log, <(bool, int)>[(true, 500)]);
+
+      clock.advance(_ms * 900);
+      expect(started(), <int>[0, 1, 2, 3, 4]);
+      expect(events.last, isA<PlayerCompleted>());
+      expect(events.length, 6);
+    });
+
+    test('a later pause and resume reports nothing new', () {
+      player.play(_timeline, paused: true);
+      player.resume();
+      clock.advance(_ms * 150); // inside the intra-character gap
+      player.pause();
+      clock.advance(_ms * 100);
+      player.resume();
+      expect(started(), <int>[0, 1]);
+      clock.advance(_ms * 750);
+      expect(started(), <int>[0, 1, 2, 3, 4]);
+    });
+
+    test('a timeline that opens with a gap reports it at resume', () {
+      player.play(_timeline.sublist(1), paused: true);
+      expect(events, isEmpty);
+      player.resume();
+      expect(events.single, isA<PlayerElementStarted>());
+      expect((events.single as PlayerElementStarted).element.on, isFalse);
+    });
+
+    test('pausing while the start is pending keeps it for resume', () {
+      player.play(_timeline, paused: true);
+      clock.advance(_ms * 100);
+      player.pause();
+      expect(events, isEmpty);
+      player.resume();
+      expect(started(), <int>[0]);
+      expect(sink.log, <(bool, int)>[(true, 100)]);
+    });
+
+    test('stopping before resume reports only the stop', () {
+      player.play(_timeline, paused: true);
+      player.stop();
+      player.resume();
+      clock.advance(_ms * 1000);
+      expect(events.single, isA<PlayerStopped>());
+      expect(sink.log, isEmpty);
+    });
+
+    test('replacing a paused start drops its pending report', () {
+      player.play(_timeline, paused: true);
+      player.play(_timeline);
+      expect(events.first, isA<PlayerStopped>());
+      expect(started(), <int>[0]);
+      clock.advance(_ms * 900);
+      expect(started(), <int>[0, 1, 2, 3, 4]);
+      expect(events.whereType<PlayerCompleted>().length, 1);
+    });
+
+    test('a listener that pauses on the resumed start stays paused', () {
+      player.events.listen((event) {
+        if (event is PlayerElementStarted) player.pause();
+      });
+      player.play(_timeline, paused: true);
+      player.resume();
+      expect(player.isPaused, isTrue);
+      expect(clock.pendingTimers, 0);
+      expect(sink.isOn, isFalse);
+    });
+  });
+
+  test('dispose stops playback and closes the event stream', () async {
+    var done = false;
+    player.events.listen(null, onDone: () => done = true);
+    player.play(_timeline);
+    await player.dispose();
+    expect(done, isTrue);
+    expect(events.last, isA<PlayerStopped>());
+    expect(player.isPlaying, isFalse);
+    expect(sink.isOn, isFalse);
+    expect(clock.pendingTimers, 0);
+    expect(await player.events.isEmpty, isTrue);
+  });
 }
