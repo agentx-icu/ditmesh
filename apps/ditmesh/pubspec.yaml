@@ -1,7 +1,7 @@
 name: ditmesh
 description: "Morse-only direct and group chat over the Tox peer-to-peer network."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 resolution: workspace
 
 environment:

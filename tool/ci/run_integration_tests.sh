@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Runs every apps/ditmesh/integration_test/*_test.dart on one device with the
-# in-memory backend, one `flutter test` per file: several integration files
-# in one run fail to attach to the second app launch on a desktop device.
+# Runs every apps/ditmesh/integration_test/*_test.dart (except the real-backend
+# device-matrix probe) on one device with the in-memory backend, one
+# `flutter test` per file: several integration files in one run fail to attach
+# to the second app launch on a desktop device.
 #
 #   bash tool/ci/run_integration_tests.sh <device-id> [extra flutter test args]
 #
@@ -13,6 +14,8 @@ device="$1"; shift
 cd "$(dirname "${BASH_SOURCE[0]}")/../../apps/ditmesh" || exit 1
 failed=()
 for f in integration_test/*_test.dart; do
+  # The device-matrix probe needs the real backend (doc/VALIDATION.md).
+  [[ "$f" != */device_matrix_test.dart ]] || continue
   echo "::group::$f on $device"
   start=$SECONDS
   if flutter test "$f" -d "$device" --dart-define=DITMESH_FAKE_BACKEND=true "$@"; then

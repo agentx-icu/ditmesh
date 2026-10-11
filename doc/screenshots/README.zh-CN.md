@@ -20,6 +20,6 @@
 | me | [PNG](macos/zh/me.png) | [PNG](ios/zh/me.png) | [PNG](ipad/zh/me.png) | [PNG](android/zh/me.png) | [PNG](linux/zh/me.png) | [PNG](windows/zh/me.png) |
 | network_bootstrap | [PNG](macos/zh/network_bootstrap.png) | [PNG](ios/zh/network_bootstrap.png) | [PNG](ipad/zh/network_bootstrap.png) | [PNG](android/zh/network_bootstrap.png) | [PNG](linux/zh/network_bootstrap.png) | [PNG](windows/zh/network_bootstrap.png) |
 
-桌面：1280×800；iPhone：1320×2868；iPad：2064×2752；Android：823×1829。macOS/iPhone/iPad/Android 已在本机实际编译并捕获。Linux、Windows 来自产品提交 `c8e1fed` 的 [E2E 37732186466](https://github.com/agentx-icu/ditmesh/actions/runs/37732186466) 成功任务，经检查和完整性守卫导入。
+桌面：1280×800；iPhone：1320×2868；iPad：2064×2752；Android：823×1829。macOS/iPhone/iPad/Android 已在本机实际编译并捕获。Linux、Windows 来自产品提交 `3e30faa` 的 [E2E 38096970941](https://github.com/agentx-icu/ditmesh/actions/runs/38096970941) 成功任务，经检查和完整性守卫导入。
 
 [截图流水线](../../tool/screenshots/README.zh-CN.md)
