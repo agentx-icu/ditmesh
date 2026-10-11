@@ -2,7 +2,7 @@
 
 # 原始拍发节奏 — 实现约定
 
-DitMesh 的此实现替代此前提议的消息注解 RFC。固定 Tim2Tox 提交为 `31531dba67491a920609e2ea543e991c7c75f3c0`；依赖引导用 `tool/ci/tim2tox-dart-overlays` 中的补丁生成独立 Dart 包，不修改上游子模块。
+DitMesh 的此实现替代此前提议的消息注解 RFC。固定 Tim2Tox 提交为 `4d6f8b47b4d88b1a3aa82edafc0c92b7a20381f7`；依赖引导用 `tool/ci/tim2tox-dart-overlays` 中的补丁生成独立 Dart 包，不修改上游子模块。
 
 ## 节奏记录与保存
 

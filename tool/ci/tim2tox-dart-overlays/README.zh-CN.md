@@ -21,8 +21,10 @@ Bootstrap 把固定的 `third_party/tim2tox/dart` 复制到被忽略的
 
 `0011-adaptive-default-instance-poll.patch` 让唯一聊天服务运行在默认原生实例上
 的宿主退出上游 50 ms 的共享实例轮询。上游默认值不变；`DitmeshFfiChatService`
-选择退出，并把空闲节奏设为 500 ms（任何事件或发送后 2 s 内为 200 ms，文件
-传输期间或探测实例已注册时为 50 ms）。`tox_iterate` 运行在原生事件线程上，
+选择退出，并把空闲节奏设为 500 ms（任何事件或发送后 2 s 内为 200 ms，接收
+文件期间或探测实例已注册时为 50 ms）。`tox_iterate` 运行在原生事件线程上，
 因此这里只调整事件读取的节奏。发送消息和扩展数据包会标记活动，并立即重新
-安排空闲计时器。`packages/ditmesh_chat/test/poll_cadence_test.dart` 覆盖策略
+安排空闲计时器。发送文件（DitMesh 不发送文件，此路径不可达）在开始时和每个
+进度事件上标记活动，因此以 200 ms 读取事件：发送端的传输记录在完成后不会
+清除，不能用来触发 50 ms 规则。`packages/ditmesh_chat/test/poll_cadence_test.dart` 覆盖策略
 与会话节奏；`native_two_peer_test.dart` 检查生产引擎构建的是自适应服务。

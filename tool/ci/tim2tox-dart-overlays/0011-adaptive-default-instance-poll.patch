@@ -46,6 +46,25 @@
        );
        _pollTimerCallback = () async {
          // P2-19: drop overlapping invocations. See _pollBusy doc.
+@@ -4911,6 +4931,7 @@
+               } else if (s.startsWith('progress_send:')) {
+                 // progress_send:<uid>:<sent>:<total>
+                 final parts = s.split(':');
++                notePollActivity();
+                 if (parts.length >= 4) {
+                   final uid = parts[1];
+                   final sent = int.tryParse(parts[2]) ?? 0;
+@@ -11792,6 +11813,10 @@
+     final result = _ffi.sendFileNative(_ffi.getCurrentInstanceId(), pto, pfp);
+     pkgffi.malloc.free(pto);
+     pkgffi.malloc.free(pfp);
++    // DitMesh overlay: the 50 ms transfer cadence only sees inbound transfers
++    // (outbound paths are never cleared on completion), so an outbound one
++    // runs at the active cadence, kept alive by its progress_send events.
++    if (result > 0) notePollActivity();
+     if (result <= 0) {
+       // -4 == FRIEND_NOT_CONNECTED: friend was reported online by the
+       // pre-check but went offline before the FFI call landed. Fall through
 --- a/lib/service/extension_transport.dart
 +++ b/lib/service/extension_transport.dart
 @@ -25,6 +25,7 @@

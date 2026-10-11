@@ -28,9 +28,12 @@ unpublished state.
 service runs on the default native instance leave the upstream 50 ms
 shared-instance poll. Upstream defaults are unchanged; `DitmeshFfiChatService`
 opts out and sets a 500 ms idle cadence (200 ms for 2 s after any event or
-send, 50 ms during file transfers or while probe instances are registered).
-`tox_iterate` runs on the native event thread, so only event draining is
-paced. Outbound sends and extension packets mark activity and re-arm an idle
-timer at once. `packages/ditmesh_chat/test/poll_cadence_test.dart` covers the
+send, 50 ms during inbound file transfers or while probe instances are
+registered). `tox_iterate` runs on the native event thread, so only event
+draining is paced. Outbound sends and extension packets mark activity and
+re-arm an idle timer at once. An outbound file send (unreachable in DitMesh,
+which sends no files) marks activity on start and on every progress event, so
+it drains at 200 ms: outbound transfer records are not cleared on completion
+and cannot drive the 50 ms rule. `packages/ditmesh_chat/test/poll_cadence_test.dart` covers the
 policy and the session cadence; `native_two_peer_test.dart` checks the
 production engine builds the adaptive service.
