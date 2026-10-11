@@ -2,6 +2,7 @@ import 'package:tim2tox_dart/interfaces/draft_preferences_service.dart';
 import 'package:tim2tox_dart/interfaces/extended_preferences_service.dart';
 import 'package:tim2tox_dart/interfaces/group_identity_preferences_service.dart';
 
+import '../bootstrap/address_family_order.dart';
 import 'key_value_store.dart';
 
 /// Tim2Tox's host preference interfaces over a [KeyValueStore].
@@ -28,12 +29,14 @@ class Tim2ToxPreferencesAdapter
     required String accountPrefix,
     this.resolveBootstrapHost,
     this.persistBootstrapSelection = true,
+    this.preferIpv6 = deviceIsIpv6Only,
   }) : _accountPrefix = accountPrefix;
 
   final KeyValueStore _store;
   final String _accountPrefix;
   final Future<String?> Function(String)? resolveBootstrapHost;
   final bool persistBootstrapSelection;
+  final PreferIpv6 preferIpv6;
 
   static const _kGroups = 'groups_list';
   static const _kQuitGroups = 'quit_groups_list';
@@ -316,9 +319,11 @@ class Tim2ToxPreferencesAdapter
   @override
   Future<({String host, int port, String pubkey})?>
   getCurrentBootstrapNode() async {
-    final host = _store.getString(_kBootstrapHost);
+    final saved = _store.getString(_kBootstrapHost);
     final pubkey = _store.getString(_kBootstrapPubkey) ?? '';
-    if (host == null || host.isEmpty || pubkey.isEmpty) return null;
+    if (saved == null || saved.isEmpty || pubkey.isEmpty) return null;
+    // Tim2Tox submits this one host at native start (manual mode).
+    final host = await preferredSavedHost(_store, saved, pubkey, preferIpv6);
     final numericHost = resolveBootstrapHost == null
         ? host
         : await resolveBootstrapHost!(host);
