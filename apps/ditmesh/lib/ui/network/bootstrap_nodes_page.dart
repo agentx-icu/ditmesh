@@ -48,6 +48,7 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
         scrollable: true,
         title: Text(s.bootstrapSwitchTitle),
         content: Text(
+          key: const ValueKey('bootstrap-switch-body'),
           [s.bootstrapSwitchQuestion, node.endpoint, ?warning].join('\n\n'),
         ),
         actions: [

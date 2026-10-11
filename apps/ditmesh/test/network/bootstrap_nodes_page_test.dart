@@ -101,11 +101,7 @@ Future<void> _tapKey(WidgetTester tester, String key) async {
 }
 
 String _dialogText(WidgetTester tester) => tester
-    .widget<Text>(
-      find
-          .descendant(of: find.byType(AlertDialog), matching: find.byType(Text))
-          .at(1),
-    )
+    .widget<Text>(find.byKey(const ValueKey('bootstrap-switch-body')))
     .data!;
 
 void main() {
