@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:meta/meta.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 
 import '../adapters/bootstrap_adapter.dart';
@@ -124,13 +125,19 @@ class Tim2ToxEngine extends ChatEngine {
     String? libraryPathOverride,
     this.onBootstrapStart,
     this.onBootstrapStop,
+    @visibleForTesting String? sessionLoginUserIdForTesting,
   }) : _store = store,
        _logger = logger,
-       _libraryPathOverride = libraryPathOverride;
+       _libraryPathOverride = libraryPathOverride,
+       _sessionLoginUserId = sessionLoginUserIdForTesting ?? loginAlias;
 
   /// V2TIM login alias Tim2Tox stamps on our own rows (`fromUserId`,
   /// `isSelf`). Never leaves the device; the wire identity is the Tox key.
   static const String loginAlias = 'ditmesh';
+
+  /// What [start] logs in as: [loginAlias], except in a test that makes the
+  /// native login fail (Tim2Tox rejects an empty user id).
+  final String _sessionLoginUserId;
 
   final KeyValueStore _store;
   final ChatLogger _logger;
@@ -295,9 +302,12 @@ class Tim2ToxEngine extends ChatEngine {
       // Native reports the self address only once logged in (Tim2Tox sets
       // it in Login): checked before login, every cold start of an existing
       // identity read an empty address and failed with identity_mismatch.
-      await svc.login(userId: loginAlias, userSig: 'dummy_sig');
+      await svc.login(userId: _sessionLoginUserId, userSig: 'dummy_sig');
       // Tim2Tox may fall back onto a native instance it could not detach;
       // never publish (or rename) a session that is not this identity's.
+      // This is no ownership proof for the file: init already re-encrypted
+      // it and teardown saves it, so IdentityService proves the savedata's
+      // key before start (identity_ownership.dart).
       final loaded = svc.getSelfToxId()?.toUpperCase() ?? '';
       final expected = config.toxId.toUpperCase();
       if (loaded.length < 64 ||

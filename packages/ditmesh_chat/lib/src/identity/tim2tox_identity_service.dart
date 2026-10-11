@@ -28,6 +28,7 @@ part 'identity_backup.dart';
 part 'identity_backup_v2.dart';
 part 'identity_profile.dart';
 part 'identity_backup_inventory.dart';
+part 'identity_ownership.dart';
 part 'identity_recovery.dart';
 
 /// [IdentityService] over Tim2Tox. States: `none` (no `tox_profile.tox`),
@@ -162,6 +163,8 @@ class Tim2ToxIdentityService
       throw const ChatException('locked', 'Identity requires a password');
     }
     final record = await _loadOrRecoverRecord(password: null);
+    final bytes = await File(_paths.profileFile).readAsBytes();
+    _requireBytesOwned(record.toxId, bytes, null);
     _publish(record);
     return record.toIdentity();
   }
@@ -182,10 +185,11 @@ class Tim2ToxIdentityService
     final stored = await IdentityRecord.read(_paths.identityFile);
     final bytes = await File(_paths.profileFile).readAsBytes();
     final encrypted = _crypto.isEncrypted(bytes);
+    var plain = bytes;
     if (encrypted) {
       // Ciphertext proves the password even if a process exited between a
       // verifier replacement and the profile rename during password change.
-      _crypto.decrypt(bytes, password);
+      plain = _crypto.decrypt(bytes, password);
     } else if (stored != null && await _verifier.hasPassword(stored.toxId)) {
       if (!await _verifier.verify(stored.toxId, password)) {
         throw const ChatException('wrong_password', 'Incorrect password');
@@ -194,6 +198,8 @@ class Tim2ToxIdentityService
       throw const ChatException('not_locked', 'Identity has no password');
     }
     var record = stored ?? await _loadOrRecoverRecord(password: password);
+    // Before the repairs below: never re-key A's verifier over B's profile.
+    _requireOwnedBy(record.toxId, plain);
     if (!await _verifier.verify(record.toxId, password)) {
       await _verifier.setPassword(record.toxId, password);
     } else if (await _verifier.needsRehash(record.toxId)) {
@@ -311,16 +317,12 @@ class Tim2ToxIdentityService
   Future<void> _connectImpl() async {
     if (_started) return;
     final record = _requireRecord();
+    final password = _sessionPassword;
+    // Before the try: its cleanup would encrypt another identity's file.
+    await _requireProfileOwned(record.toxId, password);
     _connecting = true;
     _status.add(ConnectionStatus.connecting);
     try {
-      final password = _sessionPassword;
-      if (password == null && await _profileIsEncrypted()) {
-        throw const ChatException(
-          'wrong_password',
-          'Profile is encrypted and no password is available',
-        );
-      }
       await _engine.start(
         EngineSessionConfig(
           paths: _paths,

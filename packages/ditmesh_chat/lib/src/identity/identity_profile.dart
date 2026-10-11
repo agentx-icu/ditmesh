@@ -100,6 +100,8 @@ extension _IdentityProfile on Tim2ToxIdentityService {
       final plain = _crypto.isEncrypted(before)
           ? _crypto.decrypt(before, oldPassword ?? _sessionPassword ?? '')
           : before;
+      // Never re-key (or strip) another identity's savedata.
+      _requireOwnedBy(record.toxId, plain);
       // Derive before touching either durable store. An encryption error
       // leaves the previous ciphertext and verifier untouched.
       replacement = setting ? _crypto.encrypt(plain, newPassword) : plain;
