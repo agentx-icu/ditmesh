@@ -1,5 +1,6 @@
 import 'package:tim2tox_dart/interfaces/bootstrap_service.dart';
 
+import '../bootstrap/address_family_order.dart';
 import 'key_value_store.dart';
 
 /// Tim2Tox [BootstrapService] over a [KeyValueStore].
@@ -9,10 +10,15 @@ import 'key_value_store.dart';
 /// infrastructure, not account state. Same keys as toxee's
 /// `BootstrapNodesAdapter` so the two apps behave identically here.
 class Tim2ToxBootstrapAdapter implements BootstrapService {
-  Tim2ToxBootstrapAdapter(this._store, {this.resolveHost});
+  Tim2ToxBootstrapAdapter(
+    this._store, {
+    this.resolveHost,
+    PreferIpv6 preferIpv6 = deviceIsIpv6Only,
+  }) : _preferIpv6 = preferIpv6;
 
   final KeyValueStore _store;
   final Future<String?> Function(String)? resolveHost;
+  final PreferIpv6 _preferIpv6;
 
   static const _kHost = 'current_bootstrap_host';
   static const _kPort = 'current_bootstrap_port';
@@ -20,7 +26,13 @@ class Tim2ToxBootstrapAdapter implements BootstrapService {
 
   @override
   Future<String?> getBootstrapHost() async {
-    final host = _store.getString(_kHost);
+    final saved = _store.getString(_kHost);
+    final key = _store.getString(_kPubkey);
+    // Tim2Tox submits this one host at native start; take the saved node's
+    // address family the device can reach so it does not claim the key.
+    final host = saved == null || key == null
+        ? saved
+        : await preferredSavedHost(_store, saved, key, _preferIpv6);
     if (host == null || resolveHost == null) return host;
     return resolveHost!(host);
   }

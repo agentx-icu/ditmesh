@@ -1,3 +1,4 @@
+import '../bootstrap/address_family_order.dart';
 import '../logging/chat_logger.dart';
 import 'bootstrap_adapter.dart';
 import 'key_value_store.dart';
@@ -5,11 +6,16 @@ import 'key_value_store.dart';
 /// Supplies DHT entry points for a fresh automatic session. A configured
 /// manual session uses only its selected node, including an empty selection.
 class BootstrapNodes {
-  BootstrapNodes(this._store, {ChatLogger logger = const SilentChatLogger()})
-    : _logger = logger;
+  BootstrapNodes(
+    this._store, {
+    ChatLogger logger = const SilentChatLogger(),
+    PreferIpv6 preferIpv6 = deviceIsIpv6Only,
+  }) : _logger = logger,
+       _preferIpv6 = preferIpv6;
 
   final KeyValueStore _store;
   final ChatLogger _logger;
+  final PreferIpv6 _preferIpv6;
 
   // Verified against https://nodes.tox.chat/json on 2026-10-10 (public key
   // and every address per node). Refresh from that official list before
@@ -17,7 +23,8 @@ class BootstrapNodes {
   // also configures relays on 443 and 3389. Numeric addresses avoid blocking
   // hostname resolution during auto startup. A node's published IPv6 address
   // is an alternate host, tried alongside IPv4, so an IPv6-only (NAT64)
-  // network has a usable seed before (or without) the catalogue.
+  // network has a usable seed before (or without) the catalogue. The order
+  // per node follows the device's network (address_family_order.dart).
   static const seeds =
       <
         ({String host, List<String> alternateHosts, int port, String publicKey})
@@ -85,8 +92,14 @@ class BootstrapNodes {
     bool Function()? isCurrent,
   }) async {
     if (!_automatic) return;
+    // Evaluated per call, so a network-change re-bootstrap re-decides.
+    final preferIpv6 = await resolvePreferIpv6(_preferIpv6);
     for (final node in seeds) {
-      for (final host in [node.host, ...node.alternateHosts]) {
+      final hosts = orderAddressesByFamily([
+        node.host,
+        ...node.alternateHosts,
+      ], preferIpv6: preferIpv6);
+      for (final host in hosts) {
         if (!(isCurrent?.call() ?? true)) return;
         final endpoint = host.contains(':')
             ? '[$host]:${node.port}'
