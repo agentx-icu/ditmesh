@@ -11,7 +11,9 @@ sealed class PlayerEvent {
 }
 
 /// Element [index] of the current timeline just started sounding (or its
-/// gap just began).
+/// gap just began). A timeline started paused reports its first element on
+/// the first [MorsePlayer.resume], when it actually starts; resuming a
+/// later pause reports nothing new.
 final class PlayerElementStarted extends PlayerEvent {
   const PlayerElementStarted(this.index, this.element);
 
@@ -74,6 +76,10 @@ final class MorsePlayer {
   Duration _startAt = Duration.zero;
   Duration _pausedAt = Duration.zero;
   int _current = -1;
+
+  /// Started paused: [PlayerElementStarted] for the current element is
+  /// owed to the first [resume].
+  bool _startPending = false;
   Timer? _timer;
   bool _playing = false;
   bool _paused = false;
@@ -106,8 +112,8 @@ final class MorsePlayer {
 
   /// Starts [elements] from the beginning. A running timeline is stopped
   /// first (emitting [PlayerStopped]). An empty list completes immediately.
-  /// With [paused] the timeline is loaded but stays silent, with no timer,
-  /// until [resume].
+  /// With [paused] the timeline is loaded but stays silent, with no timer
+  /// and no [PlayerElementStarted], until [resume].
   void play(List<MorseElement> elements, {bool paused = false}) {
     if (!_stop()) return;
     if (elements.isEmpty) {
@@ -144,8 +150,14 @@ final class MorsePlayer {
     }
     _paused = false;
     _startAt += _clock.now() - _pausedAt;
-    if (!_setSink(_elements[_current].on)) return;
-    _scheduleBoundaryAfter(_current);
+    final index = _current;
+    final element = _elements[index];
+    if (!_setSink(element.on)) return;
+    if (_startPending) {
+      _startPending = false;
+      if (!_announce(index, element)) return;
+    }
+    _scheduleBoundaryAfter(index);
   }
 
   void stop() => _stop();
@@ -159,6 +171,7 @@ final class MorsePlayer {
     if (!_setSink(false)) return false;
     _playing = false;
     _paused = false;
+    _startPending = false;
     _current = -1;
     _emit(const PlayerStopped());
     return true;
@@ -172,10 +185,22 @@ final class MorsePlayer {
   void _startElement(int index) {
     _current = index;
     final element = _elements[index];
-    // Started paused: the first element waits for resume().
-    if (!_paused && !_setSink(element.on)) return;
+    // Started paused: the first element, and its event, wait for resume().
+    if (_paused) {
+      _startPending = true;
+      return;
+    }
+    if (!_setSink(element.on)) return;
+    if (!_announce(index, element)) return;
+    _scheduleBoundaryAfter(index);
+  }
+
+  /// Emits [PlayerElementStarted]; false when a listener paused or stopped
+  /// the timeline from inside the callback, so the caller must not schedule
+  /// the next boundary.
+  bool _announce(int index, MorseElement element) {
     _emit(PlayerElementStarted(index, element));
-    if (!_paused) _scheduleBoundaryAfter(index);
+    return _playing && !_paused;
   }
 
   void _scheduleBoundaryAfter(int index) {
@@ -227,6 +252,7 @@ final class MorsePlayer {
     _timer = null;
     _playing = false;
     _paused = false;
+    _startPending = false;
     _current = -1;
     _sinkOn = false;
     Object? cleanupError;
