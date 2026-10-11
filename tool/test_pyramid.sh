@@ -88,6 +88,8 @@ level_e2e() {
   # launch in the same run).
   local f
   for f in apps/ditmesh/integration_test/*_test.dart; do
+    # The device-matrix probe needs the real backend (doc/VALIDATION.md).
+    [[ "$f" != */device_matrix_test.dart ]] || continue
     f="${f#apps/ditmesh/}"
     run_step "e2e $(basename "$f" _test.dart) [$device]" bash -c "cd apps/ditmesh && flutter test '$f' -d '$device' --dart-define=DITMESH_FAKE_BACKEND=true"
   done

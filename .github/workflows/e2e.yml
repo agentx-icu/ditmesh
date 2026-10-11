@@ -61,6 +61,8 @@ jobs:
           set -euo pipefail
           cd apps/ditmesh
           for f in integration_test/*_test.dart; do
+            # The device-matrix probe needs the real backend (doc/VALIDATION.md).
+            [[ "$f" != */device_matrix_test.dart ]] || continue
             flutter test "$f" -d macos --dart-define=DITMESH_FAKE_BACKEND=true
           done
 
@@ -133,6 +135,8 @@ jobs:
             gnome-keyring-daemon --unlock --daemonize --components=secrets \
               --control-directory "$XDG_RUNTIME_DIR/keyring"
           for f in integration_test/*_test.dart; do
+            # The device-matrix probe needs the real backend (doc/VALIDATION.md).
+            [[ "$f" != */device_matrix_test.dart ]] || continue
             xvfb-run -a -s '-screen 0 1920x1080x24' \
               flutter test "$f" -d linux --dart-define=DITMESH_FAKE_BACKEND=true
           done
@@ -216,6 +220,8 @@ jobs:
           flutter config --enable-windows-desktop
           cd apps/ditmesh
           for f in integration_test/*_test.dart; do
+            # The device-matrix probe needs the real backend (doc/VALIDATION.md).
+            [[ "$f" != */device_matrix_test.dart ]] || continue
             flutter test "$f" -d windows --dart-define=DITMESH_FAKE_BACKEND=true
           done
 
