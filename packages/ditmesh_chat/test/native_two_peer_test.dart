@@ -3,11 +3,13 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 
 import 'package:ditmesh_chat/ditmesh_chat.dart';
 import 'package:ditmesh_chat/src/engine/ditmesh_ffi_chat_service.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tencent_cloud_chat_sdk/native_im/bindings/native_library_manager.dart';
 
@@ -412,6 +414,14 @@ class _Peer {
       'CQ NET ${other.toUpperCase()}',
     );
     await barrier('group-delivery');
+    if (role == 'bob') {
+      // The drain must not deliver twice. Later texts on the same lossless
+      // group channel have arrived, so any duplicate of it has too.
+      final drained = (await chat.loadHistory('group_${group!.id}'))
+          .where((row) => !row.isMine && row.text == 'QRV NET ALICE')
+          .toList();
+      expect(drained, hasLength(1), reason: 'queued group text drained twice');
+    }
     await restart();
     await bootstrap(2);
     await friendOnline();
@@ -450,14 +460,159 @@ class _Peer {
     );
     await barrier('group-restart-delivery');
     await rejoin();
+    await refusedJoinSlotReuse();
+  }
+
+  /// Tim2Tox test seams (not product API): the founder's group password,
+  /// and the toxcore slot a group id maps to (-1 when unmapped).
+  late final ffi.DynamicLibrary _native = ffi.DynamicLibrary.open(library);
+  int setGroupPassword(String groupId, String password) {
+    final call = _native
+        .lookupFunction<
+          ffi.Int32 Function(ffi.Pointer<Utf8>, ffi.Pointer<Utf8>),
+          int Function(ffi.Pointer<Utf8>, ffi.Pointer<Utf8>)
+        >('tim2tox_ffi_debug_group_set_password');
+    final id = groupId.toNativeUtf8();
+    final pw = password.toNativeUtf8();
+    try {
+      return call(id, pw);
+    } finally {
+      malloc.free(id);
+      malloc.free(pw);
+    }
+  }
+
+  int groupSlot(String groupId) {
+    final call = _native
+        .lookupFunction<
+          ffi.Int32 Function(ffi.Pointer<Utf8>),
+          int Function(ffi.Pointer<Utf8>)
+        >('tim2tox_ffi_debug_group_number');
+    final id = groupId.toNativeUtf8();
+    try {
+      return call(id);
+    } finally {
+      malloc.free(id);
+    }
+  }
+
+  /// A refused invite join must not leave its group slot unsendable.
+  ///
+  /// An AUTO-accepted invite to a never-seen group stays mapped under its
+  /// invite alias until toxcore's self-join (a manual accept promotes it to
+  /// a stable id at once). Refusing that join used to drop the alias before
+  /// forgetting the slot's wire readiness, so the next group toxcore put in
+  /// the slot (here one bob creates) never became wire-ready and every text
+  /// to it stayed queued. DitMesh never turns auto-accept on; bob does here,
+  /// for this phase only, to reach Tim2Tox's path across two processes (in
+  /// one process the invitee resolves the creator's id instead).
+  Future<void> refusedJoinSlotReuse() async {
+    final svc = engine.service!;
+    if (role == 'alice') {
+      await read('bob', 'auto-accept');
+      final locked = await chat.createGroup('Locked Net');
+      expect(setGroupPassword(locked.id, 'correct horse'), 1);
+      await chat.inviteToGroup(locked.id, remoteKey);
+    } else {
+      // toxcore gives a new group the lowest free slot.
+      final taken = {for (final g in chat.groups) groupSlot(g.id)};
+      var slot = 0;
+      while (taken.contains(slot)) {
+        slot++;
+      }
+      final refused = chat.groupJoinRefusals.first.timeout(
+        const Duration(seconds: 90),
+      );
+      svc.setAutoAcceptGroupInvites(true);
+      await mark('auto-accept');
+      final refusal = await refused;
+      svc.setAutoAcceptGroupInvites(false);
+      expect(refusal.reason, GroupJoinRefusalReason.invalidPassword);
+      expect(refusal.established, isFalse);
+      expect(refusal.inviteId, isNotNull);
+      await wait(
+        'refused invite handed back',
+        () => chat.groupInvites.any((i) => i.inviteId == refusal.inviteId),
+      );
+      await chat.rejectGroupInvite(refusal.inviteId!);
+      // The refusal callback posts the refused group's deletion to the
+      // native event thread, which runs posted tasks before every later
+      // tox_iterate. A DM receipt arrives in a later iterate, so once it
+      // is here the slot is free.
+      final probe = await chat.sendText(
+        dm,
+        'SLOT PROBE',
+        recording: rhythm(role, 'SLOT PROBE'),
+      );
+      await wait(
+        'refused group deleted (a later native iterate delivered a receipt)',
+        () async => (await chat.loadHistory(dm)).any(
+          (row) => row.id == probe.id && row.status == MessageStatus.delivered,
+        ),
+      );
+      final reused = await chat.createGroup('Slot Net');
+      expect(
+        groupSlot(reused.id),
+        slot,
+        reason: 'toxcore reuses the refused slot, or this proves nothing',
+      );
+      groupChatId = reused.chatId!;
+      // Alone in it, so queued; it must drain once alice is confirmed.
+      final early = await chat.sendText(
+        'group_${reused.id}',
+        'QRV SLOT BOB',
+        recording: rhythm(role, 'QRV SLOT BOB'),
+      );
+      expect(early.status, MessageStatus.pending);
+      earlyGroupId = early.id;
+      await mark('refused', {'chatId': groupChatId});
+      await chat.inviteToGroup(reused.id, remoteKey);
+    }
+    if (role == 'alice') {
+      groupChatId = (await read('bob', 'refused'))['chatId'] as String;
+      await wait('slot group invite', () => chat.groupInvites.isNotEmpty);
+      await chat.acceptGroupInvite(chat.groupInvites.single.inviteId);
+    }
+    await groupOnline();
+    await barrier('slot-joined');
+    // Wire delivery, not the receipt: the two peers name this group with
+    // different local ids, and group receipts do not resolve across that.
+    if (role == 'bob') {
+      await wait(
+        'text queued in the reused slot handed to the wire',
+        () async => (await chat.loadHistory('group_${group!.id}')).any(
+          (row) =>
+              row.id == earlyGroupId &&
+              row.status != MessageStatus.pending &&
+              row.status != MessageStatus.failed,
+        ),
+      );
+      await chat.sendText(
+        'group_${group!.id}',
+        'SLOT BOB',
+        recording: rhythm(role, 'SLOT BOB'),
+      );
+    } else {
+      await incoming('group_${group!.id}', 'QRV SLOT BOB');
+      // Sent after the drain on the same lossless channel: once it is here,
+      // a duplicate of the drained text would be too.
+      await incoming('group_${group!.id}', 'SLOT BOB');
+      final rows = (await chat.loadHistory('group_${group!.id}'))
+          .where((row) => !row.isMine && row.text == 'QRV SLOT BOB')
+          .toList();
+      expect(rows, hasLength(1), reason: 'queued group text drained twice');
+    }
+    await barrier('slot-delivery');
+    await note('refused join left its slot sendable');
   }
 
   /// `rejoinGroup` on real toxcore: a group we hold is joined again by our
   /// own group id (the retry the app offers after a refused reconnect).
-  /// Tim2Tox has no API to give an NGC group a password or a peer limit,
-  /// so a real refusal cannot be produced here; what is proven is that
-  /// rejoining a held group succeeds (never `already_joined`), keeps one
-  /// binding, and the group carries fresh traffic afterwards, with the
+  /// Tim2Tox has no product API to give an NGC group a password or a peer
+  /// limit, so this rejoin is never refused (a refused invite join is
+  /// produced through a test seam in [refusedJoinSlotReuse]); what is proven
+  /// is that rejoining a held group succeeds (never `already_joined`), keeps
+  /// one binding, and the group carries fresh traffic afterwards, with the
   /// founder online and while it is away.
   ///
   /// Measured here too (2026-10-08): the same rejoin WITH a password, of
