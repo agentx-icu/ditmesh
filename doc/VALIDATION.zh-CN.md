@@ -90,7 +90,7 @@ DSP 跳过项涉及极低音量首块噪声可能产生多余起始符号的问�
 | P9 | 在 Android 设置里屏蔽 `ditmesh_messages` 后，"我"页面显示"已在系统设置中屏蔽"；解除屏蔽后回到应用，该行消失。通过。 |
 | P11 | Android 16：返回键和左边缘手势都会关闭会话。在主界面根部按返回会结束 Activity（`detached`；进程保留，重新启动时开新任务），重新启动后能重新打开身份。在 D1 修复之后通过。 |
 | D1 | iOS 向处于飞行模式的对端发消息（发件箱 1 条）。应用转入后台，1 秒后被终止。重新启动后重新连接。对端退出飞行模式后，接收方历史中恰好有一份，发送方该行为已送达。**修复（见下）后通过。** |
-| D1，冷启动（**缺陷，已修复**） | 修复前，两个平台上已有身份的每一次冷启动都以 `identity_mismatch` 失败，重试也一直停在"离线"。引擎在登录之前比较 Tox 地址，而 Tim2Tox 只在登录后才报告自身地址。已在 `packages/ditmesh_chat/lib/src/engine/chat_engine.dart` 修复。新增的 `test/native_cold_start_test.dart`（needs-native）在子进程中重新打开身份：修复前失败，修复后通过。同一进程内重启会掩盖这个缺陷。 |
+| D1，冷启动（**缺陷，已修复**） | 修复前，两个平台上已有身份的每一次冷启动都以 `identity_mismatch` 失败，重试也一直停在"离线"。引擎在登录之前比较 Tox 地址，而 Tim2Tox 只在登录后才报告自身地址。已在 `packages/ditmesh_chat/lib/src/engine/chat_engine.dart` 修复。新增的 `test/native_cold_start_test.dart`（needs-native）在子进程中重新打开身份：修复前失败，修复后通过。同一进程内重启会掩盖这个缺陷。后续修复：只在登录后检查，对于不匹配的配置文件为时已晚，Tim2Tox 的初始化已经用本身份的密码重新加密了另一个身份的明文存档。身份服务现在在解锁修复任何内容之前、会话启动之前验证存档的公钥（`identity_ownership.dart`；`test/native_identity_mismatch_test.dart` 验证另一个身份的字节保持不变）。 |
 | D1，被杀后的草稿（**缺陷，未修复**） | iOS：发送后约 2 秒应用被杀，已发送的文字会作为会话草稿重新出现（2 次复现 2 次）；15 秒后被杀则不会出现。用户可能因此重复发送。原因未确认。 |
 | 屏幕阅读器 | TalkBack（Android）：主界面的控件都有标签（"Chat, Tab 1 of 4"、"Contacts"、"Tap to reconnect"）。模拟器不提供 VoiceOver，仍欠真机检查。 |
 

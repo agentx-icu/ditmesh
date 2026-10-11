@@ -91,6 +91,7 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
     var profile = await readFile(profileFile);
     var profileEncrypted = _crypto.isEncrypted(profile);
     final password = _sessionPassword;
+    _requireBytesOwned(record.toxId, profile, password);
     if (!profileEncrypted && password != null && password.isNotEmpty) {
       profile = _crypto.encrypt(profile, password);
       profileEncrypted = true;

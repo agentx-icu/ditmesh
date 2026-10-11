@@ -93,7 +93,9 @@ extension _IdentityRecovery on Tim2ToxIdentityService {
   }
 
   /// Encrypts `tox_profile.tox` in place when a session password is held and
-  /// the file is plaintext. No-op otherwise. Atomic rename.
+  /// the file is the open identity's plaintext. No-op otherwise (another
+  /// identity's file is never encrypted under this one's password). Atomic
+  /// rename.
   Future<void> _encryptProfileAtRest() async {
     final password = _sessionPassword;
     if (password == null || password.isEmpty) return;
@@ -101,6 +103,7 @@ extension _IdentityRecovery on Tim2ToxIdentityService {
     if (!await file.exists()) return;
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty || _crypto.isEncrypted(bytes)) return;
+    if (!_ownsPlaintextProfile(bytes)) return;
     if (!_engine.nativeTeardownConfirmed) {
       // A zombie native save could overwrite the ciphertext with plaintext
       // behind our back; retried on the next disconnect or stop.

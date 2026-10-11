@@ -9,6 +9,7 @@ extension _IdentityBackup on Tim2ToxIdentityService {
     _requireTeardownConfirmed();
     var profile = await File(_paths.profileFile).readAsBytes();
     final password = _sessionPassword;
+    _requireBytesOwned(record.toxId, profile, password);
     var encrypted = _crypto.isEncrypted(profile);
     if (!encrypted && password != null && password.isNotEmpty) {
       profile = _crypto.encrypt(profile, password);
