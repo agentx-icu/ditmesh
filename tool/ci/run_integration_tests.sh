@@ -11,6 +11,10 @@
 set -uo pipefail
 [[ $# -ge 1 ]] || { echo "Usage: run_integration_tests.sh <device-id> [args...]" >&2; exit 64; }
 device="$1"; shift
+# UI-only build: the fake backend never loads libtim2tox_ffi, so the iOS
+# Podfile and Android Gradle build must not require it (as in e2e.yml and
+# tool/test_pyramid.sh).
+export DITMESH_ALLOW_MISSING_FFI=1
 cd "$(dirname "${BASH_SOURCE[0]}")/../../apps/ditmesh" || exit 1
 failed=()
 for f in integration_test/*_test.dart; do
