@@ -25,36 +25,19 @@ so they compile into mobile builds as inert Dart.
 
 ## Wiring from `main.dart`
 
+`main()` builds the shell on desktop targets only, over the same settings
+store the rest of the app uses (`DesktopStoreAdapter` over
+`<application support>/settings.json`):
+
 ```dart
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'desktop/desktop.dart';
-
-/// shared_preferences behind the shell's two-method store.
-class PrefsKeyValueStore implements KeyValueStore {
-  PrefsKeyValueStore(this._prefs);
-  final SharedPreferences _prefs;
-  @override
-  Future<String?> get(String key) async => _prefs.getString(key);
-  @override
-  Future<void> set(String key, String value) => _prefs.setString(key, value);
-}
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final desktopShell = await initDesktopShell(
+DesktopShellController? desktopShell;
+if (isDesktopTarget(defaultTargetPlatform)) {
+  desktopShell = await initDesktopShell(
     DesktopShellConfig(
-      store: PrefsKeyValueStore(prefs),
-      appName: 'DitMesh',
-      closeToTray: true,
-      onToggleSound: (enabled) { /* hand to the sidetone owner */ },
-      onBeforeQuit: () async { /* account teardown, bounded by a timeout */ },
+      store: DesktopStoreAdapter(settingsStore),
+      appName: currentS().appName,               // product name, never translated
+      log: kDebugMode ? debugPrint : null,
     ),
-  );
-  runApp(
-    ChangeNotifierProvider.value(value: desktopShell, child: const DitmeshApp()),
   );
 }
 ```
@@ -62,32 +45,24 @@ Future<void> main() async {
 `initDesktopShell` must run **after** `WidgetsFlutterBinding.ensureInitialized()`
 and **before** `runApp`: `window_manager` creates the window hidden, the shell
 restores the persisted bounds (clamped to the current displays) and only then
-shows it, so there is no visible jump. `initDesktopShell` returns the
-controller; awaiting it as `Future<void>` also works.
+shows it, so there is no visible jump.
 
-Then, from wherever unread state lives:
-
-```dart
-desktopShell.setUnreadCount(total);          // "(3) DitMesh" title, tray tooltip, macOS badge
-await desktopShell.setCloseToTray(value);    // settings toggle; persisted
-await desktopShell.showWindow();             // e.g. on an incoming call
-```
-
-Shortcut intents are pure definitions. To activate them:
+The controller is handed to `DitmeshApp`; `AppServices` then wires it to the
+session:
 
 ```dart
-Shortcuts(
-  shortcuts: desktopShortcutBindings(),      // Cmd/Ctrl+K, +N, +M
-  child: Actions(
-    actions: {
-      FocusSearchIntent: CallbackAction<FocusSearchIntent>(onInvoke: (_) => ...),
-      NewMessageIntent: CallbackAction<NewMessageIntent>(onInvoke: (_) => ...),
-      ToggleSidetoneIntent: CallbackAction<ToggleSidetoneIntent>(onInvoke: (_) => ...),
-    },
-    child: child,
-  ),
-)
+shell.addBeforeQuitListener(_beforeQuit);       // flush durable stores, disconnect
+shell.updateStrings(strings.s);                 // persisted language, then every change
+shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray tooltip, macOS badge
 ```
+
+`setCloseToTray(value)` is the settings toggle (persisted); `showWindow()`
+restores a hidden window.
+
+`shortcuts.dart` defines `desktopShortcutBindings()` (Cmd/Ctrl+K search, +N
+new message, +M sidetone) as pure intents. The app does not install them yet;
+to activate them, wrap the shell in `Shortcuts(shortcuts:
+desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
 
 ## Behaviour
 
@@ -102,7 +77,8 @@ Shortcuts(
   runs `onBeforeQuit`, destroys the tray and the window — the runner then
   exits. Quit from the tray menu is always a real exit.
 - **Tray**: icon per platform, tooltip = app name (+ " — N unread messages"),
-  menu Show/Hide · Sound on/off (checkbox, placeholder callback) · Quit. Left
+  menu Show/Hide · Sound on/off · Quit. The sound checkbox is persisted, but
+  `main()` passes no `onToggleSound`, so it does not yet change any app sound. Left
   click toggles the window where the host delivers clicks (macOS, Windows).
   Every tray call is tolerated: a missing tray disables the tray, a missing
   method (Linux tooltip) is logged once.
@@ -116,7 +92,8 @@ Shortcuts(
   and rebuilds the tray behind any queued tray update. Keyboard shortcut
   labels (`shortcutLabel`) stay platform-specific (`⌘K` / `Ctrl+K`), not
   language-specific.
-- **Persistence keys**: `desktop.windowBounds` (JSON), `desktop.closeToTray`.
+- **Persistence keys**: `desktop.windowBounds` (JSON), `desktop.closeToTray`,
+  `desktop.soundEnabled`.
 
 ## Per-OS caveats
 

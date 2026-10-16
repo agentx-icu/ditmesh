@@ -10,7 +10,7 @@ dart run tool/bootstrap_deps.dart
 dart pub get
 ```
 
-The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. Tim2Tox links c-toxcore and pinned static libsodium; ToxAV is disabled.
+The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. Tim2Tox links c-toxcore and pinned static libsodium on Linux, macOS, Android and iOS; Windows uses vcpkg's libsodium and pthreads, captured as DLLs next to `tim2tox_ffi.dll` and bundled with it. ToxAV is disabled.
 
 It also stages the pinned Tim2Tox Dart package into ignored `third_party/tim2tox_ditmesh` and applies `tool/ci/tim2tox-dart-overlays` for original rhythm transport. The root override and lock refer to that copy. Run `dart run tool/bootstrap_deps.dart --offline-check-only` to verify it against the upstream sources and reviewed patches; re-run bootstrap after changing either. Keep the upstream submodule clean.
 
@@ -49,14 +49,14 @@ bash tool/ci/package_artifacts.sh --target macos
 # linux, windows, android and ios run on their respective build hosts.
 ```
 
-`./build_all.sh --platform macos --mode release --package` orchestrates native and application builds and writes `dist/macos/ditmesh-1.0.0-macos-arm64.{pkg,zip}`. Output packages are written to `dist/`.
+`./build_all.sh --platform macos --mode release --package` orchestrates native and application builds and writes `dist/macos/ditmesh-<version>-macos-arm64.{pkg,zip}` (`<version>` from `apps/ditmesh/pubspec.yaml`). Output packages are written to `dist/`.
 
 ## CI and release
 
 - Analyze runs strict app/package/tool analysis, complexity/layering/localization guards, screenshot importer checks and non-native tests.
 - Native builds the required native libraries and application/package jobs. Dart/app/shared-package/pubspec changes trigger build coverage.
 - Linux x86_64, Windows x64, macOS ARM/Intel, Android ARM64/ARMv7/x86_64 and iOS device/simulator transport are supported build targets. Experimental native ARM host jobs are separately opt-in.
-- Tag release waits for validation and required applications. It verifies expected platform packages, generates SHA256SUMS and creates/updates a draft GitHub Release.
+- Tag release waits for validation and required applications. A `vX.Y.Z` tag must equal the `X.Y.Z` of `apps/ditmesh/pubspec.yaml` (`tool/ci/release_version.sh`, also run by Analyze), so bump the version before tagging. It verifies expected platform packages, generates SHA256SUMS and creates/updates a draft GitHub Release.
 - Screenshots/E2E use seeded chat data and run on demand. Native integration tests exercise real Tox peers.
 
 GitHub's workflow filter/needs behavior is documented in [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). Executed results are in the [verification record](../VALIDATION.md).
@@ -69,4 +69,4 @@ Configure Apple distribution certificates and provisioning for iOS, Developer ID
 
 Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries. For UI development with seeded conversations, use `DITMESH_FAKE_BACKEND=true` and the missing-FFI option documented by the build scripts.
 
-Native builds apply the [group-persistence overlay](../../tool/ci/tim2tox-overlays/README.md) to a copied source tree. The pinned upstream checkout remains clean. Required Linux and both macOS jobs exercise real local UDP peers; a separate public-DHT smoke probe is opt-in. Refresh the reviewed bundled bootstrap node list against [official Tox node status](https://nodes.tox.chat/) before releases.
+Native builds apply the [source overlays](../../tool/ci/tim2tox-overlays/README.md) (group persistence, member connection status, isolated node probes) to a copied source tree. The pinned upstream checkout remains clean. Required Linux and both macOS jobs exercise real local UDP peers; a separate public-DHT smoke probe is opt-in. Refresh the reviewed bundled bootstrap node list against [official Tox node status](https://nodes.tox.chat/) before releases.

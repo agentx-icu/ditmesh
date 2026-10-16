@@ -1,3 +1,5 @@
+[简体中文](./README.zh-CN.md)
+
 # DitMesh native overlays
 
 The native builder copies the pinned Tim2Tox sources into

@@ -63,7 +63,7 @@ import '../../i18n/l10n_extension.dart';
 
 Text(context.s.chatSend)                      // plain
 Text(context.s.learnLessonOf(lesson, total))  // placeholders
-Text(context.s.statsSessions(count))          // ICU plural
+Text(context.s.chatMemberCount(count))        // ICU plural
 ```
 
 在 widget 之外（控制器、后台代码）请把 `S` 实例传进去，而不是去找 context。`S.of(context)` 在
@@ -84,8 +84,8 @@ Text(context.s.statsSessions(count))          // ICU plural
 
 ## 添加一个字符串
 
-1. 把键同时加到 `app_en.arb` **和每份翻译 ARB**。按功能区域命名空间（`chatSendHint`、
-   `learnLessonOf`、`statsTitle`、`accountBackupTitle`、`referenceSearchHint`；共享字符串用
+1. 把键同时加到 `app_en.arb` **和每份翻译 ARB**。按功能区域命名空间（`chatSend`、
+   `learnLessonOf`、`bootstrapTitle`、`accountBackupTitle`、`referenceSearchHint`；共享字符串用
    `action*`、`nav*`、`connection*`、`messageStatus*`、`error*`、`language*`）。
 2. 给模板条目一个带 `description` 的 `@key`，有占位符的话再加一个 `placeholders` 映射
    （`{"count": {"type": "int"}}`）。计数使用 ICU 复数：
@@ -119,7 +119,7 @@ Text(context.s.statsSessions(count))          // ICU plural
   `accountEditProfileBody`）。联系人 只用于范围更广的**联系人**页面（`chatContacts`），
   它列出好友外加"给自己的笔记"条目。
 * **速度单位。** 每分钟字数在两种语言中都写作 `WPM`（`{wpm} WPM`、`chatWpm`）。速度未知时写作
-  `-- WPM`（`learnWpmUnknown`、`listenSpeedUnknown`）。
+  `-- WPM`（`listenSpeedUnknown`）。
 
 ## UI 字面量守卫
 
@@ -141,12 +141,15 @@ Text(context.s.statsSessions(count))          // ICU plural
 
 | 区域 | ARB 前缀 | 调用方 |
 |------|----------|--------|
-| 账号与启动 | `account*`、`action*`、`connection*`、`error*` | `startup/**`、`ui/account/**`、`ui/pages/me_page.dart`；备份对话框使用 `currentS()` |
-| 聊天、联系人与群组 | `chat*`、`messageStatus*` | `ui/chat/**`、`ui/contacts/**`、`ui/groups/**`；时间戳通过 `MaterialLocalizations` 格式化 |
-| 学习 | `learn*` | `ui/learn/**`；发报反馈辅助函数显式接收 `S` |
-| 统计 | `stats*` | `ui/stats/**`；日期按当前语言格式化 |
-| 手册与翻译器 | `reference*` | `ui/reference/**`；释义与记忆提示位于 `ui/reference/text/reference_text_<tag>.dart` |
-| 麦克风译码 | `listen*` | `ui/listen/**`；控制器暴露状态/错误，由界面解析文本 |
+| 账号、启动与"我" | `account*`、`action*`、`connection*`、`error*`、`guest*`、`offline*`、`me*`、`about*`、`terms*` | `startup/**`、`ui/account/**`、`ui/pages/me_page.dart`、`ui/pages/offline_me_page.dart`；备份对话框使用 `currentS()` |
+| 备份 | `backup*`、`restore*` | `ui/account/**`（加密备份向导、预览与恢复报告） |
+| 聊天、联系人与群组 | `chat*`、`messageStatus*`、`delivery*`、`pending*`、`first*`、`group*` | `ui/chat/**`、`ui/contacts/**`、`ui/groups/**`；时间戳通过 `MaterialLocalizations` 格式化 |
+| 屏蔽与管理 | `moderation*` | `ui/moderation/**`，以及聊天、联系人、群组中的屏蔽操作 |
+| 网络与诊断 | `bootstrap*`、`diag*` | `ui/network/**`、`ui/diagnostics/**`、外壳中的连接状态 |
+| 外观与按键设置 | `appearance*`、`keys*` | `ui/appearance/**`、`ui/keying/**` |
+| 练习 | `learn*` | `ui/learn/**`、`ui/groups/practice/**`；发报反馈辅助函数显式接收 `S` |
+| 麦克风译码与工作台 | `listen*`、`workbench*` | `ui/listen/**`；控制器暴露状态/错误，由界面解析文本 |
+| 参考、翻译器与工具 | `reference*`、`telegraph*`、`tools*` | `ui/reference/**`、`ui/telegraph/**`、`ui/tools/**`；释义与记忆提示位于 `ui/reference/text/reference_text_<tag>.dart` |
 | 导航与外壳 | `nav*`、`shellOfflineBanner` | `ui/pages/**`、`ui/shell/app_shell.dart` |
 | 通知与桌面 | `notification*`、`desktop*` | 服务在事件发生或语言变化时解析字符串 |
 

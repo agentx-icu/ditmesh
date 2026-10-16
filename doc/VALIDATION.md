@@ -4,6 +4,19 @@
 
 Verified source revision: `21224e60ddfe03a90db298b1ba82360e0b0d844e`. Toolchain: Flutter 3.41.9 / Dart 3.11.5.
 
+Each section below records what was run against the stated revision; later fixes do not rewrite it. The current state of the findings is summarised first.
+
+## Status of findings — 2026-10-16
+
+| Finding | Status on `master` |
+|---|---|
+| N1: a message sent in the ~10 s before the sender notices a silent peer drop stays `sent` and is never delivered | **Open.** Fix in progress; see the N1 row below for the mechanism. |
+| D1: on iOS, sent text returns as the draft after a kill ~2 s after sending | **Open.** Root cause not confirmed. |
+| D1: cold start of an existing identity failed with `identity_mismatch` | Fixed in DitMesh #17; ownership is now proven before any savedata repair (#19). |
+| Group delivery receipts were dropped when two peers used different local ids for one group | Fixed by Tim2Tox #32 (pin `14f317e`, DitMesh #25). `native_two_peer_test.dart` asserts `delivered` across `tox_3` / `tox_4`. |
+| Android: a notification channel blocked in system settings was not shown in the app | Fixed: the Me page reports a blocked message channel (P9 below). |
+| Real-device matrix | Still owed; the list is at the end of the simulator section. |
+
 ## Automated checks
 
 | Check | Result |
@@ -57,7 +70,7 @@ Branch `codex/chat-onboarding-playback`, based on `71c9e95`, was checked locally
 
 The native library used Homebrew libsodium 1.0.21 for this local run after pinned 1.0.20 download endpoints timed out; the repository's release pin remains 1.0.20. Local linking warns that the Homebrew dylib requires macOS 26, so this run does not verify distribution on macOS 13. The packaging test and application build use the Xcode 26.4 SDK explicitly because the installed Command Line Tools 27 SDK is incompatible with the selected linker.
 
-Final real-peer evidence directory: `/var/folders/cz/1y3n3_k12g5d1jmk7m425kr00000gn/T/ditmesh_real_peers_tqvectwq`. The new recording transport contract is documented in [the implemented RFC](rfcs/2026-10-09-keyed-rhythm.md).
+The final real-peer evidence was written to a local temporary directory and was not retained. The new recording transport contract is documented in [the implemented RFC](rfcs/2026-10-09-keyed-rhythm.md).
 
 ## Simulator / emulator evidence (2026-10-10)
 

@@ -24,7 +24,7 @@ Store signing credentials in CI secrets or local signing configuration.
 
 Describe Morse-only direct/group chat, Tox identities and peer networking in the store listing. Complete encryption and privacy questionnaires using the application and native library behavior.
 
-Camera access serves QR contacts; microphone access serves local Morse decoding; notifications provide message alerts. Link the public [privacy policy](../../site/privacy.md), [terms](../../site/terms.md) and [support page](../../site/support.md).
+Camera access serves QR contacts; microphone access serves local Morse decoding; notifications provide message alerts. Link the published pages: privacy policy <https://agentx-icu.github.io/ditmesh/privacy/>, terms <https://agentx-icu.github.io/ditmesh/terms/> and support <https://agentx-icu.github.io/ditmesh/support/> (sources: [privacy](../../site/privacy.md), [terms](../../site/terms.md), [support](../../site/support.md); the app links the same URLs from `account_routes.dart`).
 
 Explain contact blocking and peer-to-peer content handling in moderation metadata.
 
@@ -72,11 +72,11 @@ Decision log: none yet (owner action).
 
 ## iPad multitasking and share sheets
 
-iPhone supports portrait and both landscape orientations; iPad supports all four and `UIRequiresFullScreen` is not set, so Split View, Slide Over and Stage Manager apply down to 320 pt width. Every share action (backup export, LAN node info, learning-material export) anchors its popover to the tapped control through `sharePositionOrigin`; `test/platform/share_origin_guard_test.dart` fails on a share call without one.
+iPhone supports portrait and both landscape orientations; iPad supports all four and `UIRequiresFullScreen` is not set, so Split View, Slide Over and Stage Manager apply down to 320 pt width. Every share action (backup export, LAN node info) anchors its popover to the tapped control through `sharePositionOrigin`; `test/platform/share_origin_guard_test.dart` fails on a share call without one.
 
 ## Android notification channels
 
-Three channels (`ditmesh_messages`, `ditmesh_friend_requests`, `ditmesh_group_invites`). The in-app switch on the Me page is the user's preference, not the OS state: when the user blocks a channel in system settings, `areNotificationsEnabled()` stays true and posts to that channel are dropped by the OS; the app does not currently reflect a blocked channel (open item of the mobile-device review).
+Three channels (`ditmesh_messages`, `ditmesh_friend_requests`, `ditmesh_group_invites`). The in-app switch on the Me page is the user's preference, not the OS state: when the user blocks a channel in system settings, `areNotificationsEnabled()` stays true and posts to that channel are dropped by the OS. The app reads the blocked channels at start and on every return to the foreground; a blocked `ditmesh_messages` channel shows "Blocked in system settings" on the Me page. Details: [notifications guide](../../apps/ditmesh/lib/notifications/README.md#blocked-channels).
 
 ## Device checks
 

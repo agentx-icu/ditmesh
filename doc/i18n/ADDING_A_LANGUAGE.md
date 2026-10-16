@@ -5,7 +5,7 @@
 DitMesh ships English (`en`, template), Simplified Chinese (`zh`), Traditional
 Chinese (`zh_Hant`), Japanese (`ja`), Korean (`ko`), German (`de`), French (`fr`),
 Spanish (`es`), Portuguese (`pt`) and Russian (`ru`) through Flutter gen-l10n.
-Each translation contains every template message (660 as of 2026-10-03).
+Each translation contains every template message (944 as of 2026-10-16).
 Documentation remains English and Simplified Chinese only.
 
 This page explains the shared localisation pipeline and how to extend it.
@@ -20,7 +20,7 @@ For daily string work (adding a key) and Morse vocabulary, see
 |---|---|---|
 | gen-l10n config | `apps/ditmesh/l10n.yaml` | `arb-dir: lib/l10n`, `template-arb-file: app_en.arb`, `output-class: S`, `output-dir: lib/l10n/generated`, `output-localization-file: s.dart`, `nullable-getter: false`, `format: false`. No `synthetic-package` (removed in Flutter 3.41; the key only warns). |
 | Auto-generation | `apps/ditmesh/pubspec.yaml` → `flutter: generate: true` | `flutter run` / `flutter build` regenerate; `flutter gen-l10n` does it explicitly. |
-| ARB files | `apps/ditmesh/lib/l10n/app_<tag>.arb` | One per locale. `app_en.arb` is the template and the only file that needs `@key` metadata (description, placeholders). 660 message keys as of 2026-10-03. |
+| ARB files | `apps/ditmesh/lib/l10n/app_<tag>.arb` | One per locale. `app_en.arb` is the template and the only file that needs `@key` metadata (description, placeholders). 944 message keys as of 2026-10-16. |
 | Generated code | `apps/ditmesh/lib/l10n/generated/s.dart`, `s_<language>.dart` (script/region variants such as `SZhHant` live in the base language's file, `s_zh.dart`) | Committed, never edited. Exempt from the 500-LOC gate via the `**/l10n/**` pattern. |
 | Access | `context.s` (`lib/i18n/l10n_extension.dart`) or `S.of(context)` | Below `MaterialApp` only; tests pump `localizationsDelegates: S.localizationsDelegates`. |
 | Supported set | `S.supportedLocales` | Derived from the ARB files. `LocaleController.supportedLocales` and the language picker read it, so **no Dart list has to be edited to add a language**. |

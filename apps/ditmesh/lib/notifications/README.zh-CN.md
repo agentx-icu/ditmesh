@@ -30,7 +30,7 @@ android/ios/macos）。插件 README 在 pub 缓存中。
 | 打开 / 已读时取消 | 是 | 是 | 是 | **除非打包为 MSIX，否则为空操作**（插件限制，见 README） | 是 |
 | 未读角标 | 取决于启动器（三星、小米/HyperOS、华为、OPPO、vivo、索尼、HTC……；原生 Pixel 只显示圆点） | 精确 | 精确（Dock） | 不支持 → 空操作 | 不支持 → 空操作 |
 | 声音 | 频道默认，按偏好设置 `playSound` | 按偏好设置 `presentSound` | 相同 | 默认 toast 声音；关闭时 `WindowsNotificationAudio.silent()` | 关闭时 `suppressSound` |
-| 后台预算（`AppLifecycleCoordinator`） | 60 s 提示（依 OEM 而异；Doze / 厂商省电会更早或更晚冻结） | 30 s（没有 `voip`；`audio` 仅在播放期间有效） | 无——从不挂起 | 无 | 无 |
+| 后台预算（`AppLifecycleCoordinator`） | 60 s 提示（依 OEM 而异；Doze / 厂商省电会更早或更晚冻结） | 30 s（`beginBackgroundTask`；不声明后台模式） | 无——从不挂起 | 无 | 无 |
 | 恢复时重连 | 任何后台时段之后 `IdentityService.connect()` | 相同 | 相同（在 `hidden` 之后，例如最小化） | 相同 | 相同 |
 
 连接状态从不产生系统通知。`ConnectionBannerPolicy` 暴露一个 `ValueListenable<bool>`：
@@ -87,38 +87,35 @@ App 运行中点击它会打开会话"。`AppBadgePlusApi` 在 Windows 上是空
 `UNUserNotificationCenter` 不需要 plist 或 entitlement 变更；插件会安装自己的 delegate。
 通知需要签名过的 bundle（`flutter run -d macos` 的 ad-hoc 签名足以本地测试）。
 
-## 本模块所有权之外的必要后续工作
+## 平台配置
 
-1. **`android/app/build.gradle.kts`——核心库脱糖（core library desugaring）**
-   （`flutter_local_notifications` ≥ 10 的硬性构建要求）：
-   ```kotlin
-   android {
-       compileOptions {
-           isCoreLibraryDesugaringEnabled = true
-           sourceCompatibility = JavaVersion.VERSION_17
-           targetCompatibility = JavaVersion.VERSION_17
-       }
-   }
-   dependencies {
-       coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-   }
-   ```
-   AGP 已经是 8.11.1（满足插件的最低要求）。
-2. **`ios/Runner/AppDelegate.swift`**——iOS 插件依赖 App delegate 转发通知中心回调
-   （macOS 插件不需要）。在 `didFinishLaunchingWithOptions` 内、`super` 之前添加：
-   ```swift
-   UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-   ```
-   没有这一行，iOS 上的点击回调和前台展示都不工作。
-3. **在 `main.dart` / `AppScope` 中接线**（见下文）。
-4. **偏好设置持久化**：`NotificationPrefs.toJson()` / `fromJson()` 已就绪；App 设置的所有者
-   应负责加载/保存它们。
+插件的这些要求已经落实；修改宿主工程时请保留：
+
+- **Android 核心库脱糖**（`flutter_local_notifications` ≥ 10 的硬性构建要求）：
+  `android/app/build.gradle.kts` 中的 `isCoreLibraryDesugaringEnabled = true` 与
+  `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")`，Java 17，AGP 8.11.1。
+- **iOS App delegate**：`AppDelegate.swift` 在 `didFinishLaunchingWithOptions` 中、`super` 之前设置
+  `UNUserNotificationCenter.current().delegate = self`。没有这一行，iOS 上的点击回调和前台展示都不工作
+  （macOS 插件不需要）。
+- **偏好设置**：`NotificationPrefs.toJson()` / `fromJson()` 由 `AppPreferences`（`lib/di/app_preferences.dart`）持久化到 `settings.json`；
+  免打扰按身份区分（`notifications.muted.<公钥>`）。
+
+## 被屏蔽的频道
+
+App 内的开关是用户偏好，不是系统状态。在 Android 上，`LocalNotificationsApi.blockedChannels()` 在启动时以及
+每次回到前台时读取用户在系统设置中屏蔽了哪些 DitMesh 频道。`ditmesh_messages` 被屏蔽时，"我"页面显示
+"已在系统设置中屏蔽"；只屏蔽好友请求或邀请频道时不显示消息提示行
+（`test/notifications/blocked_channels_test.dart`）。
 
 ## 接线片段（编排器）
 
 ```dart
 // In AppScope (once per session, after the identity is ready):
-final lifecycle = AppLifecycleCoordinator(identity: identity)..attach();
+final lifecycle = AppLifecycleCoordinator(
+  identity: identity,
+  onBackground: () => _flushDurable(identity, ...),  // AppServices: persist before suspension
+  backgroundTasks: BackgroundTaskApi.forPlatform(), // iOS beginBackgroundTask bridge
+)..attach();
 final prefs = NotificationPrefs.fromJson(settings.notificationsJson);
 final center = NotificationCenter(
   chat: chat,
@@ -184,16 +181,18 @@ center.releaseActiveConversation(owner);
 - Android 13+：权限对话框只出现一次；拒绝后不再发送；收件箱分组正确渲染；三星 / 小米启动器上的
   角标计数；Pixel 上只有圆点。Android 8–12：频道出现在设置中，没有对话框。
 - iOS：授权提示；前台对未打开的会话显示横幅；锁屏上的线程堆叠；角标；点击冷启动通知打开会话
-  （需要上面的 AppDelegate 那一行）；无播放时进入后台约 30 s 后 App 被挂起、`mayBeDisconnected`
-  提示以及恢复时重连；活跃的摩尔斯播放在 `audio` 模式下是否能维持套接字存活。
+  （需要上面的 AppDelegate 那一行）；进入后台约 30 s 后 App 被挂起、`mayBeDisconnected`
+  提示以及恢复时重连。
 - macOS：授权提示（签名 bundle）、Dock 角标、最小化时 `hidden` → 最小化期间的通知。
 - Windows：未打包构建能出现 toast；运行中点击打开会话；确认上述 MSIX 限制；声音开关。
 - Linux（GNOME / KDE）：D-Bus 通知、`Open` 操作、声音抑制。
 
 ## 测试
 
-`test/notifications/`：`notification_center_test.dart`（后台发送文本 + 点划模式；活跃会话打开 → 不发送；
-已静音 → 不发送；角标跟随未读；好友请求 / 群组邀请；点击；权限；收件箱分组；Linux/不支持平台的门控），
-`app_lifecycle_coordinator_test.dart`（假时钟预算、恢复重连、桌面端无倒计时、钩子），
-`connection_banner_policy_test.dart`、`notification_payload_test.dart`、
-`notification_prefs_test.dart`。
+`test/notifications/` 随应用测试套件运行：`notification_center_test.dart`（后台发送文本 + 点划模式；
+活跃会话打开 → 不发送；已静音 → 不发送；角标跟随未读；好友请求 / 群组邀请；点击；权限；收件箱分组；
+Linux/不支持平台的门控），`app_lifecycle_coordinator_test.dart` 与 `background_budget_notify_test.dart`
+（假时钟预算、恢复重连、桌面端无倒计时、钩子），`blocked_channels_test.dart`、
+`message_banner_ledger_test.dart`（过期的发送不能让已读横幅复活）、`notification_text_safety_test.dart`、
+`windows_registration_test.dart`、`connection_banner_policy_test.dart`、`notification_payload_test.dart`、
+`notification_prefs_test.dart` 与 `notification_settings_section_test.dart`。

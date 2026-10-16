@@ -3,7 +3,7 @@
 # ditmesh_chat
 
 基于 Tim2Tox 的 [`ditmesh_chat_api`](../ditmesh_chat_api) 实现：通过 Tox P2P 网络提供身份、好友、
-会话、明文消息和群组。**这是工作区中唯一允许导入 `tim2tox_dart` 或腾讯云 Chat SDK 的包**
+会话、消息（可附带原始拍发节奏）、群组、加密备份和引导节点配置。**这是工作区中唯一允许导入 `tim2tox_dart` 或腾讯云 Chat SDK 的包**
 （由 `tool/import_guard.dart` 强制执行）。App 只与契约对话；它只在构建后端时才接触这个包：
 
 ```dart
@@ -17,19 +17,25 @@ await backend.identity.connect();          // init → login → startPolling
 backend.chat.conversationChanges.listen(...);
 ```
 
-## 架构（方案 §3.2 "B 变体"）
+## 架构
 
 ```
 apps/ditmesh ──► ditmesh_chat_api (contract) ◄── ditmesh_chat
                                                   │  DitmeshChatBackend
                                                   ├─ Tim2ToxIdentityService   identity.json, tox_profile.tox, password verifier, backup
                                                   ├─ Tim2ToxChatService        friends / conversations / messages / groups (+ parts)
-                                                  ├─ Tim2ToxEngine            one FfiChatService per connected session
+                                                  ├─ Tim2ToxEngine            one DitmeshFfiChatService per connected session
+                                                  │                            + RhythmTransport (original keying rhythm, dmr: rows)
+                                                  ├─ bootstrap/               NetworkBootstrapService: catalogue, probes, LAN hosting
                                                   ├─ adapters/                Tim2Tox host interfaces (prefs, bootstrap, scratch, logger)
                                                   └─ native/                  setNativeLibraryName('tim2tox_ffi')
                                                           │
-                                third_party/tim2tox/dart  │  FfiChatService (Dart)  ──ffi──►  libtim2tox_ffi (c-toxcore, --no-toxav)
+                             third_party/tim2tox_ditmesh  │  FfiChatService (Dart)  ──ffi──►  libtim2tox_ffi (c-toxcore, no ToxAV)
 ```
+
+`third_party/tim2tox_ditmesh` 是 bootstrap 复制出的固定版本 `third_party/tim2tox/dart` 包，并应用了
+DitMesh 审阅过的 Dart overlay（[overlay 说明](../../tool/ci/tim2tox-dart-overlays/README.zh-CN.md)）；
+子模块本身保持不变。
 
 **单一数据路径。** 与 toxee 的混合运行时不同，DitMesh 既不安装 `Tim2ToxSdkPlatform` 也不安装
 UIKit，并且从不调用 `TIMManager.initSDK`。一切都沿 `FfiChatService` → `Tim2ToxFfi` →
@@ -74,23 +80,52 @@ ditmesh/identity/
   profile/tox_profile.tox    Tox savedata
   data/chat_history/  data/offline_message_queue.json  data/file_recv/  data/avatars/  data/scratch/
   training/                  IdentityService.dataDirectory() — other modules' per-identity state
+  media/recordings/          saved workbench recordings
 ```
 
-### 备份格式（`exportBackup` / `importBackup`）
+上一级的 `ditmesh/` 目录被排除在 iOS 备份之外，同时存放恢复暂存目录和独立的局域网/探测节点档案。
 
-`BackupContainer`：无依赖、带长度前缀的归档。
+### 备份格式
+
+**完整加密备份**（`EncryptedBackupService`，App 的备份向导使用）。`identity/backup_envelope.dart`
+封装一个内层归档：
+
+```
+"MCQE" | version u8 = 1 | suite u8 = 1 | reserved 2 bytes | sealed(header ‖ inner archive)
+```
+
+套件 1 即 Tox 的 `toxencryptsave`（libsodium scrypt 派生密钥，再用 XSalsa20-Poly1305）。8 字节头部公开，
+同时也被封装在内，因此同样受到认证。内层归档是版本 2 的 `BackupContainer`，带私有的 `manifest.json`，
+每个 `BackupCategory` 对应一组条目（`identity/backup_snapshot.dart`）：
+
+| 类别 | 条目 |
+|---|---|
+| identity（必选） | `identity.json`、`tox_profile.tox`、`groups/bindings.json` |
+| training | `training/<path>` |
+| chatHistory | `chat/history/<path>`（去掉排队中的行） |
+| conversationMeta | `meta/conversations.json`（置顶、隐藏、草稿）、`meta/bookmarks.json` |
+| preferences | `prefs/app.json`：播放、译码、通知选项与免打扰、外观、语言——不含窗口位置、按键绑定或网络设置 |
+| media（可选） | `media/recordings/<name>` |
+| pendingMessages（可选） | `pending/outbox.json`，恢复后只作为待查看的条目，绝不放回实时发送队列 |
+
+`identity/backup_archive.dart` 在任何恢复步骤写盘之前打开整个归档并对照清单校验；
+`identity_backup_v2.dart` 生成预览并执行分阶段、事务式的恢复。
+
+**基础身份备份**（`IdentityService.exportBackup` / `importBackup`）。`BackupContainer` 版本 1，
+无依赖、带长度前缀的归档：
 
 ```
 "MCQB" | version u8 = 1 | flags u8 (bit0: profile encrypted) | count u32
 entry*: pathLen u16 | path (UTF-8, '/'-separated) | size u64 | bytes
 ```
 
-条目：`identity.json`、`tox_profile.tox`（设有身份密码时用该密码加密）、`dataDirectory()` 下
-每个文件对应的 `training/<relative path>`。解码时校验路径（不允许 `..`、绝对路径、反斜杠和
-Windows 盘符）。导出先冲刷已注册的存储；导入先完成所有归档文件的暂存，目录替换失败时回滚。
-归档包括身份、Tox savedata 和学习文件；聊天历史、待发送队列与偏好不在此格式范围内。
+条目：`identity.json`、`tox_profile.tox`（设有身份密码时用该密码加密）、`dataDirectory()` 下每个文件对应的
+`training/<relative path>`，以及可选的 `media/recordings/<name>`。聊天历史、发送队列与偏好不在此格式范围内。
 `importBackup` 替换当前身份；加密的档案需要密码（否则 `wrong_password`），并把密码带入校验器，
 这样恢复后的身份可以用同一密码解锁。
+
+两种格式都在解码时校验路径（不允许 `..`、绝对路径、反斜杠和 Windows 盘符），导出前冲刷已注册的存储，
+替换当前目录前先暂存全部条目，目录替换失败时回滚。
 
 ### 消息
 
@@ -99,11 +134,13 @@ Windows 盘符）。导出先冲刷已注册的存储；导入先完成所有归
   Tim2Tox 会把它们拆成多条独立消息。
 - Tim2Tox 把发给离线好友 / 尚未连接的群组的消息排队，并返回一条 `pending` 行；持久队列让它在
   重启后仍显示待发送，即使上游加载历史时清除了临时标志。冲刷成功后该行以
-  `sent` 状态在 `messageEvents` 上重新发出。Tim2Tox 在这条路径上没有独立的失败标记
-  （`_markPendingItemFailed` 同样把 `isPending` 置为 false），因此目前不会产生 `failed`——
-  已在上游 `tim2tox_core` 拆分中跟踪。
-- `cloudCustomData` 在 Tim2Tox 中**仅限本地**（从不经 Tox 发送）；DitMesh 不使用它
-  （方案 §5.2 第 1 层是明文）。
+  `sent` 状态在 `messageEvents` 上重新发出。`MessageMapper.statusOf` 把已取消的行映射为
+  `cancelled`、冲刷失败映射为 `failed`、排队中映射为 `pending`、收到对端回执映射为 `delivered`。
+  `retryMessage` / `cancelPendingMessage` 保留消息 ID，重试不会多出第二个气泡。
+- 原始拍发节奏：发给兼容 DitMesh 对端的手键私聊消息，在会话握手后作为一个 `dmr:` 信封经
+  `RhythmTransport` 传输；其他对端收到明文。群组文本始终是普通 NGC 文本，录制的节奏作为可选元数据私下发送。
+  线上契约见[原始拍发节奏 RFC](../../doc/rfcs/2026-10-09-keyed-rhythm.zh-CN.md)。在本地，节奏保存在该行的
+  `cloudCustomData` 中（`chat/recording_metadata.dart`）；Tim2Tox 自己从不发送这个字段。
 - 会话是派生出来的：历史 id ∪ 好友 ∪ 群组，再减去隐藏（已删除）的；未读数来自 Tim2Tox 的已读屏障；
   置顶/草稿/隐藏来自 `ConversationMetaStore`（`shared_preferences` 中按账号划分的键）。
 - 待处理好友请求在账号专属缓存中保留附言和到达时间，直到接受或拒绝。已拒绝请求也按账号隔离；
@@ -133,26 +170,27 @@ TUICore、hive、audioplayers……）。只有 `Tim2ToxSdkPlatform` 导入它�
 都不会触及那个文件。`third_party/stubs/tencent_cloud_chat_common` 是一个满足 pub 要求的空包；
 根目录的 `pubspec_overrides.yaml` 指向它。如果未来 tim2tox 的改动让 `FfiChatService` 触及
 `Tim2ToxSdkPlatform`，编译会大声失败（缺少导入），而不是悄悄把 UIKit 拉进来。当上游发布不含 UIKit 的
-`tim2tox_core` 时移除该桩包（方案 §3.2 D）。
+`tim2tox_core` 时移除该桩包。
 
 ## 引导
 
+在仓库根目录执行：
+
 ```bash
-export PATH=/home/user/flutter/bin:$PATH
-dart run tool/bootstrap_deps.dart     # submodule → vendor SDK → patches → root pubspec_overrides.yaml
-dart pub get                          # workspace root
+dart run tool/bootstrap_deps.dart     # submodule → vendor SDK → patches → Dart overlays → root pubspec_overrides.yaml
+dart pub get                          # 只在工作区根目录解析
 flutter analyze packages/ditmesh_chat
-flutter test packages/ditmesh_chat    # needs-native test skips itself without the library
+(cd packages/ditmesh_chat && flutter test --exclude-tags=needs-native)
 dart run tool/bootstrap_deps.dart --offline-check-only   # CI: prove the tree matches the lock
 ```
 
 `tool/bootstrap_deps.dart`（从 toxee 移植，去掉了 UIKit 分支）：
 
-1. `git submodule sync` / `update --init -- third_party/tim2tox`（固定在 toxee 使用的同一提交
-   `9d4245a`；嵌套的 c-toxcore 子模块不初始化——只有原生构建需要它们）。
+1. `git submodule sync` / `update --init -- third_party/tim2tox`（以父仓库记录的 gitlink 为固定版本；
+   嵌套的 c-toxcore 子模块不初始化——只有原生构建需要它们）。
 2. 按 `third_party/tim2tox/tool/tencent_cloud_chat_sdk.lock.json` 下载 `tencent_cloud_chat_sdk`
    （8.9.7540+3，SHA-256 校验）到 `third_party/tencent_cloud_chat_sdk/`。
-3. 用 tim2tox 自己的 `apply_sdk_patches.dart` 应用 tim2tox 的 22 个补丁系列
+3. 用 tim2tox 自己的 `apply_sdk_patches.dart` 应用 tim2tox 针对该 SDK 版本的补丁系列
    （补丁 0001 添加 `setNativeLibraryName`）。
 3b. 叠加 DitMesh 自己的 overlay `third_party/overlays/tencent_cloud_chat_sdk/`
    （`tool/vendor_overlay.dart`）：把插件的*平台*半边换成空操作的插件类，并删掉所有腾讯二进制——
@@ -161,13 +199,14 @@ dart run tool/bootstrap_deps.dart --offline-check-only   # CI: prove the tree ma
    `dart_native_imsdk.dll`。DitMesh 只用插件的 Dart 绑定（指向 `libtim2tox_ffi`），应用调用的
    东西一样不少；生成的插件注册器仍能找到各自的类。overlay 的哈希记为 vendor state 里的
    `overlay_sha256`（`--offline-check-only` 会校验）；toxee 保留完整插件，因为混合运行时需要它。
-4. 写入**根目录**的 `pubspec_overrides.yaml`（`tim2tox_dart`、`tencent_cloud_chat_sdk`、
-   `tencent_cloud_chat_common` → 路径）——pub 工作区只在根目录读取 overrides。
+3c. 把 `third_party/tim2tox/dart` 复制到 `third_party/tim2tox_ditmesh`，并应用
+   `tool/ci/tim2tox-dart-overlays`（`tool/tim2tox_dart_overlay.dart`）。
+4. 写入**根目录**的 `pubspec_overrides.yaml`（`tim2tox_dart` → `third_party/tim2tox_ditmesh`，
+   `tencent_cloud_chat_sdk`、`tencent_cloud_chat_common` → 路径）——pub 工作区只在根目录读取 overrides。
    `--offline-check-only` 的状态保存在 `third_party/.vendor_state.json`。
 
-生成物，永不提交：`third_party/tencent_cloud_chat_sdk/`、`third_party/.vendor_state.json`
-（两者都在 `third_party/.gitignore` 中）以及根目录的 `pubspec_overrides.yaml`
-（把它加入根目录 `.gitignore`）。
+生成物，永不提交：`third_party/tencent_cloud_chat_sdk/`、`third_party/tim2tox_ditmesh/`、
+`third_party/.vendor_state.json` 以及根目录的 `pubspec_overrides.yaml`（均已被忽略）。
 
 ## 原生库前置条件
 
@@ -175,17 +214,21 @@ Dart 包不需要它也能编译，但每条运行时路径都需要**不带 Tox
 （DitMesh 没有通话功能）：
 
 ```bash
-# from a toxee checkout with tool/ci/build_tim2tox.sh, or tim2tox's own build.sh
-tool/ci/build_tim2tox.sh --no-toxav          # Linux x86_64 / Windows x64 / macOS x86_64+arm64 / Android arm64-v8a / iOS arm64
+bash tool/ci/build_tim2tox.sh --target macos-arm64   # 全部目标见 --help
+bash tool/build_android_ffi.sh                       # 暂存 jniLibs
+bash tool/build_ios_ffi.sh                           # 组装 XCFramework
 ```
 
-| 平台 | 产物及 `Tim2ToxFfi.open()` 的查找位置 | 最低系统版本 |
+ToxAV 从不构建（`--toxav` 会被拒绝）。原生构建把[源码 overlay](../../tool/ci/tim2tox-overlays/README.zh-CN.md)
+应用到固定源码的副本上。详见[构建与打包](../../doc/operations/BUILD_AND_DEPLOY.zh-CN.md)。
+
+| 平台 | 产物及 `Tim2ToxFfi.open()` 的查找位置 | 应用最低版本 |
 |---|---|---|
-| macOS | 可执行文件旁的 `libtim2tox_ffi.dylib`、`../Frameworks/`，或 `tim2tox/build/ffi/` | 10.15 |
+| macOS | 可执行文件旁的 `libtim2tox_ffi.dylib`、`../Frameworks/`，或 `tim2tox/build/ffi/` | 13.0 |
 | Linux | 可执行文件旁或 `../lib/` 下的 `libtim2tox_ffi.so` | — |
 | Windows | 可执行文件旁或 `../lib/` 下的 `tim2tox_ffi.dll` | 10 |
-| Android | `jniLibs/<abi>/` 中的 `libtim2tox_ffi.so`（System.loadLibrary） | API 21 |
-| iOS | 嵌入 bundle 的 `tim2tox_ffi.framework` | 13 |
+| Android | `jniLibs/<abi>/` 中的 `libtim2tox_ffi.so`（System.loadLibrary），16 KB 页对齐 | API 24 |
+| iOS | 来自 `apps/ditmesh/ios/Frameworks/tim2tox_ffi.xcframework` 的 `tim2tox_ffi.framework` | 14.0 |
 
 开发循环可以用 `DitmeshChatBackend.create(nativeLibraryPathOverride: ...)` 固定一个绝对路径
 （必须在库首次打开之前设置）。移动端兼容：整个包都是共享 Dart，这里没有任何桌面专有的东西。
@@ -194,7 +237,7 @@ tool/ci/build_tim2tox.sh --no-toxav          # Linux x86_64 / Windows x64 / macO
 
 ## 测试
 
-`flutter test packages/ditmesh_chat` 无需原生库即可运行：
+`flutter test --exclude-tags=needs-native` 无需原生库即可运行。代表性文件：
 
 - `identity_service_test.dart`——inspect/create/unlock/open 状态机、围绕 connect/disconnect 的静态加密、
   校验器优先于文件的权威性、changePassword、备份导出/导入往返、deleteIdentity（假的 `ProfileCrypto`、
@@ -208,12 +251,18 @@ tool/ci/build_tim2tox.sh --no-toxav          # Linux x86_64 / Windows x64 / macO
 - `identity_persistence_test.dart`、`transport_persistence_test.dart`、`key_value_store_test.dart`、
   `message_mapper_test.dart`——写入中断、身份替换屏障、注册存储冲刷、群组未读与邀请恢复、偏好写入
   错误，以及重启后待发送状态恢复。
+- `encrypted_backup_test.dart`、`group_backup_test.dart`、`identity_recovery_test.dart`——完整备份、
+  预览与恢复回滚。
+- `rhythm_*_test.dart`、`recorded_*_test.dart`、`extension_transport_test.dart`——拍发节奏协议、
+  握手兼容、持久化接收、ACK 与拆除规则。
+- `bootstrap_*_test.dart`、`network_bootstrap_service_test.dart`——节点目录、地址族顺序、
+  保存的备用地址与探测。
 
 ### 原生冒烟测试（`@Tags(['needs-native'])`）
 
-`test/native_smoke_test.dart` 在单进程内驱动真实的库：创建身份 → 连接 → 接入 DHT →
+`test/native_smoke_test.dart` 在单进程内驱动真实的库：创建身份 → 连接（会话建立，不等待网络）→
 向离线对端排队一条发送 → 创建 / 列出成员 / 退出一个群组（`DartGetGroupMemberList`、
-`DartQuitGroup`）→ 断开连接。库无法打开时它会自行跳过；在 CI 中用
+`DartQuitGroup`）→ 断开连接。设置 `DITMESH_PUBLIC_DHT_SMOKE=true` 时还会最多等待 90 s 接入公共 DHT。库无法打开时它会自行跳过；在 CI 中用
 `flutter test --exclude-tags=needs-native` 显式排除。在开发机上：
 
 ```bash
@@ -233,6 +282,12 @@ TIM2TOX_FFI_LIB=/absolute/path/to/libtim2tox_ffi.dylib \
   flutter test --no-pub test/native_persistence_test.dart
 ```
 
-双对端互发需要两个进程（Tim2Tox 默认的单例实例模型——多实例只为其自身的 auto_tests 存在）：
-用不同的 `IdentityPaths` 根目录运行冒烟测试两次并互加 Tox ID，或者对着一个 toxee 实例驱动；
-该测试战役就是方案中的 M0b 试验。
+其他 `needs-native` 文件覆盖静态加密、冷启动、身份归属、加密备份与群组备份、引导、探测隔离以及
+`native_two_peer_test.dart`。Tim2Tox 每个进程只有一个默认实例，所以双对端互发要在两个进程里跑。
+必需的 Linux 与 macOS CI 任务使用的协调脚本：
+
+```bash
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+```
+
+它覆盖带精确节奏的私聊与群组消息、真实送达回执、加密档案重启、持久队列恰好一次发送以及群组重新加入。

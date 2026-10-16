@@ -60,7 +60,7 @@ cd apps/ditmesh
 flutter run -d macos
 ```
 
-See [build and packaging](doc/operations/BUILD_AND_DEPLOY.md), [release requirements](doc/release/APP_STORE.md), [application responsibilities](doc/APP_SPLIT.md) and the [test pyramid](doc/testing/TEST_PYRAMID.md).
+See [build and packaging](doc/operations/BUILD_AND_DEPLOY.md), [release requirements](doc/release/APP_STORE.md), [application responsibilities](doc/APP_SPLIT.md) and the [test pyramid](doc/testing/TEST_PYRAMID.md). All documents are listed in the [documentation index](doc/README.md).
 
 ## Development checks
 

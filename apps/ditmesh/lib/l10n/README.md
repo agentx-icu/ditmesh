@@ -76,7 +76,7 @@ import '../../i18n/l10n_extension.dart';
 
 Text(context.s.chatSend)                      // plain
 Text(context.s.learnLessonOf(lesson, total))  // placeholders
-Text(context.s.statsSessions(count))          // ICU plural
+Text(context.s.chatMemberCount(count))        // ICU plural
 ```
 
 Outside a widget (controllers, background code) pass the `S` instance in
@@ -104,7 +104,7 @@ relying on the host locale.
 ## Adding a string
 
 1. Add the key to `app_en.arb` **and every translation ARB**. Namespace it by area
-   (`chatSendHint`, `learnLessonOf`, `statsTitle`, `accountBackupTitle`,
+   (`chatSend`, `learnLessonOf`, `bootstrapTitle`, `accountBackupTitle`,
    `referenceSearchHint`; `action*`, `nav*`, `connection*`,
    `messageStatus*`, `error*`, `language*` for shared strings).
 2. Give the template entry an `@key` with a `description` and, for
@@ -145,8 +145,7 @@ Terminology rules (both languages):
   `accountEditProfileBody`). 联系人 is only the broader **Contacts** screen
   (`chatContacts`), which lists friends plus the note-to-self entry.
 * **Speed unit.** Words per minute is written `WPM` (`{wpm} WPM`, `chatWpm`)
-  in both languages. An unknown speed is `-- WPM` (`learnWpmUnknown`,
-  `listenSpeedUnknown`).
+  in both languages. An unknown speed is `-- WPM` (`listenSpeedUnknown`).
 
 ## UI literal guard
 
@@ -174,12 +173,15 @@ Interface areas use `context.s` or receive an `S` instance explicitly:
 
 | Area | ARB prefix | Callers |
 |------|------------|---------|
-| Account and startup | `account*`, `action*`, `connection*`, `error*` | `startup/**`, `ui/account/**`, `ui/pages/me_page.dart`; backup dialogs use `currentS()` |
-| Chat, contacts and groups | `chat*`, `messageStatus*` | `ui/chat/**`, `ui/contacts/**`, `ui/groups/**`; timestamp formatting uses `MaterialLocalizations` |
-| Learning | `learn*` | `ui/learn/**`; send-feedback helpers take `S` explicitly |
-| Statistics | `stats*` | `ui/stats/**`; date formatting uses the current locale |
-| Reference and translator | `reference*` | `ui/reference/**`; meanings and mnemonics live in `ui/reference/text/reference_text_<tag>.dart` |
-| Microphone decoding | `listen*` | `ui/listen/**`; controllers expose state/errors, widgets resolve text |
+| Account, startup and Me | `account*`, `action*`, `connection*`, `error*`, `guest*`, `offline*`, `me*`, `about*`, `terms*` | `startup/**`, `ui/account/**`, `ui/pages/me_page.dart`, `ui/pages/offline_me_page.dart`; backup dialogs use `currentS()` |
+| Backups | `backup*`, `restore*` | `ui/account/**` (encrypted backup wizard, preview and restore report) |
+| Chat, contacts and groups | `chat*`, `messageStatus*`, `delivery*`, `pending*`, `first*`, `group*` | `ui/chat/**`, `ui/contacts/**`, `ui/groups/**`; timestamp formatting uses `MaterialLocalizations` |
+| Moderation | `moderation*` | `ui/moderation/**`, block actions in chat, contacts and groups |
+| Network and diagnostics | `bootstrap*`, `diag*` | `ui/network/**`, `ui/diagnostics/**`, the shell's connection status |
+| Appearance and key setup | `appearance*`, `keys*` | `ui/appearance/**`, `ui/keying/**` |
+| Practice | `learn*` | `ui/learn/**`, `ui/groups/practice/**`; send-feedback helpers take `S` explicitly |
+| Microphone decoding and workbench | `listen*`, `workbench*` | `ui/listen/**`; controllers expose state/errors, widgets resolve text |
+| Reference, translator and tools | `reference*`, `telegraph*`, `tools*` | `ui/reference/**`, `ui/telegraph/**`, `ui/tools/**`; meanings and mnemonics live in `ui/reference/text/reference_text_<tag>.dart` |
 | Navigation and shell | `nav*`, `shellOfflineBanner` | `ui/pages/**`, `ui/shell/app_shell.dart` |
 | Notifications and desktop | `notification*`, `desktop*` | Services resolve strings at event time or on language changes |
 

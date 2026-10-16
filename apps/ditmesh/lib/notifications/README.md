@@ -33,7 +33,7 @@ lists android/ios/macos only). Plugin READMEs are in the pub cache.
 | Cancel on open / read | Yes | Yes | Yes | **No-op unless MSIX-packaged** (plugin limitation, README) | Yes |
 | Unread badge | Launcher-dependent (Samsung, Xiaomi/HyperOS, Huawei, OPPO, vivo, Sony, HTC…; stock Pixel shows a dot only) | Exact | Exact (Dock) | Not supported → no-op | Not supported → no-op |
 | Sound | Channel default, `playSound` per prefs | `presentSound` per prefs | Same | Default toast sound; `WindowsNotificationAudio.silent()` when off | `suppressSound` when off |
-| Background budget (`AppLifecycleCoordinator`) | 60 s hint (OEM-dependent; Doze / vendor savers freeze sooner or later) | 30 s (no `voip`; `audio` only while playback runs) | none — never suspended | none | none |
+| Background budget (`AppLifecycleCoordinator`) | 60 s hint (OEM-dependent; Doze / vendor savers freeze sooner or later) | 30 s (`beginBackgroundTask`; no background modes) | none — never suspended | none | none |
 | Reconnect on resume | `IdentityService.connect()` after any background period | Same | Same (after `hidden`, e.g. minimised) | Same | Same |
 
 Connection state never produces an OS notification. `ConnectionBannerPolicy`
@@ -106,39 +106,41 @@ No plist or entitlement change needed for `UNUserNotificationCenter`; the
 plugin installs its own delegate. Notifications require a signed bundle
 (`flutter run -d macos` ad-hoc signing is enough for local testing).
 
-## Required follow-ups outside this module's ownership
+## Platform configuration
 
-1. **`android/app/build.gradle.kts` — core library desugaring** (hard build
-   requirement of `flutter_local_notifications` ≥ 10):
-   ```kotlin
-   android {
-       compileOptions {
-           isCoreLibraryDesugaringEnabled = true
-           sourceCompatibility = JavaVersion.VERSION_17
-           targetCompatibility = JavaVersion.VERSION_17
-       }
-   }
-   dependencies {
-       coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-   }
-   ```
-   AGP is already 8.11.1 (matches the plugin's minimum).
-2. **`ios/Runner/AppDelegate.swift`** — the iOS plugin relies on the app
-   delegate forwarding notification-center callbacks (the macOS plugin does
-   not). Add inside `didFinishLaunchingWithOptions`, before `super`:
-   ```swift
-   UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-   ```
-   Without it, tap callbacks and foreground presentation do not work on iOS.
-3. **Wiring in `main.dart` / `AppScope`** (see below).
-4. **Prefs persistence**: `NotificationPrefs.toJson()` / `fromJson()` are
-   ready; the owner of app settings should load/save them.
+These requirements of the plugins are already in place; keep them when
+editing the host projects:
+
+- **Android core library desugaring** (hard build requirement of
+  `flutter_local_notifications` ≥ 10): `isCoreLibraryDesugaringEnabled = true`
+  and `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")` in
+  `android/app/build.gradle.kts`, Java 17, AGP 8.11.1.
+- **iOS app delegate**: `AppDelegate.swift` sets
+  `UNUserNotificationCenter.current().delegate = self` before `super` in
+  `didFinishLaunchingWithOptions`. Without it, tap callbacks and foreground
+  presentation do not work on iOS (the macOS plugin does not need this).
+- **Preferences**: `NotificationPrefs.toJson()` / `fromJson()` are persisted in
+  `settings.json` by `AppPreferences` (`lib/di/app_preferences.dart`); mutes are identity-scoped
+  (`notifications.muted.<public key>`).
+
+## Blocked channels
+
+The in-app switch is the user's preference, not the OS state. On Android,
+`LocalNotificationsApi.blockedChannels()` reads which DitMesh channels the
+user blocked in system settings, at start and again on every return to the
+foreground. When `ditmesh_messages` is blocked, the Me page shows "Blocked in
+system settings"; a blocked friend-request or invite channel alone shows no
+message line (`test/notifications/blocked_channels_test.dart`).
 
 ## Wiring snippet (orchestrator)
 
 ```dart
 // In AppScope (once per session, after the identity is ready):
-final lifecycle = AppLifecycleCoordinator(identity: identity)..attach();
+final lifecycle = AppLifecycleCoordinator(
+  identity: identity,
+  onBackground: () => _flushDurable(identity, ...),  // AppServices: persist before suspension
+  backgroundTasks: BackgroundTaskApi.forPlatform(), // iOS beginBackgroundTask bridge
+)..attach();
 final prefs = NotificationPrefs.fromJson(settings.notificationsJson);
 final center = NotificationCenter(
   chat: chat,
@@ -217,21 +219,24 @@ through an `S Function()`:
 - iOS: authorization prompt; banner shown in foreground for a non-open
   conversation; thread stacking on the lock screen; badge; tap on a cold-start
   notification opens the conversation (needs the AppDelegate line above);
-  app suspended ~30 s after backgrounding without playback, `mayBeDisconnected`
-  hint and reconnect on resume; whether an active Morse playback keeps the
-  socket alive under the `audio` mode.
+  app suspended ~30 s after backgrounding, `mayBeDisconnected` hint and
+  reconnect on resume.
 - macOS: authorization prompt (signed bundle), Dock badge, `hidden` on
   minimise → notifications while minimised.
 - Windows: toast appears for an unpackaged build; tap while running opens the
   conversation; confirm the MSIX limitations above; sound toggle.
 - Linux (GNOME / KDE): D-Bus notification, `Open` action, sound suppression.
 
-## Tests (files written, not run in this round)
+## Tests
 
-`test/notifications/`: `notification_center_test.dart` (background posts
-text + pattern; active conversation open → none; muted → none; badge follows
-unread; friend requests / group invites; taps; permission; inbox grouping;
-Linux/unsupported gating), `app_lifecycle_coordinator_test.dart` (fake-clock
-budget, resume reconnect, desktop no-countdown, hooks),
-`connection_banner_policy_test.dart`, `notification_payload_test.dart`,
-`notification_prefs_test.dart`.
+`test/notifications/` runs in the application suite: `notification_center_test.dart`
+(background posts text + pattern; active conversation open → none; muted →
+none; badge follows unread; friend requests / group invites; taps;
+permission; inbox grouping; Linux/unsupported gating),
+`app_lifecycle_coordinator_test.dart` and `background_budget_notify_test.dart`
+(fake-clock budget, resume reconnect, desktop no-countdown, hooks),
+`blocked_channels_test.dart`, `message_banner_ledger_test.dart` (a stale post
+cannot resurrect a read banner), `notification_text_safety_test.dart`,
+`windows_registration_test.dart`, `connection_banner_policy_test.dart`,
+`notification_payload_test.dart`, `notification_prefs_test.dart` and
+`notification_settings_section_test.dart`.
