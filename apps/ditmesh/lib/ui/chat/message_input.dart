@@ -74,7 +74,6 @@ class _MessageInputState extends State<MessageInput>
   InputMode _mode = InputMode.straightKey;
   Timer? _draftTimer;
   late String _lastDraft;
-  int _editRevision = 0;
   bool _sending = false;
   IdentityService? _identity;
   String? _identityKey;
@@ -144,43 +143,54 @@ class _MessageInputState extends State<MessageInput>
     if (_text.text == _lastDraft) return;
     _lastDraft = _text.text;
     _writer.recording.reconcile(_lastDraft);
-    _editRevision++;
+    _writer.revision++;
     setState(() {});
     _draftTimer?.cancel();
     _draftTimer = Timer(_draftDebounce, () => unawaited(_persistDraft()));
   }
 
   Future<void> _persistDraft() {
+    final _DraftWriter writer = _writer;
     // A teardown commit by another editor of this conversation, not yet in
     // the shared controller, outranks this editor's copy of the text.
-    final String draft = _writer.teardownCommit ?? _lastDraft;
-    if (!_acceptDrafts || !_writer.valid) return _writer.settled;
-    if (_writer.pending > 0 && draft == _writer.latest) return _writer.settled;
-    if (_writer.pending == 0 &&
-        draft == _writer.savedDraft &&
-        _writer.error == null) {
-      return _writer.settled;
+    final String draft = writer.teardownCommit ?? _lastDraft;
+    if (!_acceptDrafts || !writer.valid) return writer.settled;
+    // The text a send is sending is the send's until it completes.
+    if (writer.sendingRevision == writer.revision) return writer.settled;
+    // While a send's intent stands, even an unchanged text is written: only
+    // a write ordered after the intent supersedes it.
+    if (!writer.intentOutstanding &&
+        ((writer.pending > 0 && draft == writer.latest) ||
+            (writer.pending == 0 &&
+                draft == writer.savedDraft &&
+                writer.error == null))) {
+      return writer.settled;
     }
+    final int seq = writer.sends;
     final service = widget.service;
     final conversationId = widget.conversationId;
-    return _writer.save(draft, () async {
+    return writer.save(draft, () async {
+      // Queued before a send that is still in flight: that send owns the
+      // text now (it clears it, or saves it again if it fails).
+      if (writer.sendingRevision != null && seq < writer.intentSeq) return;
       if (!_acceptDrafts ||
-          !_writer.valid ||
+          !writer.valid ||
           (_identity != null &&
               _identity?.current?.publicKey != _identityKey)) {
         return;
       }
       try {
         await service.setDraft(conversationId, draft);
-        _writer.savedDraft = draft;
-        _writer.error = null;
+        writer.savedDraft = draft;
+        writer.error = null;
+        if (seq == writer.intentSeq) writer.supersededSeq = seq;
       } on Object catch (error) {
         // Judged here, inside the serialised save: one notice per failure
         // streak, however many saves were queued behind it. Only a storage
         // failure is reported: a ChatException is the service refusing
         // (not connected, conversation gone), which the screen reports.
-        final bool firstFailure = _writer.error == null;
-        _writer.error = error;
+        final bool firstFailure = writer.error == null;
+        writer.error = error;
         debugPrint('[MessageInput] draft save failed: $error');
         if (firstFailure &&
             error is! ChatException &&
@@ -188,7 +198,7 @@ class _MessageInputState extends State<MessageInput>
             Scaffold.maybeOf(context) != null &&
             _live &&
             _acceptDrafts &&
-            _writer.valid &&
+            writer.valid &&
             (_identity == null ||
                 _identity?.current?.publicKey == _identityKey)) {
           showSnack(context, context.s.chatDraftSaveFailed);
@@ -262,26 +272,67 @@ class _MessageInputState extends State<MessageInput>
     _keying.complete();
     if (!_canSend) return;
     final String text = _text.text.trim();
-    final int revision = _editRevision;
+    final _DraftWriter writer = _writer;
+    final int revision = writer.revision;
     final S s = context.s;
     setState(() => _sending = true);
+    // The service journals this send before it can commit; from now on
+    // only a newer edit is saved (see _persistDraft).
+    writer
+      ..sendingRevision = revision
+      ..intentSeq = ++writer.sends
+      ..inFlight += 1;
     try {
       final ChatMessage sent = await widget.service.sendText(
         widget.conversationId,
         text,
-        recording: _writer.recording.forText(text),
+        recording: writer.recording.forText(text),
       );
-      LocalMessageSends.forService(widget.service).publish(sent);
-      if (!mounted) return;
-      widget.playback.cancelMessages({_previewId});
-      _draftTimer?.cancel();
-      if (_editRevision == revision) _text.clear();
-      unawaited(_persistDraft());
-      widget.onSent?.call(sent);
+      if (writer.sendingRevision == revision) writer.sendingRevision = null;
+      _afterSent(writer, revision, sent);
     } on Object catch (e) {
+      if (writer.sendingRevision == revision) writer.sendingRevision = null;
+      // Nothing was queued: the text is a draft again, saved like an edit
+      // (by this editor's copy only while no other editor changed it).
+      if (mounted || writer.revision == revision) unawaited(_persistDraft());
       if (mounted) showSnack(context, describeChatError(s, e));
     } finally {
+      writer.inFlight -= 1;
+      writer._releaseIdleObserver();
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  /// Whether this editor's drafts still belong to the open identity. A send
+  /// that completes after a replacement neither publishes nor clears.
+  bool _draftsCurrent(_DraftWriter writer) =>
+      _acceptDrafts &&
+      writer.valid &&
+      (_identity == null || _identity?.current?.publicKey == _identityKey);
+
+  void _afterSent(_DraftWriter writer, int revision, ChatMessage sent) {
+    if (!_draftsCurrent(writer)) return;
+    LocalMessageSends.forService(widget.service).publish(sent);
+    final bool unchanged = writer.revision == revision;
+    if (mounted) {
+      widget.playback.cancelMessages({_previewId});
+      _draftTimer?.cancel();
+      if (unchanged) _text.clear();
+      // A changed text is written even if it equals the stored one: that
+      // write supersedes the send's intent.
+      unawaited(_persistDraft());
+      widget.onSent?.call(sent);
+    } else if (unchanged) {
+      // This editor left during the send (route popped, pane collapsed) and
+      // the sent text is still stored. An editor still sharing the text
+      // clears it and saves that; otherwise the empty draft is saved here.
+      final TextEditingController? shared = writer._controller;
+      if (shared != null) {
+        shared.clear();
+      } else {
+        _lastDraft = '';
+        unawaited(_persistDraft());
+      }
     }
   }
 
@@ -307,7 +358,7 @@ class _MessageInputState extends State<MessageInput>
       // record the text for the dispose-time draft flush instead of
       // notifying the controller now.
       _lastDraft = current + text;
-      _editRevision++;
+      _writer.revision++;
       if (shared) {
         // The other editor shows the shared controller: record the commit
         // as the canonical draft (its dispose flush, should it leave in this

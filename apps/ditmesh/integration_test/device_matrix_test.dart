@@ -9,7 +9,16 @@
 //   DMX_LIFE / DMX_HINT / DMX_CONN / DMX_MSG   events, with epoch ms
 //   DMX_STATE {json}                            whenever the snapshot changes
 //   DMX_HB <epoch ms>                           once a second (freeze gaps)
+//   DMX_RUN <seq> <verb> <epoch ms>             a command starts
 //   DMX_DONE <seq> ok|error <detail>            per executed command
+//   DMX_SENT <conv> <status> id=<id> "<text>"   sendText returned (composer)
+//   DMX_DRAFT <conv> "<draft>"                  persisted draft changed
+//
+// `send` returns only after the send completed (sendText returned and the
+// stored draft key is gone); `composer`, `draftstore <key>` (as published),
+// `draftraw <key>` / `intentraw <key>` (as stored), `outbox <key>` and
+// `history <key>` read the state back after a relaunch. `sendkill` exits the
+// app the instant sendText returned, before the draft is cleared.
 //
 // Commands are lines "<seq> <verb> [args]" appended to `<support dir>/dmx/cmd`
 // (printed at start as DMX_CMD_DIR). On Android write it with

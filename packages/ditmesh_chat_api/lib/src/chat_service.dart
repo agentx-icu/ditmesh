@@ -140,6 +140,11 @@ abstract interface class ChatService {
   /// friend (an outgoing, unanswered request counts): otherwise this throws
   /// `not_friend`, or `peer_blocked` for a blocked key, and nothing is
   /// queued.
+  ///
+  /// Once the row is committed (queued or sent) this returns it, also when
+  /// the session detached meanwhile. A throw therefore means nothing was
+  /// queued, or a refused row is withdrawn again: the caller may keep the
+  /// text for another attempt without risking a duplicate.
   Future<ChatMessage> sendText(
     String conversationId,
     String text, {

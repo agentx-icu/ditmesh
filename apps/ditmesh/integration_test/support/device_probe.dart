@@ -13,11 +13,13 @@ import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/lifecycle/app_lifecycle_coordinator.dart';
 import 'package:ditmesh/notifications/notification_center.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
+import 'package:ditmesh/ui/chat/local_message_sends.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'scene_walk.dart';
 import 'shot_harness.dart';
@@ -50,7 +52,9 @@ final class DeviceProbe with WidgetsBindingObserver {
   late final IdentityService _identity;
   late final ChatService _chat;
   late final AppLifecycleCoordinator _lifecycle;
+  late final LocalMessageSends _sends;
   NotificationCenter? _notifications;
+  final Map<String, String> _drafts = {};
   late final File _cmd;
   int _lastSeq = 0;
   int _errors = 0;
@@ -82,6 +86,7 @@ final class DeviceProbe with WidgetsBindingObserver {
       _previousOnError?.call(details);
     };
     WidgetsBinding.instance.addObserver(this);
+    _sends = LocalMessageSends.forService(_chat)..addListener(_onLocalSend);
     _subs
       ..add(_lifecycle.hints.listen((h) => _log('HINT ${h.name} ${_now()}')))
       ..add(
@@ -90,6 +95,7 @@ final class DeviceProbe with WidgetsBindingObserver {
         ),
       )
       ..add(_chat.messageEvents.listen(_onMessage))
+      ..add(_chat.conversationChanges.listen(_onConversations))
       ..add(_chat.friendRequestChanges.listen(_acceptAll));
     _acceptAll(_chat.friendRequests);
     _printState(force: true);
@@ -97,6 +103,7 @@ final class DeviceProbe with WidgetsBindingObserver {
 
   Future<void> stop() async {
     WidgetsBinding.instance.removeObserver(this);
+    _sends.removeListener(_onLocalSend);
     for (final s in _subs) {
       await s.cancel();
     }
@@ -112,6 +119,27 @@ final class DeviceProbe with WidgetsBindingObserver {
     'MSG ${_short(m.conversationId)} ${m.status.name} '
     'mine=${m.isMine} id=${m.id} "${m.text}" ${_now()}',
   );
+
+  /// `sendText` returned for a composer send (the composer clears its draft
+  /// right after this).
+  void _onLocalSend() {
+    final m = _sends.latest;
+    if (m == null) return;
+    _log(
+      'SENT ${_short(m.conversationId)} ${m.status.name} id=${m.id} '
+      '"${m.text}" ${_now()}',
+    );
+  }
+
+  /// The persisted draft of every conversation, as the service publishes it
+  /// after each completed write (initial values on start).
+  void _onConversations(List<Conversation> list) {
+    for (final c in list) {
+      if (_drafts[c.id] == c.draft) continue;
+      _drafts[c.id] = c.draft;
+      _log('DRAFT ${_short(c.id)} "${c.draft}" ${_now()}');
+    }
+  }
 
   void _acceptAll(List<FriendRequest> requests) {
     for (final r in requests) {
@@ -152,6 +180,7 @@ final class DeviceProbe with WidgetsBindingObserver {
       final seq = int.tryParse(parts.first);
       if (seq == null || seq <= _lastSeq) continue;
       _lastSeq = seq;
+      _log('RUN $seq ${parts.length > 1 ? parts[1] : ''} ${_now()}');
       try {
         final detail = await execute(parts[1], parts.skip(2).toList());
         _log('DONE $seq ok $detail');
@@ -183,12 +212,48 @@ final class DeviceProbe with WidgetsBindingObserver {
         await settle(tester);
         return _composer().controller!.text;
       case 'send':
-        await tapTooltip(tester, _s.chatSend);
-        return '';
+        return _send();
+      case 'sendkill':
+        // SIGKILL at the instant sendText returned, before the composer
+        // clears its draft: the outbox row is durable, the draft is not
+        // cleared yet. Deterministic version of a kill racing the send.
+        void kill() {
+          final killed = Process.killPid(pid, ProcessSignal.sigkill);
+          _log('SENDKILL killPid=$killed ${_now()}');
+          // The iOS sandbox refuses a signal to the own pid: exit at once
+          // instead (no further Dart code, so the draft clear never runs).
+          if (!killed) exit(137);
+        }
+        _sends.addListener(kill);
+        await tester.tap(find.byTooltip(_s.chatSend).hitTestable().last);
+        await tester.pump(const Duration(seconds: 10));
+        _sends.removeListener(kill);
+        return 'not killed';
+      case 'composer':
+        final composer = find.descendant(
+          of: find.byType(ConversationScreen),
+          matching: find.byType(TextField),
+        );
+        if (composer.evaluate().isEmpty) return 'none';
+        return '"${_composer().controller!.text}"';
+      case 'draftstore':
+        return '"${_draftOf('c2c_${args.single}')}"';
+      case 'draftraw':
+        return '${await _raw('ditmesh_draft', 'c2c_${args.single}')}';
+      case 'intentraw':
+        return '${await _raw('ditmesh_send_intent', 'c2c_${args.single}')}';
+      case 'outbox':
+        final inspector = _chat is OutboxInspector
+            ? _chat as OutboxInspector
+            : null;
+        final summary = inspector?.pendingOutbox(
+          conversationId: 'c2c_${args.single}',
+        );
+        return 'count=${summary?.count}';
       case 'history':
         final rows = await _chat.loadHistory('c2c_${args.single}');
         return rows
-            .map((m) => '${m.status.name}:${m.isMine}:"${m.text}"')
+            .map((m) => '${m.status.name}:${m.isMine}:${m.id}:"${m.text}"')
             .join(' | ');
       case 'orient':
         await SystemChrome.setPreferredOrientations(switch (args.single) {
@@ -212,6 +277,52 @@ final class DeviceProbe with WidgetsBindingObserver {
         return '';
     }
     throw ArgumentError('unknown verb $verb');
+  }
+
+  /// Taps send and returns only once the send has completed: `sendText`
+  /// returned (the composer published the row) and that conversation's
+  /// stored draft key is gone. Tapping alone starts the send unawaited, so
+  /// `DONE` of a bare tap said nothing about the outbox or the draft.
+  Future<String> _send() async {
+    final before = _sends.latest;
+    final started = _now();
+    await tester.tap(find.byTooltip(_s.chatSend).hitTestable().last);
+    final deadline = DateTime.now().add(const Duration(seconds: 30));
+    while (true) {
+      final sent = _sends.latest;
+      if (sent != null && !identical(sent, before)) {
+        final returned = _now();
+        while ((await _raw('ditmesh_draft', sent.conversationId)) != null) {
+          if (DateTime.now().isAfter(deadline)) {
+            throw StateError('sent ${sent.id} but the draft was not cleared');
+          }
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+        return 'sent=${sent.id} ${sent.status.name} returned=+'
+            '${returned - started}ms cleared=+${_now() - started}ms';
+      }
+      if (DateTime.now().isAfter(deadline)) {
+        throw StateError('send did not complete within 30 s');
+      }
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+  }
+
+  /// A conversation key as stored, not as the service publishes it.
+  Future<String?> _raw(String kind, String conversationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final toxId = _identity.current?.toxId ?? '';
+    final prefix = toxId.length >= 16
+        ? '_${toxId.substring(0, 16).toUpperCase()}'
+        : '';
+    return prefs.getString('${kind}_$conversationId$prefix');
+  }
+
+  String _draftOf(String conversationId) {
+    for (final c in _chat.conversations) {
+      if (c.id == conversationId) return c.draft;
+    }
+    return '';
   }
 
   TextField _composer() => tester.widget<TextField>(

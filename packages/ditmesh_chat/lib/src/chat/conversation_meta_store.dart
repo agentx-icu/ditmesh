@@ -1,4 +1,11 @@
+import 'dart:convert';
+
 import '../adapters/key_value_store.dart';
+
+/// A send started from a conversation's draft and not yet followed by any
+/// draft write: the message id the send uses, and the stored draft it was
+/// sent from (see [ConversationMetaStore.setSendIntent]).
+typedef SendIntent = ({String id, String draft});
 
 /// Per-identity conversation metadata the UI owns and Tim2Tox does not:
 /// pinned conversations, drafts, hidden (deleted) conversations, and the
@@ -18,6 +25,8 @@ class ConversationMetaStore {
   static const _kDraftPrefix = 'ditmesh_draft';
   static const _kQueuedInvites = 'ditmesh_queued_group_invites';
   static const _kWithdrawals = 'ditmesh_pending_withdrawals';
+  // Not under `ditmesh_draft`: [allDrafts] must never read one as a draft.
+  static const _kSendIntentPrefix = 'ditmesh_send_intent';
 
   String _scoped(String key) => _prefix.isEmpty ? key : '${key}_$_prefix';
 
@@ -61,9 +70,93 @@ class ConversationMetaStore {
   String draft(String conversationId) =>
       _store.getString(_scoped('${_kDraftPrefix}_$conversationId')) ?? '';
 
-  Future<void> setDraft(String conversationId, String text) {
+  /// Also supersedes the conversation's [sendIntent]: whatever the draft is
+  /// now, it is no longer the one that send was made from. Both writes are
+  /// submitted in one synchronous step, the draft first: the store applies
+  /// them in that order, so a crash in between leaves an intent whose
+  /// recorded draft no longer matches (which recovery ignores), and a
+  /// recovery running meanwhile already sees the intent gone. If the draft
+  /// write fails, the intent is put back: the stored draft is still the one
+  /// the send was made from.
+  Future<void> setDraft(String conversationId, String text) async {
     final key = _scoped('${_kDraftPrefix}_$conversationId');
-    return text.isEmpty ? _store.remove(key) : _store.setString(key, text);
+    final intentKey = _intentKey(conversationId);
+    final intent = _store.getString(intentKey);
+    final draftWrite =
+        text.isEmpty ? _store.remove(key) : _store.setString(key, text);
+    // Marked handled now: its error, if any, is only read once the draft
+    // write settled (and the draft's own error wins).
+    final intentGone =
+        intent == null ? null : (_store.remove(intentKey)..ignore());
+    try {
+      await draftWrite;
+    } on Object catch (error, stack) {
+      if (intent != null) {
+        try {
+          await intentGone;
+          // Unless a newer send journalled its own intent meanwhile.
+          if (_store.getString(intentKey) == null) {
+            await _store.setString(intentKey, intent);
+          }
+        } on Object {
+          // The draft write's failure is the one to report.
+        }
+      }
+      Error.throwWithStackTrace(error, stack);
+    }
+    await intentGone;
+  }
+
+  // ---- send intents ---------------------------------------------------------
+  //
+  // A send commits its row (durable outbox, history) before the composer can
+  // clear the draft it was made from; a process killed in between used to
+  // bring the sent text back as the draft, inviting a second send. The send
+  // journals its message id first; recovery at the next start removes the
+  // draft when that id is committed ([reconcileSendIntents]).
+
+  String _intentKey(String conversationId) =>
+      _scoped('${_kSendIntentPrefix}_$conversationId');
+
+  SendIntent? sendIntent(String conversationId) =>
+      _parseIntent(_store.getString(_intentKey(conversationId)));
+
+  /// Journals that a send with [messageId] is being made from the stored
+  /// draft of [conversationId]. Must complete before the send can commit.
+  Future<void> setSendIntent(String conversationId, String messageId) =>
+      _store.setString(
+        _intentKey(conversationId),
+        jsonEncode({'id': messageId, 'draft': draft(conversationId)}),
+      );
+
+  Future<void> clearSendIntent(String conversationId) =>
+      _store.remove(_intentKey(conversationId));
+
+  /// Every stored send intent of this identity, by conversation id.
+  Map<String, SendIntent> allSendIntents() {
+    final head = '${_kSendIntentPrefix}_';
+    final tail = _prefix.isEmpty ? '' : '_$_prefix';
+    final out = <String, SendIntent>{};
+    for (final key in _store.keys()) {
+      if (!key.startsWith(head) || !key.endsWith(tail)) continue;
+      final id = key.substring(head.length, key.length - tail.length);
+      final intent = _parseIntent(_store.getString(key));
+      if (id.isNotEmpty && intent != null) out[id] = intent;
+    }
+    return out;
+  }
+
+  static SendIntent? _parseIntent(String? raw) {
+    if (raw == null) return null;
+    try {
+      final doc = jsonDecode(raw);
+      if (doc is Map && doc['id'] is String && doc['draft'] is String) {
+        return (id: doc['id'] as String, draft: doc['draft'] as String);
+      }
+    } on FormatException {
+      // Unreadable: treated as absent (recovery then keeps the draft).
+    }
+    return null;
   }
 
   // ---- queued group invites (friend was offline) ----------------------------

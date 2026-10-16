@@ -434,6 +434,7 @@ class Tim2ToxChatService
         _logger.error('[Chat] request refresh before flush failed', e, st);
       }
     }
+    await _conversationsPart.settleDrafts();
     await _store.flush();
   }
 
@@ -466,7 +467,7 @@ class Tim2ToxChatService
     await Future.wait([
       ?cancelled,
       ?identityCancelled,
-      _store.flush(),
+      _conversationsPart.settleDrafts().then((_) => _store.flush()),
       _messageEvents.close(),
       _session.close(),
       _friendsPart.close(),

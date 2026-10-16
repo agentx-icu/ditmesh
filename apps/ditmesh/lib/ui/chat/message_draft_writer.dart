@@ -23,6 +23,29 @@ class _DraftWriter {
   Future<void> _tail = Future<void>.value();
   Future<void> get settled => _tail;
   int pending = 0;
+
+  /// Edit revision of the shared text, bumped by every editor's change and
+  /// by a teardown commit, so an editor that left still sees later edits.
+  /// Only compared for equality.
+  int revision = 0;
+
+  /// The revision a send of this conversation is sending, or null. That
+  /// text belongs to the send until it completes: saving it would supersede
+  /// the send's intent with the very text being sent.
+  int? sendingRevision;
+
+  /// Sends started here ([intentSeq] is the newest one's number) and the
+  /// newest send a completed draft write was ordered after. Until a write
+  /// supersedes it, the stored intent stands and an unchanged text still
+  /// has to be written.
+  int sends = 0;
+  int intentSeq = 0;
+  int supersededSeq = 0;
+  bool get intentOutstanding => intentSeq > supersededSeq;
+
+  /// Sends in flight: they keep this writer, its revision and its identity
+  /// observer although every editor may have left meanwhile.
+  int inFlight = 0;
   final recording = KeyedDraftRecording();
   String latest = '';
   String savedDraft = '';
@@ -46,7 +69,7 @@ class _DraftWriter {
     String initialDraft,
     IdentityService? identity,
   ) {
-    if (_editors == 0 && pending == 0 && error == null) {
+    if (_editors == 0 && pending == 0 && error == null && inFlight == 0) {
       savedDraft = latest = initialDraft;
     }
     _editors++;
@@ -67,7 +90,7 @@ class _DraftWriter {
   }
 
   void _releaseIdleObserver() {
-    if (_editors == 0 && pending == 0 && error == null) {
+    if (_editors == 0 && pending == 0 && error == null && inFlight == 0) {
       _invalidate(this);
       unawaited(_identitySub?.cancel());
       _identitySub = null;
