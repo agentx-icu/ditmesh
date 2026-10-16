@@ -21,7 +21,9 @@ import 'rhythm_protocol.dart';
 /// reached disk (a crash right after the send, including between a queue
 /// drain's durable item removal and its history save) is not replayed after
 /// restart. A receiver that cleared its history after storing a message whose
-/// ACK was lost may receive it again.
+/// ACK was lost may receive it again. The transport leaves out rows that
+/// still have an offline-queue item: the drain owns those sends, and a
+/// cancelled or failed tombstone must not be resent.
 abstract final class RhythmReplay {
   static const maxAge = Duration(hours: 72);
   static const maxRows = 32;

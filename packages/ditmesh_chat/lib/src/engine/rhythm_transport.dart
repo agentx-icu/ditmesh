@@ -193,10 +193,14 @@ final class RhythmTransport {
         service.isBlocked(peer)) {
       return;
     }
-    final rows = RhythmReplay.candidates(
-      service.getHistory(peer),
-      DateTime.now(),
-    );
+    // A row with a queue item is the drain's: a send it still owns (a
+    // retry, or one whose post-send removal did not persist), or a
+    // committed cancel / failure its row may not show yet.
+    final queued = service.offlineMessageQueuePersistence.queuedMsgIDs();
+    final rows = RhythmReplay.candidates([
+      for (final row in service.getHistory(peer))
+        if (!queued.contains(row.msgID)) row,
+    ], DateTime.now());
     for (final row in rows) {
       final packets = _envelopePackets(
         session,
