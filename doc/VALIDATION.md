@@ -10,7 +10,7 @@ Each section below records what was run against the stated revision; later fixes
 
 | Finding | Status on `master` |
 |---|---|
-| N1: a message sent in the ~10 s before the sender notices a silent peer drop stays `sent` and is never delivered | **Open.** Fix in progress; see the N1 row below for the mechanism. |
+| N1: a message sent in the ~10 s before the sender notices a silent peer drop stays `sent` and is never delivered | **Partly fixed** in DitMesh #26: unacknowledged keyed (`dmr:`) direct messages are resent with the same message ID when the rhythm handshake completes again (`recorded_resend_test.dart`). **Still open** for plain-text sends (other clients, or no negotiated extension). Mechanism: N1 row below. |
 | D1: on iOS, sent text returns as the draft after a kill ~2 s after sending | **Open.** Root cause not confirmed. |
 | D1: cold start of an existing identity failed with `identity_mismatch` | Fixed in DitMesh #17; ownership is now proven before any savedata repair (#19). |
 | Group delivery receipts were dropped when two peers used different local ids for one group | Fixed by Tim2Tox #32 (pin `14f317e`, DitMesh #25). `native_two_peer_test.dart` asserts `delivered` across `tox_3` / `tox_4`. |
