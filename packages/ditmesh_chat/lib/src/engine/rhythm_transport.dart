@@ -2,10 +2,30 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:tim2tox_dart/models/chat_message.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
+import 'package:tim2tox_dart/utils/message_history_persistence.dart'
+    show MessageHistoryReceiptScope;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart' show KeyedRecording;
 import '../chat/recording_metadata.dart';
 import '../chat/group_bindings.dart';
 import 'rhythm_protocol.dart';
+
+/// Direct arrivals admitted but not yet finished, across every peer. Matches
+/// the service-wide bound on receives awaiting persistence: an arrival beyond
+/// it is dropped unacknowledged, so its sender never sees it as received.
+const _maxQueuedDirectArrivals = 128;
+
+/// A validated direct envelope plus the session epoch and history receipt
+/// scope current when it arrived. A clear or a session change while it waits
+/// behind an earlier arrival makes it stale, so it is never stored or ACKed.
+typedef _DirectArrival = ({
+  String key,
+  String id,
+  String text,
+  String authorSession,
+  Map<String, dynamic> envelope,
+  int epoch,
+  MessageHistoryReceiptScope scope,
+});
 
 /// Direct replay uses a negotiated envelope because standard C2C text has no
 /// cross-peer ID. NGC keeps its ordinary text and attaches by native gmid.
@@ -23,6 +43,9 @@ final class RhythmTransport {
   final Map<String, String> _peerSessions = {};
   final Map<String, DateTime> _helloAt = {};
   final Map<String, Completer<void>> _ready = {};
+
+  /// `peer|dmr:id` of every direct arrival from admission until it finishes,
+  /// whether queued or being received; its size is the admitted count.
   final Set<String> _receiving = {};
   final Map<String, String> _groupMetadata = {};
 
@@ -168,11 +191,22 @@ final class RhythmTransport {
     return true;
   }
 
+  /// Admits [envelope] behind the peer's earlier arrivals. Validation, the
+  /// duplicate check and the bound run here, and the epoch and receipt scope
+  /// are captured here, because the receive itself may wait arbitrarily long.
   void _queueDirect(String peer, Map<String, dynamic> envelope) {
+    final arrival = _admitDirect(peer, envelope);
+    if (arrival == null) return;
     final previous = _directArrivals[peer] ?? Future<void>.value();
-    final next = previous.then(
-      (_) => _receiveDirect(peer, envelope).catchError((Object _) {}),
-    );
+    final next = previous.then((_) async {
+      try {
+        await _receiveDirect(peer, arrival);
+      } on Object {
+        // A failed arrival must not block the next one; it stays unACKed.
+      } finally {
+        _receiving.remove(arrival.key);
+      }
+    });
     _directArrivals[peer] = next;
     unawaited(
       next.whenComplete(() {
@@ -183,10 +217,7 @@ final class RhythmTransport {
     );
   }
 
-  Future<void> _receiveDirect(
-    String peer,
-    Map<String, dynamic> envelope,
-  ) async {
+  _DirectArrival? _admitDirect(String peer, Map<String, dynamic> envelope) {
     final id = envelope['id'];
     final text = envelope['text'];
     final authorSession = envelope['authorSession'];
@@ -197,36 +228,59 @@ final class RhythmTransport {
         text.isEmpty ||
         text.contains('\u0000') ||
         utf8.encode(text).length > 1322) {
+      return null;
+    }
+    final key = '$peer|dmr:$id';
+    if (_receiving.length >= _maxQueuedDirectArrivals || !_receiving.add(key)) {
+      return null;
+    }
+    return (
+      key: key,
+      id: id as String,
+      text: text,
+      authorSession: authorSession as String,
+      envelope: envelope,
+      epoch: service.extensionSessionEpoch,
+      // The same store, normalized conversation and clear generation the
+      // service's own receive captures.
+      scope: service.messageHistoryPersistence.receiptScope(
+        service.normalizeToxId(peer),
+      ),
+    );
+  }
+
+  Future<void> _receiveDirect(String peer, _DirectArrival arrival) async {
+    // No await precedes the service call, so its own receipt scope is taken
+    // in the generation checked here.
+    if (arrival.epoch != service.extensionSessionEpoch ||
+        !arrival.scope.isCurrent) {
       return;
     }
-    final alias = 'dmr:$id';
-    final scope = '$peer|$alias';
-    if (!_receiving.add(scope)) return;
-    final receiveEpoch = service.extensionSessionEpoch;
-    try {
-      final recording = envelope['version'] == 1
-          ? KeyedRecording.fromJson(envelope['recording'])
-          : null;
-      await _receiveText(
+    final envelope = arrival.envelope;
+    final recording = envelope['version'] == 1
+        ? KeyedRecording.fromJson(envelope['recording'])
+        : null;
+    await _receiveText(
+      peer,
+      'dmr:${arrival.id}',
+      arrival.text,
+      metadata: RecordingMetadata.encode(recording),
+      kind: envelope['contentKind'] == 'action'
+          ? ChatMessageContentKind.action
+          : ChatMessageContentKind.normal,
+    );
+    // Duplicate envelope IDs are acknowledged again after disk identity
+    // lookup, so a sender's retry can recover a lost receipt. A row that
+    // became durable before a later clear is still acknowledged.
+    if (service.extensionSessionEpoch == arrival.epoch &&
+        !service.isBlocked(peer)) {
+      service.sendExtensionPacket(
         peer,
-        alias,
-        text,
-        metadata: RecordingMetadata.encode(recording),
-        kind: envelope['contentKind'] == 'action'
-            ? ChatMessageContentKind.action
-            : ChatMessageContentKind.normal,
+        RhythmProtocol.control('ack', {
+          'id': arrival.id,
+          'session': arrival.authorSession,
+        }),
       );
-      // Duplicate envelope IDs are acknowledged again after disk identity
-      // lookup, so a sender's retry can recover a lost receipt.
-      if (service.extensionSessionEpoch == receiveEpoch &&
-          !service.isBlocked(peer)) {
-        service.sendExtensionPacket(
-          peer,
-          RhythmProtocol.control('ack', {'id': id, 'session': authorSession}),
-        );
-      }
-    } finally {
-      _receiving.remove(scope);
     }
   }
 
