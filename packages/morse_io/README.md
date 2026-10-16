@@ -150,8 +150,7 @@ pointer/keyboard handling — is covered by `flutter test packages/morse_io`.
 ## Development
 
 ```bash
-export PATH=/home/user/flutter/bin:$PATH
-flutter pub get                       # at the workspace root
+dart pub get                          # at the workspace root
 flutter analyze packages/morse_io
-flutter test packages/morse_io
+(cd packages/morse_io && flutter test)
 ```

@@ -36,7 +36,7 @@ Background, backup/export, identity replacement and desktop quit use store flush
 
 A failed restore retains the previous identity and notification settings. Staging directories sit beside the identity root; restore validates paths and stages the full replacement before committing. The identity parent is excluded from iOS platform backups so staging and renamed roots retain the exclusion.
 
-DitMesh's encrypted backup supports selected identity, chat history, conversation metadata, pending messages, practice and referenced audio components, with a restore preview. Global application settings are outside that archive. A basic identity backup or interoperable `.tox` import is a smaller operation and does not imply a complete chat restore. Backup passphrases and profile passwords serve separate purposes.
+DitMesh's encrypted backup supports selected identity, chat history, conversation metadata, portable preferences, pending messages, practice and referenced audio components, with a restore preview. Portable preferences cover playback, decoder, notification choices and this identity's mutes, appearance and language; window geometry, device key bindings and network bootstrap configuration are never included. Restored pending messages become review items and are not put back into the send queue. A basic identity backup or interoperable `.tox` import is a smaller operation and does not imply a complete chat restore. Backup passphrases and profile passwords serve separate purposes.
 
 ## Verification and limits
 

@@ -3,8 +3,9 @@
 # ditmesh_chat
 
 Tim2Tox-backed implementation of [`ditmesh_chat_api`](../ditmesh_chat_api):
-identity, friends, conversations, plain-text messages and groups over the Tox
-P2P network. **This is the only package in the workspace allowed to import
+identity, friends, conversations, messages (with optional original keying
+rhythm), groups, encrypted backups and bootstrap-node configuration over the
+Tox P2P network. **This is the only package in the workspace allowed to import
 `tim2tox_dart` or the Tencent Cloud Chat SDK** (`tool/import_guard.dart`
 enforces it). The app talks to the contract; it touches this package only to
 build the backend:
@@ -20,19 +21,26 @@ await backend.identity.connect();          // init → login → startPolling
 backend.chat.conversationChanges.listen(...);
 ```
 
-## Architecture (plan §3.2 "B variant")
+## Architecture
 
 ```
 apps/ditmesh ──► ditmesh_chat_api (contract) ◄── ditmesh_chat
                                                   │  DitmeshChatBackend
                                                   ├─ Tim2ToxIdentityService   identity.json, tox_profile.tox, password verifier, backup
                                                   ├─ Tim2ToxChatService        friends / conversations / messages / groups (+ parts)
-                                                  ├─ Tim2ToxEngine            one FfiChatService per connected session
+                                                  ├─ Tim2ToxEngine            one DitmeshFfiChatService per connected session
+                                                  │                            + RhythmTransport (original keying rhythm, dmr: rows)
+                                                  ├─ bootstrap/               NetworkBootstrapService: catalogue, probes, LAN hosting
                                                   ├─ adapters/                Tim2Tox host interfaces (prefs, bootstrap, scratch, logger)
                                                   └─ native/                  setNativeLibraryName('tim2tox_ffi')
                                                           │
-                                third_party/tim2tox/dart  │  FfiChatService (Dart)  ──ffi──►  libtim2tox_ffi (c-toxcore, --no-toxav)
+                             third_party/tim2tox_ditmesh  │  FfiChatService (Dart)  ──ffi──►  libtim2tox_ffi (c-toxcore, no ToxAV)
 ```
+
+`third_party/tim2tox_ditmesh` is the pinned `third_party/tim2tox/dart`
+package with DitMesh's reviewed Dart overlays applied by bootstrap
+([overlays](../../tool/ci/tim2tox-dart-overlays/README.md)); the submodule
+itself stays unmodified.
 
 **One data path.** Unlike toxee's hybrid runtime, DitMesh installs neither
 `Tim2ToxSdkPlatform` nor the UIKit and never calls `TIMManager.initSDK`.
@@ -91,11 +99,43 @@ ditmesh/identity/
   profile/tox_profile.tox    Tox savedata
   data/chat_history/  data/offline_message_queue.json  data/file_recv/  data/avatars/  data/scratch/
   training/                  IdentityService.dataDirectory() — other modules' per-identity state
+  media/recordings/          saved workbench recordings
 ```
 
-### Backup format (`exportBackup` / `importBackup`)
+The parent `ditmesh/` directory is excluded from iOS backups and also holds
+restore staging and the independent LAN/probe node profiles.
 
-`BackupContainer`: a dependency-free, length-prefixed archive.
+### Backup formats
+
+**Complete encrypted backup** (`EncryptedBackupService`, used by the app's
+backup wizard). `identity/backup_envelope.dart` seals an inner archive:
+
+```
+"MCQE" | version u8 = 1 | suite u8 = 1 | reserved 2 bytes | sealed(header ‖ inner archive)
+```
+
+Suite 1 is Tox's `toxencryptsave` (libsodium scrypt key derivation, then
+XSalsa20-Poly1305). The 8-byte header is public and also sealed, so it is
+authenticated. The inner archive is a version-2 `BackupContainer` with a
+private `manifest.json` and one entry group per `BackupCategory`
+(`identity/backup_snapshot.dart`):
+
+| Category | Entries |
+|---|---|
+| identity (required) | `identity.json`, `tox_profile.tox`, `groups/bindings.json` |
+| training | `training/<path>` |
+| chatHistory | `chat/history/<path>` (queued rows removed) |
+| conversationMeta | `meta/conversations.json` (pins, hidden, drafts), `meta/bookmarks.json` |
+| preferences | `prefs/app.json`: playback, decoder, notification choices and mutes, appearance, language — never window geometry, key bindings or network settings |
+| media (opt-in) | `media/recordings/<name>` |
+| pendingMessages (opt-in) | `pending/outbox.json`, restored only as inert review items, never back into the live send queue |
+
+`identity/backup_archive.dart` opens and validates the whole archive against
+its manifest before any restore step writes; `identity_backup_v2.dart` builds
+the preview and performs the staged, transactional restore.
+
+**Basic identity backup** (`IdentityService.exportBackup` / `importBackup`).
+`BackupContainer` version 1, a dependency-free, length-prefixed archive:
 
 ```
 "MCQB" | version u8 = 1 | flags u8 (bit0: profile encrypted) | count u32
@@ -104,14 +144,16 @@ entry*: pathLen u16 | path (UTF-8, '/'-separated) | size u64 | bytes
 
 Entries: `identity.json`, `tox_profile.tox` (encrypted with the identity
 password when one is set), `training/<relative path>` for every file under
-`dataDirectory()`. Paths are validated on decode (no `..`, no absolute paths,
-no backslashes or Windows drive prefixes). Export flushes registered data
-stores first. Import stages every archive entry before replacing the current
-tree and rolls back a failed directory swap. The archive contains identity,
-Tox savedata and training files; chat history, queue and preferences remain
-outside this format. `importBackup` replaces the current identity; an encrypted
-profile requires the password (`wrong_password` otherwise) and carries it
-over into the verifier so the restored identity unlocks with the same one.
+`dataDirectory()`, and opt-in `media/recordings/<name>`. Chat history, the
+queue and preferences are not part of this format. `importBackup` replaces
+the current identity; an encrypted profile requires the password
+(`wrong_password` otherwise) and carries it over into the verifier so the
+restored identity unlocks with the same one.
+
+Both formats validate paths on decode (no `..`, no absolute paths, no
+backslashes or Windows drive prefixes), flush registered data stores before
+export, stage every entry before replacing the current tree and roll back a
+failed directory swap.
 
 ### Messages
 
@@ -122,11 +164,17 @@ over into the verifier so the restored identity unlocks with the same one.
   returns a `pending` row; the row is re-emitted on `messageEvents` as `sent`
   when the drain succeeds. The durable queue preserves `pending` across
   restart even though upstream history reload clears its transient flag.
-  Tim2Tox does not carry a distinct failure flag on
-  this path (`_markPendingItemFailed` also flips `isPending: false`), so
-  `failed` is not produced today — tracked for the upstream `tim2tox_core` split.
-- `cloudCustomData` is **local only** in Tim2Tox (never sent over Tox); DitMesh
-  does not use it (plan §5.2 layer 1 is plain text).
+  `MessageMapper.statusOf` maps a cancelled row to `cancelled`, a failed
+  drain to `failed`, a queued row to `pending`, and a row with a peer receipt
+  to `delivered`. `retryMessage` / `cancelPendingMessage` keep the message ID,
+  so retry never adds a second bubble.
+- Original keying rhythm: a keyed direct message to a compatible DitMesh peer
+  travels as one `dmr:` envelope through `RhythmTransport` after a session
+  handshake; other peers receive plain text. Group text is always ordinary
+  NGC text, with the recording sent privately as optional metadata. The wire
+  contract is in the [keyed-rhythm RFC](../../doc/rfcs/2026-10-09-keyed-rhythm.md).
+  Locally the recording is kept in the row's `cloudCustomData`
+  (`chat/recording_metadata.dart`); Tim2Tox never sends that field itself.
 - Conversations are derived: history ids ∪ friends ∪ groups, minus hidden
   (deleted) ones; unread from Tim2Tox's read barrier; pinned/draft/hidden from
   `ConversationMetaStore` (account-scoped keys in `shared_preferences`).
@@ -163,29 +211,30 @@ file. `third_party/stubs/tencent_cloud_chat_common` is an empty package that
 satisfies pub; the root `pubspec_overrides.yaml` points at it. If a future
 tim2tox change makes `FfiChatService` reach `Tim2ToxSdkPlatform`, compilation
 fails loudly (missing imports) rather than silently pulling the UIKit in.
-Remove the stub when upstream ships a UIKit-free `tim2tox_core` (plan §3.2 D).
+Remove the stub when upstream ships a UIKit-free `tim2tox_core`.
 
 ## Bootstrap
 
+From the repository root:
+
 ```bash
-export PATH=/home/user/flutter/bin:$PATH
-dart run tool/bootstrap_deps.dart     # submodule → vendor SDK → patches → root pubspec_overrides.yaml
-dart pub get                          # workspace root
+dart run tool/bootstrap_deps.dart     # submodule → vendor SDK → patches → Dart overlays → root pubspec_overrides.yaml
+dart pub get                          # workspace root only
 flutter analyze packages/ditmesh_chat
-flutter test packages/ditmesh_chat    # needs-native test skips itself without the library
+(cd packages/ditmesh_chat && flutter test --exclude-tags=needs-native)
 dart run tool/bootstrap_deps.dart --offline-check-only   # CI: prove the tree matches the lock
 ```
 
 `tool/bootstrap_deps.dart` (ported from toxee, UIKit branches removed):
 
-1. `git submodule sync` / `update --init -- third_party/tim2tox` (pinned to
-   the same commit toxee uses, `9d4245a`; nested c-toxcore submodules are not
+1. `git submodule sync` / `update --init -- third_party/tim2tox` (the
+   superproject's gitlink is the pin; nested c-toxcore submodules are not
    initialised — only the native build needs them).
 2. Downloads `tencent_cloud_chat_sdk` per
    `third_party/tim2tox/tool/tencent_cloud_chat_sdk.lock.json` (8.9.7540+3,
    SHA-256 verified) into `third_party/tencent_cloud_chat_sdk/`.
-3. Applies tim2tox's 22-patch series with tim2tox's own `apply_sdk_patches.dart`
-   (patch 0001 adds `setNativeLibraryName`).
+3. Applies tim2tox's patch series for that SDK version with tim2tox's own
+   `apply_sdk_patches.dart` (patch 0001 adds `setNativeLibraryName`).
 3b. Applies DitMesh's own overlay `third_party/overlays/tencent_cloud_chat_sdk/`
    (`tool/vendor_overlay.dart`): the plugin's *platform* halves are replaced
    by no-op plugin classes and every Tencent binary is removed — the
@@ -197,14 +246,17 @@ dart run tool/bootstrap_deps.dart --offline-check-only   # CI: prove the tree ma
    hash is recorded as `overlay_sha256` in the vendor state (checked by
    `--offline-check-only`); toxee keeps the full plugin because its hybrid
    runtime needs it.
-4. Writes the **root** `pubspec_overrides.yaml` (`tim2tox_dart`,
-   `tencent_cloud_chat_sdk`, `tencent_cloud_chat_common` → paths) — a pub
-   workspace reads overrides at the root only. State for `--offline-check-only`
-   lives in `third_party/.vendor_state.json`.
+3c. Copies `third_party/tim2tox/dart` to `third_party/tim2tox_ditmesh` and
+   applies `tool/ci/tim2tox-dart-overlays` (`tool/tim2tox_dart_overlay.dart`).
+4. Writes the **root** `pubspec_overrides.yaml` (`tim2tox_dart` →
+   `third_party/tim2tox_ditmesh`, `tencent_cloud_chat_sdk`,
+   `tencent_cloud_chat_common` → paths) — a pub workspace reads overrides at
+   the root only. State for `--offline-check-only` lives in
+   `third_party/.vendor_state.json`.
 
 Generated, never committed: `third_party/tencent_cloud_chat_sdk/`,
-`third_party/.vendor_state.json` (both in `third_party/.gitignore`) and the
-root `pubspec_overrides.yaml` (add it to the root `.gitignore`).
+`third_party/tim2tox_ditmesh/`, `third_party/.vendor_state.json` and the root
+`pubspec_overrides.yaml` (all ignored).
 
 ## Native library prerequisites
 
@@ -212,17 +264,22 @@ The Dart package compiles without it, but every runtime path needs
 `libtim2tox_ffi` built **without ToxAV** (DitMesh has no calls):
 
 ```bash
-# from a toxee checkout with tool/ci/build_tim2tox.sh, or tim2tox's own build.sh
-tool/ci/build_tim2tox.sh --no-toxav          # Linux x86_64 / Windows x64 / macOS x86_64+arm64 / Android arm64-v8a / iOS arm64
+bash tool/ci/build_tim2tox.sh --target macos-arm64   # see --help for every target
+bash tool/build_android_ffi.sh                       # stages jniLibs
+bash tool/build_ios_ffi.sh                           # assembles the XCFramework
 ```
 
-| Platform | Artefact and where `Tim2ToxFfi.open()` looks | Minimum OS |
+ToxAV is never built (`--toxav` is rejected). Native builds apply the
+[source overlays](../../tool/ci/tim2tox-overlays/README.md) to a copy of the
+pinned sources. Details: [build and packaging](../../doc/operations/BUILD_AND_DEPLOY.md).
+
+| Platform | Artefact and where `Tim2ToxFfi.open()` looks | Application minimum |
 |---|---|---|
-| macOS | `libtim2tox_ffi.dylib` next to the executable, `../Frameworks/`, or `tim2tox/build/ffi/` | 10.15 |
+| macOS | `libtim2tox_ffi.dylib` next to the executable, `../Frameworks/`, or `tim2tox/build/ffi/` | 13.0 |
 | Linux | `libtim2tox_ffi.so` next to the executable or `../lib/` | — |
 | Windows | `tim2tox_ffi.dll` next to the executable or `../lib/` | 10 |
-| Android | `libtim2tox_ffi.so` in `jniLibs/<abi>/` (System.loadLibrary) | API 21 |
-| iOS | `tim2tox_ffi.framework` embedded in the bundle | 13 |
+| Android | `libtim2tox_ffi.so` in `jniLibs/<abi>/` (System.loadLibrary), 16 KB page aligned | API 24 |
+| iOS | `tim2tox_ffi.framework` from `apps/ditmesh/ios/Frameworks/tim2tox_ffi.xcframework` | 14.0 |
 
 Dev loops can pin an absolute path with
 `DitmeshChatBackend.create(nativeLibraryPathOverride: ...)` (must be set before
@@ -233,7 +290,8 @@ because its Windows plugin depends on `win32 ^6`, the major the app's
 
 ## Tests
 
-`flutter test packages/ditmesh_chat` runs without the native library:
+`flutter test --exclude-tags=needs-native` runs without the native library.
+Representative files:
 
 - `identity_service_test.dart` — inspect/create/unlock/open state machine,
   encryption-at-rest around connect/disconnect, verifier-vs-file authority,
@@ -250,13 +308,22 @@ because its Windows plugin depends on `win32 ^6`, the major the app's
   `key_value_store_test.dart`, `message_mapper_test.dart` — interrupted writes,
   replacement barriers, registered-store flushing, persisted group unread and
   invites, preference errors and queued message status after restart.
+- `encrypted_backup_test.dart`, `group_backup_test.dart`,
+  `identity_recovery_test.dart` — complete backups, previews and restore
+  rollback.
+- `rhythm_*_test.dart`, `recorded_*_test.dart`, `extension_transport_test.dart`
+  — the keyed-rhythm protocol, handshake compatibility, durable receive, ACK
+  and teardown rules.
+- `bootstrap_*_test.dart`, `network_bootstrap_service_test.dart` — node
+  catalogue, address-family order, saved alternates and probes.
 
 ### Native smoke test (`@Tags(['needs-native'])`)
 
 `test/native_smoke_test.dart` drives the real library single-process: create
-identity → connect → reach the DHT → queue a send to an offline peer → create /
+identity → connect (session up, no network wait) → queue a send to an offline peer → create /
 list members / leave a group (`DartGetGroupMemberList`, `DartQuitGroup`) →
-disconnect. It skips itself when the library cannot be opened; in CI exclude it
+disconnect. `DITMESH_PUBLIC_DHT_SMOKE=true` additionally waits up to 90 s for
+the public DHT. It skips itself when the library cannot be opened; in CI exclude it
 explicitly with `flutter test --exclude-tags=needs-native`. On a dev machine:
 
 ```bash
@@ -279,7 +346,16 @@ TIM2TOX_FFI_LIB=/absolute/path/to/libtim2tox_ffi.dylib \
   flutter test --no-pub test/native_persistence_test.dart
 ```
 
-A two-peer exchange needs two processes (Tim2Tox's default singleton instance
-model — multi-instance exists only for its own auto_tests): run the smoke
-twice with different `IdentityPaths` roots and add each other's Tox ID, or
-drive it against a toxee instance; that campaign is the M0b spike in the plan.
+Other `needs-native` files cover encryption at rest, cold start, identity
+ownership, encrypted and group backups, bootstrap, probe isolation and
+`native_two_peer_test.dart`. Tim2Tox has one default instance per process,
+so a two-peer exchange runs in two processes. The coordinator used by the
+required Linux and macOS CI jobs:
+
+```bash
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+```
+
+It covers direct and group messages with exact recorded timing, actual
+delivery receipts, encrypted restart, durable queued sending exactly once and
+group rejoin.

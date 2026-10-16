@@ -5,7 +5,7 @@
 DitMesh 通过 Flutter gen-l10n 提供英语（`en`，模板）、简体中文（`zh`）、繁体中文
 （`zh_Hant`）、日语（`ja`）、韩语（`ko`）、德语（`de`）、法语（`fr`）、
 西班牙语（`es`）、葡萄牙语（`pt`）和俄语（`ru`）。每份译文完整包含模板的
-全部消息（截至 2026-10-03 共 660 条）。文档仍只维护英文和简体中文。
+全部消息（截至 2026-10-16 共 944 条）。文档仍只维护英文和简体中文。
 
 本页说明共享本地化流程与扩展方法。日常字符串工作（添加一个键）和莫尔斯词汇请看
 [`apps/ditmesh/lib/l10n/README.zh-CN.md`](../../apps/ditmesh/lib/l10n/README.zh-CN.md)。
@@ -18,7 +18,7 @@ DitMesh 通过 Flutter gen-l10n 提供英语（`en`，模板）、简体中文�
 |---|---|---|
 | gen-l10n 配置 | `apps/ditmesh/l10n.yaml` | `arb-dir: lib/l10n`、`template-arb-file: app_en.arb`、`output-class: S`、`output-dir: lib/l10n/generated`、`output-localization-file: s.dart`、`nullable-getter: false`、`format: false`。不设 `synthetic-package`（Flutter 3.41 已移除；该键只会打印警告）。 |
 | 自动生成 | `apps/ditmesh/pubspec.yaml` → `flutter: generate: true` | `flutter run` / `flutter build` 会重新生成；`flutter gen-l10n` 显式执行。 |
-| ARB 文件 | `apps/ditmesh/lib/l10n/app_<tag>.arb` | 每个区域设置一个。`app_en.arb` 是模板，也是唯一需要 `@key` 元数据（description、placeholders）的文件。截至 2026-10-03 有 660 个消息键。 |
+| ARB 文件 | `apps/ditmesh/lib/l10n/app_<tag>.arb` | 每个区域设置一个。`app_en.arb` 是模板，也是唯一需要 `@key` 元数据（description、placeholders）的文件。截至 2026-10-16 有 944 个消息键。 |
 | 生成的代码 | `apps/ditmesh/lib/l10n/generated/s.dart`、`s_<language>.dart`（`SZhHant` 等脚本/地区变体位于基础语言的文件 `s_zh.dart` 中） | 已提交，永不手改。通过 `**/l10n/**` 模式免于 500 行门禁。 |
 | 访问方式 | `context.s`（`lib/i18n/l10n_extension.dart`）或 `S.of(context)` | 仅在 `MaterialApp` 之下可用；测试需要 pump `localizationsDelegates: S.localizationsDelegates`。 |
 | 支持的集合 | `S.supportedLocales` | 由 ARB 文件推导。`LocaleController.supportedLocales` 和语言选择器都读它，因此**添加语言不需要编辑任何 Dart 列表**。 |

@@ -24,7 +24,7 @@
 
 商店介绍说明 Morse 单聊和群聊、Tox 身份及点对点联网。根据应用和原生库的实际行为填写加密及隐私问卷。
 
-摄像头用于添加二维码联系人，麦克风用于本地电码解码，通知用于消息提醒。填写公开的[隐私政策](../../site/zh-CN/privacy.md)、[条款](../../site/zh-CN/terms.md)和[支持页面](../../site/zh-CN/support.md)。
+摄像头用于添加二维码联系人，麦克风用于本地电码解码，通知用于消息提醒。填写已发布的页面：隐私政策 <https://agentx-icu.github.io/ditmesh/privacy/>、条款 <https://agentx-icu.github.io/ditmesh/terms/> 和支持页面 <https://agentx-icu.github.io/ditmesh/support/>（源文件：[隐私政策](../../site/zh-CN/privacy.md)、[条款](../../site/zh-CN/terms.md)、[支持](../../site/zh-CN/support.md)；App 在 `account_routes.dart` 中链接的是同一组 URL）。
 
 内容管理说明涵盖联系人屏蔽及点对点内容处理方式。
 
@@ -72,11 +72,11 @@ for so in apk/lib/*/*.so; do echo "$so"; llvm-readelf -lW "$so" | grep -E '^\s+L
 
 ## iPad 多任务与分享面板
 
-iPhone 支持竖屏和两个横屏方向；iPad 支持全部四个方向且未设置 `UIRequiresFullScreen`，因此 Split View、Slide Over 和 Stage Manager 都适用，最窄到 320 pt。每个分享动作（备份导出、局域网节点信息、学习素材导出）都通过 `sharePositionOrigin` 把弹出框锚定到被点击的控件；`test/platform/share_origin_guard_test.dart` 会让没有锚点的分享调用失败。
+iPhone 支持竖屏和两个横屏方向；iPad 支持全部四个方向且未设置 `UIRequiresFullScreen`，因此 Split View、Slide Over 和 Stage Manager 都适用，最窄到 320 pt。每个分享动作（备份导出、局域网节点信息）都通过 `sharePositionOrigin` 把弹出框锚定到被点击的控件；`test/platform/share_origin_guard_test.dart` 会让没有锚点的分享调用失败。
 
 ## Android 通知渠道
 
-三个渠道（`ditmesh_messages`、`ditmesh_friend_requests`、`ditmesh_group_invites`）。"我"页面上的应用内开关是用户偏好，不是系统状态：用户在系统设置里屏蔽某个渠道后，`areNotificationsEnabled()` 仍为 true，发到该渠道的通知会被系统丢弃；应用目前不反映被屏蔽的渠道（移动设备评审的待办项）。
+三个渠道（`ditmesh_messages`、`ditmesh_friend_requests`、`ditmesh_group_invites`）。"我"页面上的应用内开关是用户偏好，不是系统状态：用户在系统设置里屏蔽某个渠道后，`areNotificationsEnabled()` 仍为 true，发到该渠道的通知会被系统丢弃。应用在启动时和每次回到前台时读取被屏蔽的渠道；`ditmesh_messages` 被屏蔽时，"我"页面显示"已在系统设置中屏蔽"。详见[通知说明](../../apps/ditmesh/lib/notifications/README.zh-CN.md#被屏蔽的频道)。
 
 ## 设备检查
 

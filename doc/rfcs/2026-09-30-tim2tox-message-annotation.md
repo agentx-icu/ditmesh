@@ -4,7 +4,7 @@
 
 DitMesh now implements the [2026-10-09 original keyed-rhythm contract](2026-10-09-keyed-rhythm.md), using exact message identities and a compatible receipt carrier. This document is retained as the earlier upstream proposal.
 
-> Status: **draft, not yet filed upstream** (2026-09-30). Target repository:
+> Status: **superseded** by the keyed-rhythm contract (2026-10-09); Original status: draft, not yet filed upstream (2026-09-30). Target repository:
 > `agentx-icu/tim2tox` (submodule pin `9d4245a`). Companion items of track D —
 > Dart-side custom packet API, lossy packet API, `failed` message status — are
 > listed in §7 and get their own proposals.

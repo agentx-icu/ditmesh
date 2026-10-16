@@ -23,68 +23,39 @@
 
 ## 从 `main.dart` 接线
 
+`main()` 只在桌面目标上构建 shell，使用与 App 其余部分相同的设置存储
+（`DesktopStoreAdapter` 包装 `<application support>/settings.json`）：
+
 ```dart
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'desktop/desktop.dart';
-
-/// shared_preferences behind the shell's two-method store.
-class PrefsKeyValueStore implements KeyValueStore {
-  PrefsKeyValueStore(this._prefs);
-  final SharedPreferences _prefs;
-  @override
-  Future<String?> get(String key) async => _prefs.getString(key);
-  @override
-  Future<void> set(String key, String value) => _prefs.setString(key, value);
-}
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final desktopShell = await initDesktopShell(
+DesktopShellController? desktopShell;
+if (isDesktopTarget(defaultTargetPlatform)) {
+  desktopShell = await initDesktopShell(
     DesktopShellConfig(
-      store: PrefsKeyValueStore(prefs),
-      appName: 'DitMesh',
-      closeToTray: true,
-      onToggleSound: (enabled) { /* hand to the sidetone owner */ },
-      onBeforeQuit: () async { /* account teardown, bounded by a timeout */ },
+      store: DesktopStoreAdapter(settingsStore),
+      appName: currentS().appName,               // product name, never translated
+      log: kDebugMode ? debugPrint : null,
     ),
-  );
-  runApp(
-    ChangeNotifierProvider.value(value: desktopShell, child: const DitmeshApp()),
   );
 }
 ```
 
 `initDesktopShell` 必须在 `WidgetsFlutterBinding.ensureInitialized()` **之后**、`runApp` **之前**运行：
 `window_manager` 以隐藏状态创建窗口，shell 恢复持久化的边界（夹取到当前显示器范围内），
-然后才显示窗口，因此没有可见的跳动。`initDesktopShell` 返回控制器；把它当作 `Future<void>` 来 await
-也可以。
+然后才显示窗口，因此没有可见的跳动。
 
-然后，从未读状态所在之处：
-
-```dart
-desktopShell.setUnreadCount(total);          // "(3) DitMesh" title, tray tooltip, macOS badge
-await desktopShell.setCloseToTray(value);    // settings toggle; persisted
-await desktopShell.showWindow();             // e.g. on an incoming call
-```
-
-快捷键 intent 只是纯定义。要激活它们：
+控制器交给 `DitmeshApp`，再由 `AppServices` 接到会话上：
 
 ```dart
-Shortcuts(
-  shortcuts: desktopShortcutBindings(),      // Cmd/Ctrl+K, +N, +M
-  child: Actions(
-    actions: {
-      FocusSearchIntent: CallbackAction<FocusSearchIntent>(onInvoke: (_) => ...),
-      NewMessageIntent: CallbackAction<NewMessageIntent>(onInvoke: (_) => ...),
-      ToggleSidetoneIntent: CallbackAction<ToggleSidetoneIntent>(onInvoke: (_) => ...),
-    },
-    child: child,
-  ),
-)
+shell.addBeforeQuitListener(_beforeQuit);       // flush durable stores, disconnect
+shell.updateStrings(strings.s);                 // persisted language, then every change
+shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray tooltip, macOS badge
 ```
+
+`setCloseToTray(value)` 是设置开关（会持久化）；`showWindow()` 恢复被隐藏的窗口。
+
+`shortcuts.dart` 以纯 intent 的形式定义了 `desktopShortcutBindings()`（Cmd/Ctrl+K 搜索、+N 新消息、
++M 侧音）。App 目前还没有安装它们；要启用，用 `Shortcuts(shortcuts: desktopShortcutBindings(),
+child: Actions(actions: {...}, child: ...))` 包住外壳。
 
 ## 行为
 
@@ -95,9 +66,15 @@ Shortcuts(
   窗口隐藏；否则（设置关闭，或没有托盘宿主）shell 持久化边界、运行 `onBeforeQuit`、销毁托盘和窗口——
   然后 runner 退出。从托盘菜单退出永远是真正的退出。
 - **托盘**：每个平台各自的图标，提示文本 = App 名称（+ " — N 未读"），菜单为
-  显示/隐藏 · 声音开/关（复选框，占位回调）· 退出。在宿主传递点击的平台上（macOS、Windows）
+  显示/隐藏 · 声音开/关 · 退出。声音复选框会持久化，但 `main()` 没有传入
+  `onToggleSound`，所以目前不会改变 App 的任何声音。在宿主传递点击的平台上（macOS、Windows）
   左键切换窗口。每个托盘调用都被容错处理：没有托盘则禁用托盘，缺少方法（Linux 的提示文本）只记录一次日志。
-- **持久化键**：`desktop.windowBounds`（JSON）、`desktop.closeToTray`。
+- **语言**：菜单标签、提示文本和未读窗口标题都是 `S` 字符串（`lib/l10n/app_*.arb` 中的 `desktop*` 键）；
+  产品名（`DesktopShellConfig.appName`）是占位符，从不翻译。控制器在 `main()` 中构建，那时 `LocaleController`
+  还不存在，所以它先使用 `currentS()`（平台语言，或 `strings:` 参数）；`AppServices` 在启动时以持久化的选择、
+  之后在每次语言切换时（`StringsResolver`）调用 `updateStrings(S)`，重新设置标题并在排队的托盘更新之后重建托盘。
+  快捷键标签（`shortcutLabel`）只随平台变化（`⌘K` / `Ctrl+K`），不随语言变化。
+- **持久化键**：`desktop.windowBounds`（JSON）、`desktop.closeToTray`、`desktop.soundEnabled`。
 
 ## 各操作系统注意事项
 

@@ -102,8 +102,7 @@ suite pins down.
 ## Running the tests
 
 ```bash
-export PATH=/home/user/flutter/bin:$PATH
-cd /path/to/ditmesh && dart pub get          # workspace root
+dart pub get                                 # at the workspace root
 cd packages/morse_core
 dart analyze .
 dart test
