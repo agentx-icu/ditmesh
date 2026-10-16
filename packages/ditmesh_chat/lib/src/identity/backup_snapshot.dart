@@ -18,6 +18,7 @@ final class QueuedRow {
     required this.queuedAt,
     this.msgId,
     this.recording,
+    this.sendable = true,
   });
 
   /// Tim2Tox queue slot: a peer key, or `group:<id>`.
@@ -29,6 +30,12 @@ final class QueuedRow {
   final DateTime queuedAt;
   final String? msgId;
   final KeyedRecording? recording;
+
+  /// False for a cancelled or failed tombstone ([OfflineSendControl]): it is
+  /// never sent, so it is not an unsent message to review (see
+  /// [BackupSnapshot.withoutWithdrawn]); its history row is still held back
+  /// like any other queued row's.
+  final bool sendable;
 
   /// History file id this row belongs to (peer key or group id).
   String get historyId => queueKey.startsWith('group:')
@@ -154,6 +161,7 @@ abstract final class BackupSnapshot {
               recording: RecordingMetadata.decode(item.cloudCustomData),
               queuedAt: item.timestamp,
               msgId: id == null || id.isEmpty ? null : id,
+              sendable: OfflineSendControl.dispatchable(item.control),
             ),
           );
         }
@@ -174,12 +182,17 @@ abstract final class BackupSnapshot {
   /// yet: [withdrawals] are `peer\tmessageId` entries of the identity's
   /// `ditmesh_pending_withdrawals`. Those rows are not unsent messages; a
   /// restore must not offer them for review again. Matched on the C2C
-  /// queue key (case-insensitive) and the durable id together.
+  /// queue key (case-insensitive) and the durable id together. Tombstones
+  /// ([QueuedRow.sendable] false) are left out the same way.
   static List<QueuedRow> withoutWithdrawn(
     List<QueuedRow> queue,
     Set<String> withdrawals,
   ) {
-    if (withdrawals.isEmpty) return queue;
+    final sendable = [
+      for (final row in queue)
+        if (row.sendable) row,
+    ];
+    if (withdrawals.isEmpty) return sendable;
     final withdrawn = {
       for (final entry in withdrawals)
         if (entry.indexOf('\t') case final tab when tab > 0)
@@ -187,7 +200,7 @@ abstract final class BackupSnapshot {
               '${entry.substring(tab + 1)}',
     };
     return [
-      for (final row in queue)
+      for (final row in sendable)
         if (row.queueKey.startsWith('group:') ||
             row.msgId == null ||
             !withdrawn.contains(

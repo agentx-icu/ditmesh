@@ -104,9 +104,7 @@ extension _Sending on Tim2ToxChatService {
     final result = await svc.cancelQueuedMessage(peer, id);
     // Judged by the outbox, not the answer: notApplicable also comes back
     // while another cancel of the row is still persisting.
-    final queued = svc.offlineMessageQueuePersistence
-        .getMessages(peer)
-        .any((m) => m.msgID == id);
+    final queued = _friendsPart.stillQueued(svc, peer, id);
     if (queued && !_isCurrent(svc)) {
       _friendsPart.rememberWithdrawal(prefix, peer, id);
     }

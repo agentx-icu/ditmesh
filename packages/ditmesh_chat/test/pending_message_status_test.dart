@@ -9,6 +9,7 @@ OfflineMessageItem _item({
   required DateTime at,
   String? msgID,
   ChatMessageContentKind contentKind = ChatMessageContentKind.normal,
+  String? control,
 }) => (
   kind: 'text',
   text: text,
@@ -18,6 +19,7 @@ OfflineMessageItem _item({
   msgID: msgID,
   cloudCustomData: null,
   contentKind: contentKind,
+  control: control,
 );
 
 ChatMessage _row({
@@ -121,5 +123,24 @@ void main() {
       0,
     );
     expect(status.summary(conversationId: ConversationIds.c2c('C' * 64)).oldest, isNull);
+  });
+
+  test('cancelled and failed tombstones are not queued; a retry is', () {
+    queue.setCache({
+      peer: [
+        _item(text: 'c', at: t0, msgID: 'c1', control: OfflineSendControl.cancelled),
+        _item(text: 'f', at: t0, msgID: 'f1', control: OfflineSendControl.failed),
+        _item(text: 'legacy', at: t0, control: OfflineSendControl.cancelled),
+        _item(text: 'r', at: t1, msgID: 'r1', control: OfflineSendControl.retry),
+      ],
+    });
+    expect(status.isQueued(_row(text: 'c', at: t0, msgID: 'c1'), c2c), isFalse);
+    expect(status.isQueued(_row(text: 'f', at: t0, msgID: 'f1'), c2c), isFalse);
+    expect(status.isQueued(_row(text: 'legacy', at: t0), c2c), isFalse);
+    expect(status.isQueued(_row(text: 'r', at: t1, msgID: 'r1'), c2c), isTrue);
+    final mine = status.summary(conversationId: c2c);
+    expect(mine.count, 1);
+    expect(mine.oldest, t1);
+    expect(status.summary().count, 1);
   });
 }

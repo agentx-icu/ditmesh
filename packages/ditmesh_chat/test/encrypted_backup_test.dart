@@ -22,7 +22,12 @@ const _all = {
   BackupCategory.preferences,
 };
 
-OfflineMessageItem _item(String text, DateTime at, String? id) => (
+OfflineMessageItem _item(
+  String text,
+  DateTime at,
+  String? id, {
+  String? control,
+}) => (
   kind: 'text',
   text: text,
   filePath: null,
@@ -31,6 +36,7 @@ OfflineMessageItem _item(String text, DateTime at, String? id) => (
   msgID: id,
   cloudCustomData: null,
   contentKind: ChatMessageContentKind.normal,
+  control: control,
 );
 
 Map<String, Object?> _row(
@@ -151,6 +157,7 @@ void main() {
             msgID: 'queued-1',
             cloudCustomData: metadata,
             contentKind: ChatMessageContentKind.normal,
+            control: null,
           ),
         ],
       });
@@ -707,6 +714,54 @@ void main() {
       expect(n, 1);
       expect(utf8.decode(lines), contains('"keep"'));
     });
+
+    test(
+      'tombstones are held back from history but are not unsent rows',
+      () async {
+        Directory(
+          p.dirname(paths.offlineQueueFile),
+        ).createSync(recursive: true);
+        await OfflineMessageQueuePersistence(
+          queueFilePath: paths.offlineQueueFile,
+        ).saveQueue({
+          kPeerKey: [
+            _item('QRL?', t1, 'q1'),
+            _item('gone', t0, 'c1', control: OfflineSendControl.cancelled),
+            _item('lost', t0, 'f1', control: OfflineSendControl.failed),
+            _item('again', t1, 'r1', control: OfflineSendControl.retry),
+          ],
+        });
+        final rows = await BackupSnapshot.readQueue(paths);
+        expect(rows.map((r) => (r.msgId, r.sendable)), [
+          ('q1', true),
+          ('c1', false),
+          ('f1', false),
+          ('r1', true),
+        ]);
+        expect(
+          BackupSnapshot.withoutWithdrawn(rows, const {}).map((r) => r.msgId),
+          ['q1', 'r1'],
+        );
+        // A tombstone's row may not say cancelled / failed on disk yet; it is
+        // never exported as a sent message.
+        final doc = utf8.encode(
+          jsonEncode({
+            'conversationId': kPeerKey,
+            'messages': [
+              _row('QRL?', t1, 'q1'),
+              _row('gone', t0, 'c1'),
+              _row('keep', t0, 'k'),
+            ],
+          }),
+        );
+        final (_, removed) = BackupSnapshot.withoutQueued(
+          '$kPeerKey.json',
+          Uint8List.fromList(doc),
+          rows,
+        );
+        expect(removed, 2);
+      },
+    );
 
     test('verifyStable notices a changed or a new file', () async {
       final dir = Directory(p.join(tempRoot.path, 'v'))..createSync();

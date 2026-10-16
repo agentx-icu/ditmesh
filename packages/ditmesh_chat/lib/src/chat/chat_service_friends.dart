@@ -48,36 +48,50 @@ class _FriendsPart {
   /// Takes every row still queued for [key] out of the durable outbox: a
   /// removed (or blocked) friend's queue would otherwise never drain, and
   /// its history rows are gone with the friendship. Rows the outbox does
-  /// not let go of now are recorded and retried every refresh round.
+  /// not let go of now are recorded and retried every refresh round. If the
+  /// session goes away meanwhile, the rest is remembered for the identity's
+  /// next session instead (in memory, like a refused send's withdrawal).
   Future<void> withdrawQueuedFor(FfiChatService svc, String key) async {
+    final prefix = _owner._accountPrefix;
     final queue = svc.offlineMessageQueuePersistence;
     for (final peer in queue.getPeerIds().toList()) {
       if (ConversationIds.normalizeKey(peer) != key) continue;
       for (final item in queue.getMessages(peer).toList()) {
         final id = item.msgID;
         if (id == null || id.isEmpty) continue;
-        await svc.cancelQueuedMessage(peer, id);
-        _owner._ensureCurrent(svc);
-        if (queue.getMessages(peer).any((m) => m.msgID == id)) {
+        if (!OfflineSendControl.dispatchable(item.control)) continue;
+        if (_owner._isCurrent(svc)) await svc.cancelQueuedMessage(peer, id);
+        if (!stillQueued(svc, peer, id)) continue;
+        if (_owner._isCurrent(svc)) {
           await recordWithdrawal(peer, id);
-          _owner._ensureCurrent(svc);
+        } else {
+          rememberWithdrawal(prefix, peer, id);
         }
       }
     }
+    _owner._ensureCurrent(svc);
   }
+
+  /// Whether [peer]'s outbox still holds item [id] in a state a drain may
+  /// send. A cancel commits as a tombstone ([OfflineSendControl]) that is
+  /// never sent; Tim2Tox removes it once the row durably says cancelled
+  /// (not while the row is not loaded, e.g. its history went with the
+  /// friendship), so the tombstone is withdrawn but may stay queued.
+  bool stillQueued(FfiChatService svc, String peer, String id) => svc
+      .offlineMessageQueuePersistence
+      .getMessages(peer)
+      .any((m) => m.msgID == id && OfflineSendControl.dispatchable(m.control));
 
   /// Every refresh round: a recorded row still in the outbox is cancelled
   /// again (whatever a cancel answers, the outbox decides next round: a
   /// concurrent cancel may still fail); a row gone from it is forgotten.
   Future<void> retryWithdrawals(FfiChatService svc) async {
     final memory = _unrecorded.putIfAbsent(_owner._accountPrefix, () => {});
-    final queue = svc.offlineMessageQueuePersistence;
     for (final entry in {..._owner._meta.withdrawals, ...memory}) {
       final tab = entry.indexOf('\t');
       final peer = tab > 0 ? entry.substring(0, tab) : '';
       final id = tab > 0 ? entry.substring(tab + 1) : '';
-      bool queued() =>
-          id.isNotEmpty && queue.getMessages(peer).any((m) => m.msgID == id);
+      bool queued() => id.isNotEmpty && stillQueued(svc, peer, id);
       try {
         if (queued()) {
           await svc.cancelQueuedMessage(peer, id);

@@ -10,6 +10,7 @@ import 'package:ditmesh_chat/src/engine/rhythm_replay.dart';
 import 'package:ditmesh_chat/src/chat/recording_metadata.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart' show KeyedRecording;
 import 'package:tim2tox_dart/models/chat_message.dart';
+import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 import 'helpers/fakes.dart';
 import 'rhythm_service_test.dart' show PacketFfi;
 
@@ -381,6 +382,36 @@ void main() {
       expect(envelopesWithId(pair.aliceSent.sublist(before), _id), 1);
       expect(pair.bobRows(), hasLength(1));
       expect(pair.aliceRow().isReceived, isTrue);
+    },
+  );
+
+  test(
+    'a row whose queue item is a cancelled tombstone is not replayed',
+    () async {
+      await pair.restartAliceWithUnacked();
+      // The cancel committed on the queue; its history write was lost.
+      await pair.a.loadHistory(kPeerKey);
+      pair.a.offlineMessageQueuePersistence.setCache({
+        kPeerKey: [
+          (
+            kind: 'text',
+            text: 'CQ',
+            filePath: null,
+            fileName: null,
+            timestamp: pair.aliceRow().timestamp,
+            msgID: 'dmr:$_id',
+            cloudCustomData: _metadata,
+            contentKind: ChatMessageContentKind.normal,
+            control: OfflineSendControl.cancelled,
+          ),
+        ],
+      });
+      expect(pair.aliceRow().isCancelled, isFalse);
+      final before = pair.aliceSent.length;
+      await pair.connect();
+      await pair.settle();
+      expect(envelopesWithId(pair.aliceSent.sublist(before), _id), 0);
+      expect(pair.bobRows(), isEmpty);
     },
   );
 

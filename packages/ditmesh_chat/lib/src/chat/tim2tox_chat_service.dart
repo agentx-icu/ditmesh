@@ -6,6 +6,8 @@ import 'package:meta/meta.dart';
 import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/models/send_control_result.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
+import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart'
+    show OfflineSendControl;
 
 import '../adapters/key_value_store.dart';
 import '../adapters/prefs_adapter.dart';
@@ -150,16 +152,19 @@ class Tim2ToxChatService
   }
 
   @override
-  MessageMapper get _mapper => MessageMapper(
-    selfKey: _selfKey,
-    selfName: _identity.current?.displayName ?? '',
-    nameOf: _friendsPart.nameOf,
-    isQueued: _service == null
+  MessageMapper get _mapper {
+    final svc = _service;
+    final outbox = svc == null
         ? null
-        : PendingMessageStatus(
-            _service!.offlineMessageQueuePersistence,
-          ).isQueued,
-  );
+        : PendingMessageStatus(svc.offlineMessageQueuePersistence);
+    return MessageMapper(
+      selfKey: _selfKey,
+      selfName: _identity.current?.displayName ?? '',
+      nameOf: _friendsPart.nameOf,
+      isQueued: outbox?.isQueued,
+      tombstoneOf: outbox?.tombstoneOf,
+    );
+  }
 
   /// Whether [svc] is still the bound session. Every refresh that awaited
   /// something checks this before publishing: a tick or callback started on

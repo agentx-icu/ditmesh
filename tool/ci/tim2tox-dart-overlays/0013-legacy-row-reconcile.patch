@@ -1,0 +1,26 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -12870,11 +12870,20 @@
+ 
+   /// Index of [captured]'s row in [history] now, after an await: by msgID
+   /// (its current version), or by identity for a legacy row without one.
++  /// DitMesh: a receipt may have replaced that legacy row (copyWith) during
++  /// the await; it is then found by its content and exact instant.
+   static int _currentRowIndex(List<ChatMessage> history, ChatMessage captured) {
+     final id = captured.msgID;
+-    return id != null && id.isNotEmpty
+-        ? _ownRowIndex(history, id)
+-        : history.lastIndexWhere((m) => identical(m, captured));
++    if (id != null && id.isNotEmpty) return _ownRowIndex(history, id);
++    final same = history.lastIndexWhere((m) => identical(m, captured));
++    if (same >= 0) return same;
++    return history.lastIndexWhere((m) =>
++        m.isSelf &&
++        (m.msgID == null || m.msgID!.isEmpty) &&
++        m.filePath == captured.filePath &&
++        m.text == captured.text &&
++        m.contentKind == captured.contentKind &&
++        m.timestamp == captured.timestamp);
+   }
+ 
+   static OfflineMessageItem _withControl(

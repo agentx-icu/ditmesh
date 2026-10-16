@@ -11,6 +11,7 @@ import 'package:ditmesh_chat_api/testing.dart';
 import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/models/send_control_result.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
+import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 
 import 'helpers/fakes.dart';
 
@@ -22,6 +23,15 @@ Future<void> _settles(bool Function() condition) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
 }
+
+/// What a drain could still send to the peer. A withdrawal commits as a
+/// cancelled tombstone, which is never sent; Tim2Tox drops it once the row
+/// durably says cancelled, so after a removal (the row went with the
+/// friendship) it may stay queued.
+List<OfflineMessageItem> _sendable(OfflineMessageQueuePersistence queue) => [
+  for (final item in queue.getMessages(kPeerKey))
+    if (OfflineSendControl.dispatchable(item.control)) item,
+];
 
 /// Tim2Tox whose next [failCancels] withdrawals cannot be persisted.
 class _FlakyCancel extends DitmeshFfiChatService {
@@ -42,6 +52,9 @@ class _FlakyCancel extends DitmeshFfiChatService {
 
   /// Runs after a C2C text is queued, before the send returns.
   Future<void> Function()? afterSend;
+
+  /// Runs when a cancel starts, before it answers.
+  Future<void> Function()? beforeCancel;
 
   @override
   Future<t2t.ChatMessage> sendTextWithResult(
@@ -66,6 +79,7 @@ class _FlakyCancel extends DitmeshFfiChatService {
     String msgID, {
     bool isGroup = false,
   }) async {
+    await beforeCancel?.call();
     if (failCancels > 0) {
       failCancels--;
       return SendControlResult.persistFailed;
@@ -180,7 +194,7 @@ void main() {
       throwsA(isA<ChatException>().having((e) => e.code, 'code', code));
 
   List<Object?> queued() =>
-      engineService.offlineMessageQueuePersistence.getMessages(kPeerKey);
+      _sendable(engineService.offlineMessageQueuePersistence);
 
   group('sendText target (M1)', () {
     test(
@@ -263,11 +277,11 @@ void main() {
       };
       await expectLater(chat.sendText(dm, 'CQ'), throwsCode('send_failed'));
       final queue = flaky.offlineMessageQueuePersistence;
-      expect(queue.getMessages(kPeerKey), hasLength(1));
+      expect(_sendable(queue), hasLength(1));
       // The next refresh rounds withdraw it (the native delete is still
       // running: Tim2Tox's removeFriend takes over half a second).
-      await _settles(() => queue.getMessages(kPeerKey).isEmpty);
-      expect(queue.getMessages(kPeerKey), isEmpty);
+      await _settles(() => _sendable(queue).isEmpty);
+      expect(_sendable(queue), isEmpty);
       await removal;
     });
 
@@ -288,13 +302,37 @@ void main() {
       await expectLater(chat.sendText(dm, 'CQ'), throwsCode('send_failed'));
       await removal?.catchError((Object _) {});
       final queue = flaky.offlineMessageQueuePersistence;
-      expect(queue.getMessages(kPeerKey), hasLength(1));
+      expect(_sendable(queue), hasLength(1));
       engine.bind(null);
       await pumpEventQueue();
       flaky.failCancels = 0;
       engine.bind(flaky);
-      await _settles(() => queue.getMessages(kPeerKey).isEmpty);
-      expect(queue.getMessages(kPeerKey), isEmpty);
+      await _settles(() => _sendable(queue).isEmpty);
+      expect(_sendable(queue), isEmpty);
+    });
+
+    test('a removal whose session goes away during the withdrawal finishes '
+        'it in the next session of the identity', () async {
+      final flaky = await newService('flaky6', flaky: true) as _FlakyCancel;
+      extra.add(flaky);
+      ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: false));
+      engine.bind(flaky);
+      await pumpEventQueue();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await chat.sendText(dm, 'CQ');
+      final queue = flaky.offlineMessageQueuePersistence;
+      flaky.failCancels = 1;
+      flaky.beforeCancel = () async {
+        flaky.beforeCancel = null;
+        engine.bind(null);
+        await pumpEventQueue();
+      };
+      ffi.friends.clear();
+      await chat.removeFriend(kPeerKey).catchError((Object _) {});
+      expect(_sendable(queue), hasLength(1));
+      engine.bind(flaky);
+      await _settles(() => _sendable(queue).isEmpty);
+      expect(_sendable(queue), isEmpty);
     });
 
     /// Binds a [_FlakyCancel] session and refuses a send to a friend
@@ -329,13 +367,11 @@ void main() {
       final queue = flaky.offlineMessageQueuePersistence;
       expect(recorded(), isEmpty);
       await Future<void>.delayed(const Duration(milliseconds: 150));
-      expect(queue.getMessages(kPeerKey), hasLength(1));
+      expect(_sendable(queue), hasLength(1));
       store.failKey = null;
       flaky.failCancels = 0;
-      await _settles(
-        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
-      );
-      expect(queue.getMessages(kPeerKey), isEmpty);
+      await _settles(() => _sendable(queue).isEmpty && recorded().isEmpty);
+      expect(_sendable(queue), isEmpty);
       expect(recorded(), isEmpty);
     });
 
@@ -346,12 +382,10 @@ void main() {
       final queue = flaky.offlineMessageQueuePersistence;
       expect(recorded(), hasLength(1));
       await Future<void>.delayed(const Duration(milliseconds: 60));
-      expect(queue.getMessages(kPeerKey), hasLength(1));
+      expect(_sendable(queue), hasLength(1));
       expect(recorded(), hasLength(1));
-      await _settles(
-        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
-      );
-      expect(queue.getMessages(kPeerKey), isEmpty);
+      await _settles(() => _sendable(queue).isEmpty && recorded().isEmpty);
+      expect(_sendable(queue), isEmpty);
       expect(recorded(), isEmpty);
     });
 
@@ -366,6 +400,12 @@ void main() {
         ffi.friends.clear();
         await chat.removeFriend(kPeerKey);
         expect(queued(), isEmpty);
+        expect(
+          engineService.offlineMessageQueuePersistence
+              .getMessages(kPeerKey)
+              .map((item) => item.control),
+          everyElement(OfflineSendControl.cancelled),
+        );
         expect(chat.pendingOutbox()?.count, 0);
       },
     );
@@ -395,10 +435,8 @@ void main() {
       await chat.removeFriend(kPeerKey);
       final queue = flaky.offlineMessageQueuePersistence;
       expect(recorded(), hasLength(1));
-      await _settles(
-        () => queue.getMessages(kPeerKey).isEmpty && recorded().isEmpty,
-      );
-      expect(queue.getMessages(kPeerKey), isEmpty);
+      await _settles(() => _sendable(queue).isEmpty && recorded().isEmpty);
+      expect(_sendable(queue), isEmpty);
       expect(recorded(), isEmpty);
     });
 

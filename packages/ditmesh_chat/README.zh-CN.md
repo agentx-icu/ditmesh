@@ -133,8 +133,11 @@ entry*: pathLen u16 | path (UTF-8, '/'-separated) | size u64 | bytes
   `maxMessageBytes`（**1322**，`TOX_MAX_MESSAGE_LENGTH − 50`）的文本抛出 `message_too_long`：
   Tim2Tox 会把它们拆成多条独立消息。
 - Tim2Tox 把发给离线好友 / 尚未连接的群组的消息排队，并返回一条 `pending` 行；持久队列让它在
-  重启后仍显示待发送，即使上游加载历史时清除了临时标志。冲刷成功后该行以
-  `sent` 状态在 `messageEvents` 上重新发出。`MessageMapper.statusOf` 把已取消的行映射为
+  重启后仍显示待发送（Tim2Tox 为带 msgID 的队列项恢复该标志；DitMesh 也匹配没有 msgID 的旧队列项）。
+  取消或冲刷失败先以队列墓碑项提交，再修改该行；DitMesh 把这样的行映射为 `cancelled` / `failed`
+  （送达证据优先于失败），并且从不把墓碑项算作未发送消息：不计入待发送摘要、撤回判断、备份的待审阅项
+  和录制消息重放。已删除好友的取消墓碑项会留在队列中、永不发送，因为 Tim2Tox 只在该行持久标记为
+  已取消后才删除它。冲刷成功后该行以 `sent` 状态在 `messageEvents` 上重新发出。`MessageMapper.statusOf` 把已取消的行映射为
   `cancelled`、冲刷失败映射为 `failed`、排队中映射为 `pending`、收到对端回执映射为 `delivered`。
   `retryMessage` / `cancelPendingMessage` 保留消息 ID，重试不会多出第二个气泡。
 - 原始拍发节奏：发给兼容 DitMesh 对端的手键私聊消息，在会话握手后作为一个 `dmr:` 信封经

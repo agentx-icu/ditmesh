@@ -1,0 +1,24 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -13127,12 +13127,20 @@
+     final historyKey =
+         isGroup ? conversation : _normalizeFriendId(conversation);
+     final history = _historyById[historyKey];
++    // DitMesh: a committed failed tombstone is the row's failure even when
++    // the row's own write did not land before a restart (it is settled only
++    // by a drain, which needs the peer online).
++    bool failed(ChatMessage m) =>
++        m.isFailed ||
++        (!_deliveryProven(m) &&
++            _queuedTextItem(conversation, msgID, isGroup)?.item.control ==
++                OfflineSendControl.failed);
+     final index = history == null
+         ? -1
+         : history.lastIndexWhere((m) =>
+             m.isSelf &&
+             m.msgID == msgID &&
+-            m.isFailed &&
++            failed(m) &&
+             !m.isCancelled &&
+             (m.filePath == null || m.filePath!.isEmpty));
+     if (history == null || index < 0) return SendControlResult.notApplicable;

@@ -36,9 +36,12 @@ void main() {
       nameOf: (_) => null,
       isQueued: (_, _) => true,
     );
+    // Delivery proof means it went out: a queue item that outlived the send
+    // (its removal did not persist) does not make it pending again. Tim2Tox
+    // no longer binds a content receipt to a row that is still queued.
     expect(
       mapper.map(row(), conversationId: 'c2c_PEER').status,
-      MessageStatus.pending,
+      MessageStatus.delivered,
     );
   });
   test('a failed queued send maps to failed, even while still queued', () {
@@ -62,6 +65,7 @@ void main() {
           msgID: 'f1',
           cloudCustomData: null,
           contentKind: t2t.ChatMessageContentKind.normal,
+          control: null,
         ),
       ],
     });
@@ -130,6 +134,7 @@ void main() {
         msgID: 'pending-id',
         cloudCustomData: null,
         contentKind: t2t.ChatMessageContentKind.normal,
+        control: null,
       );
       queue.setCache({
         'PEER': [item],
@@ -220,5 +225,61 @@ void main() {
       mapper.map(legacy('A' * 64), conversationId: 'group_tox_1').id,
       a.id,
     );
+  });
+
+  test('a tombstone is the committed state of a row that does not show it '
+      'yet (a crash before its history write)', () {
+    final queue = OfflineMessageQueuePersistence();
+    final now = DateTime.utc(2026);
+    OfflineMessageItem item(String id, String? control) => (
+      kind: 'text',
+      text: 'CQ',
+      filePath: null,
+      fileName: null,
+      timestamp: now,
+      msgID: id,
+      cloudCustomData: null,
+      contentKind: t2t.ChatMessageContentKind.normal,
+      control: control,
+    );
+    t2t.ChatMessage row(String id, {bool received = false}) => t2t.ChatMessage(
+      msgID: id,
+      fromUserId: 'me',
+      text: 'CQ',
+      timestamp: now,
+      isSelf: true,
+      isReceived: received,
+    );
+    queue.setCache({
+      'PEER': [
+        item('c1', OfflineSendControl.cancelled),
+        item('f1', OfflineSendControl.failed),
+        item('d1', OfflineSendControl.failed),
+        item('r1', OfflineSendControl.retry),
+        item('s1', null),
+      ],
+    });
+    final outbox = PendingMessageStatus(queue);
+    final mapper = MessageMapper(
+      selfKey: 'SELF',
+      selfName: 'me',
+      nameOf: (_) => null,
+      isQueued: outbox.isQueued,
+      tombstoneOf: outbox.tombstoneOf,
+    );
+    MessageStatus status(t2t.ChatMessage m) =>
+        mapper.map(m, conversationId: 'c2c_PEER').status;
+    // Reload cleared isPending: without the tombstone these looked sent.
+    expect(status(row('c1')), MessageStatus.cancelled);
+    expect(status(row('f1')), MessageStatus.failed);
+    // Delivery proof beats a failure, as when Tim2Tox settles the row.
+    expect(status(row('d1', received: true)), MessageStatus.delivered);
+    // A retry item is a send again.
+    expect(status(row('r1')), MessageStatus.pending);
+    expect(status(row('other')), MessageStatus.sent);
+    // Sent and acknowledged, but the queue removal after the send did not
+    // persist: the lingering item does not make it pending again.
+    expect(status(row('s1', received: true)), MessageStatus.delivered);
+    expect(status(row('s1')), MessageStatus.pending);
   });
 }
