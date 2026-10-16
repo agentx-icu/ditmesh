@@ -574,17 +574,22 @@ class _Peer {
       await chat.acceptGroupInvite(chat.groupInvites.single.inviteId);
     }
     await groupOnline();
+    await mark('slot-local-id', {'id': group!.id});
     await barrier('slot-joined');
-    // Wire delivery, not the receipt: the two peers name this group with
-    // different local ids, and group receipts do not resolve across that.
     if (role == 'bob') {
+      // The two peers name this group with different local ids, so alice's
+      // receipt echoes an alias stamped with HER id for it: delivered proves
+      // that Tim2Tox resolved the receipt across that, not only the send.
+      expect(
+        (await read('alice', 'slot-local-id'))['id'],
+        isNot(group!.id),
+        reason: 'both peers share a local id, so this proves nothing',
+      );
       await wait(
-        'text queued in the reused slot handed to the wire',
+        'text queued in the reused slot delivered across local group ids',
         () async => (await chat.loadHistory('group_${group!.id}')).any(
           (row) =>
-              row.id == earlyGroupId &&
-              row.status != MessageStatus.pending &&
-              row.status != MessageStatus.failed,
+              row.id == earlyGroupId && row.status == MessageStatus.delivered,
         ),
       );
       await chat.sendText(

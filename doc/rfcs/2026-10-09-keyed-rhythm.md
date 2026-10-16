@@ -2,7 +2,7 @@
 
 # Original keyed rhythm — implementation contract
 
-This implementation supersedes the earlier proposed annotation RFC for DitMesh. The pinned Tim2Tox revision is `4d6f8b47b4d88b1a3aa82edafc0c92b7a20381f7`; bootstrap generates a separate Dart package with reviewed patches under `tool/ci/tim2tox-dart-overlays`. It does not edit the upstream submodule.
+This implementation supersedes the earlier proposed annotation RFC for DitMesh. The pinned Tim2Tox revision is `14f317e08ee79ac1213af81d359008caf48aa566`; bootstrap generates a separate Dart package with reviewed patches under `tool/ci/tim2tox-dart-overlays`. It does not edit the upstream submodule.
 
 ## Recording and storage
 
