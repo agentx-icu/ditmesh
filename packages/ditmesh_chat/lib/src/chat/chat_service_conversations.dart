@@ -11,6 +11,46 @@ class _ConversationsPart {
 
   final ValueStream<List<Conversation>> conversations = ValueStream(const []);
 
+  /// Per identity and conversation: the last draft or send-intent write. A
+  /// draft write that starts after a send's intent must land after it (and
+  /// so supersede it); an older one must not remove a newer intent.
+  final Map<String, Future<void>> _draftTails = {};
+
+  Future<void> _serialDraft(String conversationId, Future<void> Function() op) {
+    final key = '${_owner._accountPrefix}|$conversationId';
+    final next = (_draftTails[key] ?? Future<void>.value()).then((_) => op());
+    final Future<void> tail = next.then<void>((_) {}, onError: (Object _) {});
+    _draftTails[key] = tail;
+    unawaited(
+      tail.then((_) {
+        if (identical(_draftTails[key], tail)) _draftTails.remove(key);
+      }),
+    );
+    return next;
+  }
+
+  /// Waits for every draft and send-intent write submitted so far: the
+  /// flush, replacement and dispose barriers must cover them, or a write
+  /// still queued here lands after the barrier (in a cleared identity).
+  Future<void> settleDrafts() async {
+    while (_draftTails.isNotEmpty) {
+      await Future.wait(_draftTails.values.toList());
+    }
+  }
+
+  /// Journals a send of [conversationId]'s draft as [messageId], ordered
+  /// with the draft writes. Called before the send's first await.
+  Future<void> recordSendIntent(String conversationId, String messageId) {
+    if (_owner._identity.current == null || _owner._replacing) {
+      throw const ChatException('no_identity', 'No identity is open');
+    }
+    final meta = _owner._meta;
+    return _serialDraft(
+      conversationId,
+      () => meta.setSendIntent(conversationId, messageId),
+    );
+  }
+
   void reset() => conversations.add(const []);
 
   void rebuild(FfiChatService svc) {
@@ -166,7 +206,10 @@ class _ConversationsPart {
     }
     final svc = _owner._service;
     final meta = _owner._meta;
-    await meta.setDraft(conversationId, draft);
+    await _serialDraft(
+      conversationId,
+      () => meta.setDraft(conversationId, draft),
+    );
     if (svc != null && _owner._isCurrent(svc)) rebuild(svc);
   }
 

@@ -10,6 +10,8 @@ import '../adapters/key_value_store.dart';
 import '../adapters/prefs_adapter.dart';
 import '../adapters/scratch_file_adapter.dart';
 import '../bootstrap/host_resolver.dart';
+import '../chat/conversation_meta_store.dart';
+import '../chat/send_intents.dart';
 import '../identity/identity_paths.dart';
 import '../logging/chat_logger.dart';
 import '../native/native_library.dart';
@@ -283,6 +285,20 @@ class Tim2ToxEngine extends ChatEngine {
     return toxId;
   }
 
+  /// [reconcileSendIntents] for the identity being started. A storage
+  /// failure is logged and leaves the intents for the next start; the
+  /// session does not depend on it.
+  Future<void> _settleSendIntents(FfiChatService svc, String prefix) async {
+    try {
+      await reconcileSendIntents(
+        ConversationMetaStore(_store, accountPrefix: prefix),
+        svc,
+      );
+    } catch (e, st) {
+      _logger.error('[Tim2ToxEngine] settling send intents failed', e, st);
+    }
+  }
+
   @override
   Future<void> start(EngineSessionConfig config) async {
     if (_service != null) return;
@@ -293,9 +309,11 @@ class Tim2ToxEngine extends ChatEngine {
     final svc = _build(config.paths, config.accountPrefix);
     // Before init: the native session posts friendAddResult and the group
     // notifications through the SDK port from its first tick on.
+    final settled = Completer<void>();
     _callbacks
       ..install()
-      ..target = svc;
+      ..target = svc
+      ..holdMembership(settled.future);
     try {
       _stagePassphrase(svc, config.profilePassphrase);
       await svc.init(profileDirectory: config.paths.profileDirectory);
@@ -322,6 +340,10 @@ class Tim2ToxEngine extends ChatEngine {
         nickname: config.displayName,
         statusMessage: config.statusMessage,
       );
+      // History and queue are loaded, nothing can drain yet: a send the
+      // previous run committed but whose draft it could not clear is
+      // settled now, while its queued row is still evidence.
+      await _settleSendIntents(svc, config.accountPrefix);
     } catch (e, st) {
       _logger.error('[Tim2ToxEngine] start failed', e, st);
       try {
@@ -331,6 +353,8 @@ class Tim2ToxEngine extends ChatEngine {
         _callbacks.target = null;
       }
       rethrow;
+    } finally {
+      settled.complete();
     }
     _service = svc;
     _connected.add(svc.isConnected);

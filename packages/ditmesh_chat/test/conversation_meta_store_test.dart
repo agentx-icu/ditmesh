@@ -1,8 +1,71 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh_chat/ditmesh_chat.dart';
 import 'package:ditmesh_chat/src/chat/conversation_meta_store.dart';
 
+/// Refuses to write or remove the draft keys while [fail] is set.
+class _FailingDrafts extends MemoryKeyValueStore {
+  bool fail = false;
+
+  @override
+  Future<void> remove(String key) => fail && key.startsWith('ditmesh_draft_')
+      ? Future<void>.error(StateError('draft write refused'))
+      : super.remove(key);
+
+  @override
+  Future<void> setString(String key, String value) =>
+      fail && key.startsWith('ditmesh_draft_')
+      ? Future<void>.error(StateError('draft write refused'))
+      : super.setString(key, value);
+}
+
+/// Draft writes complete only on [release]; intent removals fail at once.
+class _SlowDraftFailingIntent extends MemoryKeyValueStore {
+  final Completer<void> release = Completer<void>();
+
+  @override
+  Future<void> remove(String key) => key.startsWith('ditmesh_send_intent_')
+      ? Future<void>.error(StateError('intent removal refused'))
+      : release.future.then((_) => super.remove(key));
+}
+
 void main() {
+  test('a failing intent removal is reported by the draft write, not as an '
+      'unhandled error', () async {
+    final store = _SlowDraftFailingIntent();
+    final meta = ConversationMetaStore(store, accountPrefix: 'A');
+    await store.setString('ditmesh_draft_c2c_p_A', 'CQ');
+    await meta.setSendIntent('c2c_p', 'dmt:1');
+    final write = meta.setDraft('c2c_p', '');
+    await pumpEventQueue();
+    store.release.complete();
+    await expectLater(write, throwsStateError);
+  });
+
+  test('a draft write supersedes the send intent', () async {
+    final meta = ConversationMetaStore(MemoryKeyValueStore(), accountPrefix: 'A');
+    await meta.setDraft('c2c_p', 'CQ');
+    await meta.setSendIntent('c2c_p', 'dmt:1');
+    expect(meta.sendIntent('c2c_p'), (id: 'dmt:1', draft: 'CQ'));
+    expect(meta.allDrafts(), {'c2c_p': 'CQ'}, reason: 'never read as a draft');
+    await meta.setDraft('c2c_p', 'CQ');
+    expect(meta.sendIntent('c2c_p'), isNull);
+  });
+
+  test('a failed draft write leaves the send intent standing', () async {
+    final store = _FailingDrafts();
+    final meta = ConversationMetaStore(store, accountPrefix: 'A');
+    await meta.setDraft('c2c_p', 'CQ');
+    await meta.setSendIntent('c2c_p', 'dmt:1');
+    store.fail = true;
+    await expectLater(meta.setDraft('c2c_p', ''), throwsStateError);
+    expect(meta.draft('c2c_p'), 'CQ');
+    expect(meta.sendIntent('c2c_p'), (id: 'dmt:1', draft: 'CQ'),
+        reason: 'the stored draft is still the one that was sent');
+  });
+
+
   const prefixA = 'AAAAAAAAAAAAAAAA';
   const prefixB = 'BBBBBBBBBBBBBBBB';
   const c2c = 'c2c_${'1234567890ABCDEF'}';

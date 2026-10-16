@@ -30,6 +30,22 @@ class NativeCustomCallbacks {
   /// The live session, or null between sessions (callbacks are dropped).
   FfiChatService? target;
 
+  /// The session-scoped (group membership) notifications run one after
+  /// another, in arrival order, behind this tail.
+  Future<void> _membership = Future<void>.value();
+
+  /// Holds the session-scoped notifications until [until] completes,
+  /// keeping their order: a join starts the group's queue drain, which must
+  /// not run before the engine settled the previous run's send intents
+  /// (`reconcileSendIntents`), and a quit that arrived after a held join
+  /// must still run after it.
+  void holdMembership(Future<void> until) {
+    _membership = _membership.then((_) => until).then<void>(
+          (_) {},
+          onError: (Object _) {},
+        );
+  }
+
   /// Notifications stamped with the emitting native session (see
   /// `Tim2ToxSdkPlatform._sessionScopedNativeNotifications`).
   static const Set<String> sessionScoped = {
@@ -72,6 +88,23 @@ class NativeCustomCallbacks {
     if (sessionScoped.contains(callbackName) && !_owns(svc, callbackName, data)) {
       return;
     }
+    if (!sessionScoped.contains(callbackName)) {
+      return _guarded(svc, callbackName, data);
+    }
+    final Future<void> run = _membership.then((_) {
+      // Held across a session change: not this session's any more.
+      if (!identical(target, svc)) return null;
+      return _guarded(svc, callbackName, data);
+    });
+    _membership = run;
+    await run;
+  }
+
+  Future<void> _guarded(
+    FfiChatService svc,
+    String callbackName,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await _dispatch(svc, callbackName, data);
     } catch (e, st) {

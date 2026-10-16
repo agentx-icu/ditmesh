@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -97,6 +98,57 @@ void main() {
       'session_epoch': 3,
     }, {});
     expect(svc.knownGroups, contains('g_live'));
+  });
+
+  test('a group join waits for the hold before it can start a drain', () async {
+    ffi.sessionEpoch = 3;
+    final hold = Completer<void>();
+    router.holdMembership(hold.future);
+    final join = router.handle('groupJoinNotification', {
+      'group_id': 'g_held',
+      'instance_id': 0,
+      'session_epoch': 3,
+    }, {});
+    await pumpEventQueue();
+    expect(svc.knownGroups, isNot(contains('g_held')),
+        reason: 'the send intents of the last run are not settled yet');
+    hold.complete();
+    await join;
+    expect(svc.knownGroups, contains('g_held'));
+  });
+
+  test('a held group join of a session that ended meanwhile is dropped',
+      () async {
+    ffi.sessionEpoch = 3;
+    final hold = Completer<void>();
+    router.holdMembership(hold.future);
+    final join = router.handle('groupJoinNotification', {
+      'group_id': 'g_gone',
+      'instance_id': 0,
+      'session_epoch': 3,
+    }, {});
+    router.target = null;
+    hold.complete();
+    await join;
+    expect(svc.knownGroups, isNot(contains('g_gone')));
+  });
+
+  test('held membership callbacks keep their order: a quit after a held '
+      'join still wins', () async {
+    ffi.sessionEpoch = 3;
+    final hold = Completer<void>();
+    router.holdMembership(hold.future);
+    final scope = {'instance_id': 0, 'session_epoch': 3};
+    final join = router.handle(
+        'groupJoinNotification', {'group_id': 'g_order', ...scope}, {});
+    final quit = router.handle(
+        'groupQuitNotification', {'group_id': 'g_order', ...scope}, {});
+    await pumpEventQueue();
+    expect(svc.knownGroups, isNot(contains('g_order')));
+    hold.complete();
+    await Future.wait([join, quit]);
+    expect(svc.knownGroups, isNot(contains('g_order')),
+        reason: 'the join must not land after the quit');
   });
 
   test('unknown callbacks are ignored with a log line, not an error', () async {

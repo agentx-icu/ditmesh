@@ -27,10 +27,29 @@ extension _Sending on Tim2ToxChatService {
     // The note to self is stored locally, never sent.
     final checked = !isGroup && key != _selfKey;
     final removals = _friendsPart.removals;
+    // The originating session's view: a row committed there is mapped with
+    // its self key and names even if the session detached meanwhile.
+    final mapper = _mapper;
+    // Every send carries its own id (recordings the rhythm transport's
+    // `dmr:` form), journalled before the first await so a draft write the
+    // composer starts later is ordered after it.
+    final id = recording == null
+        ? 'dmt:${RhythmProtocol.freshId()}'
+        : 'dmr:${RhythmProtocol.freshId()}';
+    final intent = _conversationsPart.recordSendIntent(conversationId, id)
+      ..ignore();
     if (checked) await _requireFriend(svc, key);
+    try {
+      await intent;
+    } on ChatException {
+      rethrow;
+    } on Object catch (e) {
+      // Nothing is queued yet: the draft stays and the send can be retried.
+      throw ChatException('send_failed', 'Could not record the send: $e');
+    }
+    _ensureCurrent(svc);
     final t2t.ChatMessage row;
     try {
-      final id = recording == null ? null : 'dmr:${RhythmProtocol.freshId()}';
       if (isGroup) {
         svc.armNextSendCloudCustomData(RecordingMetadata.encode(recording));
       }
@@ -47,8 +66,10 @@ extension _Sending on Tim2ToxChatService {
     } on StateError catch (e) {
       throw ChatException('send_failed', e.message);
     }
-    _ensureCurrent(svc);
-    final message = _mapper.map(row, conversationId: conversationId);
+    final message = mapper.map(row, conversationId: conversationId);
+    // Committed (queued or sent): from here on the send succeeds. Failing it
+    // would leave the composer offering the same text again.
+    if (!_isCurrent(svc)) return message;
     // A remove or block that ran while this send awaited: a row it left
     // queued would never drain, so it is cancelled and the send refused.
     if (checked &&
@@ -62,8 +83,13 @@ extension _Sending on Tim2ToxChatService {
       }
     }
     if (_meta.hidden.contains(conversationId)) {
-      await _meta.unhide(conversationId);
-      _ensureCurrent(svc);
+      try {
+        await _meta.unhide(conversationId);
+      } on Object catch (e, st) {
+        // The row's own message event unhides it again (_onEngineMessage).
+        _logger.error('[Chat] unhide after a send failed', e, st);
+      }
+      if (!_isCurrent(svc)) return message;
     }
     _conversationsPart.rebuild(svc);
     return message;
