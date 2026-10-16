@@ -1,0 +1,33 @@
+--- a/lib/service/extension_transport.dart
++++ b/lib/service/extension_transport.dart
+@@ -20,6 +20,13 @@
+   Future<bool>? attempt;
+ }
+ 
++/// Thrown by a [FfiChatService.sendTextExtension] override when the native
++/// transport refused one of its packets (send queue full or congested). The
++/// offline-queue drain keeps the item queued instead of failing it.
++final class ExtensionSendRefused extends StateError {
++  ExtensionSendRefused(super.message);
++}
++
+ /// Narrow bridge used by DitMesh's additive timing protocol. These helpers
+ /// share upstream history, unread, streams and durable queue ownership.
+ extension FfiExtensionTransport on FfiChatService {
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -13152,10 +13152,13 @@
+     try {
+       extensionId = await sendTextExtension(normalizedPeerId, item.text,
+           item.cloudCustomData, durableId: item.msgID, kind: item.contentKind);
+-    } on Object {
++    } on Object catch (e) {
+       if (_sessionClosed || _pollDisposed || _sessionEpoch != extensionEpoch) {
+         throw const _OfflineDuringDrain();
+       }
++      // A refused packet is backpressure, not a failed message: keep the
++      // item queued, as for a refused native text send.
++      if (e is ExtensionSendRefused) throw _TextTransportSendError(e.message);
+       rethrow;
+     }
+     if (_sessionClosed || _pollDisposed || _sessionEpoch != extensionEpoch) {

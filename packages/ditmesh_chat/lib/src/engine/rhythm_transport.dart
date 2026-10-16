@@ -8,6 +8,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart' show KeyedRecording;
 import '../chat/recording_metadata.dart';
 import '../chat/group_bindings.dart';
 import 'rhythm_protocol.dart';
+import 'rhythm_replay.dart';
 
 /// Direct arrivals admitted but not yet finished, across every peer. Matches
 /// the service-wide bound on receives awaiting persistence: an arrival beyond
@@ -43,6 +44,11 @@ final class RhythmTransport {
   final Map<String, String> _peerSessions = {};
   final Map<String, DateTime> _helloAt = {};
   final Map<String, Completer<void>> _ready = {};
+
+  /// Peers with a replay in flight, mapped to whether another handshake
+  /// completed meanwhile and asked for a rerun. A rerun is never dropped: a
+  /// fresh hello may be a new recovery even under an unchanged session.
+  final Map<String, bool> _replays = {};
 
   /// `peer|dmr:id` of every direct arrival from admission until it finishes,
   /// whether queued or being received; its size is the admitted count.
@@ -105,8 +111,28 @@ final class RhythmTransport {
     final id = RhythmProtocol.validId(candidate)
         ? candidate!
         : RhythmProtocol.freshId();
+    if (!_sendAll(
+      peer,
+      _envelopePackets(remoteSession, id, text, recording, kind),
+    )) {
+      // Once a chunk escaped, a plaintext fallback could duplicate the text.
+      // A queue drain keeps its item for a later retry under the same id.
+      throw ExtensionSendRefused('Recorded message packet was not accepted');
+    }
+    return 'dmr:$id';
+  }
+
+  /// One envelope addressed to [remoteSession], under a fresh transfer id.
+  /// A replay keeps [id], which the receiver deduplicates and acknowledges.
+  List<String> _envelopePackets(
+    String remoteSession,
+    String id,
+    String text,
+    KeyedRecording recording,
+    ChatMessageContentKind kind,
+  ) {
     final transferId = RhythmProtocol.freshId();
-    final packets = RhythmProtocol.packets(transferId, {
+    return RhythmProtocol.packets(transferId, {
       'version': 1,
       'id': id,
       'transferId': transferId,
@@ -116,14 +142,72 @@ final class RhythmTransport {
       'contentKind': kind.name,
       'recording': recording.toJson(),
     });
+  }
+
+  bool _sendAll(String peer, List<String> packets) {
     for (final packet in packets) {
-      if (!service.sendExtensionPacket(peer, packet)) {
-        // Once a chunk escaped, a plaintext fallback could duplicate the text.
-        // Upstream keeps queued items on StateError's typed transport wrapper.
-        throw StateError('Recorded message packet was not accepted');
-      }
+      if (!service.sendExtensionPacket(peer, packet)) return false;
     }
-    return 'dmr:$id';
+    return true;
+  }
+
+  /// Resends this peer's unacknowledged recorded rows ([RhythmReplay]) once
+  /// the handshake has completed again: after a silent drop, a restart on
+  /// either side, or a peer that lost our session.
+  void _replayUnacked(String peer) {
+    if (!_peerSessions.containsKey(peer)) return;
+    if (_replays.containsKey(peer)) {
+      _replays[peer] = true;
+      return;
+    }
+    _replays[peer] = false;
+    unawaited(_runReplays(peer, service.extensionSessionEpoch));
+  }
+
+  Future<void> _runReplays(String peer, int epoch) async {
+    try {
+      do {
+        _replays[peer] = false;
+        await _replay(peer, epoch);
+      } while (_replays[peer] == true &&
+          epoch == service.extensionSessionEpoch);
+    } on Object {
+      // Best effort: the rows stay unacknowledged for the next handshake.
+    } finally {
+      _replays.remove(peer);
+    }
+  }
+
+  Future<void> _replay(String peer, int epoch) async {
+    // Sends this handshake released go first: a replay only takes the send
+    // capacity they leave, and stops at its first refused packet.
+    await Future<void>(() {});
+    final session = _peerSessions[peer];
+    if (session == null) return;
+    // A cold start may not have loaded this conversation yet.
+    if (service.getHistory(peer).isEmpty) await service.loadHistory(peer);
+    // The peer went offline, restarted or was blocked meanwhile, or this
+    // service closed: a rerun or the next handshake replays instead.
+    if (epoch != service.extensionSessionEpoch ||
+        _peerSessions[peer] != session ||
+        service.isBlocked(peer)) {
+      return;
+    }
+    final rows = RhythmReplay.candidates(
+      service.getHistory(peer),
+      DateTime.now(),
+    );
+    for (final row in rows) {
+      final packets = _envelopePackets(
+        session,
+        RhythmReplay.wireId(row)!,
+        row.text,
+        RecordingMetadata.decode(row.cloudCustomData)!,
+        row.contentKind,
+      );
+      // A full send buffer or a closed session: the next handshake retries.
+      if (!_sendAll(peer, packets)) return;
+    }
   }
 
   bool consume(String peer, String payload, {String? groupId}) {
@@ -163,6 +247,9 @@ final class RhythmTransport {
               }),
             );
             presence(peer, true);
+            // A peer says hello only when it lacks our session: it restarted
+            // or saw us offline, so what we sent meanwhile may be lost.
+            _replayUnacked(peer);
           }
         case 'hello_ack':
           if (packet['nonce'] == _challenges[peer] &&
@@ -170,6 +257,7 @@ final class RhythmTransport {
             _peerSessions[peer] = packet['session'] as String;
             final ready = _ready[peer];
             if (ready != null && !ready.isCompleted) ready.complete();
+            _replayUnacked(peer);
           }
         case 'ack':
           if (packet['session'] == _session &&

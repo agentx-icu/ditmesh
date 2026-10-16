@@ -28,3 +28,10 @@ Bootstrap 把固定的 `third_party/tim2tox/dart` 复制到被忽略的
 进度事件上标记活动，因此以 200 ms 读取事件：发送端的传输记录在完成后不会
 清除，不能用来触发 50 ms 规则。`packages/ditmesh_chat/test/poll_cadence_test.dart` 覆盖策略
 与会话节奏；`native_two_peer_test.dart` 检查生产引擎构建的是自适应服务。
+
+`0012-extension-refusal-keeps-queue.patch` 新增 `ExtensionSendRefused`：当原生
+传输拒收某个分包时，`sendTextExtension` 的覆写实现抛出它。离线队列排空把它当作
+原生文本发送被拒处理：条目留在队列中，对应行保持待发送，不会标记为失败。录制
+信封以同一消息标识重试，接收端按该标识去重。
+`packages/ditmesh_chat/test/recorded_resend_test.dart` 与 DitMesh 对未确认录制
+消息的重放一起覆盖此行为。

@@ -37,3 +37,11 @@ it drains at 200 ms: outbound transfer records are not cleared on completion
 and cannot drive the 50 ms rule. `packages/ditmesh_chat/test/poll_cadence_test.dart` covers the
 policy and the session cadence; `native_two_peer_test.dart` checks the
 production engine builds the adaptive service.
+
+`0012-extension-refusal-keeps-queue.patch` adds `ExtensionSendRefused`, which
+a `sendTextExtension` override throws when the native transport refuses one of
+its packets. The offline-queue drain treats it like a refused native text send:
+the item stays queued and its row stays pending instead of being marked failed.
+A recorded envelope is retried under the same message identity, which the
+receiver deduplicates. `packages/ditmesh_chat/test/recorded_resend_test.dart`
+covers it together with DitMesh's replay of unacknowledged recorded messages.
