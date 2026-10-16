@@ -5,6 +5,8 @@ import 'package:tim2tox_dart/models/chat_message.dart' as t2t;
 import 'package:tim2tox_dart/utils/conversation_id_utils.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart'
     show isExtensionMetadataUpdate;
+import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart'
+    show OfflineSendControl;
 import 'recording_metadata.dart';
 
 /// Conversation-id helpers shared by the chat service parts.
@@ -45,6 +47,7 @@ class MessageMapper {
     required this.selfName,
     required this.nameOf,
     this.isQueued,
+    this.tombstoneOf,
   });
 
   /// Our 64-hex public key (upper-case). Empty before login.
@@ -56,6 +59,11 @@ class MessageMapper {
 
   /// Checks the durable outbox when history's transient pending flag was lost.
   final bool Function(t2t.ChatMessage message, String conversationId)? isQueued;
+
+  /// The control of a cancelled / failed tombstone queued for a row
+  /// ([OfflineSendControl]), or null.
+  final String? Function(t2t.ChatMessage message, String conversationId)?
+  tombstoneOf;
 
   /// [conversationId] is required for our own C2C rows: Tim2Tox stamps them
   /// with the login alias and no peer, so the caller must know the target.
@@ -75,20 +83,36 @@ class MessageMapper {
       senderName: isMine ? selfName : nameOf(sender),
       text: text,
       timestamp: m.timestamp,
-      // A cancelled or failed row keeps that state even while its queue item
-      // lingers (Tim2Tox emits the row before the durable removal);
-      // otherwise the durable queue says pending.
-      status:
-          isMine &&
-              !m.isCancelled &&
-              !m.isFailed &&
-              (isQueued?.call(m, conversationId) ?? false)
-          ? api.MessageStatus.pending
-          : statusOf(m),
+      status: _status(m, conversationId),
       isMine: isMine,
       recording: RecordingMetadata.decode(m.cloudCustomData),
       isUpdate: isExtensionMetadataUpdate(m),
     );
+  }
+
+  /// [statusOf], with the durable queue's word on our own rows. A cancelled
+  /// row keeps that state even while its queue item lingers. A tombstone is
+  /// a committed cancel or failure the row may not show yet (a crash before
+  /// its history write); delivery proof beats a failed one, as in Tim2Tox.
+  /// A failed row stays failed while a retry item waits for the drain to
+  /// clear it, and a delivered one stays delivered when the queue removal
+  /// after its send did not persist; otherwise a sendable queue item says
+  /// pending.
+  api.MessageStatus _status(t2t.ChatMessage m, String conversationId) {
+    if (!m.isSelf || m.isCancelled) return statusOf(m);
+    switch (tombstoneOf?.call(m, conversationId)) {
+      case OfflineSendControl.cancelled:
+        return api.MessageStatus.cancelled;
+      case OfflineSendControl.failed when !m.isReceived && !m.isRead:
+        return api.MessageStatus.failed;
+    }
+    if (!m.isFailed &&
+        !m.isReceived &&
+        !m.isRead &&
+        (isQueued?.call(m, conversationId) ?? false)) {
+      return api.MessageStatus.pending;
+    }
+    return statusOf(m);
   }
 
   /// Our rows: cancelled (`isCancelled`), failed (a queued send whose

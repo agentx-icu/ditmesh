@@ -74,6 +74,7 @@ OfflineMessageItem _item(String text, DateTime at, String id) => (
   msgID: id,
   cloudCustomData: null,
   contentKind: ChatMessageContentKind.normal,
+  control: null,
 );
 
 void main() {

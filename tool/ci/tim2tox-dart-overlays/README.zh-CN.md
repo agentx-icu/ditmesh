@@ -35,3 +35,15 @@ Bootstrap 把固定的 `third_party/tim2tox/dart` 复制到被忽略的
 信封以同一消息标识重试，接收端按该标识去重。
 `packages/ditmesh_chat/test/recorded_resend_test.dart` 与 DitMesh 对未确认录制
 消息的重放一起覆盖此行为。
+
+`0013-legacy-row-reconcile.patch` 让冲刷在等待移除队列项之后，仍能找回没有 msgID
+的旧版己方行：若期间回执替换了该行（`copyWith`），按内容和精确时间匹配，使该行退出
+待发送状态并保留回执。带 msgID 的行使用上游的查找。它取代原
+`0005-preserve-recorded-outbox-ack.patch`；上游 #31 已为带 msgID 的行实现了同样的处理。
+`packages/ditmesh_chat/test/legacy_recorded_outbox_test.dart` 和
+`recorded_outbox_ack_test.dart` 覆盖两种情况。
+
+`0014-retry-failed-tombstone.patch` 让“重试”也能重新排队这样的行：其冲刷失败只记录在
+已提交的 `failed` 墓碑项中（该行自身的写入在重启前丢失，重新加载的行不显示失败，而
+DitMesh 显示为失败）。送达证据仍优先于失败。
+`packages/ditmesh_chat/test/failed_tombstone_retry_test.dart` 覆盖此情况。

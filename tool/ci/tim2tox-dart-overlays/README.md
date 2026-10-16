@@ -45,3 +45,18 @@ the item stays queued and its row stays pending instead of being marked failed.
 A recorded envelope is retried under the same message identity, which the
 receiver deduplicates. `packages/ditmesh_chat/test/recorded_resend_test.dart`
 covers it together with DitMesh's replay of unacknowledged recorded messages.
+
+`0013-legacy-row-reconcile.patch` lets a drain find a legacy own row
+without a msgID again after its queue-removal await when a receipt replaced
+it meanwhile (`copyWith`): by content and exact instant, so the row leaves
+pending and keeps the receipt. Rows with a msgID use the upstream lookup.
+It replaces the former `0005-preserve-recorded-outbox-ack.patch`, which
+upstream #31 made redundant for rows with a msgID.
+`packages/ditmesh_chat/test/legacy_recorded_outbox_test.dart` and
+`recorded_outbox_ack_test.dart` cover both.
+
+`0014-retry-failed-tombstone.patch` lets Retry re-queue a row whose drain
+failure only its committed `failed` tombstone records (the row's own write
+was lost before a restart, so the reloaded row does not say failed while
+DitMesh shows it failed). Delivery proof still beats the failure.
+`packages/ditmesh_chat/test/failed_tombstone_retry_test.dart` covers it.

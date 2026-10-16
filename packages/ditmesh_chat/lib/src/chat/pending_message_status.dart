@@ -5,17 +5,40 @@ import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 
 import 'message_mapper.dart';
 
-/// The durable outbox is authoritative after history reload: Tim2Tox clears
-/// historical `isPending` flags on load even when their queue items survive.
+/// The durable outbox is authoritative after history reload. Tim2Tox marks a
+/// reloaded row pending again only when its queue item has a msgID; this
+/// also covers legacy items without one.
+///
+/// Only items a drain may still send count as queued. A cancelled or failed
+/// tombstone ([OfflineSendControl]) is never sent; it is the committed state
+/// of its row until Tim2Tox settles that row ([tombstoneOf]).
 class PendingMessageStatus {
   const PendingMessageStatus(this.queue);
 
   final OfflineMessageQueuePersistence queue;
 
-  bool isQueued(ChatMessage message, String conversationId) {
-    if (!message.isSelf) return false;
+  bool isQueued(ChatMessage message, String conversationId) => _items(
+    message,
+    conversationId,
+  ).any((item) => OfflineSendControl.dispatchable(item.control));
+
+  /// The control of a tombstone queued for [message], or null. A crash (or
+  /// a failed history write) after the tombstone committed leaves the row
+  /// saying otherwise until a drain settles it.
+  String? tombstoneOf(ChatMessage message, String conversationId) {
+    for (final item in _items(message, conversationId)) {
+      if (!OfflineSendControl.dispatchable(item.control)) return item.control;
+    }
+    return null;
+  }
+
+  Iterable<OfflineMessageItem> _items(
+    ChatMessage message,
+    String conversationId,
+  ) {
+    if (!message.isSelf) return const [];
     final key = queueKeyOf(conversationId);
-    return queue.getMessages(key).any((item) {
+    return queue.getMessages(key).where((item) {
       final id = item.msgID;
       if (id != null && id.isNotEmpty) return message.msgID == id;
       // Older queues predate durable message ids; match their shared enqueue
@@ -47,6 +70,7 @@ class PendingMessageStatus {
     DateTime? oldest;
     for (final key in keys) {
       for (final item in queue.getMessages(key)) {
+        if (!OfflineSendControl.dispatchable(item.control)) continue;
         final id = item.msgID;
         if (id != null && id.isNotEmpty && !seen.add('$key/$id')) continue;
         count++;

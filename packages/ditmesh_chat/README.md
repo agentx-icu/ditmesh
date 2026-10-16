@@ -162,8 +162,15 @@ failed directory swap.
   `message_too_long`: Tim2Tox would fragment them into separate messages.
 - Tim2Tox queues sends to an offline friend / not-yet-connected group and
   returns a `pending` row; the row is re-emitted on `messageEvents` as `sent`
-  when the drain succeeds. The durable queue preserves `pending` across
-  restart even though upstream history reload clears its transient flag.
+  when the drain succeeds. The durable queue keeps it `pending` across a
+  restart (Tim2Tox restores the flag for queue items with a msgID; DitMesh
+  also matches legacy items without one). A cancel or a drain failure
+  commits as a queue tombstone before the row changes; DitMesh maps such a
+  row `cancelled` / `failed` (delivery proof beats a failure) and never
+  counts a tombstone as unsent: not in the outbox summary, a withdrawal, a
+  backup's review items or the recorded replay. A removed friend's
+  cancelled tombstone stays queued, never sent, because Tim2Tox only drops
+  it once the row durably says cancelled.
   `MessageMapper.statusOf` maps a cancelled row to `cancelled`, a failed
   drain to `failed`, a queued row to `pending`, and a row with a peer receipt
   to `delivered`. `retryMessage` / `cancelPendingMessage` keep the message ID,
