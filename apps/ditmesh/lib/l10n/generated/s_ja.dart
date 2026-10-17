@@ -1260,6 +1260,281 @@ class SJa extends S {
   String get toolsBeaconsPlaceYv5b => 'カラカス、ベネズエラ';
 
   @override
+  String get toolsFeedlineTitle => '給電線損失';
+
+  @override
+  String get toolsFeedlineHint => '同軸ケーブルの損失、無線機側の SWR、λ/4・λ/2 の線長';
+
+  @override
+  String get toolsFeedlineCable => 'ケーブル';
+
+  @override
+  String get toolsFeedlineLength => '長さ（m）';
+
+  @override
+  String get toolsFeedlineFrequency => '周波数（MHz）';
+
+  @override
+  String get toolsFeedlineSwr => 'アンテナ側の SWR';
+
+  @override
+  String get toolsFeedlinePower => '給電線への入力電力（W）';
+
+  @override
+  String get toolsFeedlineInvalid => '長さは 0 以上、周波数と電力は 0 より大きく、SWR は 1 以上にしてください';
+
+  @override
+  String get toolsFeedlineMatchedLoss => '整合時の損失';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'この SWR での損失';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => '無線機側で見える SWR';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'アンテナに届く電力';
+
+  @override
+  String get toolsFeedlineElectricalLength => '電気長';
+
+  @override
+  String get toolsFeedlineSections => 'この周波数での線路長';
+
+  @override
+  String get toolsFeedlineImpedance => 'インピーダンス';
+
+  @override
+  String get toolsFeedlineVelocityFactor => '波長短縮率';
+
+  @override
+  String get toolsFeedlineQuarterWave => '1/4 波長（λ/4）';
+
+  @override
+  String get toolsFeedlineHalfWave => '1/2 波長（λ/2）';
+
+  @override
+  String get toolsFeedlineNote => '減衰量は公称値で、実際のケーブル・コネクタ・経年でさらに増えます。SWR を含む損失は、反射電力が線路を往復する分を含みます。';
+
+  @override
+  String get toolsLinkTitle => 'リンクバジェット';
+
+  @override
+  String get toolsLinkHint => '電波の見通し距離、自由空間損失、相手側の信号レベル';
+
+  @override
+  String get toolsLinkHorizonSection => '電波の見通し距離';
+
+  @override
+  String get toolsLinkHeightA => '自局のアンテナ高（m）';
+
+  @override
+  String get toolsLinkHeightB => '相手局のアンテナ高（m）';
+
+  @override
+  String get toolsLinkInvalidHeight => '高さは 0 以上にしてください';
+
+  @override
+  String get toolsLinkHorizonA => '自局の見通し距離';
+
+  @override
+  String get toolsLinkHorizonB => '相手局の見通し距離';
+
+  @override
+  String get toolsLinkLineOfSight => '見通し通信距離';
+
+  @override
+  String get toolsLinkPathSection => '伝搬路';
+
+  @override
+  String get toolsLinkPower => '送信電力（W）';
+
+  @override
+  String get toolsLinkTxLoss => '給電線損失（dB）';
+
+  @override
+  String get toolsLinkTxGain => '自局のアンテナ利得（dBi）';
+
+  @override
+  String get toolsLinkRxGain => '相手局のアンテナ利得（dBi）';
+
+  @override
+  String get toolsLinkFrequency => '周波数（MHz）';
+
+  @override
+  String get toolsLinkDistance => '距離（km）';
+
+  @override
+  String get toolsLinkInvalid => '電力・周波数・距離は 0 より大きく、利得と損失は数値にしてください';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => '自由空間損失';
+
+  @override
+  String get toolsLinkReceived => '相手側の信号レベル';
+
+  @override
+  String get toolsLinkReceivedVoltage => '相手側の電圧（50 Ω）';
+
+  @override
+  String get toolsLinkSMeter => 'S メーター';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'この両アンテナ高では電波の見通し距離を超えています';
+
+  @override
+  String get toolsLinkNote => '自由空間での値です。地形・建物・樹木・大地が損失を加えるので、最良の場合と考えてください。ERP はダイポール基準、EIRP は等方性アンテナ基準で、差は 2.15 dB です。';
+
+  @override
+  String get toolsCircuitTitle => 'RF 回路';
+
+  @override
+  String get toolsCircuitHint => 'LC 共振とリアクタンス、アッテネータ、インピーダンス変換パッド';
+
+  @override
+  String get toolsCircuitResonanceSection => '共振回路';
+
+  @override
+  String get toolsCircuitFrequency => '周波数（MHz）';
+
+  @override
+  String get toolsCircuitInductance => 'インダクタンス（µH）';
+
+  @override
+  String get toolsCircuitCapacitance => 'キャパシタンス（pF）';
+
+  @override
+  String get toolsCircuitInductanceResult => 'インダクタンス';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'キャパシタンス';
+
+  @override
+  String get toolsCircuitResonanceHelp => '2 つを入力すると残りを計算します。';
+
+  @override
+  String get toolsCircuitInvalid => '値は 0 より大きくしてください';
+
+  @override
+  String get toolsCircuitResonantFrequency => '共振周波数';
+
+  @override
+  String get toolsCircuitInductiveReactance => '誘導性リアクタンス';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => '容量性リアクタンス';
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'アッテネータ';
+
+  @override
+  String get toolsCircuitAttenuation => '減衰量（dB）';
+
+  @override
+  String get toolsCircuitImpedance => 'インピーダンス（Ω）';
+
+  @override
+  String get toolsCircuitPiSeries => 'π 型：直列抵抗';
+
+  @override
+  String get toolsCircuitPiShunt => 'π 型：両端の対地抵抗';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T 型：両端の直列抵抗';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T 型：対地抵抗';
+
+  @override
+  String get toolsCircuitPadSection => '最小損失パッド';
+
+  @override
+  String get toolsCircuitPadHigh => '高い方のインピーダンス（Ω）';
+
+  @override
+  String get toolsCircuitPadLow => '低い方のインピーダンス（Ω）';
+
+  @override
+  String get toolsCircuitPadInvalid => '2 つのインピーダンスは 0 より大きく、異なる値にしてください';
+
+  @override
+  String get toolsCircuitPadSeries => '直列抵抗（高インピーダンス側）';
+
+  @override
+  String get toolsCircuitPadShunt => '並列抵抗（低インピーダンス側）';
+
+  @override
+  String get toolsCircuitPadLoss => '損失';
+
+  @override
+  String get toolsCircuitNote => '抵抗値は計算値そのままです。最も近い標準値を選び、テスターで確認してください。パッドは抵抗だけで 2 つのインピーダンスを合わせる最小損失の構成で、75 Ω→50 Ω では 5.7 dB です。';
+
+  @override
+  String get toolsMatchTitle => 'L 型マッチング';
+
+  @override
+  String get toolsMatchHint => 'アンテナを給電線に合わせるコイルとコンデンサの値';
+
+  @override
+  String get toolsMatchFrequency => '周波数（MHz）';
+
+  @override
+  String get toolsMatchResistance => 'アンテナの抵抗 R（Ω）';
+
+  @override
+  String get toolsMatchReactance => 'アンテナのリアクタンス X（Ω）';
+
+  @override
+  String get toolsMatchReference => '給電線インピーダンス Z₀（Ω）';
+
+  @override
+  String get toolsMatchInvalid => '周波数・抵抗・給電線インピーダンスは 0 より大きく、リアクタンスは数値にしてください';
+
+  @override
+  String get toolsMatchSwrBefore => '整合前の SWR';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'すでに整合しており、回路は不要です。';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return '解 $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'ローパス';
+
+  @override
+  String get toolsMatchHighPass => 'ハイパス';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'アンテナと直列';
+
+  @override
+  String get toolsMatchSeriesAtRadio => '無線機と直列';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'アンテナ側に並列';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => '無線機側に並列';
+
+  @override
+  String get toolsMatchQ => '負荷 Q';
+
+  @override
+  String get toolsMatchNoElement => 'ここに部品は不要';
+
+  @override
+  String get toolsMatchNote => '部品は無損失と仮定しています。「直列」は両側の間に、「並列」は線路と大地の間に入れます。ローパス形は高調波も抑え、ハイパス形は部品が小さくて済むことが多いです。';
+
+  @override
   String get learnReceiveTitle => '受信';
 
   @override

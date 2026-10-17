@@ -1263,6 +1263,281 @@ class SFr extends S {
   String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
 
   @override
+  String get toolsFeedlineTitle => 'Pertes de la ligne';
+
+  @override
+  String get toolsFeedlineHint => 'Pertes d\'un coaxial, ROS vu de la radio, longueurs de tronçons';
+
+  @override
+  String get toolsFeedlineCable => 'Câble';
+
+  @override
+  String get toolsFeedlineLength => 'Longueur (m)';
+
+  @override
+  String get toolsFeedlineFrequency => 'Fréquence (MHz)';
+
+  @override
+  String get toolsFeedlineSwr => 'ROS à l\'antenne';
+
+  @override
+  String get toolsFeedlinePower => 'Puissance injectée (W)';
+
+  @override
+  String get toolsFeedlineInvalid => 'Longueur ≥ 0, fréquence et puissance > 0, ROS ≥ 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => 'Pertes en charge adaptée';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'Pertes avec ce ROS';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => 'ROS vu de la radio';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'Puissance à l\'antenne';
+
+  @override
+  String get toolsFeedlineElectricalLength => 'Longueur électrique';
+
+  @override
+  String get toolsFeedlineSections => 'Tronçons de ligne à cette fréquence';
+
+  @override
+  String get toolsFeedlineImpedance => 'Impédance';
+
+  @override
+  String get toolsFeedlineVelocityFactor => 'Coefficient de vélocité';
+
+  @override
+  String get toolsFeedlineQuarterWave => 'Quart d\'onde (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => 'Demi-onde (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => 'Valeurs d\'atténuation nominales : le câble réel, ses connecteurs et son âge en ajoutent. Les pertes avec ROS comptent les allers-retours supplémentaires de la puissance réfléchie sur la ligne.';
+
+  @override
+  String get toolsLinkTitle => 'Bilan de liaison';
+
+  @override
+  String get toolsLinkHint => 'Horizon radio, affaiblissement en espace libre et signal reçu';
+
+  @override
+  String get toolsLinkHorizonSection => 'Horizon radio';
+
+  @override
+  String get toolsLinkHeightA => 'Hauteur de votre antenne (m)';
+
+  @override
+  String get toolsLinkHeightB => 'Hauteur de leur antenne (m)';
+
+  @override
+  String get toolsLinkInvalidHeight => 'Hauteurs ≥ 0';
+
+  @override
+  String get toolsLinkHorizonA => 'Votre horizon';
+
+  @override
+  String get toolsLinkHorizonB => 'Leur horizon';
+
+  @override
+  String get toolsLinkLineOfSight => 'Portée en visibilité directe';
+
+  @override
+  String get toolsLinkPathSection => 'Trajet';
+
+  @override
+  String get toolsLinkPower => 'Puissance émise (W)';
+
+  @override
+  String get toolsLinkTxLoss => 'Pertes de la ligne (dB)';
+
+  @override
+  String get toolsLinkTxGain => 'Gain de votre antenne (dBi)';
+
+  @override
+  String get toolsLinkRxGain => 'Gain de leur antenne (dBi)';
+
+  @override
+  String get toolsLinkFrequency => 'Fréquence (MHz)';
+
+  @override
+  String get toolsLinkDistance => 'Distance (km)';
+
+  @override
+  String get toolsLinkInvalid => 'Puissance, fréquence et distance > 0 ; gains et pertes doivent être des nombres';
+
+  @override
+  String get toolsLinkEirp => 'PIRE';
+
+  @override
+  String get toolsLinkErp => 'PAR';
+
+  @override
+  String get toolsLinkPathLoss => 'Affaiblissement en espace libre';
+
+  @override
+  String get toolsLinkReceived => 'Signal reçu à l\'autre bout';
+
+  @override
+  String get toolsLinkReceivedVoltage => 'Tension à l\'autre bout (50 Ω)';
+
+  @override
+  String get toolsLinkSMeter => 'S-mètre';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'Au-delà de l\'horizon radio pour ces hauteurs d\'antenne';
+
+  @override
+  String get toolsLinkNote => 'Valeurs en espace libre : relief, bâtiments, arbres et sol ajoutent des pertes, c\'est donc le meilleur cas. La PAR se réfère à un dipôle, la PIRE à une source isotrope, soit 2,15 dB d\'écart.';
+
+  @override
+  String get toolsCircuitTitle => 'Circuits RF';
+
+  @override
+  String get toolsCircuitHint => 'Résonance et réactance LC, atténuateurs, cellules d\'adaptation';
+
+  @override
+  String get toolsCircuitResonanceSection => 'Circuit résonant';
+
+  @override
+  String get toolsCircuitFrequency => 'Fréquence (MHz)';
+
+  @override
+  String get toolsCircuitInductance => 'Inductance (µH)';
+
+  @override
+  String get toolsCircuitCapacitance => 'Capacité (pF)';
+
+  @override
+  String get toolsCircuitInductanceResult => 'Inductance';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'Capacité';
+
+  @override
+  String get toolsCircuitResonanceHelp => 'Saisissez deux valeurs, la troisième est calculée.';
+
+  @override
+  String get toolsCircuitInvalid => 'Les valeurs doivent être > 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => 'Fréquence de résonance';
+
+  @override
+  String get toolsCircuitInductiveReactance => 'Réactance inductive';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => 'Réactance capacitive';
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'Atténuateur';
+
+  @override
+  String get toolsCircuitAttenuation => 'Atténuation (dB)';
+
+  @override
+  String get toolsCircuitImpedance => 'Impédance (Ω)';
+
+  @override
+  String get toolsCircuitPiSeries => 'π : résistance série';
+
+  @override
+  String get toolsCircuitPiShunt => 'π : résistance à la masse à chaque extrémité';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T : résistance série à chaque extrémité';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T : résistance à la masse';
+
+  @override
+  String get toolsCircuitPadSection => 'Cellule d\'adaptation à pertes minimales';
+
+  @override
+  String get toolsCircuitPadHigh => 'Impédance la plus élevée (Ω)';
+
+  @override
+  String get toolsCircuitPadLow => 'Impédance la plus basse (Ω)';
+
+  @override
+  String get toolsCircuitPadInvalid => 'Les deux impédances doivent être > 0 et différentes';
+
+  @override
+  String get toolsCircuitPadSeries => 'Résistance série (côté haute impédance)';
+
+  @override
+  String get toolsCircuitPadShunt => 'Résistance parallèle (côté basse impédance)';
+
+  @override
+  String get toolsCircuitPadLoss => 'Pertes';
+
+  @override
+  String get toolsCircuitNote => 'Les valeurs de résistance sont exactes ; prenez les valeurs normalisées les plus proches et vérifiez au multimètre. La cellule est la perte minimale qu\'un réseau résistif peut atteindre entre deux impédances, 5,7 dB de 75 Ω à 50 Ω.';
+
+  @override
+  String get toolsMatchTitle => 'Adaptation en L';
+
+  @override
+  String get toolsMatchHint => 'Valeurs de bobine et de condensateur pour adapter une antenne à la ligne';
+
+  @override
+  String get toolsMatchFrequency => 'Fréquence (MHz)';
+
+  @override
+  String get toolsMatchResistance => 'Résistance de l\'antenne R (Ω)';
+
+  @override
+  String get toolsMatchReactance => 'Réactance de l\'antenne X (Ω)';
+
+  @override
+  String get toolsMatchReference => 'Impédance de la ligne Z₀ (Ω)';
+
+  @override
+  String get toolsMatchInvalid => 'Fréquence, résistance et impédance de ligne > 0 ; la réactance doit être un nombre';
+
+  @override
+  String get toolsMatchSwrBefore => 'ROS avant adaptation';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'Déjà adaptée, aucun réseau nécessaire.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return 'Solution $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'passe-bas';
+
+  @override
+  String get toolsMatchHighPass => 'passe-haut';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'En série avec l\'antenne';
+
+  @override
+  String get toolsMatchSeriesAtRadio => 'En série avec la radio';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'En parallèle côté antenne';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => 'En parallèle côté radio';
+
+  @override
+  String get toolsMatchQ => 'Q en charge';
+
+  @override
+  String get toolsMatchNoElement => 'Aucun composant nécessaire ici';
+
+  @override
+  String get toolsMatchNote => 'Composants supposés sans pertes. « En série » se place entre les deux côtés, « en parallèle » entre la ligne et la masse. La forme passe-bas atténue aussi les harmoniques ; la forme passe-haut demande souvent des composants plus petits.';
+
+  @override
   String get learnReceiveTitle => 'Réception';
 
   @override

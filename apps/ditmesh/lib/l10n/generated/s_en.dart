@@ -1263,6 +1263,281 @@ class SEn extends S {
   String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
 
   @override
+  String get toolsFeedlineTitle => 'Feedline loss';
+
+  @override
+  String get toolsFeedlineHint => 'Coax loss for a run, SWR at the radio, stub lengths';
+
+  @override
+  String get toolsFeedlineCable => 'Cable';
+
+  @override
+  String get toolsFeedlineLength => 'Length (m)';
+
+  @override
+  String get toolsFeedlineFrequency => 'Frequency (MHz)';
+
+  @override
+  String get toolsFeedlineSwr => 'SWR at the antenna';
+
+  @override
+  String get toolsFeedlinePower => 'Power into the line (W)';
+
+  @override
+  String get toolsFeedlineInvalid => 'Length must be 0 or more, frequency above 0, SWR 1 or more and power above 0';
+
+  @override
+  String get toolsFeedlineMatchedLoss => 'Matched loss';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'Loss with this SWR';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => 'SWR seen at the radio';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'Power at the antenna';
+
+  @override
+  String get toolsFeedlineElectricalLength => 'Electrical length';
+
+  @override
+  String get toolsFeedlineSections => 'Line sections at this frequency';
+
+  @override
+  String get toolsFeedlineImpedance => 'Impedance';
+
+  @override
+  String get toolsFeedlineVelocityFactor => 'Velocity factor';
+
+  @override
+  String get toolsFeedlineQuarterWave => 'Quarter wave (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => 'Half wave (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => 'Nominal attenuation figures: a real run, its connectors and its age add to them. The loss with SWR counts the extra trips the reflected power makes along the line.';
+
+  @override
+  String get toolsLinkTitle => 'Link budget';
+
+  @override
+  String get toolsLinkHint => 'Radio horizon, free-space path loss and the signal at the far end';
+
+  @override
+  String get toolsLinkHorizonSection => 'Radio horizon';
+
+  @override
+  String get toolsLinkHeightA => 'Your antenna height (m)';
+
+  @override
+  String get toolsLinkHeightB => 'Their antenna height (m)';
+
+  @override
+  String get toolsLinkInvalidHeight => 'Heights must be 0 or more';
+
+  @override
+  String get toolsLinkHorizonA => 'Your horizon';
+
+  @override
+  String get toolsLinkHorizonB => 'Their horizon';
+
+  @override
+  String get toolsLinkLineOfSight => 'Line-of-sight range';
+
+  @override
+  String get toolsLinkPathSection => 'Path';
+
+  @override
+  String get toolsLinkPower => 'Transmitter power (W)';
+
+  @override
+  String get toolsLinkTxLoss => 'Feedline loss (dB)';
+
+  @override
+  String get toolsLinkTxGain => 'Your antenna gain (dBi)';
+
+  @override
+  String get toolsLinkRxGain => 'Their antenna gain (dBi)';
+
+  @override
+  String get toolsLinkFrequency => 'Frequency (MHz)';
+
+  @override
+  String get toolsLinkDistance => 'Distance (km)';
+
+  @override
+  String get toolsLinkInvalid => 'Power, frequency and distance must be above 0; gains and loss must be numbers';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => 'Free-space path loss';
+
+  @override
+  String get toolsLinkReceived => 'Signal at the far end';
+
+  @override
+  String get toolsLinkReceivedVoltage => 'Voltage at the far end (50 Ω)';
+
+  @override
+  String get toolsLinkSMeter => 'S-meter';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'Beyond the radio horizon for these antenna heights';
+
+  @override
+  String get toolsLinkNote => 'Free-space figures: terrain, buildings, trees and the ground add loss, so treat them as the best case. ERP is relative to a dipole and EIRP to an isotropic radiator, 2.15 dB apart.';
+
+  @override
+  String get toolsCircuitTitle => 'RF circuits';
+
+  @override
+  String get toolsCircuitHint => 'LC resonance and reactance, attenuators, impedance pads';
+
+  @override
+  String get toolsCircuitResonanceSection => 'Resonant circuit';
+
+  @override
+  String get toolsCircuitFrequency => 'Frequency (MHz)';
+
+  @override
+  String get toolsCircuitInductance => 'Inductance (µH)';
+
+  @override
+  String get toolsCircuitCapacitance => 'Capacitance (pF)';
+
+  @override
+  String get toolsCircuitInductanceResult => 'Inductance';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'Capacitance';
+
+  @override
+  String get toolsCircuitResonanceHelp => 'Fill in any two; the third is calculated.';
+
+  @override
+  String get toolsCircuitInvalid => 'Values must be above 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => 'Resonant frequency';
+
+  @override
+  String get toolsCircuitInductiveReactance => 'Inductive reactance';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => 'Capacitive reactance';
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'Attenuator';
+
+  @override
+  String get toolsCircuitAttenuation => 'Attenuation (dB)';
+
+  @override
+  String get toolsCircuitImpedance => 'Impedance (Ω)';
+
+  @override
+  String get toolsCircuitPiSeries => 'π: series resistor';
+
+  @override
+  String get toolsCircuitPiShunt => 'π: resistor to ground at each end';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T: series resistor at each end';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T: resistor to ground';
+
+  @override
+  String get toolsCircuitPadSection => 'Minimum-loss pad';
+
+  @override
+  String get toolsCircuitPadHigh => 'Higher impedance (Ω)';
+
+  @override
+  String get toolsCircuitPadLow => 'Lower impedance (Ω)';
+
+  @override
+  String get toolsCircuitPadInvalid => 'Both impedances must be above 0 and different';
+
+  @override
+  String get toolsCircuitPadSeries => 'Series resistor (higher side)';
+
+  @override
+  String get toolsCircuitPadShunt => 'Shunt resistor (lower side)';
+
+  @override
+  String get toolsCircuitPadLoss => 'Loss';
+
+  @override
+  String get toolsCircuitNote => 'Resistor values are exact; pick the nearest standard values and check with a meter. The pad is the least loss a resistive network can manage between two impedances, 5.7 dB for 75 Ω to 50 Ω.';
+
+  @override
+  String get toolsMatchTitle => 'L-network match';
+
+  @override
+  String get toolsMatchHint => 'Coil and capacitor values that match an antenna to the feedline';
+
+  @override
+  String get toolsMatchFrequency => 'Frequency (MHz)';
+
+  @override
+  String get toolsMatchResistance => 'Antenna resistance R (Ω)';
+
+  @override
+  String get toolsMatchReactance => 'Antenna reactance X (Ω)';
+
+  @override
+  String get toolsMatchReference => 'Line impedance Z₀ (Ω)';
+
+  @override
+  String get toolsMatchInvalid => 'Frequency, resistance and line impedance must be above 0; reactance must be a number';
+
+  @override
+  String get toolsMatchSwrBefore => 'SWR before matching';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'Already matched; no network needed.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return 'Solution $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'low-pass';
+
+  @override
+  String get toolsMatchHighPass => 'high-pass';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'In series with the antenna';
+
+  @override
+  String get toolsMatchSeriesAtRadio => 'In series with the radio';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'Across the antenna';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => 'Across the radio';
+
+  @override
+  String get toolsMatchQ => 'Loaded Q';
+
+  @override
+  String get toolsMatchNoElement => 'No part needed here';
+
+  @override
+  String get toolsMatchNote => 'Lossless parts assumed. \'In series\' sits between the two sides; \'across\' goes from the line to ground. The low-pass form also attenuates harmonics; the high-pass form often needs smaller parts.';
+
+  @override
   String get learnReceiveTitle => 'Receive';
 
   @override

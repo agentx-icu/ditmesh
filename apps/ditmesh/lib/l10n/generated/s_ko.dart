@@ -1260,6 +1260,281 @@ class SKo extends S {
   String get toolsBeaconsPlaceYv5b => '카라카스, 베네수엘라';
 
   @override
+  String get toolsFeedlineTitle => '급전선 손실';
+
+  @override
+  String get toolsFeedlineHint => '동축 케이블 손실, 무전기 쪽 SWR, λ/4·λ/2 선로 길이';
+
+  @override
+  String get toolsFeedlineCable => '케이블';
+
+  @override
+  String get toolsFeedlineLength => '길이 (m)';
+
+  @override
+  String get toolsFeedlineFrequency => '주파수 (MHz)';
+
+  @override
+  String get toolsFeedlineSwr => '안테나 쪽 SWR';
+
+  @override
+  String get toolsFeedlinePower => '급전선 입력 전력 (W)';
+
+  @override
+  String get toolsFeedlineInvalid => '길이는 0 이상, 주파수와 전력은 0 초과, SWR은 1 이상이어야 합니다';
+
+  @override
+  String get toolsFeedlineMatchedLoss => '정합 시 손실';
+
+  @override
+  String get toolsFeedlineTotalLoss => '이 SWR에서의 손실';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => '무전기 쪽에서 보이는 SWR';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => '안테나에 도달하는 전력';
+
+  @override
+  String get toolsFeedlineElectricalLength => '전기적 길이';
+
+  @override
+  String get toolsFeedlineSections => '이 주파수에서의 선로 길이';
+
+  @override
+  String get toolsFeedlineImpedance => '임피던스';
+
+  @override
+  String get toolsFeedlineVelocityFactor => '속도 계수';
+
+  @override
+  String get toolsFeedlineQuarterWave => '1/4 파장 (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => '1/2 파장 (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => '감쇠는 공칭값이며 실제 케이블, 커넥터, 노화로 더 늘어납니다. SWR을 포함한 손실은 반사 전력이 선로를 오가며 추가로 잃는 양을 포함합니다.';
+
+  @override
+  String get toolsLinkTitle => '링크 버짓';
+
+  @override
+  String get toolsLinkHint => '전파 가시거리, 자유 공간 손실, 상대방이 받는 신호';
+
+  @override
+  String get toolsLinkHorizonSection => '전파 가시거리';
+
+  @override
+  String get toolsLinkHeightA => '내 안테나 높이 (m)';
+
+  @override
+  String get toolsLinkHeightB => '상대 안테나 높이 (m)';
+
+  @override
+  String get toolsLinkInvalidHeight => '높이는 0 이상이어야 합니다';
+
+  @override
+  String get toolsLinkHorizonA => '내 가시거리';
+
+  @override
+  String get toolsLinkHorizonB => '상대 가시거리';
+
+  @override
+  String get toolsLinkLineOfSight => '가시선 통달 거리';
+
+  @override
+  String get toolsLinkPathSection => '전파 경로';
+
+  @override
+  String get toolsLinkPower => '송신 전력 (W)';
+
+  @override
+  String get toolsLinkTxLoss => '급전선 손실 (dB)';
+
+  @override
+  String get toolsLinkTxGain => '내 안테나 이득 (dBi)';
+
+  @override
+  String get toolsLinkRxGain => '상대 안테나 이득 (dBi)';
+
+  @override
+  String get toolsLinkFrequency => '주파수 (MHz)';
+
+  @override
+  String get toolsLinkDistance => '거리 (km)';
+
+  @override
+  String get toolsLinkInvalid => '전력, 주파수, 거리는 0 초과, 이득과 손실은 숫자여야 합니다';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => '자유 공간 손실';
+
+  @override
+  String get toolsLinkReceived => '상대방이 받는 신호';
+
+  @override
+  String get toolsLinkReceivedVoltage => '상대방 쪽 전압 (50 Ω)';
+
+  @override
+  String get toolsLinkSMeter => 'S 미터';
+
+  @override
+  String get toolsLinkBeyondHorizon => '두 안테나 높이에서의 전파 가시거리를 넘어섭니다';
+
+  @override
+  String get toolsLinkNote => '자유 공간 값입니다. 지형, 건물, 나무, 지면이 손실을 더하므로 최상의 경우로 보십시오. ERP는 다이폴 기준, EIRP는 등방성 안테나 기준이며 2.15 dB 차이입니다.';
+
+  @override
+  String get toolsCircuitTitle => 'RF 회로';
+
+  @override
+  String get toolsCircuitHint => 'LC 공진과 리액턴스, 감쇠기, 임피던스 패드';
+
+  @override
+  String get toolsCircuitResonanceSection => '공진 회로';
+
+  @override
+  String get toolsCircuitFrequency => '주파수 (MHz)';
+
+  @override
+  String get toolsCircuitInductance => '인덕턴스 (µH)';
+
+  @override
+  String get toolsCircuitCapacitance => '커패시턴스 (pF)';
+
+  @override
+  String get toolsCircuitInductanceResult => '인덕턴스';
+
+  @override
+  String get toolsCircuitCapacitanceResult => '커패시턴스';
+
+  @override
+  String get toolsCircuitResonanceHelp => '두 값을 입력하면 나머지를 계산합니다.';
+
+  @override
+  String get toolsCircuitInvalid => '값은 0보다 커야 합니다';
+
+  @override
+  String get toolsCircuitResonantFrequency => '공진 주파수';
+
+  @override
+  String get toolsCircuitInductiveReactance => '유도성 리액턴스';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => '용량성 리액턴스';
+
+  @override
+  String get toolsCircuitAttenuatorSection => '감쇠기';
+
+  @override
+  String get toolsCircuitAttenuation => '감쇠량 (dB)';
+
+  @override
+  String get toolsCircuitImpedance => '임피던스 (Ω)';
+
+  @override
+  String get toolsCircuitPiSeries => 'π형: 직렬 저항';
+
+  @override
+  String get toolsCircuitPiShunt => 'π형: 양단 접지 저항';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T형: 양단 직렬 저항';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T형: 접지 저항';
+
+  @override
+  String get toolsCircuitPadSection => '최소 손실 패드';
+
+  @override
+  String get toolsCircuitPadHigh => '높은 쪽 임피던스 (Ω)';
+
+  @override
+  String get toolsCircuitPadLow => '낮은 쪽 임피던스 (Ω)';
+
+  @override
+  String get toolsCircuitPadInvalid => '두 임피던스는 0보다 크고 서로 달라야 합니다';
+
+  @override
+  String get toolsCircuitPadSeries => '직렬 저항 (높은 쪽)';
+
+  @override
+  String get toolsCircuitPadShunt => '병렬 저항 (낮은 쪽)';
+
+  @override
+  String get toolsCircuitPadLoss => '손실';
+
+  @override
+  String get toolsCircuitNote => '저항값은 계산값 그대로입니다. 가장 가까운 표준값을 고르고 계측기로 확인하십시오. 패드는 저항만으로 두 임피던스를 맞추는 최소 손실 구성이며 75 Ω→50 Ω에서 5.7 dB입니다.';
+
+  @override
+  String get toolsMatchTitle => 'L형 매칭';
+
+  @override
+  String get toolsMatchHint => '안테나를 급전선에 맞추는 코일과 커패시터 값';
+
+  @override
+  String get toolsMatchFrequency => '주파수 (MHz)';
+
+  @override
+  String get toolsMatchResistance => '안테나 저항 R (Ω)';
+
+  @override
+  String get toolsMatchReactance => '안테나 리액턴스 X (Ω)';
+
+  @override
+  String get toolsMatchReference => '급전선 임피던스 Z₀ (Ω)';
+
+  @override
+  String get toolsMatchInvalid => '주파수, 저항, 급전선 임피던스는 0 초과, 리액턴스는 숫자여야 합니다';
+
+  @override
+  String get toolsMatchSwrBefore => '매칭 전 SWR';
+
+  @override
+  String get toolsMatchAlreadyMatched => '이미 정합되어 회로가 필요 없습니다.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return '해 $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => '저역 통과';
+
+  @override
+  String get toolsMatchHighPass => '고역 통과';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => '안테나와 직렬';
+
+  @override
+  String get toolsMatchSeriesAtRadio => '무전기와 직렬';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => '안테나 쪽에 병렬';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => '무전기 쪽에 병렬';
+
+  @override
+  String get toolsMatchQ => '부하 Q';
+
+  @override
+  String get toolsMatchNoElement => '여기에는 부품이 필요 없음';
+
+  @override
+  String get toolsMatchNote => '부품은 무손실로 가정합니다. \'직렬\'은 양쪽 사이에, \'병렬\'은 선로와 접지 사이에 넣습니다. 저역 통과형은 고조파도 억제하고, 고역 통과형은 부품이 더 작은 경우가 많습니다.';
+
+  @override
   String get learnReceiveTitle => '수신';
 
   @override
