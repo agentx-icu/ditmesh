@@ -14,6 +14,10 @@ DitMesh「无线电工具」页背后的业余无线电计算，**纯 Dart**（�
 | 信号报告 | `RstReport`（格式化、缩略数字、解析 `579` / `5NN` / `59`） | `src/rst.dart` |
 | 分贝 | `Decibels`（瓦与 dBm 互换、dB 与功率 / 电压倍数互换）、`SMeterReading`（IARU 1 区 S 表：短波 S9 = -73 dBm、超短波 -93 dBm，每单位 6 dB） | `src/decibels.dart` |
 | 驻波比 | `Swr`（由正向 / 反向功率、比值或负载阻抗求得；回波损耗、反射功率占比、失配损耗） | `src/swr.dart` |
+| 馈线 | `CoaxCable`、`Feedlines`（常见同轴线与梯形线的标称衰减表、速度因数）、`FeedlineRun`（匹配损耗与驻波比附加损耗、电台端驻波比、到达负载的功率、电长度） | `src/feedline.dart` |
+| 传播 | `Propagation`（自由空间损耗、无线电 / 光学视距、视距通联距离、dBm 换微伏）、`LinkBudget`（EIRP / ERP、接收电平） | `src/propagation.dart` |
+| 电路 | `Resonance`（LC 谐振频率、按频率求 L 或 C、电抗）、`Attenuator`（π / T 型电阻值）、`MinimumLossPad`（两种阻抗间的双电阻最小损耗网络） | `src/circuits.dart` |
+| 匹配 | `LNetwork`（把 `R + jX` 匹配到实阻抗的 L 型网络解）、`LMatch`、`ReactiveElement` | `src/matching.dart` |
 | 太阳 | `SolarDay`（按 NOAA 公式计算 UTC 日出、太阳正午、日落与白昼长度；极昼 / 极夜；民用曙暮光天顶角） | `src/solar.dart` |
 | 信标 | `NcdxfBeacons`（18 座 NCDXF / IARU 信标，任一时刻五个频率上各是哪座、距某信标下次时隙的时间）、`Beacon` | `src/beacons.dart` |
 
@@ -24,6 +28,9 @@ final km = GreatCircle.distanceKm(here, there);
 final heading = GreatCircle.initialBearing(here, there);
 final band = AmateurBands.bandFor(7.030, IaruRegion.region3); // 40m
 final swr = Swr.fromPowers(forwardW: 100, reflectedW: 4); // 1.5:1
+final run = FeedlineRun(cable: Feedlines.catalogue[3], lengthM: 30, mhz: 144, swrAtLoad: 2);
+final loss = Propagation.freeSpacePathLossDb(distanceKm: 50, mhz: 144); // 109.6 dB
+final nets = LNetwork.solutions(resistance: 25, frequencyHz: 7.1e6); // 两个 L 型网络解
 final sun = SolarDay.compute(here, DateTime.now()); // UTC 日出 / 日落
 final onAir = NcdxfBeacons.onAir(DateTime.now(), 0); // 14.100 MHz 上的信标
 ```

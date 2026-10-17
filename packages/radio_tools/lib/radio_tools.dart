@@ -2,16 +2,22 @@
 ///
 /// Maidenhead locators with great-circle distance and bearing, IARU band
 /// edges with wavelength and antenna lengths, CW speed timing, RST reports,
-/// decibels and S-meter levels, SWR, sunrise / sunset and the NCDXF beacon
-/// schedule. No Flutter imports; the app only renders them.
+/// decibels and S-meter levels, SWR, feedline loss, free-space path loss and
+/// the radio horizon, LC resonance, attenuators and L-network matching,
+/// sunrise / sunset and the NCDXF beacon schedule. No Flutter imports; the
+/// app only renders them.
 library;
 
 export 'src/bands.dart';
 export 'src/beacons.dart';
+export 'src/circuits.dart';
 export 'src/cw_speed.dart';
 export 'src/decibels.dart';
+export 'src/feedline.dart';
 export 'src/geo.dart';
 export 'src/maidenhead.dart';
+export 'src/matching.dart';
+export 'src/propagation.dart';
 export 'src/rst.dart';
 export 'src/solar.dart';
 export 'src/swr.dart';

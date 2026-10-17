@@ -1260,6 +1260,281 @@ class SZh extends S {
   String get toolsBeaconsPlaceYv5b => '加拉加斯，委内瑞拉';
 
   @override
+  String get toolsFeedlineTitle => '馈线损耗';
+
+  @override
+  String get toolsFeedlineHint => '一段同轴线的损耗、电台端的驻波比、λ/4 与 λ/2 线段长度';
+
+  @override
+  String get toolsFeedlineCable => '线缆';
+
+  @override
+  String get toolsFeedlineLength => '长度（m）';
+
+  @override
+  String get toolsFeedlineFrequency => '频率（MHz）';
+
+  @override
+  String get toolsFeedlineSwr => '天线端驻波比';
+
+  @override
+  String get toolsFeedlinePower => '送入馈线的功率（W）';
+
+  @override
+  String get toolsFeedlineInvalid => '长度须 ≥ 0，频率与功率须 > 0，驻波比须 ≥ 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => '匹配时的损耗';
+
+  @override
+  String get toolsFeedlineTotalLoss => '该驻波比下的损耗';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => '电台端看到的驻波比';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => '到达天线的功率';
+
+  @override
+  String get toolsFeedlineElectricalLength => '电长度';
+
+  @override
+  String get toolsFeedlineSections => '该频率下的线段长度';
+
+  @override
+  String get toolsFeedlineImpedance => '阻抗';
+
+  @override
+  String get toolsFeedlineVelocityFactor => '速度因数';
+
+  @override
+  String get toolsFeedlineQuarterWave => '四分之一波长（λ/4）';
+
+  @override
+  String get toolsFeedlineHalfWave => '半波长（λ/2）';
+
+  @override
+  String get toolsFeedlineNote => '衰减为标称值，实际线缆、接头与老化都会再增加损耗。含驻波比的损耗计入了反射功率在线上多次往返的消耗。';
+
+  @override
+  String get toolsLinkTitle => '链路预算';
+
+  @override
+  String get toolsLinkHint => '无线电视距、自由空间损耗与对方收到的信号';
+
+  @override
+  String get toolsLinkHorizonSection => '无线电视距';
+
+  @override
+  String get toolsLinkHeightA => '你的天线高度（m）';
+
+  @override
+  String get toolsLinkHeightB => '对方天线高度（m）';
+
+  @override
+  String get toolsLinkInvalidHeight => '高度须 ≥ 0';
+
+  @override
+  String get toolsLinkHorizonA => '你的视距';
+
+  @override
+  String get toolsLinkHorizonB => '对方的视距';
+
+  @override
+  String get toolsLinkLineOfSight => '视距通联距离';
+
+  @override
+  String get toolsLinkPathSection => '路径';
+
+  @override
+  String get toolsLinkPower => '发射功率（W）';
+
+  @override
+  String get toolsLinkTxLoss => '馈线损耗（dB）';
+
+  @override
+  String get toolsLinkTxGain => '你的天线增益（dBi）';
+
+  @override
+  String get toolsLinkRxGain => '对方天线增益（dBi）';
+
+  @override
+  String get toolsLinkFrequency => '频率（MHz）';
+
+  @override
+  String get toolsLinkDistance => '距离（km）';
+
+  @override
+  String get toolsLinkInvalid => '功率、频率与距离须 > 0，增益与损耗须为数字';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => '自由空间损耗';
+
+  @override
+  String get toolsLinkReceived => '对方收到的信号';
+
+  @override
+  String get toolsLinkReceivedVoltage => '对方端电压（50 Ω）';
+
+  @override
+  String get toolsLinkSMeter => 'S 表';
+
+  @override
+  String get toolsLinkBeyondHorizon => '超出了这两个天线高度的无线电视距';
+
+  @override
+  String get toolsLinkNote => '均为自由空间数值；地形、建筑、树木与地面都会增加损耗，请当作最好情况。ERP 相对于偶极子，EIRP 相对于全向点源，二者相差 2.15 dB。';
+
+  @override
+  String get toolsCircuitTitle => '射频电路';
+
+  @override
+  String get toolsCircuitHint => 'LC 谐振与电抗、衰减器、阻抗匹配衰减网络';
+
+  @override
+  String get toolsCircuitResonanceSection => '谐振回路';
+
+  @override
+  String get toolsCircuitFrequency => '频率（MHz）';
+
+  @override
+  String get toolsCircuitInductance => '电感（µH）';
+
+  @override
+  String get toolsCircuitCapacitance => '电容（pF）';
+
+  @override
+  String get toolsCircuitInductanceResult => '电感';
+
+  @override
+  String get toolsCircuitCapacitanceResult => '电容';
+
+  @override
+  String get toolsCircuitResonanceHelp => '任填两项，自动算出第三项。';
+
+  @override
+  String get toolsCircuitInvalid => '数值须 > 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => '谐振频率';
+
+  @override
+  String get toolsCircuitInductiveReactance => '感抗';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => '容抗';
+
+  @override
+  String get toolsCircuitAttenuatorSection => '衰减器';
+
+  @override
+  String get toolsCircuitAttenuation => '衰减量（dB）';
+
+  @override
+  String get toolsCircuitImpedance => '阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPiSeries => 'π 型：串联电阻';
+
+  @override
+  String get toolsCircuitPiShunt => 'π 型：两端对地电阻';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T 型：两端串联电阻';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T 型：对地电阻';
+
+  @override
+  String get toolsCircuitPadSection => '最小损耗匹配网络';
+
+  @override
+  String get toolsCircuitPadHigh => '较高阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPadLow => '较低阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPadInvalid => '两个阻抗须 > 0 且不相等';
+
+  @override
+  String get toolsCircuitPadSeries => '串联电阻（高阻抗侧）';
+
+  @override
+  String get toolsCircuitPadShunt => '并联电阻（低阻抗侧）';
+
+  @override
+  String get toolsCircuitPadLoss => '损耗';
+
+  @override
+  String get toolsCircuitNote => '电阻值为精确计算值，请选最接近的标称值并用表测量。该网络是纯电阻匹配两种阻抗时损耗最小的方案，75 Ω 到 50 Ω 为 5.7 dB。';
+
+  @override
+  String get toolsMatchTitle => 'L 型匹配网络';
+
+  @override
+  String get toolsMatchHint => '把天线匹配到馈线所需的电感与电容值';
+
+  @override
+  String get toolsMatchFrequency => '频率（MHz）';
+
+  @override
+  String get toolsMatchResistance => '天线电阻 R（Ω）';
+
+  @override
+  String get toolsMatchReactance => '天线电抗 X（Ω）';
+
+  @override
+  String get toolsMatchReference => '馈线阻抗 Z₀（Ω）';
+
+  @override
+  String get toolsMatchInvalid => '频率、电阻与馈线阻抗须 > 0，电抗须为数字';
+
+  @override
+  String get toolsMatchSwrBefore => '匹配前驻波比';
+
+  @override
+  String get toolsMatchAlreadyMatched => '已匹配，无需网络。';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return '方案 $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => '低通';
+
+  @override
+  String get toolsMatchHighPass => '高通';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => '与天线串联';
+
+  @override
+  String get toolsMatchSeriesAtRadio => '与电台串联';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => '并联在天线端';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => '并联在电台端';
+
+  @override
+  String get toolsMatchQ => '有载 Q 值';
+
+  @override
+  String get toolsMatchNoElement => '此处无需元件';
+
+  @override
+  String get toolsMatchNote => '假定元件无损耗。“串联”接在两侧之间，“并联”接在线与地之间。低通形式还能抑制谐波，高通形式元件往往更小。';
+
+  @override
   String get learnReceiveTitle => '听抄';
 
   @override
@@ -4597,6 +4872,281 @@ class SZhHant extends SZh {
 
   @override
   String get toolsBeaconsPlaceYv5b => '卡拉卡斯，委內瑞拉';
+
+  @override
+  String get toolsFeedlineTitle => '饋線損耗';
+
+  @override
+  String get toolsFeedlineHint => '一段同軸線的損耗、電台端的駐波比、λ/4 與 λ/2 線段長度';
+
+  @override
+  String get toolsFeedlineCable => '線纜';
+
+  @override
+  String get toolsFeedlineLength => '長度（m）';
+
+  @override
+  String get toolsFeedlineFrequency => '頻率（MHz）';
+
+  @override
+  String get toolsFeedlineSwr => '天線端駐波比';
+
+  @override
+  String get toolsFeedlinePower => '送入饋線的功率（W）';
+
+  @override
+  String get toolsFeedlineInvalid => '長度須 ≥ 0，頻率與功率須 > 0，駐波比須 ≥ 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => '匹配時的損耗';
+
+  @override
+  String get toolsFeedlineTotalLoss => '該駐波比下的損耗';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => '電台端看到的駐波比';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => '到達天線的功率';
+
+  @override
+  String get toolsFeedlineElectricalLength => '電長度';
+
+  @override
+  String get toolsFeedlineSections => '該頻率下的線段長度';
+
+  @override
+  String get toolsFeedlineImpedance => '阻抗';
+
+  @override
+  String get toolsFeedlineVelocityFactor => '速度因數';
+
+  @override
+  String get toolsFeedlineQuarterWave => '四分之一波長（λ/4）';
+
+  @override
+  String get toolsFeedlineHalfWave => '半波長（λ/2）';
+
+  @override
+  String get toolsFeedlineNote => '衰減為標稱值，實際線纜、接頭與老化都會再增加損耗。含駐波比的損耗計入了反射功率在線上多次往返的消耗。';
+
+  @override
+  String get toolsLinkTitle => '鏈路預算';
+
+  @override
+  String get toolsLinkHint => '無線電視距、自由空間損耗與對方收到的信號';
+
+  @override
+  String get toolsLinkHorizonSection => '無線電視距';
+
+  @override
+  String get toolsLinkHeightA => '你的天線高度（m）';
+
+  @override
+  String get toolsLinkHeightB => '對方天線高度（m）';
+
+  @override
+  String get toolsLinkInvalidHeight => '高度須 ≥ 0';
+
+  @override
+  String get toolsLinkHorizonA => '你的視距';
+
+  @override
+  String get toolsLinkHorizonB => '對方的視距';
+
+  @override
+  String get toolsLinkLineOfSight => '視距通聯距離';
+
+  @override
+  String get toolsLinkPathSection => '路徑';
+
+  @override
+  String get toolsLinkPower => '發射功率（W）';
+
+  @override
+  String get toolsLinkTxLoss => '饋線損耗（dB）';
+
+  @override
+  String get toolsLinkTxGain => '你的天線增益（dBi）';
+
+  @override
+  String get toolsLinkRxGain => '對方天線增益（dBi）';
+
+  @override
+  String get toolsLinkFrequency => '頻率（MHz）';
+
+  @override
+  String get toolsLinkDistance => '距離（km）';
+
+  @override
+  String get toolsLinkInvalid => '功率、頻率與距離須 > 0，增益與損耗須為數字';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => '自由空間損耗';
+
+  @override
+  String get toolsLinkReceived => '對方收到的信號';
+
+  @override
+  String get toolsLinkReceivedVoltage => '對方端電壓（50 Ω）';
+
+  @override
+  String get toolsLinkSMeter => 'S 表';
+
+  @override
+  String get toolsLinkBeyondHorizon => '超出了這兩個天線高度的無線電視距';
+
+  @override
+  String get toolsLinkNote => '均為自由空間數值；地形、建築、樹木與地面都會增加損耗，請當作最好情況。ERP 相對於偶極天線，EIRP 相對於全向點源，二者相差 2.15 dB。';
+
+  @override
+  String get toolsCircuitTitle => '射頻電路';
+
+  @override
+  String get toolsCircuitHint => 'LC 諧振與電抗、衰減器、阻抗匹配衰減網路';
+
+  @override
+  String get toolsCircuitResonanceSection => '諧振迴路';
+
+  @override
+  String get toolsCircuitFrequency => '頻率（MHz）';
+
+  @override
+  String get toolsCircuitInductance => '電感（µH）';
+
+  @override
+  String get toolsCircuitCapacitance => '電容（pF）';
+
+  @override
+  String get toolsCircuitInductanceResult => '電感';
+
+  @override
+  String get toolsCircuitCapacitanceResult => '電容';
+
+  @override
+  String get toolsCircuitResonanceHelp => '任填兩項，自動算出第三項。';
+
+  @override
+  String get toolsCircuitInvalid => '數值須 > 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => '諧振頻率';
+
+  @override
+  String get toolsCircuitInductiveReactance => '感抗';
+
+  @override
+  String get toolsCircuitCapacitiveReactance => '容抗';
+
+  @override
+  String get toolsCircuitAttenuatorSection => '衰減器';
+
+  @override
+  String get toolsCircuitAttenuation => '衰減量（dB）';
+
+  @override
+  String get toolsCircuitImpedance => '阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPiSeries => 'π 型：串聯電阻';
+
+  @override
+  String get toolsCircuitPiShunt => 'π 型：兩端對地電阻';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T 型：兩端串聯電阻';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T 型：對地電阻';
+
+  @override
+  String get toolsCircuitPadSection => '最小損耗匹配網路';
+
+  @override
+  String get toolsCircuitPadHigh => '較高阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPadLow => '較低阻抗（Ω）';
+
+  @override
+  String get toolsCircuitPadInvalid => '兩個阻抗須 > 0 且不相等';
+
+  @override
+  String get toolsCircuitPadSeries => '串聯電阻（高阻抗側）';
+
+  @override
+  String get toolsCircuitPadShunt => '並聯電阻（低阻抗側）';
+
+  @override
+  String get toolsCircuitPadLoss => '損耗';
+
+  @override
+  String get toolsCircuitNote => '電阻值為精確計算值，請選最接近的標稱值並用錶測量。該網路是純電阻匹配兩種阻抗時損耗最小的方案，75 Ω 到 50 Ω 為 5.7 dB。';
+
+  @override
+  String get toolsMatchTitle => 'L 型匹配網路';
+
+  @override
+  String get toolsMatchHint => '把天線匹配到饋線所需的電感與電容值';
+
+  @override
+  String get toolsMatchFrequency => '頻率（MHz）';
+
+  @override
+  String get toolsMatchResistance => '天線電阻 R（Ω）';
+
+  @override
+  String get toolsMatchReactance => '天線電抗 X（Ω）';
+
+  @override
+  String get toolsMatchReference => '饋線阻抗 Z₀（Ω）';
+
+  @override
+  String get toolsMatchInvalid => '頻率、電阻與饋線阻抗須 > 0，電抗須為數字';
+
+  @override
+  String get toolsMatchSwrBefore => '匹配前駐波比';
+
+  @override
+  String get toolsMatchAlreadyMatched => '已匹配，無需網路。';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return '方案 $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => '低通';
+
+  @override
+  String get toolsMatchHighPass => '高通';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => '與天線串聯';
+
+  @override
+  String get toolsMatchSeriesAtRadio => '與電台串聯';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => '並聯在天線端';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => '並聯在電台端';
+
+  @override
+  String get toolsMatchQ => '有載 Q 值';
+
+  @override
+  String get toolsMatchNoElement => '此處無需元件';
+
+  @override
+  String get toolsMatchNote => '假定元件無損耗。「串聯」接在兩側之間，「並聯」接在線與地之間。低通形式還能抑制諧波，高通形式元件往往更小。';
 
   @override
   String get learnReceiveTitle => '聽抄';
