@@ -2084,6 +2084,420 @@ abstract class S {
   /// **'Logs and QSL cards use UTC.'**
   String get toolsClockNote;
 
+  /// Power / decibel tool title
+  ///
+  /// In en, this message translates to:
+  /// **'Power & dB'**
+  String get toolsPowerTitle;
+
+  /// Power / decibel tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Watts to dBm, dB to ratio, S-meter equivalents'**
+  String get toolsPowerHint;
+
+  /// Power tool: header of the section converting a power between watts, dBm and dBW
+  ///
+  /// In en, this message translates to:
+  /// **'Power level'**
+  String get toolsPowerSection;
+
+  /// Power tool: label of the power input field and of the result row showing the power in watts
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get toolsPowerValue;
+
+  /// Power tool: error when the typed power is not a positive number
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a power above 0'**
+  String get toolsPowerInvalid;
+
+  /// Power tool: result row with the power expressed in dBm and dBW
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get toolsPowerLevel;
+
+  /// Power tool: result row with the S-meter reading this level gives on HF (e.g. S9+20)
+  ///
+  /// In en, this message translates to:
+  /// **'S-meter below 30 MHz'**
+  String get toolsPowerSMeterHf;
+
+  /// Power tool: result row with the S-meter reading this level gives on VHF/UHF
+  ///
+  /// In en, this message translates to:
+  /// **'S-meter above 30 MHz'**
+  String get toolsPowerSMeterVhf;
+
+  /// Power tool: note under the S-meter rows explaining the scale
+  ///
+  /// In en, this message translates to:
+  /// **'IARU Region 1 scale: S9 is -73 dBm on HF and -93 dBm on VHF, one S-unit is 6 dB.'**
+  String get toolsPowerSMeterNote;
+
+  /// Power tool: header of the section converting a gain or loss in dB to a ratio
+  ///
+  /// In en, this message translates to:
+  /// **'Decibels to ratio'**
+  String get toolsPowerRatioSection;
+
+  /// Power tool: label of the decibel input field
+  ///
+  /// In en, this message translates to:
+  /// **'Gain or loss (dB)'**
+  String get toolsPowerDb;
+
+  /// Power tool: result row with the power ratio of the typed decibels (×2 for 3 dB)
+  ///
+  /// In en, this message translates to:
+  /// **'Power ratio'**
+  String get toolsPowerRatio;
+
+  /// Power tool: result row with the voltage ratio of the typed decibels (×2 for 6 dB)
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage ratio'**
+  String get toolsPowerVoltageRatio;
+
+  /// Power tool: result row with how many S-units the typed decibels are (6 dB each)
+  ///
+  /// In en, this message translates to:
+  /// **'S-units'**
+  String get toolsPowerSUnits;
+
+  /// Power tool: note under the ratio rows
+  ///
+  /// In en, this message translates to:
+  /// **'Doubling the power adds 3 dB and ten times adds 10 dB. One S-unit is 6 dB, so 10 dB more power is under two S-units at the other end.'**
+  String get toolsPowerDbNote;
+
+  /// SWR (standing-wave ratio) tool title; keep the abbreviation SWR
+  ///
+  /// In en, this message translates to:
+  /// **'SWR'**
+  String get toolsSwrTitle;
+
+  /// SWR tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Standing-wave ratio from power readings or impedance, return loss'**
+  String get toolsSwrHint;
+
+  /// SWR tool: header of the section fed by a directional wattmeter
+  ///
+  /// In en, this message translates to:
+  /// **'From forward and reflected power'**
+  String get toolsSwrFromPower;
+
+  /// SWR tool: label of the forward power field, in watts
+  ///
+  /// In en, this message translates to:
+  /// **'Forward power (W)'**
+  String get toolsSwrForward;
+
+  /// SWR tool: label of the reflected power field, in watts
+  ///
+  /// In en, this message translates to:
+  /// **'Reflected power (W)'**
+  String get toolsSwrReflected;
+
+  /// SWR tool: error for impossible wattmeter readings
+  ///
+  /// In en, this message translates to:
+  /// **'Forward power must be above 0 and reflected power between 0 and the forward power'**
+  String get toolsSwrInvalidPower;
+
+  /// SWR tool: result row with the ratio itself (e.g. 1.50:1)
+  ///
+  /// In en, this message translates to:
+  /// **'SWR'**
+  String get toolsSwrRatio;
+
+  /// SWR tool: result row with the return loss in dB
+  ///
+  /// In en, this message translates to:
+  /// **'Return loss'**
+  String get toolsSwrReturnLoss;
+
+  /// SWR tool: result row with the percentage of the forward power that comes back
+  ///
+  /// In en, this message translates to:
+  /// **'Power reflected'**
+  String get toolsSwrReflectedShare;
+
+  /// SWR tool: result row with the power lost to the mismatch in dB
+  ///
+  /// In en, this message translates to:
+  /// **'Mismatch loss'**
+  String get toolsSwrMismatchLoss;
+
+  /// SWR tool: result row with the magnitude of the reflection coefficient, 0 to 1
+  ///
+  /// In en, this message translates to:
+  /// **'Reflection coefficient'**
+  String get toolsSwrCoefficient;
+
+  /// SWR tool: header of the section fed by an antenna impedance
+  ///
+  /// In en, this message translates to:
+  /// **'From load impedance'**
+  String get toolsSwrFromImpedance;
+
+  /// SWR tool: label of the load resistance field, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance R (Ω)'**
+  String get toolsSwrResistance;
+
+  /// SWR tool: label of the load reactance field, ohms; may be left empty
+  ///
+  /// In en, this message translates to:
+  /// **'Reactance X (Ω)'**
+  String get toolsSwrReactance;
+
+  /// SWR tool: label of the feed-line characteristic impedance field, ohms, 50 by default
+  ///
+  /// In en, this message translates to:
+  /// **'Line impedance Z₀ (Ω)'**
+  String get toolsSwrReference;
+
+  /// SWR tool: error for impossible impedance values
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance must be 0 or more and line impedance above 0'**
+  String get toolsSwrInvalidImpedance;
+
+  /// SWR tool: note at the bottom on how to read the figure
+  ///
+  /// In en, this message translates to:
+  /// **'Below 1.5:1 is excellent and 2:1 is fine for most rigs; many transceivers reduce power above 3:1.'**
+  String get toolsSwrNote;
+
+  /// Sunrise / sunset tool title
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise & grey line'**
+  String get toolsSunTitle;
+
+  /// Sunrise tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise, solar noon and sunset in UTC for your locator and theirs'**
+  String get toolsSunHint;
+
+  /// Sunrise tool: label of the row showing the UTC date the times are computed for
+  ///
+  /// In en, this message translates to:
+  /// **'Today (UTC)'**
+  String get toolsSunDate;
+
+  /// Sunrise tool: result row with the time the sun rises, UTC
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get toolsSunSunrise;
+
+  /// Sunrise tool: result row with the time the sun is highest, UTC
+  ///
+  /// In en, this message translates to:
+  /// **'Solar noon'**
+  String get toolsSunNoon;
+
+  /// Sunrise tool: result row with the time the sun sets, UTC
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get toolsSunSunset;
+
+  /// Sunrise tool: result row with the hours of daylight
+  ///
+  /// In en, this message translates to:
+  /// **'Day length'**
+  String get toolsSunDayLength;
+
+  /// Sunrise tool: shown instead of times during polar day (midnight sun)
+  ///
+  /// In en, this message translates to:
+  /// **'The sun stays up all day'**
+  String get toolsSunPolarDay;
+
+  /// Sunrise tool: shown instead of times during polar night
+  ///
+  /// In en, this message translates to:
+  /// **'The sun stays below the horizon all day'**
+  String get toolsSunPolarNight;
+
+  /// Sunrise tool: note explaining grey-line propagation
+  ///
+  /// In en, this message translates to:
+  /// **'Grey line: for about half an hour around sunrise and sunset the low bands open along the day/night boundary. Compare both ends of the path.'**
+  String get toolsSunNote;
+
+  /// NCDXF / IARU beacon tool title; keep NCDXF
+  ///
+  /// In en, this message translates to:
+  /// **'NCDXF beacons'**
+  String get toolsBeaconsTitle;
+
+  /// Beacon tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Which IARU beacon is on air now on 20 to 10 m, and where it is'**
+  String get toolsBeaconsHint;
+
+  /// Beacon tool: header of the section listing the beacon currently transmitting on each frequency
+  ///
+  /// In en, this message translates to:
+  /// **'On air now'**
+  String get toolsBeaconsOnAir;
+
+  /// Beacon tool: label of the row counting down the seconds left in the current 10-second transmission slot
+  ///
+  /// In en, this message translates to:
+  /// **'Slot ends in'**
+  String get toolsBeaconsSlotRemaining;
+
+  /// Beacon tool: helper text under the locator field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your locator to see the heading and distance to each beacon.'**
+  String get toolsBeaconsLocatorHelp;
+
+  /// Beacon tool: header of the list of all 18 beacons
+  ///
+  /// In en, this message translates to:
+  /// **'All beacons'**
+  String get toolsBeaconsSchedule;
+
+  /// Beacon tool: status of the beacon currently transmitting on 14.100 MHz in the full list
+  ///
+  /// In en, this message translates to:
+  /// **'On air'**
+  String get toolsBeaconsOnAirNow;
+
+  /// Beacon tool: status of a waiting beacon in the full list; time is pre-formatted as minutes:seconds (e.g. 2:05)
+  ///
+  /// In en, this message translates to:
+  /// **'Next on 20 m in {time}'**
+  String toolsBeaconsNextIn(String time);
+
+  /// Beacon tool: note at the bottom explaining the transmission format
+  ///
+  /// In en, this message translates to:
+  /// **'Each beacon sends its callsign in CW at 22 WPM, then one-second dashes at 100 W, 10 W, 1 W and 0.1 W, moving up through the five bands every 10 seconds in a 3-minute cycle. The schedule follows this device\'s clock.'**
+  String get toolsBeaconsNote;
+
+  /// Beacon tool: location of beacon 4U1UN
+  ///
+  /// In en, this message translates to:
+  /// **'United Nations, New York'**
+  String get toolsBeaconsPlace4u1un;
+
+  /// Beacon tool: location of beacon VE8AT
+  ///
+  /// In en, this message translates to:
+  /// **'Eureka, Nunavut, Canada'**
+  String get toolsBeaconsPlaceVe8at;
+
+  /// Beacon tool: location of beacon W6WX
+  ///
+  /// In en, this message translates to:
+  /// **'Mt Umunhum, California'**
+  String get toolsBeaconsPlaceW6wx;
+
+  /// Beacon tool: location of beacon KH6RS
+  ///
+  /// In en, this message translates to:
+  /// **'Maui, Hawaii'**
+  String get toolsBeaconsPlaceKh6rs;
+
+  /// Beacon tool: location of beacon ZL6B
+  ///
+  /// In en, this message translates to:
+  /// **'Masterton, New Zealand'**
+  String get toolsBeaconsPlaceZl6b;
+
+  /// Beacon tool: location of beacon VK6RBP
+  ///
+  /// In en, this message translates to:
+  /// **'Rolystone, Western Australia'**
+  String get toolsBeaconsPlaceVk6rbp;
+
+  /// Beacon tool: location of beacon JA2IGY
+  ///
+  /// In en, this message translates to:
+  /// **'Mt Asama, Japan'**
+  String get toolsBeaconsPlaceJa2igy;
+
+  /// Beacon tool: location of beacon RR9O
+  ///
+  /// In en, this message translates to:
+  /// **'Novosibirsk, Russia'**
+  String get toolsBeaconsPlaceRr9o;
+
+  /// Beacon tool: location of beacon VR2B
+  ///
+  /// In en, this message translates to:
+  /// **'Hong Kong'**
+  String get toolsBeaconsPlaceVr2b;
+
+  /// Beacon tool: location of beacon 4S7B
+  ///
+  /// In en, this message translates to:
+  /// **'Colombo, Sri Lanka'**
+  String get toolsBeaconsPlace4s7b;
+
+  /// Beacon tool: location of beacon ZS6DN
+  ///
+  /// In en, this message translates to:
+  /// **'Pretoria, South Africa'**
+  String get toolsBeaconsPlaceZs6dn;
+
+  /// Beacon tool: location of beacon 5Z4B
+  ///
+  /// In en, this message translates to:
+  /// **'Kikuyu, Kenya'**
+  String get toolsBeaconsPlace5z4b;
+
+  /// Beacon tool: location of beacon 4X6TU
+  ///
+  /// In en, this message translates to:
+  /// **'Tel Aviv, Israel'**
+  String get toolsBeaconsPlace4x6tu;
+
+  /// Beacon tool: location of beacon OH2B
+  ///
+  /// In en, this message translates to:
+  /// **'Lohja, Finland'**
+  String get toolsBeaconsPlaceOh2b;
+
+  /// Beacon tool: location of beacon CS3B
+  ///
+  /// In en, this message translates to:
+  /// **'Madeira, Portugal'**
+  String get toolsBeaconsPlaceCs3b;
+
+  /// Beacon tool: location of beacon LU4AA
+  ///
+  /// In en, this message translates to:
+  /// **'Buenos Aires, Argentina'**
+  String get toolsBeaconsPlaceLu4aa;
+
+  /// Beacon tool: location of beacon OA4B
+  ///
+  /// In en, this message translates to:
+  /// **'Lima, Peru'**
+  String get toolsBeaconsPlaceOa4b;
+
+  /// Beacon tool: location of beacon YV5B
+  ///
+  /// In en, this message translates to:
+  /// **'Caracas, Venezuela'**
+  String get toolsBeaconsPlaceYv5b;
+
   /// Receive drill screen: app bar title
   ///
   /// In en, this message translates to:

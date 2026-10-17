@@ -1425,6 +1425,287 @@
   "@toolsClockNote": {
     "description": "Note under the UTC clock"
   },
+  "toolsPowerTitle": "Power & dB",
+  "@toolsPowerTitle": {
+    "description": "Power / decibel tool title"
+  },
+  "toolsPowerHint": "Watts to dBm, dB to ratio, S-meter equivalents",
+  "@toolsPowerHint": {
+    "description": "Power / decibel tool subtitle"
+  },
+  "toolsPowerSection": "Power level",
+  "@toolsPowerSection": {
+    "description": "Power tool: header of the section converting a power between watts, dBm and dBW"
+  },
+  "toolsPowerValue": "Power",
+  "@toolsPowerValue": {
+    "description": "Power tool: label of the power input field and of the result row showing the power in watts"
+  },
+  "toolsPowerInvalid": "Enter a power above 0",
+  "@toolsPowerInvalid": {
+    "description": "Power tool: error when the typed power is not a positive number"
+  },
+  "toolsPowerLevel": "Level",
+  "@toolsPowerLevel": {
+    "description": "Power tool: result row with the power expressed in dBm and dBW"
+  },
+  "toolsPowerSMeterHf": "S-meter below 30 MHz",
+  "@toolsPowerSMeterHf": {
+    "description": "Power tool: result row with the S-meter reading this level gives on HF (e.g. S9+20)"
+  },
+  "toolsPowerSMeterVhf": "S-meter above 30 MHz",
+  "@toolsPowerSMeterVhf": {
+    "description": "Power tool: result row with the S-meter reading this level gives on VHF/UHF"
+  },
+  "toolsPowerSMeterNote": "IARU Region 1 scale: S9 is -73 dBm on HF and -93 dBm on VHF, one S-unit is 6 dB.",
+  "@toolsPowerSMeterNote": {
+    "description": "Power tool: note under the S-meter rows explaining the scale"
+  },
+  "toolsPowerRatioSection": "Decibels to ratio",
+  "@toolsPowerRatioSection": {
+    "description": "Power tool: header of the section converting a gain or loss in dB to a ratio"
+  },
+  "toolsPowerDb": "Gain or loss (dB)",
+  "@toolsPowerDb": {
+    "description": "Power tool: label of the decibel input field"
+  },
+  "toolsPowerRatio": "Power ratio",
+  "@toolsPowerRatio": {
+    "description": "Power tool: result row with the power ratio of the typed decibels (×2 for 3 dB)"
+  },
+  "toolsPowerVoltageRatio": "Voltage ratio",
+  "@toolsPowerVoltageRatio": {
+    "description": "Power tool: result row with the voltage ratio of the typed decibels (×2 for 6 dB)"
+  },
+  "toolsPowerSUnits": "S-units",
+  "@toolsPowerSUnits": {
+    "description": "Power tool: result row with how many S-units the typed decibels are (6 dB each)"
+  },
+  "toolsPowerDbNote": "Doubling the power adds 3 dB and ten times adds 10 dB. One S-unit is 6 dB, so 10 dB more power is under two S-units at the other end.",
+  "@toolsPowerDbNote": {
+    "description": "Power tool: note under the ratio rows"
+  },
+  "toolsSwrTitle": "SWR",
+  "@toolsSwrTitle": {
+    "description": "SWR (standing-wave ratio) tool title; keep the abbreviation SWR"
+  },
+  "toolsSwrHint": "Standing-wave ratio from power readings or impedance, return loss",
+  "@toolsSwrHint": {
+    "description": "SWR tool subtitle"
+  },
+  "toolsSwrFromPower": "From forward and reflected power",
+  "@toolsSwrFromPower": {
+    "description": "SWR tool: header of the section fed by a directional wattmeter"
+  },
+  "toolsSwrForward": "Forward power (W)",
+  "@toolsSwrForward": {
+    "description": "SWR tool: label of the forward power field, in watts"
+  },
+  "toolsSwrReflected": "Reflected power (W)",
+  "@toolsSwrReflected": {
+    "description": "SWR tool: label of the reflected power field, in watts"
+  },
+  "toolsSwrInvalidPower": "Forward power must be above 0 and reflected power between 0 and the forward power",
+  "@toolsSwrInvalidPower": {
+    "description": "SWR tool: error for impossible wattmeter readings"
+  },
+  "toolsSwrRatio": "SWR",
+  "@toolsSwrRatio": {
+    "description": "SWR tool: result row with the ratio itself (e.g. 1.50:1)"
+  },
+  "toolsSwrReturnLoss": "Return loss",
+  "@toolsSwrReturnLoss": {
+    "description": "SWR tool: result row with the return loss in dB"
+  },
+  "toolsSwrReflectedShare": "Power reflected",
+  "@toolsSwrReflectedShare": {
+    "description": "SWR tool: result row with the percentage of the forward power that comes back"
+  },
+  "toolsSwrMismatchLoss": "Mismatch loss",
+  "@toolsSwrMismatchLoss": {
+    "description": "SWR tool: result row with the power lost to the mismatch in dB"
+  },
+  "toolsSwrCoefficient": "Reflection coefficient",
+  "@toolsSwrCoefficient": {
+    "description": "SWR tool: result row with the magnitude of the reflection coefficient, 0 to 1"
+  },
+  "toolsSwrFromImpedance": "From load impedance",
+  "@toolsSwrFromImpedance": {
+    "description": "SWR tool: header of the section fed by an antenna impedance"
+  },
+  "toolsSwrResistance": "Resistance R (Ω)",
+  "@toolsSwrResistance": {
+    "description": "SWR tool: label of the load resistance field, ohms"
+  },
+  "toolsSwrReactance": "Reactance X (Ω)",
+  "@toolsSwrReactance": {
+    "description": "SWR tool: label of the load reactance field, ohms; may be left empty"
+  },
+  "toolsSwrReference": "Line impedance Z₀ (Ω)",
+  "@toolsSwrReference": {
+    "description": "SWR tool: label of the feed-line characteristic impedance field, ohms, 50 by default"
+  },
+  "toolsSwrInvalidImpedance": "Resistance must be 0 or more and line impedance above 0",
+  "@toolsSwrInvalidImpedance": {
+    "description": "SWR tool: error for impossible impedance values"
+  },
+  "toolsSwrNote": "Below 1.5:1 is excellent and 2:1 is fine for most rigs; many transceivers reduce power above 3:1.",
+  "@toolsSwrNote": {
+    "description": "SWR tool: note at the bottom on how to read the figure"
+  },
+  "toolsSunTitle": "Sunrise & grey line",
+  "@toolsSunTitle": {
+    "description": "Sunrise / sunset tool title"
+  },
+  "toolsSunHint": "Sunrise, solar noon and sunset in UTC for your locator and theirs",
+  "@toolsSunHint": {
+    "description": "Sunrise tool subtitle"
+  },
+  "toolsSunDate": "Today (UTC)",
+  "@toolsSunDate": {
+    "description": "Sunrise tool: label of the row showing the UTC date the times are computed for"
+  },
+  "toolsSunSunrise": "Sunrise",
+  "@toolsSunSunrise": {
+    "description": "Sunrise tool: result row with the time the sun rises, UTC"
+  },
+  "toolsSunNoon": "Solar noon",
+  "@toolsSunNoon": {
+    "description": "Sunrise tool: result row with the time the sun is highest, UTC"
+  },
+  "toolsSunSunset": "Sunset",
+  "@toolsSunSunset": {
+    "description": "Sunrise tool: result row with the time the sun sets, UTC"
+  },
+  "toolsSunDayLength": "Day length",
+  "@toolsSunDayLength": {
+    "description": "Sunrise tool: result row with the hours of daylight"
+  },
+  "toolsSunPolarDay": "The sun stays up all day",
+  "@toolsSunPolarDay": {
+    "description": "Sunrise tool: shown instead of times during polar day (midnight sun)"
+  },
+  "toolsSunPolarNight": "The sun stays below the horizon all day",
+  "@toolsSunPolarNight": {
+    "description": "Sunrise tool: shown instead of times during polar night"
+  },
+  "toolsSunNote": "Grey line: for about half an hour around sunrise and sunset the low bands open along the day/night boundary. Compare both ends of the path.",
+  "@toolsSunNote": {
+    "description": "Sunrise tool: note explaining grey-line propagation"
+  },
+  "toolsBeaconsTitle": "NCDXF beacons",
+  "@toolsBeaconsTitle": {
+    "description": "NCDXF / IARU beacon tool title; keep NCDXF"
+  },
+  "toolsBeaconsHint": "Which IARU beacon is on air now on 20 to 10 m, and where it is",
+  "@toolsBeaconsHint": {
+    "description": "Beacon tool subtitle"
+  },
+  "toolsBeaconsOnAir": "On air now",
+  "@toolsBeaconsOnAir": {
+    "description": "Beacon tool: header of the section listing the beacon currently transmitting on each frequency"
+  },
+  "toolsBeaconsSlotRemaining": "Slot ends in",
+  "@toolsBeaconsSlotRemaining": {
+    "description": "Beacon tool: label of the row counting down the seconds left in the current 10-second transmission slot"
+  },
+  "toolsBeaconsLocatorHelp": "Enter your locator to see the heading and distance to each beacon.",
+  "@toolsBeaconsLocatorHelp": {
+    "description": "Beacon tool: helper text under the locator field"
+  },
+  "toolsBeaconsSchedule": "All beacons",
+  "@toolsBeaconsSchedule": {
+    "description": "Beacon tool: header of the list of all 18 beacons"
+  },
+  "toolsBeaconsOnAirNow": "On air",
+  "@toolsBeaconsOnAirNow": {
+    "description": "Beacon tool: status of the beacon currently transmitting on 14.100 MHz in the full list"
+  },
+  "toolsBeaconsNextIn": "Next on 20 m in {time}",
+  "@toolsBeaconsNextIn": {
+    "description": "Beacon tool: status of a waiting beacon in the full list; time is pre-formatted as minutes:seconds (e.g. 2:05)",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsBeaconsNote": "Each beacon sends its callsign in CW at 22 WPM, then one-second dashes at 100 W, 10 W, 1 W and 0.1 W, moving up through the five bands every 10 seconds in a 3-minute cycle. The schedule follows this device's clock.",
+  "@toolsBeaconsNote": {
+    "description": "Beacon tool: note at the bottom explaining the transmission format"
+  },
+  "toolsBeaconsPlace4u1un": "United Nations, New York",
+  "@toolsBeaconsPlace4u1un": {
+    "description": "Beacon tool: location of beacon 4U1UN"
+  },
+  "toolsBeaconsPlaceVe8at": "Eureka, Nunavut, Canada",
+  "@toolsBeaconsPlaceVe8at": {
+    "description": "Beacon tool: location of beacon VE8AT"
+  },
+  "toolsBeaconsPlaceW6wx": "Mt Umunhum, California",
+  "@toolsBeaconsPlaceW6wx": {
+    "description": "Beacon tool: location of beacon W6WX"
+  },
+  "toolsBeaconsPlaceKh6rs": "Maui, Hawaii",
+  "@toolsBeaconsPlaceKh6rs": {
+    "description": "Beacon tool: location of beacon KH6RS"
+  },
+  "toolsBeaconsPlaceZl6b": "Masterton, New Zealand",
+  "@toolsBeaconsPlaceZl6b": {
+    "description": "Beacon tool: location of beacon ZL6B"
+  },
+  "toolsBeaconsPlaceVk6rbp": "Rolystone, Western Australia",
+  "@toolsBeaconsPlaceVk6rbp": {
+    "description": "Beacon tool: location of beacon VK6RBP"
+  },
+  "toolsBeaconsPlaceJa2igy": "Mt Asama, Japan",
+  "@toolsBeaconsPlaceJa2igy": {
+    "description": "Beacon tool: location of beacon JA2IGY"
+  },
+  "toolsBeaconsPlaceRr9o": "Novosibirsk, Russia",
+  "@toolsBeaconsPlaceRr9o": {
+    "description": "Beacon tool: location of beacon RR9O"
+  },
+  "toolsBeaconsPlaceVr2b": "Hong Kong",
+  "@toolsBeaconsPlaceVr2b": {
+    "description": "Beacon tool: location of beacon VR2B"
+  },
+  "toolsBeaconsPlace4s7b": "Colombo, Sri Lanka",
+  "@toolsBeaconsPlace4s7b": {
+    "description": "Beacon tool: location of beacon 4S7B"
+  },
+  "toolsBeaconsPlaceZs6dn": "Pretoria, South Africa",
+  "@toolsBeaconsPlaceZs6dn": {
+    "description": "Beacon tool: location of beacon ZS6DN"
+  },
+  "toolsBeaconsPlace5z4b": "Kikuyu, Kenya",
+  "@toolsBeaconsPlace5z4b": {
+    "description": "Beacon tool: location of beacon 5Z4B"
+  },
+  "toolsBeaconsPlace4x6tu": "Tel Aviv, Israel",
+  "@toolsBeaconsPlace4x6tu": {
+    "description": "Beacon tool: location of beacon 4X6TU"
+  },
+  "toolsBeaconsPlaceOh2b": "Lohja, Finland",
+  "@toolsBeaconsPlaceOh2b": {
+    "description": "Beacon tool: location of beacon OH2B"
+  },
+  "toolsBeaconsPlaceCs3b": "Madeira, Portugal",
+  "@toolsBeaconsPlaceCs3b": {
+    "description": "Beacon tool: location of beacon CS3B"
+  },
+  "toolsBeaconsPlaceLu4aa": "Buenos Aires, Argentina",
+  "@toolsBeaconsPlaceLu4aa": {
+    "description": "Beacon tool: location of beacon LU4AA"
+  },
+  "toolsBeaconsPlaceOa4b": "Lima, Peru",
+  "@toolsBeaconsPlaceOa4b": {
+    "description": "Beacon tool: location of beacon OA4B"
+  },
+  "toolsBeaconsPlaceYv5b": "Caracas, Venezuela",
+  "@toolsBeaconsPlaceYv5b": {
+    "description": "Beacon tool: location of beacon YV5B"
+  },
   "learnReceiveTitle": "Receive",
   "@learnReceiveTitle": {
     "description": "Receive drill screen: app bar title"
