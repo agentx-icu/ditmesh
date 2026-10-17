@@ -1051,6 +1051,215 @@ class SZh extends S {
   String get toolsClockNote => '通联日志与 QSL 卡片统一使用 UTC。';
 
   @override
+  String get toolsPowerTitle => '功率与分贝';
+
+  @override
+  String get toolsPowerHint => '瓦与 dBm 互换、dB 换算倍数、对应的 S 表读数';
+
+  @override
+  String get toolsPowerSection => '功率电平';
+
+  @override
+  String get toolsPowerValue => '功率';
+
+  @override
+  String get toolsPowerInvalid => '请输入大于 0 的功率';
+
+  @override
+  String get toolsPowerLevel => '电平';
+
+  @override
+  String get toolsPowerSMeterHf => 'S 表读数（30 MHz 以下）';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S 表读数（30 MHz 以上）';
+
+  @override
+  String get toolsPowerSMeterNote => 'IARU 1 区标准：短波 S9 为 -73 dBm，超短波 S9 为 -93 dBm，每个 S 单位 6 dB。';
+
+  @override
+  String get toolsPowerRatioSection => '分贝换算倍数';
+
+  @override
+  String get toolsPowerDb => '增益或损耗（dB）';
+
+  @override
+  String get toolsPowerRatio => '功率倍数';
+
+  @override
+  String get toolsPowerVoltageRatio => '电压倍数';
+
+  @override
+  String get toolsPowerSUnits => 'S 单位';
+
+  @override
+  String get toolsPowerDbNote => '功率翻倍增加 3 dB，十倍增加 10 dB。一个 S 单位是 6 dB，所以功率提高 10 dB 在对方那里还不到两个 S 单位。';
+
+  @override
+  String get toolsSwrTitle => '驻波比';
+
+  @override
+  String get toolsSwrHint => '由功率读数或阻抗求驻波比与回波损耗';
+
+  @override
+  String get toolsSwrFromPower => '由正向与反向功率';
+
+  @override
+  String get toolsSwrForward => '正向功率（W）';
+
+  @override
+  String get toolsSwrReflected => '反向功率（W）';
+
+  @override
+  String get toolsSwrInvalidPower => '正向功率需大于 0，反向功率需在 0 与正向功率之间';
+
+  @override
+  String get toolsSwrRatio => '驻波比';
+
+  @override
+  String get toolsSwrReturnLoss => '回波损耗';
+
+  @override
+  String get toolsSwrReflectedShare => '反射功率占比';
+
+  @override
+  String get toolsSwrMismatchLoss => '失配损耗';
+
+  @override
+  String get toolsSwrCoefficient => '反射系数';
+
+  @override
+  String get toolsSwrFromImpedance => '由负载阻抗';
+
+  @override
+  String get toolsSwrResistance => '电阻 R（Ω）';
+
+  @override
+  String get toolsSwrReactance => '电抗 X（Ω）';
+
+  @override
+  String get toolsSwrReference => '馈线阻抗 Z₀（Ω）';
+
+  @override
+  String get toolsSwrInvalidImpedance => '电阻需不小于 0，馈线阻抗需大于 0';
+
+  @override
+  String get toolsSwrNote => '1.5:1 以下很好，2:1 对多数电台没有问题；许多电台在 3:1 以上会自动降低功率。';
+
+  @override
+  String get toolsSunTitle => '日出与灰线';
+
+  @override
+  String get toolsSunHint => '你与对方网格今天的日出、正午与日落（UTC）';
+
+  @override
+  String get toolsSunDate => '今天（UTC）';
+
+  @override
+  String get toolsSunSunrise => '日出';
+
+  @override
+  String get toolsSunNoon => '太阳正午';
+
+  @override
+  String get toolsSunSunset => '日落';
+
+  @override
+  String get toolsSunDayLength => '白昼长度';
+
+  @override
+  String get toolsSunPolarDay => '极昼：太阳整天不落';
+
+  @override
+  String get toolsSunPolarNight => '极夜：太阳整天不升';
+
+  @override
+  String get toolsSunNote => '灰线：日出与日落前后约半小时，低频段沿昼夜分界线开放。请对照通联双方的时间。';
+
+  @override
+  String get toolsBeaconsTitle => 'NCDXF 信标';
+
+  @override
+  String get toolsBeaconsHint => '此刻 20 至 10 米各频率上是哪座 IARU 信标，以及它的位置';
+
+  @override
+  String get toolsBeaconsOnAir => '正在发射';
+
+  @override
+  String get toolsBeaconsSlotRemaining => '本时隙剩余';
+
+  @override
+  String get toolsBeaconsLocatorHelp => '输入你的网格即可看到到各信标的方位与距离。';
+
+  @override
+  String get toolsBeaconsSchedule => '全部信标';
+
+  @override
+  String get toolsBeaconsOnAirNow => '发射中';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return '$time 后在 20 米发射';
+  }
+
+  @override
+  String get toolsBeaconsNote => '每座信标以 22 WPM 的 CW 发送呼号，再以 100 W、10 W、1 W、0.1 W 各发一秒长划，每 10 秒升一个频段，3 分钟一个周期。时序依据本机时钟。';
+
+  @override
+  String get toolsBeaconsPlace4u1un => '联合国，纽约';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => '尤里卡，加拿大努纳武特';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => '乌门亨山，加利福尼亚';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => '毛伊岛，夏威夷';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => '马斯特顿，新西兰';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => '罗利斯通，西澳大利亚';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => '朝熊山，日本';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => '新西伯利亚，俄罗斯';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => '香港';
+
+  @override
+  String get toolsBeaconsPlace4s7b => '科伦坡，斯里兰卡';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => '比勒陀利亚，南非';
+
+  @override
+  String get toolsBeaconsPlace5z4b => '基库尤，肯尼亚';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => '特拉维夫，以色列';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => '洛赫亚，芬兰';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => '马德拉，葡萄牙';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => '布宜诺斯艾利斯，阿根廷';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => '利马，秘鲁';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => '加拉加斯，委内瑞拉';
+
+  @override
   String get learnReceiveTitle => '听抄';
 
   @override
@@ -4179,6 +4388,215 @@ class SZhHant extends SZh {
 
   @override
   String get toolsClockNote => '通聯日誌與 QSL 卡片統一使用 UTC。';
+
+  @override
+  String get toolsPowerTitle => '功率與分貝';
+
+  @override
+  String get toolsPowerHint => '瓦與 dBm 互換、dB 換算倍數、對應的 S 表讀數';
+
+  @override
+  String get toolsPowerSection => '功率電平';
+
+  @override
+  String get toolsPowerValue => '功率';
+
+  @override
+  String get toolsPowerInvalid => '請輸入大於 0 的功率';
+
+  @override
+  String get toolsPowerLevel => '電平';
+
+  @override
+  String get toolsPowerSMeterHf => 'S 表讀數（30 MHz 以下）';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S 表讀數（30 MHz 以上）';
+
+  @override
+  String get toolsPowerSMeterNote => 'IARU 第 1 區標準：短波 S9 為 -73 dBm，超短波 S9 為 -93 dBm，每個 S 單位 6 dB。';
+
+  @override
+  String get toolsPowerRatioSection => '分貝換算倍數';
+
+  @override
+  String get toolsPowerDb => '增益或損耗（dB）';
+
+  @override
+  String get toolsPowerRatio => '功率倍數';
+
+  @override
+  String get toolsPowerVoltageRatio => '電壓倍數';
+
+  @override
+  String get toolsPowerSUnits => 'S 單位';
+
+  @override
+  String get toolsPowerDbNote => '功率加倍增加 3 dB，十倍增加 10 dB。一個 S 單位是 6 dB，所以功率提高 10 dB 在對方那裡還不到兩個 S 單位。';
+
+  @override
+  String get toolsSwrTitle => '駐波比';
+
+  @override
+  String get toolsSwrHint => '由功率讀數或阻抗求駐波比與回波損耗';
+
+  @override
+  String get toolsSwrFromPower => '由正向與反向功率';
+
+  @override
+  String get toolsSwrForward => '正向功率（W）';
+
+  @override
+  String get toolsSwrReflected => '反向功率（W）';
+
+  @override
+  String get toolsSwrInvalidPower => '正向功率需大於 0，反向功率需在 0 與正向功率之間';
+
+  @override
+  String get toolsSwrRatio => '駐波比';
+
+  @override
+  String get toolsSwrReturnLoss => '回波損耗';
+
+  @override
+  String get toolsSwrReflectedShare => '反射功率佔比';
+
+  @override
+  String get toolsSwrMismatchLoss => '失配損耗';
+
+  @override
+  String get toolsSwrCoefficient => '反射係數';
+
+  @override
+  String get toolsSwrFromImpedance => '由負載阻抗';
+
+  @override
+  String get toolsSwrResistance => '電阻 R（Ω）';
+
+  @override
+  String get toolsSwrReactance => '電抗 X（Ω）';
+
+  @override
+  String get toolsSwrReference => '饋線阻抗 Z₀（Ω）';
+
+  @override
+  String get toolsSwrInvalidImpedance => '電阻需不小於 0，饋線阻抗需大於 0';
+
+  @override
+  String get toolsSwrNote => '1.5:1 以下很好，2:1 對多數電台沒有問題；許多電台在 3:1 以上會自動降低功率。';
+
+  @override
+  String get toolsSunTitle => '日出與灰線';
+
+  @override
+  String get toolsSunHint => '你與對方網格今天的日出、正午與日落（UTC）';
+
+  @override
+  String get toolsSunDate => '今天（UTC）';
+
+  @override
+  String get toolsSunSunrise => '日出';
+
+  @override
+  String get toolsSunNoon => '太陽正午';
+
+  @override
+  String get toolsSunSunset => '日落';
+
+  @override
+  String get toolsSunDayLength => '白晝長度';
+
+  @override
+  String get toolsSunPolarDay => '極晝：太陽整天不落';
+
+  @override
+  String get toolsSunPolarNight => '極夜：太陽整天不升';
+
+  @override
+  String get toolsSunNote => '灰線：日出與日落前後約半小時，低頻段沿晝夜分界線開放。請對照通聯雙方的時間。';
+
+  @override
+  String get toolsBeaconsTitle => 'NCDXF 信標';
+
+  @override
+  String get toolsBeaconsHint => '此刻 20 至 10 米各頻率上是哪座 IARU 信標，以及它的位置';
+
+  @override
+  String get toolsBeaconsOnAir => '正在發射';
+
+  @override
+  String get toolsBeaconsSlotRemaining => '本時隙剩餘';
+
+  @override
+  String get toolsBeaconsLocatorHelp => '輸入你的網格即可看到到各信標的方位與距離。';
+
+  @override
+  String get toolsBeaconsSchedule => '全部信標';
+
+  @override
+  String get toolsBeaconsOnAirNow => '發射中';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return '$time 後在 20 米發射';
+  }
+
+  @override
+  String get toolsBeaconsNote => '每座信標以 22 WPM 的 CW 發送呼號，再以 100 W、10 W、1 W、0.1 W 各發一秒長劃，每 10 秒升一個頻段，3 分鐘一個週期。時序依據本機時鐘。';
+
+  @override
+  String get toolsBeaconsPlace4u1un => '聯合國，紐約';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => '尤里卡，加拿大努納武特';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => '烏門亨山，加利福尼亞';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => '茂宜島，夏威夷';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => '馬斯特頓，紐西蘭';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => '羅利斯通，西澳';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => '朝熊山，日本';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => '新西伯利亞，俄羅斯';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => '香港';
+
+  @override
+  String get toolsBeaconsPlace4s7b => '可倫坡，斯里蘭卡';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => '普利托利亞，南非';
+
+  @override
+  String get toolsBeaconsPlace5z4b => '基庫尤，肯亞';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => '特拉維夫，以色列';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => '洛赫亞，芬蘭';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => '馬德拉，葡萄牙';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => '布宜諾斯艾利斯，阿根廷';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => '利馬，秘魯';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => '卡拉卡斯，委內瑞拉';
 
   @override
   String get learnReceiveTitle => '聽抄';

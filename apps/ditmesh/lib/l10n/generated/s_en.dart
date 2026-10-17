@@ -1054,6 +1054,215 @@ class SEn extends S {
   String get toolsClockNote => 'Logs and QSL cards use UTC.';
 
   @override
+  String get toolsPowerTitle => 'Power & dB';
+
+  @override
+  String get toolsPowerHint => 'Watts to dBm, dB to ratio, S-meter equivalents';
+
+  @override
+  String get toolsPowerSection => 'Power level';
+
+  @override
+  String get toolsPowerValue => 'Power';
+
+  @override
+  String get toolsPowerInvalid => 'Enter a power above 0';
+
+  @override
+  String get toolsPowerLevel => 'Level';
+
+  @override
+  String get toolsPowerSMeterHf => 'S-meter below 30 MHz';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S-meter above 30 MHz';
+
+  @override
+  String get toolsPowerSMeterNote => 'IARU Region 1 scale: S9 is -73 dBm on HF and -93 dBm on VHF, one S-unit is 6 dB.';
+
+  @override
+  String get toolsPowerRatioSection => 'Decibels to ratio';
+
+  @override
+  String get toolsPowerDb => 'Gain or loss (dB)';
+
+  @override
+  String get toolsPowerRatio => 'Power ratio';
+
+  @override
+  String get toolsPowerVoltageRatio => 'Voltage ratio';
+
+  @override
+  String get toolsPowerSUnits => 'S-units';
+
+  @override
+  String get toolsPowerDbNote => 'Doubling the power adds 3 dB and ten times adds 10 dB. One S-unit is 6 dB, so 10 dB more power is under two S-units at the other end.';
+
+  @override
+  String get toolsSwrTitle => 'SWR';
+
+  @override
+  String get toolsSwrHint => 'Standing-wave ratio from power readings or impedance, return loss';
+
+  @override
+  String get toolsSwrFromPower => 'From forward and reflected power';
+
+  @override
+  String get toolsSwrForward => 'Forward power (W)';
+
+  @override
+  String get toolsSwrReflected => 'Reflected power (W)';
+
+  @override
+  String get toolsSwrInvalidPower => 'Forward power must be above 0 and reflected power between 0 and the forward power';
+
+  @override
+  String get toolsSwrRatio => 'SWR';
+
+  @override
+  String get toolsSwrReturnLoss => 'Return loss';
+
+  @override
+  String get toolsSwrReflectedShare => 'Power reflected';
+
+  @override
+  String get toolsSwrMismatchLoss => 'Mismatch loss';
+
+  @override
+  String get toolsSwrCoefficient => 'Reflection coefficient';
+
+  @override
+  String get toolsSwrFromImpedance => 'From load impedance';
+
+  @override
+  String get toolsSwrResistance => 'Resistance R (Ω)';
+
+  @override
+  String get toolsSwrReactance => 'Reactance X (Ω)';
+
+  @override
+  String get toolsSwrReference => 'Line impedance Z₀ (Ω)';
+
+  @override
+  String get toolsSwrInvalidImpedance => 'Resistance must be 0 or more and line impedance above 0';
+
+  @override
+  String get toolsSwrNote => 'Below 1.5:1 is excellent and 2:1 is fine for most rigs; many transceivers reduce power above 3:1.';
+
+  @override
+  String get toolsSunTitle => 'Sunrise & grey line';
+
+  @override
+  String get toolsSunHint => 'Sunrise, solar noon and sunset in UTC for your locator and theirs';
+
+  @override
+  String get toolsSunDate => 'Today (UTC)';
+
+  @override
+  String get toolsSunSunrise => 'Sunrise';
+
+  @override
+  String get toolsSunNoon => 'Solar noon';
+
+  @override
+  String get toolsSunSunset => 'Sunset';
+
+  @override
+  String get toolsSunDayLength => 'Day length';
+
+  @override
+  String get toolsSunPolarDay => 'The sun stays up all day';
+
+  @override
+  String get toolsSunPolarNight => 'The sun stays below the horizon all day';
+
+  @override
+  String get toolsSunNote => 'Grey line: for about half an hour around sunrise and sunset the low bands open along the day/night boundary. Compare both ends of the path.';
+
+  @override
+  String get toolsBeaconsTitle => 'NCDXF beacons';
+
+  @override
+  String get toolsBeaconsHint => 'Which IARU beacon is on air now on 20 to 10 m, and where it is';
+
+  @override
+  String get toolsBeaconsOnAir => 'On air now';
+
+  @override
+  String get toolsBeaconsSlotRemaining => 'Slot ends in';
+
+  @override
+  String get toolsBeaconsLocatorHelp => 'Enter your locator to see the heading and distance to each beacon.';
+
+  @override
+  String get toolsBeaconsSchedule => 'All beacons';
+
+  @override
+  String get toolsBeaconsOnAirNow => 'On air';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return 'Next on 20 m in $time';
+  }
+
+  @override
+  String get toolsBeaconsNote => 'Each beacon sends its callsign in CW at 22 WPM, then one-second dashes at 100 W, 10 W, 1 W and 0.1 W, moving up through the five bands every 10 seconds in a 3-minute cycle. The schedule follows this device\'s clock.';
+
+  @override
+  String get toolsBeaconsPlace4u1un => 'United Nations, New York';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canada';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, California';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => 'Maui, Hawaii';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => 'Masterton, New Zealand';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => 'Rolystone, Western Australia';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => 'Mt Asama, Japan';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => 'Novosibirsk, Russia';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => 'Hong Kong';
+
+  @override
+  String get toolsBeaconsPlace4s7b => 'Colombo, Sri Lanka';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => 'Pretoria, South Africa';
+
+  @override
+  String get toolsBeaconsPlace5z4b => 'Kikuyu, Kenya';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => 'Tel Aviv, Israel';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => 'Lohja, Finland';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => 'Madeira, Portugal';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => 'Buenos Aires, Argentina';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => 'Lima, Peru';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
+
+  @override
   String get learnReceiveTitle => 'Receive';
 
   @override

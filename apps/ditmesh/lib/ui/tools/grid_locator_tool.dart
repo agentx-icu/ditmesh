@@ -3,6 +3,7 @@ import 'package:radio_tools/radio_tools.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../common/field_label.dart';
+import 'locator_field.dart';
 import 'tool_page.dart';
 
 /// Maidenhead locator from coordinates, and distance / heading between two
@@ -49,13 +50,18 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
         ToolSection(
           title: s.toolsGridDistanceSection,
           children: <Widget>[
-            _locatorField(GridLocatorTool.mineKey, _mine, s.toolsGridMine, s),
+            LocatorField(
+              key: GridLocatorTool.mineKey,
+              controller: _mine,
+              label: s.toolsGridMine,
+              onChanged: _changed,
+            ),
             const SizedBox(height: 12),
-            _locatorField(
-              GridLocatorTool.theirsKey,
-              _theirs,
-              s.toolsGridTheirs,
-              s,
+            LocatorField(
+              key: GridLocatorTool.theirsKey,
+              controller: _theirs,
+              label: s.toolsGridTheirs,
+              onChanged: _changed,
             ),
             const SizedBox(height: 8),
             ..._distanceResult(s),
@@ -141,31 +147,6 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
         emphasize: true,
       ),
     ];
-  }
-
-  Widget _locatorField(
-    Key key,
-    TextEditingController controller,
-    String label,
-    S s,
-  ) {
-    final text = controller.text.trim();
-    final invalid = text.isNotEmpty && !Maidenhead.isValid(text);
-    return TextField(
-      key: key,
-      controller: controller,
-      textCapitalization: TextCapitalization.characters,
-      autocorrect: false,
-      enableSuggestions: false,
-      onChanged: _changed,
-      decoration: InputDecoration(
-        label: FieldLabel(label),
-        // ui-literal-ok: Maidenhead locator example, identical in every locale
-        hintText: 'OM89ex',
-        errorText: invalid ? s.toolsGridInvalidLocator : null,
-        border: const OutlineInputBorder(),
-      ),
-    );
   }
 
   List<Widget> _distanceResult(S s) {
