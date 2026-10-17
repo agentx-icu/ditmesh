@@ -1,5 +1,5 @@
 name: radio_tools
-description: Pure-Dart amateur radio helpers - Maidenhead locators, great-circle distance and bearing, IARU band edges and antenna lengths, CW speed, RST reports, decibels and S-meter levels, SWR, sunrise / sunset and the NCDXF beacon schedule. No Flutter dependency.
+description: Pure-Dart amateur radio helpers - Maidenhead locators, great-circle distance and bearing, IARU band edges and antenna lengths, CW speed, RST reports, decibels and S-meter levels, SWR, feedline loss, free-space path loss and radio horizon, LC resonance, attenuators, L-network matching, sunrise / sunset and the NCDXF beacon schedule. No Flutter dependency.
 version: 0.1.0
 publish_to: none
 resolution: workspace

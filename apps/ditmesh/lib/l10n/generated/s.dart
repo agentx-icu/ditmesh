@@ -2498,6 +2498,552 @@ abstract class S {
   /// **'Caracas, Venezuela'**
   String get toolsBeaconsPlaceYv5b;
 
+  /// Feedline loss tool title
+  ///
+  /// In en, this message translates to:
+  /// **'Feedline loss'**
+  String get toolsFeedlineTitle;
+
+  /// Feedline loss tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Coax loss for a run, SWR at the radio, stub lengths'**
+  String get toolsFeedlineHint;
+
+  /// Feedline tool: label of the cable type dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Cable'**
+  String get toolsFeedlineCable;
+
+  /// Feedline tool: label of the run length field, metres
+  ///
+  /// In en, this message translates to:
+  /// **'Length (m)'**
+  String get toolsFeedlineLength;
+
+  /// Feedline tool: label of the frequency field
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get toolsFeedlineFrequency;
+
+  /// Feedline tool: label of the SWR-at-the-antenna field (1 for a matched antenna)
+  ///
+  /// In en, this message translates to:
+  /// **'SWR at the antenna'**
+  String get toolsFeedlineSwr;
+
+  /// Feedline tool: label of the transmitter power field, watts
+  ///
+  /// In en, this message translates to:
+  /// **'Power into the line (W)'**
+  String get toolsFeedlinePower;
+
+  /// Feedline tool: error when a field holds an impossible value
+  ///
+  /// In en, this message translates to:
+  /// **'Length must be 0 or more, frequency above 0, SWR 1 or more and power above 0'**
+  String get toolsFeedlineInvalid;
+
+  /// Feedline tool: result row with the loss into a matched (SWR 1:1) load
+  ///
+  /// In en, this message translates to:
+  /// **'Matched loss'**
+  String get toolsFeedlineMatchedLoss;
+
+  /// Feedline tool: result row with the loss including the extra loss caused by the antenna SWR
+  ///
+  /// In en, this message translates to:
+  /// **'Loss with this SWR'**
+  String get toolsFeedlineTotalLoss;
+
+  /// Feedline tool: result row with the SWR measured at the transmitter end, lower than at the antenna because of line loss
+  ///
+  /// In en, this message translates to:
+  /// **'SWR seen at the radio'**
+  String get toolsFeedlineSwrAtRadio;
+
+  /// Feedline tool: result row with the power that reaches the antenna (watts and percentage)
+  ///
+  /// In en, this message translates to:
+  /// **'Power at the antenna'**
+  String get toolsFeedlinePowerAtAntenna;
+
+  /// Feedline tool: result row with the run length in electrical degrees and wavelengths
+  ///
+  /// In en, this message translates to:
+  /// **'Electrical length'**
+  String get toolsFeedlineElectricalLength;
+
+  /// Feedline tool: header of the section giving the cable data and quarter / half wave lengths
+  ///
+  /// In en, this message translates to:
+  /// **'Line sections at this frequency'**
+  String get toolsFeedlineSections;
+
+  /// Feedline tool: result row with the characteristic impedance of the chosen cable
+  ///
+  /// In en, this message translates to:
+  /// **'Impedance'**
+  String get toolsFeedlineImpedance;
+
+  /// Feedline tool: result row with the velocity factor of the chosen cable (e.g. 0.66)
+  ///
+  /// In en, this message translates to:
+  /// **'Velocity factor'**
+  String get toolsFeedlineVelocityFactor;
+
+  /// Feedline tool: result row with the physical length of a quarter wavelength of this cable
+  ///
+  /// In en, this message translates to:
+  /// **'Quarter wave (λ/4)'**
+  String get toolsFeedlineQuarterWave;
+
+  /// Feedline tool: result row with the physical length of a half wavelength of this cable
+  ///
+  /// In en, this message translates to:
+  /// **'Half wave (λ/2)'**
+  String get toolsFeedlineHalfWave;
+
+  /// Feedline tool: note at the bottom about the nominal data and the SWR loss
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal attenuation figures: a real run, its connectors and its age add to them. The loss with SWR counts the extra trips the reflected power makes along the line.'**
+  String get toolsFeedlineNote;
+
+  /// Link budget tool title
+  ///
+  /// In en, this message translates to:
+  /// **'Link budget'**
+  String get toolsLinkTitle;
+
+  /// Link budget tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Radio horizon, free-space path loss and the signal at the far end'**
+  String get toolsLinkHint;
+
+  /// Link tool: header of the radio-horizon section
+  ///
+  /// In en, this message translates to:
+  /// **'Radio horizon'**
+  String get toolsLinkHorizonSection;
+
+  /// Link tool: label of the user's antenna height field, metres above ground
+  ///
+  /// In en, this message translates to:
+  /// **'Your antenna height (m)'**
+  String get toolsLinkHeightA;
+
+  /// Link tool: label of the other station's antenna height field, metres
+  ///
+  /// In en, this message translates to:
+  /// **'Their antenna height (m)'**
+  String get toolsLinkHeightB;
+
+  /// Link tool: error when a height is negative or not a number
+  ///
+  /// In en, this message translates to:
+  /// **'Heights must be 0 or more'**
+  String get toolsLinkInvalidHeight;
+
+  /// Link tool: result row with the distance to the user's radio horizon
+  ///
+  /// In en, this message translates to:
+  /// **'Your horizon'**
+  String get toolsLinkHorizonA;
+
+  /// Link tool: result row with the distance to the other station's radio horizon
+  ///
+  /// In en, this message translates to:
+  /// **'Their horizon'**
+  String get toolsLinkHorizonB;
+
+  /// Link tool: result row with the sum of both horizons, the maximum line-of-sight distance
+  ///
+  /// In en, this message translates to:
+  /// **'Line-of-sight range'**
+  String get toolsLinkLineOfSight;
+
+  /// Link tool: header of the section with transmitter, antennas and distance
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get toolsLinkPathSection;
+
+  /// Link tool: label of the transmitter power field, watts
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter power (W)'**
+  String get toolsLinkPower;
+
+  /// Link tool: label of the transmitter feedline loss field, dB; may be left empty
+  ///
+  /// In en, this message translates to:
+  /// **'Feedline loss (dB)'**
+  String get toolsLinkTxLoss;
+
+  /// Link tool: label of the user's antenna gain field in dBi; may be left empty
+  ///
+  /// In en, this message translates to:
+  /// **'Your antenna gain (dBi)'**
+  String get toolsLinkTxGain;
+
+  /// Link tool: label of the other station's antenna gain field in dBi; may be left empty
+  ///
+  /// In en, this message translates to:
+  /// **'Their antenna gain (dBi)'**
+  String get toolsLinkRxGain;
+
+  /// Link tool: label of the frequency field
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get toolsLinkFrequency;
+
+  /// Link tool: label of the path distance field, kilometres
+  ///
+  /// In en, this message translates to:
+  /// **'Distance (km)'**
+  String get toolsLinkDistance;
+
+  /// Link tool: error when a path field holds an impossible value
+  ///
+  /// In en, this message translates to:
+  /// **'Power, frequency and distance must be above 0; gains and loss must be numbers'**
+  String get toolsLinkInvalid;
+
+  /// Link tool: result row with the effective isotropic radiated power; keep the abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'EIRP'**
+  String get toolsLinkEirp;
+
+  /// Link tool: result row with the effective radiated power relative to a dipole; keep the abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'ERP'**
+  String get toolsLinkErp;
+
+  /// Link tool: result row with the free-space path loss in dB
+  ///
+  /// In en, this message translates to:
+  /// **'Free-space path loss'**
+  String get toolsLinkPathLoss;
+
+  /// Link tool: result row with the signal level at the other station's receiver, dBm
+  ///
+  /// In en, this message translates to:
+  /// **'Signal at the far end'**
+  String get toolsLinkReceived;
+
+  /// Link tool: result row with that signal as a voltage across 50 ohms (S9 is 50 µV)
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage at the far end (50 Ω)'**
+  String get toolsLinkReceivedVoltage;
+
+  /// Link tool: result row with the S-meter reading of the received signal
+  ///
+  /// In en, this message translates to:
+  /// **'S-meter'**
+  String get toolsLinkSMeter;
+
+  /// Link tool: warning shown when the distance exceeds the line-of-sight range of the two heights
+  ///
+  /// In en, this message translates to:
+  /// **'Beyond the radio horizon for these antenna heights'**
+  String get toolsLinkBeyondHorizon;
+
+  /// Link tool: note at the bottom on the free-space assumption and ERP vs EIRP
+  ///
+  /// In en, this message translates to:
+  /// **'Free-space figures: terrain, buildings, trees and the ground add loss, so treat them as the best case. ERP is relative to a dipole and EIRP to an isotropic radiator, 2.15 dB apart.'**
+  String get toolsLinkNote;
+
+  /// RF circuits tool title
+  ///
+  /// In en, this message translates to:
+  /// **'RF circuits'**
+  String get toolsCircuitTitle;
+
+  /// RF circuits tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'LC resonance and reactance, attenuators, impedance pads'**
+  String get toolsCircuitHint;
+
+  /// Circuits tool: header of the LC resonance section
+  ///
+  /// In en, this message translates to:
+  /// **'Resonant circuit'**
+  String get toolsCircuitResonanceSection;
+
+  /// Circuits tool: label of the frequency field
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get toolsCircuitFrequency;
+
+  /// Circuits tool: label of the inductance field, microhenries
+  ///
+  /// In en, this message translates to:
+  /// **'Inductance (µH)'**
+  String get toolsCircuitInductance;
+
+  /// Circuits tool: label of the capacitance field, picofarads
+  ///
+  /// In en, this message translates to:
+  /// **'Capacitance (pF)'**
+  String get toolsCircuitCapacitance;
+
+  /// Circuits tool: result row with the inductance (value carries its own unit)
+  ///
+  /// In en, this message translates to:
+  /// **'Inductance'**
+  String get toolsCircuitInductanceResult;
+
+  /// Circuits tool: result row with the capacitance (value carries its own unit)
+  ///
+  /// In en, this message translates to:
+  /// **'Capacitance'**
+  String get toolsCircuitCapacitanceResult;
+
+  /// Circuits tool: helper text under the three resonance fields
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in any two; the third is calculated.'**
+  String get toolsCircuitResonanceHelp;
+
+  /// Circuits tool: error when a value is zero, negative or not a number
+  ///
+  /// In en, this message translates to:
+  /// **'Values must be above 0'**
+  String get toolsCircuitInvalid;
+
+  /// Circuits tool: result row with the resonant frequency of L and C
+  ///
+  /// In en, this message translates to:
+  /// **'Resonant frequency'**
+  String get toolsCircuitResonantFrequency;
+
+  /// Circuits tool: result row with the reactance of the coil at the frequency, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Inductive reactance'**
+  String get toolsCircuitInductiveReactance;
+
+  /// Circuits tool: result row with the reactance of the capacitor at the frequency, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Capacitive reactance'**
+  String get toolsCircuitCapacitiveReactance;
+
+  /// Circuits tool: header of the attenuator section
+  ///
+  /// In en, this message translates to:
+  /// **'Attenuator'**
+  String get toolsCircuitAttenuatorSection;
+
+  /// Circuits tool: label of the attenuation field, dB
+  ///
+  /// In en, this message translates to:
+  /// **'Attenuation (dB)'**
+  String get toolsCircuitAttenuation;
+
+  /// Circuits tool: label of the system impedance field for the attenuator, ohms, 50 by default
+  ///
+  /// In en, this message translates to:
+  /// **'Impedance (Ω)'**
+  String get toolsCircuitImpedance;
+
+  /// Circuits tool: result row with the series resistor of the pi attenuator
+  ///
+  /// In en, this message translates to:
+  /// **'π: series resistor'**
+  String get toolsCircuitPiSeries;
+
+  /// Circuits tool: result row with the two shunt resistors of the pi attenuator
+  ///
+  /// In en, this message translates to:
+  /// **'π: resistor to ground at each end'**
+  String get toolsCircuitPiShunt;
+
+  /// Circuits tool: result row with the two series resistors of the T attenuator
+  ///
+  /// In en, this message translates to:
+  /// **'T: series resistor at each end'**
+  String get toolsCircuitTeeSeries;
+
+  /// Circuits tool: result row with the shunt resistor of the T attenuator
+  ///
+  /// In en, this message translates to:
+  /// **'T: resistor to ground'**
+  String get toolsCircuitTeeShunt;
+
+  /// Circuits tool: header of the minimum-loss impedance pad section
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum-loss pad'**
+  String get toolsCircuitPadSection;
+
+  /// Circuits tool: label of the higher impedance field of the pad, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Higher impedance (Ω)'**
+  String get toolsCircuitPadHigh;
+
+  /// Circuits tool: label of the lower impedance field of the pad, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Lower impedance (Ω)'**
+  String get toolsCircuitPadLow;
+
+  /// Circuits tool: error when the pad impedances are not positive or are equal
+  ///
+  /// In en, this message translates to:
+  /// **'Both impedances must be above 0 and different'**
+  String get toolsCircuitPadInvalid;
+
+  /// Circuits tool: result row with the series resistor of the pad, on the higher-impedance side
+  ///
+  /// In en, this message translates to:
+  /// **'Series resistor (higher side)'**
+  String get toolsCircuitPadSeries;
+
+  /// Circuits tool: result row with the shunt resistor of the pad, across the lower-impedance side
+  ///
+  /// In en, this message translates to:
+  /// **'Shunt resistor (lower side)'**
+  String get toolsCircuitPadShunt;
+
+  /// Circuits tool: result row with the loss of the pad, dB
+  ///
+  /// In en, this message translates to:
+  /// **'Loss'**
+  String get toolsCircuitPadLoss;
+
+  /// Circuits tool: note at the bottom about standard values and the pad
+  ///
+  /// In en, this message translates to:
+  /// **'Resistor values are exact; pick the nearest standard values and check with a meter. The pad is the least loss a resistive network can manage between two impedances, 5.7 dB for 75 Ω to 50 Ω.'**
+  String get toolsCircuitNote;
+
+  /// L-network matching tool title
+  ///
+  /// In en, this message translates to:
+  /// **'L-network match'**
+  String get toolsMatchTitle;
+
+  /// L-network matching tool subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Coil and capacitor values that match an antenna to the feedline'**
+  String get toolsMatchHint;
+
+  /// Matching tool: label of the frequency field
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get toolsMatchFrequency;
+
+  /// Matching tool: label of the antenna resistance field, ohms
+  ///
+  /// In en, this message translates to:
+  /// **'Antenna resistance R (Ω)'**
+  String get toolsMatchResistance;
+
+  /// Matching tool: label of the antenna reactance field, ohms, positive inductive; may be left empty
+  ///
+  /// In en, this message translates to:
+  /// **'Antenna reactance X (Ω)'**
+  String get toolsMatchReactance;
+
+  /// Matching tool: label of the feedline impedance field, ohms, 50 by default
+  ///
+  /// In en, this message translates to:
+  /// **'Line impedance Z₀ (Ω)'**
+  String get toolsMatchReference;
+
+  /// Matching tool: error when a field holds an impossible value
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency, resistance and line impedance must be above 0; reactance must be a number'**
+  String get toolsMatchInvalid;
+
+  /// Matching tool: result row with the SWR of the bare antenna on the line
+  ///
+  /// In en, this message translates to:
+  /// **'SWR before matching'**
+  String get toolsMatchSwrBefore;
+
+  /// Matching tool: shown when the antenna already equals the line impedance
+  ///
+  /// In en, this message translates to:
+  /// **'Already matched; no network needed.'**
+  String get toolsMatchAlreadyMatched;
+
+  /// Matching tool: title of one solution card; index is 1, 2, 3…, kind is the translated low-pass / high-pass word
+  ///
+  /// In en, this message translates to:
+  /// **'Solution {index} · {kind}'**
+  String toolsMatchSolution(int index, String kind);
+
+  /// Matching tool: network kind inserted into the solution title (series coil, shunt capacitor)
+  ///
+  /// In en, this message translates to:
+  /// **'low-pass'**
+  String get toolsMatchLowPass;
+
+  /// Matching tool: network kind inserted into the solution title (series capacitor, shunt coil)
+  ///
+  /// In en, this message translates to:
+  /// **'high-pass'**
+  String get toolsMatchHighPass;
+
+  /// Matching tool: row for the element in series on the antenna side
+  ///
+  /// In en, this message translates to:
+  /// **'In series with the antenna'**
+  String get toolsMatchSeriesAtAntenna;
+
+  /// Matching tool: row for the element in series on the radio side
+  ///
+  /// In en, this message translates to:
+  /// **'In series with the radio'**
+  String get toolsMatchSeriesAtRadio;
+
+  /// Matching tool: row for the element from line to ground on the antenna side
+  ///
+  /// In en, this message translates to:
+  /// **'Across the antenna'**
+  String get toolsMatchShuntAcrossAntenna;
+
+  /// Matching tool: row for the element from line to ground on the radio side
+  ///
+  /// In en, this message translates to:
+  /// **'Across the radio'**
+  String get toolsMatchShuntAcrossRadio;
+
+  /// Matching tool: result row with the loaded Q of the network
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded Q'**
+  String get toolsMatchQ;
+
+  /// Matching tool: value shown when a position of the network needs no component
+  ///
+  /// In en, this message translates to:
+  /// **'No part needed here'**
+  String get toolsMatchNoElement;
+
+  /// Matching tool: note at the bottom explaining the wording and the two forms
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless parts assumed. \'In series\' sits between the two sides; \'across\' goes from the line to ground. The low-pass form also attenuates harmonics; the high-pass form often needs smaller parts.'**
+  String get toolsMatchNote;
+
   /// Receive drill screen: app bar title
   ///
   /// In en, this message translates to:
