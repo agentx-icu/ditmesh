@@ -58,6 +58,13 @@ double? optionalOf(TextEditingController controller) {
   return v != null && v.isFinite ? v : null;
 }
 
+/// The field's number, 0 when the field is empty, null when it is negative
+/// or not a finite number.
+double? optionalNonNegativeOf(TextEditingController controller) {
+  final v = optionalOf(controller);
+  return v != null && v >= 0 ? v : null;
+}
+
 /// True when the user typed something that did not parse into the value
 /// the tool needs.
 bool rejected(TextEditingController controller, double? parsed) =>

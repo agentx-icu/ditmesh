@@ -179,6 +179,22 @@ void main() {
       expect(twilight.sunrise, isNotNull);
     });
 
+    test('rejects an impossible zenith angle', () {
+      final munich = Maidenhead.toPoint('JN58td');
+      final date = DateTime.utc(2026, 6, 21);
+      for (final z in <double>[double.nan, double.infinity, 0, -1, 180, 200]) {
+        expect(
+          () => SolarDay.compute(munich, date, zenithDeg: z),
+          throwsArgumentError,
+          reason: '$z',
+        );
+      }
+      expect(
+        SolarDay.compute(munich, date, zenithDeg: 179.9).sunNeverRises,
+        isFalse,
+      );
+    });
+
     test('rejects an invalid point', () {
       expect(
         () => SolarDay.compute(const GeoPoint(91, 0), DateTime.utc(2026)),
@@ -194,6 +210,30 @@ void main() {
       for (final b in NcdxfBeacons.beacons) {
         expect(Maidenhead.isValid(b.locator), isTrue, reason: b.callsign);
         expect(b.locator, hasLength(6));
+      }
+      // The NCDXF beacon-locations table (VE8AT moved from Eureka to Inuvik).
+      const expected = <String, String>{
+        '4U1UN': 'FN30as',
+        'VE8AT': 'CP38gh',
+        'W6WX': 'CM97bd',
+        'KH6RS': 'BL10ts',
+        'ZL6B': 'RE78tw',
+        'VK6RBP': 'OF87av',
+        'JA2IGY': 'PM84jk',
+        'RR9O': 'NO14kx',
+        'VR2B': 'OL72bg',
+        '4S7B': 'MJ96wv',
+        'ZS6DN': 'KG33xi',
+        '5Z4B': 'KI88hr',
+        '4X6TU': 'KM72jb',
+        'OH2B': 'KP20eh',
+        'CS3B': 'IM12jt',
+        'LU4AA': 'GF05tj',
+        'OA4B': 'FH17mw',
+        'YV5B': 'FK60nd',
+      };
+      for (final b in NcdxfBeacons.beacons) {
+        expect(b.locator, expected[b.callsign], reason: b.callsign);
       }
       expect(
         NcdxfBeacons.beacons.map((b) => b.callsign).toSet(),

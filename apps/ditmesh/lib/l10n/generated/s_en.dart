@@ -1212,7 +1212,7 @@ class SEn extends S {
   String get toolsBeaconsPlace4u1un => 'United Nations, New York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canada';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Northwest Territories, Canada';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, California';
@@ -1368,7 +1368,7 @@ class SEn extends S {
   String get toolsLinkDistance => 'Distance (km)';
 
   @override
-  String get toolsLinkInvalid => 'Power, frequency and distance must be above 0; gains and loss must be numbers';
+  String get toolsLinkInvalid => 'Power, frequency and distance must be above 0; feedline loss must be 0 or more; gains must be numbers';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -1428,10 +1428,14 @@ class SEn extends S {
   String get toolsCircuitResonantFrequency => 'Resonant frequency';
 
   @override
-  String get toolsCircuitInductiveReactance => 'Inductive reactance';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Inductive reactance at $frequency';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => 'Capacitive reactance';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Capacitive reactance at $frequency';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'Attenuator';

@@ -178,6 +178,7 @@ class _CircuitToolState extends State<CircuitTool> {
       return const <Widget>[];
     }
     final at = f ?? resonantHz;
+    final atText = formatEngineering(at, 'Hz');
     return <Widget>[
       ResultRow(
         label: s.toolsCircuitResonantFrequency,
@@ -193,7 +194,7 @@ class _CircuitToolState extends State<CircuitTool> {
         value: formatEngineering(capacitanceF, 'F'),
       ),
       ResultRow(
-        label: s.toolsCircuitInductiveReactance,
+        label: s.toolsCircuitInductiveReactanceAt(atText),
         value: formatOhms(
           Resonance.inductiveReactance(
             frequencyHz: at,
@@ -202,7 +203,7 @@ class _CircuitToolState extends State<CircuitTool> {
         ),
       ),
       ResultRow(
-        label: s.toolsCircuitCapacitiveReactance,
+        label: s.toolsCircuitCapacitiveReactanceAt(atText),
         value: formatOhms(
           Resonance.capacitiveReactance(
             frequencyHz: at,

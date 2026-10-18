@@ -66,6 +66,35 @@ void main() {
       expect(at('RG-213'), greaterThan(at('LMR-400')));
     });
 
+    test('each cable sits near its widely published loss at 100 MHz', () {
+      // dB per 100 ft at 100 MHz as the ARRL Antenna Book / manufacturer
+      // tables print them; ±25 % covers the spread between makes.
+      const published = <String, double>{
+        'RG-174': 8.9,
+        'RG-58': 4.9,
+        'RG-8X': 3.5,
+        'RG-213': 1.9,
+        'RG-8 foam': 1.4,
+        'LMR-400': 1.2,
+        '1/2" hardline': 0.6,
+        'RG-6': 2.0,
+        '450 Ω window line': 0.3,
+      };
+      expect(
+        Feedlines.catalogue.map((c) => c.name).toSet(),
+        published.keys.toSet(),
+      );
+      for (final cable in Feedlines.catalogue) {
+        final per100ft = cable.lossPer100mDb(100) / 3.28084;
+        final want = published[cable.name]!;
+        expect(
+          per100ft,
+          closeTo(want, want * 0.25),
+          reason: '${cable.name} at 100 MHz',
+        );
+      }
+    });
+
     test('wavelength along the cable uses the velocity factor', () {
       expect(rg213.wavelengthM(14.2), closeTo(299.792458 / 14.2 * 0.66, 1e-9));
     });
@@ -91,14 +120,33 @@ void main() {
       expect(run.totalLossDb, greaterThan(run.matchedLossDb));
       expect(run.swrAtInput, lessThan(3));
       expect(run.swrAtInput, greaterThan(1));
-      // ARRL additional-loss chart: 1 dB matched loss with 3:1 at the load
-      // (reflection coefficient 0.5) adds about 0.5 dB; the radio sees 2.3:1.
+    });
+
+    test('ARRL additional-loss chart: 1 dB matched, 3:1 at the load', () {
+      // A synthetic line with exactly 1 dB per 100 m at every frequency.
+      const flat = CoaxCable(
+        name: 'flat 1 dB',
+        impedance: 50,
+        velocityFactor: 1,
+        lossTable: <(double, double)>[(1, 1), (1000, 1)],
+      );
+      final run = FeedlineRun(cable: flat, lengthM: 100, mhz: 14, swrAtLoad: 3);
+      expect(run.matchedLossDb, closeTo(1, 1e-9));
+      // Reflection coefficient 0.5: the chart gives about 0.5 dB extra and
+      // an input SWR near 2.3:1.
       final a = math.pow(10, 0.1).toDouble();
       final total =
           10 * math.log((a * a - 0.25) / (a * (1 - 0.25))) / math.ln10;
       expect(total, closeTo(1.5, 0.02));
+      expect(run.totalLossDb, closeTo(total, 1e-9));
+      expect(run.additionalLossDb, closeTo(0.5, 0.02));
       final rhoIn = 0.5 / a;
-      expect((1 + rhoIn) / (1 - rhoIn), closeTo(2.3, 0.05));
+      expect(run.swrAtInput, closeTo((1 + rhoIn) / (1 - rhoIn), 1e-9));
+      expect(run.swrAtInput, closeTo(2.3, 0.05));
+      expect(
+        run.powerDeliveredW(100),
+        closeTo(100 / math.pow(10, total / 10), 1e-9),
+      );
     });
 
     test('zero length has no loss at any SWR', () {

@@ -2399,7 +2399,7 @@ abstract class S {
   /// Beacon tool: location of beacon VE8AT
   ///
   /// In en, this message translates to:
-  /// **'Eureka, Nunavut, Canada'**
+  /// **'Inuvik, Northwest Territories, Canada'**
   String get toolsBeaconsPlaceVe8at;
 
   /// Beacon tool: location of beacon W6WX
@@ -2708,10 +2708,10 @@ abstract class S {
   /// **'Distance (km)'**
   String get toolsLinkDistance;
 
-  /// Link tool: error when a path field holds an impossible value
+  /// Link tool: error when a path field holds an impossible value (negative feedline loss included)
   ///
   /// In en, this message translates to:
-  /// **'Power, frequency and distance must be above 0; gains and loss must be numbers'**
+  /// **'Power, frequency and distance must be above 0; feedline loss must be 0 or more; gains must be numbers'**
   String get toolsLinkInvalid;
 
   /// Link tool: result row with the effective isotropic radiated power; keep the abbreviation
@@ -2828,17 +2828,17 @@ abstract class S {
   /// **'Resonant frequency'**
   String get toolsCircuitResonantFrequency;
 
-  /// Circuits tool: result row with the reactance of the coil at the frequency, ohms
+  /// Circuits tool: result row with the reactance of the coil at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms
   ///
   /// In en, this message translates to:
-  /// **'Inductive reactance'**
-  String get toolsCircuitInductiveReactance;
+  /// **'Inductive reactance at {frequency}'**
+  String toolsCircuitInductiveReactanceAt(String frequency);
 
-  /// Circuits tool: result row with the reactance of the capacitor at the frequency, ohms
+  /// Circuits tool: result row with the reactance of the capacitor at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms
   ///
   /// In en, this message translates to:
-  /// **'Capacitive reactance'**
-  String get toolsCircuitCapacitiveReactance;
+  /// **'Capacitive reactance at {frequency}'**
+  String toolsCircuitCapacitiveReactanceAt(String frequency);
 
   /// Circuits tool: header of the attenuator section
   ///

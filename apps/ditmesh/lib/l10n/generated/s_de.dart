@@ -1212,7 +1212,7 @@ class SDe extends S {
   String get toolsBeaconsPlace4u1un => 'Vereinte Nationen, New York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Kanada';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Nordwest-Territorien, Kanada';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Kalifornien';
@@ -1368,7 +1368,7 @@ class SDe extends S {
   String get toolsLinkDistance => 'Entfernung (km)';
 
   @override
-  String get toolsLinkInvalid => 'Leistung, Frequenz und Entfernung über 0; Gewinne und Dämpfung müssen Zahlen sein';
+  String get toolsLinkInvalid => 'Leistung, Frequenz und Entfernung über 0; Kabeldämpfung mindestens 0; Gewinne müssen Zahlen sein';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -1428,10 +1428,14 @@ class SDe extends S {
   String get toolsCircuitResonantFrequency => 'Resonanzfrequenz';
 
   @override
-  String get toolsCircuitInductiveReactance => 'Induktiver Blindwiderstand';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Induktiver Blindwiderstand bei $frequency';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => 'Kapazitiver Blindwiderstand';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Kapazitiver Blindwiderstand bei $frequency';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'Dämpfungsglied';

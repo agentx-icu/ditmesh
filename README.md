@@ -23,6 +23,7 @@ The main destinations are **Chat / Groups / Reference / Me** on phones, tablets 
 - **Device identity and backups:** password-protected identity, encrypted export/restore with preview, selective components, Tox profile import and current DitMesh backup restore.
 - **Privacy and moderation:** peer-to-peer encrypted transport, local notifications, blocked peers and community guidelines. No messaging or push server.
 - **Reference and key setup:** alphabet, prosigns, Q-codes, translator, Chinese telegraph-code interpretation and configurable device key bindings.
+- **Radio tools:** thirteen offline calculators next to the key: Maidenhead locator with heading and distance, IARU band plan with wire-antenna lengths, power and dB with S-meter equivalents, SWR, feedline loss, L-network matching, LC resonance / attenuator / pad arithmetic, link budget with radio horizon, CW speed timing, RST, sunrise and grey line, the NCDXF beacon schedule and a UTC clock.
 - **Network configuration:** official node catalogue, node reachability tests, automatic/manual selection and desktop LAN hosting; network settings also work before unlocking an identity. [Node and LAN guide](doc/operations/NETWORK.md).
 - **Appearance and languages:** ten interface locales; Classic Brass, Modern Calm, Night Radio, Paper Handbook and Fresh Cartoon styles with light/dark/system brightness.
 - **Desktop integration:** responsive panes, window persistence, tray, unread badge and notification routing.

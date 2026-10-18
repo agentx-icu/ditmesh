@@ -1209,7 +1209,7 @@ class SKo extends S {
   String get toolsBeaconsPlace4u1un => '유엔, 뉴욕';
 
   @override
-  String get toolsBeaconsPlaceVe8at => '유레카, 캐나다 누나부트';
+  String get toolsBeaconsPlaceVe8at => '이누빅, 캐나다 노스웨스트 준주';
 
   @override
   String get toolsBeaconsPlaceW6wx => '우뭄훔산, 캘리포니아';
@@ -1365,7 +1365,7 @@ class SKo extends S {
   String get toolsLinkDistance => '거리 (km)';
 
   @override
-  String get toolsLinkInvalid => '전력, 주파수, 거리는 0 초과, 이득과 손실은 숫자여야 합니다';
+  String get toolsLinkInvalid => '전력, 주파수, 거리는 0 초과, 급전선 손실은 0 이상, 이득은 숫자여야 합니다';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -1425,10 +1425,14 @@ class SKo extends S {
   String get toolsCircuitResonantFrequency => '공진 주파수';
 
   @override
-  String get toolsCircuitInductiveReactance => '유도성 리액턴스';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return '$frequency에서의 유도성 리액턴스';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => '용량성 리액턴스';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return '$frequency에서의 용량성 리액턴스';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => '감쇠기';

@@ -52,6 +52,13 @@ final class CoaxCable {
 }
 
 /// Common amateur feedlines with nominal attenuation.
+///
+/// The tables are generic figures for each cable family, in the range of
+/// the published Belden / Times Microwave / CommScope datasheets and the
+/// ARRL Antenna Book line-loss table (dB per 100 ft converted to dB per
+/// 100 m). They are not a specific product's datasheet: makes of the same
+/// type differ by 10 to 20 %, and connectors and age add more. Treat the
+/// result as an estimate, as the app's note says.
 abstract final class Feedlines {
   static const List<CoaxCable> catalogue = <CoaxCable>[
     CoaxCable(

@@ -167,6 +167,9 @@ void main() {
     );
     await popIfCan(tester);
 
+    // Reference: the radio tools calculate on the real platform.
+    await walkRadioTools(tester, s());
+
     // Me: identity card and the backend label.
     await selectTab(tester, ShellTab.me);
     expect(find.text('Ann'), findsWidgets);

@@ -1212,7 +1212,7 @@ class SFr extends S {
   String get toolsBeaconsPlace4u1un => 'Nations unies, New York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canada';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Territoires du Nord-Ouest, Canada';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Californie';
@@ -1368,7 +1368,7 @@ class SFr extends S {
   String get toolsLinkDistance => 'Distance (km)';
 
   @override
-  String get toolsLinkInvalid => 'Puissance, fréquence et distance > 0 ; gains et pertes doivent être des nombres';
+  String get toolsLinkInvalid => 'Puissance, fréquence et distance > 0 ; pertes de ligne ≥ 0 ; les gains doivent être des nombres';
 
   @override
   String get toolsLinkEirp => 'PIRE';
@@ -1428,10 +1428,14 @@ class SFr extends S {
   String get toolsCircuitResonantFrequency => 'Fréquence de résonance';
 
   @override
-  String get toolsCircuitInductiveReactance => 'Réactance inductive';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Réactance inductive à $frequency';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => 'Réactance capacitive';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Réactance capacitive à $frequency';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'Atténuateur';

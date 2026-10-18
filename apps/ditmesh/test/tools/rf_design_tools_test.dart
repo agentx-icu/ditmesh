@@ -142,6 +142,11 @@ void main() {
       expect(find.text(en.toolsLinkBeyondHorizon), findsOneWidget);
       await _enter(tester, LinkBudgetTool.txGainKey, 'abc');
       expect(find.text(en.toolsLinkInvalid), findsOneWidget);
+      await _enter(tester, LinkBudgetTool.txGainKey, '');
+      expect(find.text(en.toolsLinkInvalid), findsNothing);
+      // A feedline cannot have negative loss.
+      await _enter(tester, LinkBudgetTool.txLossKey, '-10');
+      expect(find.text(en.toolsLinkInvalid), findsOneWidget);
     });
   });
 
@@ -159,6 +164,30 @@ void main() {
       expect(find.text(formatEngineering(c, 'F')), findsOneWidget);
       await _enter(tester, CircuitTool.frequencyKey, '-1');
       expect(find.text(en.toolsCircuitInvalid), findsOneWidget);
+    });
+
+    testWidgets('all three given: resonance of L and C, reactances at f', (
+      tester,
+    ) async {
+      await _pumpIn(tester, const CircuitTool());
+      await _enter(tester, CircuitTool.inductanceKey, '10');
+      await _enter(tester, CircuitTool.capacitanceKey, '100');
+      expect(
+        find.text(en.toolsCircuitInductiveReactanceAt('5.03 MHz')),
+        findsOneWidget,
+      );
+      await _enter(tester, CircuitTool.frequencyKey, '7.1');
+      expect(find.text('5.03 MHz'), findsOneWidget);
+      expect(
+        find.text(en.toolsCircuitInductiveReactanceAt('7.10 MHz')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(en.toolsCircuitCapacitiveReactanceAt('7.10 MHz')),
+        findsOneWidget,
+      );
+      expect(find.text('446 Ω'), findsOneWidget);
+      expect(find.text('224 Ω'), findsOneWidget);
     });
 
     testWidgets('attenuator and pad', (tester) async {
@@ -198,6 +227,20 @@ void main() {
       expect(find.text('C 448 pF · 50.0 Ω'), findsOneWidget);
       expect(find.text(en.toolsMatchSeriesAtAntenna), findsNWidgets(2));
       expect(find.text(en.toolsMatchShuntAcrossRadio), findsNWidgets(2));
+    });
+
+    testWidgets('100 Ω puts the shunt element on the antenna side', (
+      tester,
+    ) async {
+      await _pumpIn(tester, const MatchingTool());
+      await _enter(tester, MatchingTool.frequencyKey, '7.1');
+      await _enter(tester, MatchingTool.resistanceKey, '100');
+      expect(find.text(en.toolsMatchShuntAcrossAntenna), findsNWidgets(2));
+      expect(find.text(en.toolsMatchSeriesAtRadio), findsNWidgets(2));
+      expect(find.text(en.toolsMatchSeriesAtAntenna), findsNothing);
+      // Q = 1 again: shunt 100 Ω, series 50 Ω.
+      expect(find.text('C 224 pF · 100 Ω'), findsOneWidget);
+      expect(find.text('L 1.12 µH · 50.0 Ω'), findsOneWidget);
     });
 
     testWidgets('matched load, bare reactance and bad input', (tester) async {

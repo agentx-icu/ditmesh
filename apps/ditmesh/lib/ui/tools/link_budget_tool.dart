@@ -177,7 +177,7 @@ class _LinkBudgetToolState extends State<LinkBudgetTool> {
     final power = positiveOf(_power);
     final mhz = positiveOf(_frequency);
     final distance = positiveOf(_distance);
-    final txLoss = optionalOf(_txLoss);
+    final txLoss = optionalNonNegativeOf(_txLoss);
     final txGain = optionalOf(_txGain);
     final rxGain = optionalOf(_rxGain);
     if (rejected(_power, power) ||

@@ -1209,7 +1209,7 @@ class SZh extends S {
   String get toolsBeaconsPlace4u1un => '联合国，纽约';
 
   @override
-  String get toolsBeaconsPlaceVe8at => '尤里卡，加拿大努纳武特';
+  String get toolsBeaconsPlaceVe8at => '伊努维克，加拿大西北地区';
 
   @override
   String get toolsBeaconsPlaceW6wx => '乌门亨山，加利福尼亚';
@@ -1365,7 +1365,7 @@ class SZh extends S {
   String get toolsLinkDistance => '距离（km）';
 
   @override
-  String get toolsLinkInvalid => '功率、频率与距离须 > 0，增益与损耗须为数字';
+  String get toolsLinkInvalid => '功率、频率与距离须 > 0，馈线损耗须 ≥ 0，增益须为数字';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -1425,10 +1425,14 @@ class SZh extends S {
   String get toolsCircuitResonantFrequency => '谐振频率';
 
   @override
-  String get toolsCircuitInductiveReactance => '感抗';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return '$frequency 下的感抗';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => '容抗';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return '$frequency 下的容抗';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => '衰减器';
@@ -4823,7 +4827,7 @@ class SZhHant extends SZh {
   String get toolsBeaconsPlace4u1un => '聯合國，紐約';
 
   @override
-  String get toolsBeaconsPlaceVe8at => '尤里卡，加拿大努納武特';
+  String get toolsBeaconsPlaceVe8at => '伊努維克，加拿大西北地區';
 
   @override
   String get toolsBeaconsPlaceW6wx => '烏門亨山，加利福尼亞';
@@ -4979,7 +4983,7 @@ class SZhHant extends SZh {
   String get toolsLinkDistance => '距離（km）';
 
   @override
-  String get toolsLinkInvalid => '功率、頻率與距離須 > 0，增益與損耗須為數字';
+  String get toolsLinkInvalid => '功率、頻率與距離須 > 0，饋線損耗須 ≥ 0，增益須為數字';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -5039,10 +5043,14 @@ class SZhHant extends SZh {
   String get toolsCircuitResonantFrequency => '諧振頻率';
 
   @override
-  String get toolsCircuitInductiveReactance => '感抗';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return '$frequency 下的感抗';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => '容抗';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return '$frequency 下的容抗';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => '衰減器';

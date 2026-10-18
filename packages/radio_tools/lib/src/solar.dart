@@ -35,6 +35,13 @@ final class SolarDay {
     if (!point.isValid) {
       throw ArgumentError.value(point, 'point', 'out of range');
     }
+    if (!zenithDeg.isFinite || zenithDeg <= 0 || zenithDeg >= 180) {
+      throw ArgumentError.value(
+        zenithDeg,
+        'zenithDeg',
+        'must be an angle between 0 and 180 degrees',
+      );
+    }
     final utc = date.toUtc();
     final day = DateTime.utc(utc.year, utc.month, utc.day);
     final jd0 =

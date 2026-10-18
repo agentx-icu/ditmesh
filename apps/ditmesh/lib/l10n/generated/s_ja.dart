@@ -1209,7 +1209,7 @@ class SJa extends S {
   String get toolsBeaconsPlace4u1un => '国連、ニューヨーク';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'ユリーカ、カナダ・ヌナブト';
+  String get toolsBeaconsPlaceVe8at => 'イヌヴィク、カナダ・ノースウェスト準州';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'ウムヌム山、カリフォルニア';
@@ -1365,7 +1365,7 @@ class SJa extends S {
   String get toolsLinkDistance => '距離（km）';
 
   @override
-  String get toolsLinkInvalid => '電力・周波数・距離は 0 より大きく、利得と損失は数値にしてください';
+  String get toolsLinkInvalid => '電力・周波数・距離は 0 より大きく、給電線損失は 0 以上、利得は数値にしてください';
 
   @override
   String get toolsLinkEirp => 'EIRP';
@@ -1425,10 +1425,14 @@ class SJa extends S {
   String get toolsCircuitResonantFrequency => '共振周波数';
 
   @override
-  String get toolsCircuitInductiveReactance => '誘導性リアクタンス';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return '$frequency での誘導性リアクタンス';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => '容量性リアクタンス';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return '$frequency での容量性リアクタンス';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'アッテネータ';

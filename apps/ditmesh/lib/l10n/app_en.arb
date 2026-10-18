@@ -1638,7 +1638,7 @@
   "@toolsBeaconsPlace4u1un": {
     "description": "Beacon tool: location of beacon 4U1UN"
   },
-  "toolsBeaconsPlaceVe8at": "Eureka, Nunavut, Canada",
+  "toolsBeaconsPlaceVe8at": "Inuvik, Northwest Territories, Canada",
   "@toolsBeaconsPlaceVe8at": {
     "description": "Beacon tool: location of beacon VE8AT"
   },
@@ -1846,9 +1846,9 @@
   "@toolsLinkDistance": {
     "description": "Link tool: label of the path distance field, kilometres"
   },
-  "toolsLinkInvalid": "Power, frequency and distance must be above 0; gains and loss must be numbers",
+  "toolsLinkInvalid": "Power, frequency and distance must be above 0; feedline loss must be 0 or more; gains must be numbers",
   "@toolsLinkInvalid": {
-    "description": "Link tool: error when a path field holds an impossible value"
+    "description": "Link tool: error when a path field holds an impossible value (negative feedline loss included)"
   },
   "toolsLinkEirp": "EIRP",
   "@toolsLinkEirp": {
@@ -1926,13 +1926,23 @@
   "@toolsCircuitResonantFrequency": {
     "description": "Circuits tool: result row with the resonant frequency of L and C"
   },
-  "toolsCircuitInductiveReactance": "Inductive reactance",
-  "@toolsCircuitInductiveReactance": {
-    "description": "Circuits tool: result row with the reactance of the coil at the frequency, ohms"
+  "toolsCircuitInductiveReactanceAt": "Inductive reactance at {frequency}",
+  "@toolsCircuitInductiveReactanceAt": {
+    "description": "Circuits tool: result row with the reactance of the coil at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms",
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      }
+    }
   },
-  "toolsCircuitCapacitiveReactance": "Capacitive reactance",
-  "@toolsCircuitCapacitiveReactance": {
-    "description": "Circuits tool: result row with the reactance of the capacitor at the frequency, ohms"
+  "toolsCircuitCapacitiveReactanceAt": "Capacitive reactance at {frequency}",
+  "@toolsCircuitCapacitiveReactanceAt": {
+    "description": "Circuits tool: result row with the reactance of the capacitor at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms",
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      }
+    }
   },
   "toolsCircuitAttenuatorSection": "Attenuator",
   "@toolsCircuitAttenuatorSection": {

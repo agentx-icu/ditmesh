@@ -1212,7 +1212,7 @@ class SPt extends S {
   String get toolsBeaconsPlace4u1un => 'Nações Unidas, Nova York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canadá';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Territórios do Noroeste, Canadá';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Califórnia';
@@ -1368,7 +1368,7 @@ class SPt extends S {
   String get toolsLinkDistance => 'Distância (km)';
 
   @override
-  String get toolsLinkInvalid => 'Potência, frequência e distância > 0; ganhos e perdas devem ser números';
+  String get toolsLinkInvalid => 'Potência, frequência e distância > 0; perdas da linha ≥ 0; os ganhos devem ser números';
 
   @override
   String get toolsLinkEirp => 'PIRE';
@@ -1428,10 +1428,14 @@ class SPt extends S {
   String get toolsCircuitResonantFrequency => 'Frequência de ressonância';
 
   @override
-  String get toolsCircuitInductiveReactance => 'Reactância indutiva';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Reactância indutiva a $frequency';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => 'Reactância capacitiva';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Reactância capacitiva a $frequency';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'Atenuador';

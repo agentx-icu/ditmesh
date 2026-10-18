@@ -14,7 +14,7 @@ the Chat / Groups / Reference / Me destinations.
 | [`morse_io`](../../packages/morse_io/README.md) | Sidetone, haptics, flash, straight key and iambic keyer |
 | [`morse_dsp`](../../packages/morse_dsp/README.md) | Microphone Morse decoding |
 | [`morse_trainer`](../../packages/morse_trainer/README.md) | Drills, scoring and progress for copy practice, group practice and the listening workbench |
-| [`radio_tools`](../../packages/radio_tools/README.md) | Radio tools reached from Reference |
+| [`radio_tools`](../../packages/radio_tools/README.md) | Radio tools reached from Reference: locator, bands, power, SWR, feedline, L-network matching, RF circuits, link budget, CW speed, RST, sunrise, NCDXF beacons, UTC |
 
 ## Source layout
 

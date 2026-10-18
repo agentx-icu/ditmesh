@@ -1218,7 +1218,7 @@ class SRu extends S {
   String get toolsBeaconsPlace4u1un => 'ООН, Нью-Йорк';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Юрика, Нунавут, Канада';
+  String get toolsBeaconsPlaceVe8at => 'Инувик, Северо-Западные территории, Канада';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'гора Умунхум, Калифорния';
@@ -1374,7 +1374,7 @@ class SRu extends S {
   String get toolsLinkDistance => 'Расстояние (км)';
 
   @override
-  String get toolsLinkInvalid => 'Мощность, частота и расстояние > 0; усиление и потери должны быть числами';
+  String get toolsLinkInvalid => 'Мощность, частота и расстояние > 0; потери в кабеле ≥ 0; усиление должно быть числом';
 
   @override
   String get toolsLinkEirp => 'ЭИИМ (EIRP)';
@@ -1434,10 +1434,14 @@ class SRu extends S {
   String get toolsCircuitResonantFrequency => 'Резонансная частота';
 
   @override
-  String get toolsCircuitInductiveReactance => 'Индуктивное сопротивление';
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Индуктивное сопротивление на $frequency';
+  }
 
   @override
-  String get toolsCircuitCapacitiveReactance => 'Ёмкостное сопротивление';
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Ёмкостное сопротивление на $frequency';
+  }
 
   @override
   String get toolsCircuitAttenuatorSection => 'Аттенюатор';

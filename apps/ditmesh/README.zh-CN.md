@@ -13,7 +13,7 @@ DitMesh 的 Flutter 应用外壳。功能逻辑在工作区的各个包里；本
 | [`morse_io`](../../packages/morse_io/README.zh-CN.md) | 侧音、振动、闪光、直键与自动键 |
 | [`morse_dsp`](../../packages/morse_dsp/README.zh-CN.md) | 麦克风莫尔斯译码 |
 | [`morse_trainer`](../../packages/morse_trainer/README.zh-CN.md) | 抄收练习、群组练习和听抄工作台用到的练习题、评分与进度 |
-| [`radio_tools`](../../packages/radio_tools/README.zh-CN.md) | 从"参考"进入的无线电工具 |
+| [`radio_tools`](../../packages/radio_tools/README.zh-CN.md) | 从"参考"进入的无线电工具：网格、频段、功率、驻波比、馈线、L 型匹配、射频电路、链路预算、CW 速度、RST、日出、NCDXF 信标、UTC |
 
 ## 源码布局
 

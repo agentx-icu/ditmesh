@@ -37,7 +37,7 @@ abstract final class NcdxfBeacons {
   /// Beacons in transmission order.
   static const List<Beacon> beacons = <Beacon>[
     Beacon('4U1UN', 'FN30as'),
-    Beacon('VE8AT', 'EQ79ax'),
+    Beacon('VE8AT', 'CP38gh'),
     Beacon('W6WX', 'CM97bd'),
     Beacon('KH6RS', 'BL10ts'),
     Beacon('ZL6B', 'RE78tw'),
@@ -53,7 +53,7 @@ abstract final class NcdxfBeacons {
     Beacon('CS3B', 'IM12jt'),
     Beacon('LU4AA', 'GF05tj'),
     Beacon('OA4B', 'FH17mw'),
-    Beacon('YV5B', 'FJ69cc'),
+    Beacon('YV5B', 'FK60nd'),
   ];
 
   /// Seconds since the current cycle began, 0..179.
