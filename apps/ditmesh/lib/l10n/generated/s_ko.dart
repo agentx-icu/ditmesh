@@ -1051,6 +1051,215 @@ class SKo extends S {
   String get toolsClockNote => '로그와 QSL 카드에는 UTC를 사용합니다.';
 
   @override
+  String get toolsPowerTitle => '전력과 dB';
+
+  @override
+  String get toolsPowerHint => '와트와 dBm 변환, dB를 배율로, S 미터 환산';
+
+  @override
+  String get toolsPowerSection => '전력 레벨';
+
+  @override
+  String get toolsPowerValue => '전력';
+
+  @override
+  String get toolsPowerInvalid => '0보다 큰 전력을 입력하세요';
+
+  @override
+  String get toolsPowerLevel => '레벨';
+
+  @override
+  String get toolsPowerSMeterHf => 'S 미터 (30 MHz 미만)';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S 미터 (30 MHz 이상)';
+
+  @override
+  String get toolsPowerSMeterNote => 'IARU 제1지역 기준: HF에서 S9는 -73 dBm, VHF에서는 -93 dBm이며 1 S 단위는 6 dB입니다.';
+
+  @override
+  String get toolsPowerRatioSection => 'dB를 배율로';
+
+  @override
+  String get toolsPowerDb => '이득 또는 손실 (dB)';
+
+  @override
+  String get toolsPowerRatio => '전력 배율';
+
+  @override
+  String get toolsPowerVoltageRatio => '전압 배율';
+
+  @override
+  String get toolsPowerSUnits => 'S 단위';
+
+  @override
+  String get toolsPowerDbNote => '전력이 두 배면 +3 dB, 열 배면 +10 dB입니다. 1 S 단위가 6 dB이므로 10 dB를 올려도 상대방에게는 2 S 단위가 안 됩니다.';
+
+  @override
+  String get toolsSwrTitle => 'SWR';
+
+  @override
+  String get toolsSwrHint => '전력 측정값이나 임피던스로 정재파비와 반사 손실 계산';
+
+  @override
+  String get toolsSwrFromPower => '진행파·반사파 전력으로';
+
+  @override
+  String get toolsSwrForward => '진행파 전력 (W)';
+
+  @override
+  String get toolsSwrReflected => '반사파 전력 (W)';
+
+  @override
+  String get toolsSwrInvalidPower => '진행파 전력은 0보다 크고, 반사파 전력은 0 이상 진행파 전력 이하여야 합니다';
+
+  @override
+  String get toolsSwrRatio => 'SWR';
+
+  @override
+  String get toolsSwrReturnLoss => '반사 손실';
+
+  @override
+  String get toolsSwrReflectedShare => '반사 전력 비율';
+
+  @override
+  String get toolsSwrMismatchLoss => '부정합 손실';
+
+  @override
+  String get toolsSwrCoefficient => '반사 계수';
+
+  @override
+  String get toolsSwrFromImpedance => '부하 임피던스로';
+
+  @override
+  String get toolsSwrResistance => '저항 R (Ω)';
+
+  @override
+  String get toolsSwrReactance => '리액턴스 X (Ω)';
+
+  @override
+  String get toolsSwrReference => '급전선 임피던스 Z₀ (Ω)';
+
+  @override
+  String get toolsSwrInvalidImpedance => '저항은 0 이상, 급전선 임피던스는 0보다 커야 합니다';
+
+  @override
+  String get toolsSwrNote => '1.5:1 미만이면 아주 좋고 2:1도 대부분의 무전기에 문제없습니다. 많은 무전기가 3:1을 넘으면 출력을 줄입니다.';
+
+  @override
+  String get toolsSunTitle => '일출과 그레이 라인';
+
+  @override
+  String get toolsSunHint => '내 로케이터와 상대 로케이터의 오늘 일출·정오·일몰 (UTC)';
+
+  @override
+  String get toolsSunDate => '오늘 (UTC)';
+
+  @override
+  String get toolsSunSunrise => '일출';
+
+  @override
+  String get toolsSunNoon => '태양 정오';
+
+  @override
+  String get toolsSunSunset => '일몰';
+
+  @override
+  String get toolsSunDayLength => '낮의 길이';
+
+  @override
+  String get toolsSunPolarDay => '하루 종일 해가 지지 않습니다 (백야)';
+
+  @override
+  String get toolsSunPolarNight => '하루 종일 해가 뜨지 않습니다 (극야)';
+
+  @override
+  String get toolsSunNote => '그레이 라인: 일출과 일몰 전후 약 30분 동안 낮은 밴드가 밤낮 경계선을 따라 열립니다. 경로 양 끝을 비교하세요.';
+
+  @override
+  String get toolsBeaconsTitle => 'NCDXF 비컨';
+
+  @override
+  String get toolsBeaconsHint => '지금 20 m~10 m 각 주파수에서 송신 중인 IARU 비컨과 그 위치';
+
+  @override
+  String get toolsBeaconsOnAir => '현재 송신 중';
+
+  @override
+  String get toolsBeaconsSlotRemaining => '슬롯 종료까지';
+
+  @override
+  String get toolsBeaconsLocatorHelp => '내 로케이터를 입력하면 각 비컨까지의 방위와 거리가 표시됩니다.';
+
+  @override
+  String get toolsBeaconsSchedule => '전체 비컨';
+
+  @override
+  String get toolsBeaconsOnAirNow => '송신 중';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return '$time 후 20 m에서 송신';
+  }
+
+  @override
+  String get toolsBeaconsNote => '각 비컨은 22 WPM CW로 호출부호를 보낸 뒤 100 W, 10 W, 1 W, 0.1 W로 1초짜리 장점을 보냅니다. 10초마다 다음 밴드로 올라가며 3분에 한 바퀴 돕니다. 시각은 이 기기의 시계를 따릅니다.';
+
+  @override
+  String get toolsBeaconsPlace4u1un => '유엔, 뉴욕';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => '유레카, 캐나다 누나부트';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => '우뭄훔산, 캘리포니아';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => '마우이, 하와이';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => '마스터턴, 뉴질랜드';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => '롤리스톤, 서호주';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => '아사마산, 일본';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => '노보시비르스크, 러시아';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => '홍콩';
+
+  @override
+  String get toolsBeaconsPlace4s7b => '콜롬보, 스리랑카';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => '프리토리아, 남아프리카';
+
+  @override
+  String get toolsBeaconsPlace5z4b => '키쿠유, 케냐';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => '텔아비브, 이스라엘';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => '로야, 핀란드';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => '마데이라, 포르투갈';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => '부에노스아이레스, 아르헨티나';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => '리마, 페루';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => '카라카스, 베네수엘라';
+
+  @override
   String get learnReceiveTitle => '수신';
 
   @override

@@ -1060,6 +1060,215 @@ class SRu extends S {
   String get toolsClockNote => 'В журналах связей и QSL-карточках используют UTC.';
 
   @override
+  String get toolsPowerTitle => 'Мощность и дБ';
+
+  @override
+  String get toolsPowerHint => 'Ватты в dBm, дБ в отношение, показания S-метра';
+
+  @override
+  String get toolsPowerSection => 'Уровень мощности';
+
+  @override
+  String get toolsPowerValue => 'Мощность';
+
+  @override
+  String get toolsPowerInvalid => 'Введите мощность больше 0';
+
+  @override
+  String get toolsPowerLevel => 'Уровень';
+
+  @override
+  String get toolsPowerSMeterHf => 'S-метр ниже 30 МГц';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S-метр выше 30 МГц';
+
+  @override
+  String get toolsPowerSMeterNote => 'Шкала 1-го района IARU: S9 — это -73 dBm на КВ и -93 dBm на УКВ, один балл S равен 6 дБ.';
+
+  @override
+  String get toolsPowerRatioSection => 'Децибелы в отношение';
+
+  @override
+  String get toolsPowerDb => 'Усиление или потери (дБ)';
+
+  @override
+  String get toolsPowerRatio => 'Отношение мощностей';
+
+  @override
+  String get toolsPowerVoltageRatio => 'Отношение напряжений';
+
+  @override
+  String get toolsPowerSUnits => 'Баллы S';
+
+  @override
+  String get toolsPowerDbNote => 'Удвоение мощности даёт +3 дБ, десятикратное — +10 дБ. Один балл S равен 6 дБ, поэтому лишние 10 дБ у корреспондента не дотянут до двух баллов.';
+
+  @override
+  String get toolsSwrTitle => 'КСВ';
+
+  @override
+  String get toolsSwrHint => 'Коэффициент стоячей волны по показаниям мощности или по импедансу, возвратные потери';
+
+  @override
+  String get toolsSwrFromPower => 'По падающей и отражённой мощности';
+
+  @override
+  String get toolsSwrForward => 'Падающая мощность (Вт)';
+
+  @override
+  String get toolsSwrReflected => 'Отражённая мощность (Вт)';
+
+  @override
+  String get toolsSwrInvalidPower => 'Падающая мощность должна быть больше 0, а отражённая — от 0 до падающей';
+
+  @override
+  String get toolsSwrRatio => 'КСВ';
+
+  @override
+  String get toolsSwrReturnLoss => 'Возвратные потери';
+
+  @override
+  String get toolsSwrReflectedShare => 'Отражённая мощность';
+
+  @override
+  String get toolsSwrMismatchLoss => 'Потери на рассогласование';
+
+  @override
+  String get toolsSwrCoefficient => 'Коэффициент отражения';
+
+  @override
+  String get toolsSwrFromImpedance => 'По импедансу нагрузки';
+
+  @override
+  String get toolsSwrResistance => 'Сопротивление R (Ом)';
+
+  @override
+  String get toolsSwrReactance => 'Реактивное сопротивление X (Ом)';
+
+  @override
+  String get toolsSwrReference => 'Волновое сопротивление линии Z₀ (Ом)';
+
+  @override
+  String get toolsSwrInvalidImpedance => 'Сопротивление должно быть не меньше 0, а волновое сопротивление линии — больше 0';
+
+  @override
+  String get toolsSwrNote => 'Ниже 1,5:1 — отлично, 2:1 годится для большинства аппаратов; многие трансиверы снижают мощность при КСВ выше 3:1.';
+
+  @override
+  String get toolsSunTitle => 'Восход и серая линия';
+
+  @override
+  String get toolsSunHint => 'Восход, солнечный полдень и закат в UTC для вашего локатора и локатора корреспондента';
+
+  @override
+  String get toolsSunDate => 'Сегодня (UTC)';
+
+  @override
+  String get toolsSunSunrise => 'Восход';
+
+  @override
+  String get toolsSunNoon => 'Солнечный полдень';
+
+  @override
+  String get toolsSunSunset => 'Закат';
+
+  @override
+  String get toolsSunDayLength => 'Долгота дня';
+
+  @override
+  String get toolsSunPolarDay => 'Сегодня солнце не заходит';
+
+  @override
+  String get toolsSunPolarNight => 'Сегодня солнце не восходит';
+
+  @override
+  String get toolsSunNote => 'Серая линия: примерно полчаса около восхода и заката нижние диапазоны открываются вдоль границы дня и ночи. Сравните оба конца трассы.';
+
+  @override
+  String get toolsBeaconsTitle => 'Маяки NCDXF';
+
+  @override
+  String get toolsBeaconsHint => 'Какой маяк IARU сейчас в эфире на 20–10 м и где он находится';
+
+  @override
+  String get toolsBeaconsOnAir => 'Сейчас в эфире';
+
+  @override
+  String get toolsBeaconsSlotRemaining => 'До конца слота';
+
+  @override
+  String get toolsBeaconsLocatorHelp => 'Введите свой локатор, чтобы увидеть азимут и расстояние до каждого маяка.';
+
+  @override
+  String get toolsBeaconsSchedule => 'Все маяки';
+
+  @override
+  String get toolsBeaconsOnAirNow => 'В эфире';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return 'Снова на 20 м через $time';
+  }
+
+  @override
+  String get toolsBeaconsNote => 'Каждый маяк передаёт свой позывной телеграфом на 22 WPM, затем секундные тире мощностью 100 Вт, 10 Вт, 1 Вт и 0,1 Вт, переходя каждые 10 секунд на следующий диапазон; цикл длится 3 минуты. Расписание берётся по часам этого устройства.';
+
+  @override
+  String get toolsBeaconsPlace4u1un => 'ООН, Нью-Йорк';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => 'Юрика, Нунавут, Канада';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => 'гора Умунхум, Калифорния';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => 'Мауи, Гавайи';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => 'Мастертон, Новая Зеландия';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => 'Ролистон, Западная Австралия';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => 'гора Асама, Япония';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => 'Новосибирск, Россия';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => 'Гонконг';
+
+  @override
+  String get toolsBeaconsPlace4s7b => 'Коломбо, Шри-Ланка';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => 'Претория, ЮАР';
+
+  @override
+  String get toolsBeaconsPlace5z4b => 'Кикуйю, Кения';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => 'Тель-Авив, Израиль';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => 'Лохья, Финляндия';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => 'Мадейра, Португалия';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => 'Буэнос-Айрес, Аргентина';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => 'Лима, Перу';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => 'Каракас, Венесуэла';
+
+  @override
   String get learnReceiveTitle => 'Приём';
 
   @override

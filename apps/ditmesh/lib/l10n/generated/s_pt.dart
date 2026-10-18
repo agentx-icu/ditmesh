@@ -1054,6 +1054,215 @@ class SPt extends S {
   String get toolsClockNote => 'Os registros de contatos e os cartões QSL usam UTC.';
 
   @override
+  String get toolsPowerTitle => 'Potência e dB';
+
+  @override
+  String get toolsPowerHint => 'Watts em dBm, dB em razão, equivalente no S-meter';
+
+  @override
+  String get toolsPowerSection => 'Nível de potência';
+
+  @override
+  String get toolsPowerValue => 'Potência';
+
+  @override
+  String get toolsPowerInvalid => 'Digite uma potência maior que 0';
+
+  @override
+  String get toolsPowerLevel => 'Nível';
+
+  @override
+  String get toolsPowerSMeterHf => 'S-meter abaixo de 30 MHz';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S-meter acima de 30 MHz';
+
+  @override
+  String get toolsPowerSMeterNote => 'Escala da Região 1 da IARU: S9 é -73 dBm em HF e -93 dBm em VHF; um ponto S são 6 dB.';
+
+  @override
+  String get toolsPowerRatioSection => 'Decibéis em razão';
+
+  @override
+  String get toolsPowerDb => 'Ganho ou perda (dB)';
+
+  @override
+  String get toolsPowerRatio => 'Razão de potência';
+
+  @override
+  String get toolsPowerVoltageRatio => 'Razão de tensão';
+
+  @override
+  String get toolsPowerSUnits => 'Pontos S';
+
+  @override
+  String get toolsPowerDbNote => 'Dobrar a potência acrescenta 3 dB; dez vezes acrescenta 10 dB. Um ponto S são 6 dB, então 10 dB a mais não chegam a dois pontos S no outro lado.';
+
+  @override
+  String get toolsSwrTitle => 'ROE';
+
+  @override
+  String get toolsSwrHint => 'Relação de ondas estacionárias a partir de potências ou impedância, perda de retorno';
+
+  @override
+  String get toolsSwrFromPower => 'A partir da potência direta e refletida';
+
+  @override
+  String get toolsSwrForward => 'Potência direta (W)';
+
+  @override
+  String get toolsSwrReflected => 'Potência refletida (W)';
+
+  @override
+  String get toolsSwrInvalidPower => 'A potência direta deve ser maior que 0 e a refletida ficar entre 0 e a direta';
+
+  @override
+  String get toolsSwrRatio => 'ROE';
+
+  @override
+  String get toolsSwrReturnLoss => 'Perda de retorno';
+
+  @override
+  String get toolsSwrReflectedShare => 'Potência refletida';
+
+  @override
+  String get toolsSwrMismatchLoss => 'Perda por descasamento';
+
+  @override
+  String get toolsSwrCoefficient => 'Coeficiente de reflexão';
+
+  @override
+  String get toolsSwrFromImpedance => 'A partir da impedância da carga';
+
+  @override
+  String get toolsSwrResistance => 'Resistência R (Ω)';
+
+  @override
+  String get toolsSwrReactance => 'Reatância X (Ω)';
+
+  @override
+  String get toolsSwrReference => 'Impedância da linha Z₀ (Ω)';
+
+  @override
+  String get toolsSwrInvalidImpedance => 'A resistência deve ser 0 ou mais e a impedância da linha maior que 0';
+
+  @override
+  String get toolsSwrNote => 'Abaixo de 1,5:1 é excelente e 2:1 serve para quase todos os rádios; muitos transceptores reduzem a potência acima de 3:1.';
+
+  @override
+  String get toolsSunTitle => 'Nascer do sol e linha cinza';
+
+  @override
+  String get toolsSunHint => 'Nascer do sol, meio-dia solar e pôr do sol em UTC para o seu locator e o do correspondente';
+
+  @override
+  String get toolsSunDate => 'Hoje (UTC)';
+
+  @override
+  String get toolsSunSunrise => 'Nascer do sol';
+
+  @override
+  String get toolsSunNoon => 'Meio-dia solar';
+
+  @override
+  String get toolsSunSunset => 'Pôr do sol';
+
+  @override
+  String get toolsSunDayLength => 'Duração do dia';
+
+  @override
+  String get toolsSunPolarDay => 'Hoje o sol não se põe';
+
+  @override
+  String get toolsSunPolarNight => 'Hoje o sol não nasce';
+
+  @override
+  String get toolsSunNote => 'Linha cinza: por cerca de meia hora em torno do nascer e do pôr do sol, as bandas baixas abrem ao longo da fronteira entre dia e noite. Compare as duas pontas do percurso.';
+
+  @override
+  String get toolsBeaconsTitle => 'Balizas NCDXF';
+
+  @override
+  String get toolsBeaconsHint => 'Qual baliza IARU está no ar agora de 20 a 10 m e onde ela fica';
+
+  @override
+  String get toolsBeaconsOnAir => 'No ar agora';
+
+  @override
+  String get toolsBeaconsSlotRemaining => 'A janela termina em';
+
+  @override
+  String get toolsBeaconsLocatorHelp => 'Digite o seu locator para ver o rumo e a distância até cada baliza.';
+
+  @override
+  String get toolsBeaconsSchedule => 'Todas as balizas';
+
+  @override
+  String get toolsBeaconsOnAirNow => 'No ar';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return 'De novo em 20 m em $time';
+  }
+
+  @override
+  String get toolsBeaconsNote => 'Cada baliza envia o indicativo em CW a 22 WPM e depois traços de um segundo a 100 W, 10 W, 1 W e 0,1 W, subindo uma banda a cada 10 segundos num ciclo de 3 minutos. O horário segue o relógio deste aparelho.';
+
+  @override
+  String get toolsBeaconsPlace4u1un => 'Nações Unidas, Nova York';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canadá';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Califórnia';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => 'Maui, Havaí';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => 'Masterton, Nova Zelândia';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => 'Rolystone, Austrália Ocidental';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => 'Monte Asama, Japão';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => 'Novosibirsk, Rússia';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => 'Hong Kong';
+
+  @override
+  String get toolsBeaconsPlace4s7b => 'Colombo, Sri Lanka';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => 'Pretória, África do Sul';
+
+  @override
+  String get toolsBeaconsPlace5z4b => 'Kikuyu, Quênia';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => 'Tel Aviv, Israel';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => 'Lohja, Finlândia';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => 'Madeira, Portugal';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => 'Buenos Aires, Argentina';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => 'Lima, Peru';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
+
+  @override
   String get learnReceiveTitle => 'Recepção';
 
   @override

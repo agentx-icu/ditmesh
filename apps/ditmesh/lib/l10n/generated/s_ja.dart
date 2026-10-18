@@ -1051,6 +1051,215 @@ class SJa extends S {
   String get toolsClockNote => 'ログと QSL カードには UTC を使います。';
 
   @override
+  String get toolsPowerTitle => '電力と dB';
+
+  @override
+  String get toolsPowerHint => 'ワットと dBm の換算、dB から倍率、S メーターの目安';
+
+  @override
+  String get toolsPowerSection => '電力レベル';
+
+  @override
+  String get toolsPowerValue => '電力';
+
+  @override
+  String get toolsPowerInvalid => '0 より大きい電力を入力してください';
+
+  @override
+  String get toolsPowerLevel => 'レベル';
+
+  @override
+  String get toolsPowerSMeterHf => 'S メーター（30 MHz 未満）';
+
+  @override
+  String get toolsPowerSMeterVhf => 'S メーター（30 MHz 以上）';
+
+  @override
+  String get toolsPowerSMeterNote => 'IARU 第 1 地域の基準：HF では S9 = -73 dBm、VHF では S9 = -93 dBm、1 S ユニットは 6 dB です。';
+
+  @override
+  String get toolsPowerRatioSection => 'dB から倍率';
+
+  @override
+  String get toolsPowerDb => '利得または損失（dB）';
+
+  @override
+  String get toolsPowerRatio => '電力比';
+
+  @override
+  String get toolsPowerVoltageRatio => '電圧比';
+
+  @override
+  String get toolsPowerSUnits => 'S ユニット';
+
+  @override
+  String get toolsPowerDbNote => '電力が 2 倍で +3 dB、10 倍で +10 dB。1 S ユニットは 6 dB なので、10 dB 増やしても相手側では 2 S ユニット未満です。';
+
+  @override
+  String get toolsSwrTitle => 'SWR';
+
+  @override
+  String get toolsSwrHint => '電力の読みやインピーダンスから SWR とリターンロスを求める';
+
+  @override
+  String get toolsSwrFromPower => '進行波・反射波電力から';
+
+  @override
+  String get toolsSwrForward => '進行波電力（W）';
+
+  @override
+  String get toolsSwrReflected => '反射波電力（W）';
+
+  @override
+  String get toolsSwrInvalidPower => '進行波電力は 0 より大きく、反射波電力は 0 以上かつ進行波電力以下にしてください';
+
+  @override
+  String get toolsSwrRatio => 'SWR';
+
+  @override
+  String get toolsSwrReturnLoss => 'リターンロス';
+
+  @override
+  String get toolsSwrReflectedShare => '反射電力の割合';
+
+  @override
+  String get toolsSwrMismatchLoss => 'ミスマッチ損失';
+
+  @override
+  String get toolsSwrCoefficient => '反射係数';
+
+  @override
+  String get toolsSwrFromImpedance => '負荷インピーダンスから';
+
+  @override
+  String get toolsSwrResistance => '抵抗 R（Ω）';
+
+  @override
+  String get toolsSwrReactance => 'リアクタンス X（Ω）';
+
+  @override
+  String get toolsSwrReference => '給電線インピーダンス Z₀（Ω）';
+
+  @override
+  String get toolsSwrInvalidImpedance => '抵抗は 0 以上、給電線インピーダンスは 0 より大きくしてください';
+
+  @override
+  String get toolsSwrNote => '1.5:1 未満なら優秀、2:1 でもほとんどの無線機で問題ありません。多くの無線機は 3:1 を超えると出力を絞ります。';
+
+  @override
+  String get toolsSunTitle => '日の出とグレーライン';
+
+  @override
+  String get toolsSunHint => '自局と相手局のロケーターの日の出・正午・日の入り（UTC）';
+
+  @override
+  String get toolsSunDate => '今日（UTC）';
+
+  @override
+  String get toolsSunSunrise => '日の出';
+
+  @override
+  String get toolsSunNoon => '太陽正午';
+
+  @override
+  String get toolsSunSunset => '日の入り';
+
+  @override
+  String get toolsSunDayLength => '昼の長さ';
+
+  @override
+  String get toolsSunPolarDay => '一日中太陽が沈みません（白夜）';
+
+  @override
+  String get toolsSunPolarNight => '一日中太陽が昇りません（極夜）';
+
+  @override
+  String get toolsSunNote => 'グレーライン：日の出・日の入りの前後およそ 30 分、ローバンドが昼夜の境界に沿って開けます。パスの両端で比べてください。';
+
+  @override
+  String get toolsBeaconsTitle => 'NCDXF ビーコン';
+
+  @override
+  String get toolsBeaconsHint => '今 20 m〜10 m の各周波数で送信中の IARU ビーコンとその場所';
+
+  @override
+  String get toolsBeaconsOnAir => '送信中';
+
+  @override
+  String get toolsBeaconsSlotRemaining => 'スロット残り';
+
+  @override
+  String get toolsBeaconsLocatorHelp => '自局のロケーターを入力すると、各ビーコンへの方位と距離が表示されます。';
+
+  @override
+  String get toolsBeaconsSchedule => '全ビーコン';
+
+  @override
+  String get toolsBeaconsOnAirNow => '送信中';
+
+  @override
+  String toolsBeaconsNextIn(String time) {
+    return '$time 後に 20 m で送信';
+  }
+
+  @override
+  String get toolsBeaconsNote => '各ビーコンは 22 WPM の CW でコールサインを送り、続いて 100 W・10 W・1 W・0.1 W で 1 秒の長点を送ります。10 秒ごとに次のバンドへ移り、3 分で一周します。時刻はこの端末の時計に従います。';
+
+  @override
+  String get toolsBeaconsPlace4u1un => '国連、ニューヨーク';
+
+  @override
+  String get toolsBeaconsPlaceVe8at => 'ユリーカ、カナダ・ヌナブト';
+
+  @override
+  String get toolsBeaconsPlaceW6wx => 'ウムヌム山、カリフォルニア';
+
+  @override
+  String get toolsBeaconsPlaceKh6rs => 'マウイ島、ハワイ';
+
+  @override
+  String get toolsBeaconsPlaceZl6b => 'マスタートン、ニュージーランド';
+
+  @override
+  String get toolsBeaconsPlaceVk6rbp => 'ローリーストーン、西オーストラリア';
+
+  @override
+  String get toolsBeaconsPlaceJa2igy => '朝熊山、日本';
+
+  @override
+  String get toolsBeaconsPlaceRr9o => 'ノヴォシビルスク、ロシア';
+
+  @override
+  String get toolsBeaconsPlaceVr2b => '香港';
+
+  @override
+  String get toolsBeaconsPlace4s7b => 'コロンボ、スリランカ';
+
+  @override
+  String get toolsBeaconsPlaceZs6dn => 'プレトリア、南アフリカ';
+
+  @override
+  String get toolsBeaconsPlace5z4b => 'キクユ、ケニア';
+
+  @override
+  String get toolsBeaconsPlace4x6tu => 'テルアビブ、イスラエル';
+
+  @override
+  String get toolsBeaconsPlaceOh2b => 'ロホヤ、フィンランド';
+
+  @override
+  String get toolsBeaconsPlaceCs3b => 'マデイラ、ポルトガル';
+
+  @override
+  String get toolsBeaconsPlaceLu4aa => 'ブエノスアイレス、アルゼンチン';
+
+  @override
+  String get toolsBeaconsPlaceOa4b => 'リマ、ペルー';
+
+  @override
+  String get toolsBeaconsPlaceYv5b => 'カラカス、ベネズエラ';
+
+  @override
   String get learnReceiveTitle => '受信';
 
   @override

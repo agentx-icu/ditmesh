@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:radio_tools/radio_tools.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/reference/reference_screen.dart';
 import 'package:ditmesh/ui/tools/band_tool.dart';
+import 'package:ditmesh/ui/tools/beacon_tool.dart';
 import 'package:ditmesh/ui/tools/cw_speed_tool.dart';
 import 'package:ditmesh/ui/tools/grid_locator_tool.dart';
+import 'package:ditmesh/ui/tools/power_tool.dart';
 import 'package:ditmesh/ui/tools/radio_tools_screen.dart';
 import 'package:ditmesh/ui/tools/rst_tool.dart';
+import 'package:ditmesh/ui/tools/sun_tool.dart';
+import 'package:ditmesh/ui/tools/swr_tool.dart';
 import 'package:ditmesh/ui/tools/utc_clock_tool.dart';
 
 import '../reference/reference_test_support.dart';
@@ -177,6 +182,137 @@ void main() {
       expect(formatOffset(const Duration(hours: 8)), 'UTC+8');
       expect(formatOffset(const Duration(hours: -3, minutes: -30)), 'UTC-3:30');
       expect(formatOffset(Duration.zero), 'UTC+0');
+    });
+  });
+
+  group('PowerTool', () {
+    testWidgets('watts give dBm and S-meter readings', (tester) async {
+      await _pumpIn(tester, const PowerTool());
+      await _enter(tester, PowerTool.valueKey, '100');
+      expect(find.text('100 W'), findsOneWidget);
+      expect(find.text('50.0 dBm · 20.0 dBW'), findsOneWidget);
+      expect(find.text('S9+123'), findsOneWidget);
+      expect(find.text('S9+143'), findsOneWidget);
+      await tester.ensureVisible(find.text(PowerUnit.dbm.symbol));
+      await tester.tap(find.text(PowerUnit.dbm.symbol));
+      await tester.pumpAndSettle();
+      await _enter(tester, PowerTool.valueKey, '-79');
+      expect(find.text('S8'), findsOneWidget); // HF
+      expect(find.text('S9+14'), findsOneWidget); // VHF
+      expect(find.text('12.6 pW'), findsOneWidget);
+      await tester.ensureVisible(find.text(PowerUnit.watts.symbol));
+      await tester.tap(find.text(PowerUnit.watts.symbol));
+      await tester.pumpAndSettle();
+      await _enter(tester, PowerTool.valueKey, '0');
+      expect(find.text(en.toolsPowerInvalid), findsOneWidget);
+    });
+
+    testWidgets('decibels give ratios', (tester) async {
+      await _pumpIn(tester, const PowerTool());
+      await _enter(tester, PowerTool.dbKey, '10');
+      expect(find.text('× 10.0'), findsOneWidget);
+      expect(find.text('× 3.16'), findsOneWidget);
+      expect(find.text('1.7'), findsOneWidget); // S-units
+    });
+
+    test('formatting helpers', () {
+      expect(formatWatts(1500), '1.50 kW');
+      expect(formatWatts(100), '100 W');
+      expect(formatWatts(5), '5.00 W');
+      expect(formatWatts(0.005), '5.00 mW');
+      expect(formatWatts(1e-7), '100 nW');
+      expect(formatWatts(2.5e-7), '250 nW');
+      expect(formatWatts(1e-13), '0.10 pW');
+      expect(formatRatio(1e6), '1000000');
+      expect(formatRatio(2), '2.00');
+    });
+  });
+
+  group('SwrTool', () {
+    testWidgets('power readings give SWR, impedance too', (tester) async {
+      await _pumpIn(tester, const SwrTool());
+      await _enter(tester, SwrTool.forwardKey, '100');
+      await _enter(tester, SwrTool.reflectedKey, '4');
+      expect(find.text('1.50:1'), findsOneWidget);
+      expect(find.text('14.0 dB'), findsOneWidget);
+      expect(find.text('4.0 %'), findsOneWidget);
+      expect(find.text('0.18 dB'), findsOneWidget);
+      await _enter(tester, SwrTool.reflectedKey, '101');
+      expect(find.text(en.toolsSwrInvalidPower), findsOneWidget);
+      await _enter(tester, SwrTool.resistanceKey, '100');
+      expect(find.text('2.00:1'), findsOneWidget);
+      await _enter(tester, SwrTool.referenceKey, '0');
+      expect(find.text(en.toolsSwrInvalidImpedance), findsOneWidget);
+    });
+
+    test('formatting helpers', () {
+      expect(formatSwr(1.5), '1.50:1');
+      expect(formatSwr(double.infinity), '∞');
+      expect(formatDb(double.infinity), '∞ dB');
+      expect(formatDb(13.979), '14.0 dB');
+    });
+  });
+
+  group('SunTool', () {
+    testWidgets('a locator gives sunrise and sunset; polar day is named', (
+      tester,
+    ) async {
+      final now = DateTime.utc(2026, 6, 21, 15);
+      await _pumpIn(tester, SunTool(now: () => now));
+      expect(find.text('2026-06-21'), findsOneWidget);
+      await _enter(tester, SunTool.mineKey, 'jn58td');
+      expect(find.text('JN58td'), findsOneWidget);
+      final day = SolarDay.compute(Maidenhead.toPoint('JN58td'), now);
+      expect(find.text('${formatHourMinute(day.sunrise!)}Z'), findsOneWidget);
+      expect(find.text('${formatHourMinute(day.sunset!)}Z'), findsOneWidget);
+      expect(day.sunrise!.hour, 3); // 05:13 CEST
+      expect(day.sunset!.hour, 19); // 21:17 CEST
+      expect(find.text(en.toolsSunDayLength), findsOneWidget);
+      await _enter(tester, SunTool.theirsKey, 'JQ78'); // Svalbard
+      expect(find.text(en.toolsSunPolarDay), findsOneWidget);
+      await _enter(tester, SunTool.theirsKey, 'JQ7');
+      expect(find.text(en.toolsGridInvalidLocator), findsOneWidget);
+      expect(find.text(en.toolsSunPolarDay), findsNothing);
+    });
+
+    test('formatting helpers', () {
+      expect(formatHourMinute(DateTime.utc(2026, 1, 1, 7, 5)), '07:05');
+      expect(
+        formatHoursMinutes(const Duration(hours: 15, minutes: 4)),
+        '15 h 04 min',
+      );
+    });
+  });
+
+  group('BeaconTool', () {
+    testWidgets('shows the beacon on each band and the path to it', (
+      tester,
+    ) async {
+      // 12:00:05 UTC: slot 0, 4U1UN on 14.100, five seconds left.
+      final now = DateTime.utc(2026, 10, 17, 12, 0, 5);
+      await _pumpIn(tester, BeaconTool(now: () => now), size: kDesktop);
+      expect(find.text('12:00:05Z'), findsOneWidget);
+      expect(find.text('5 s'), findsOneWidget);
+      expect(find.text('4U1UN'), findsNWidgets(2)); // on air + schedule
+      expect(find.text(en.toolsBeaconsPlace4u1un), findsNWidgets(2));
+      expect(find.text(en.toolsBeaconsOnAirNow), findsOneWidget);
+      expect(find.text(en.toolsBeaconsNextIn('0:05')), findsOneWidget); // VE8AT
+      await _enter(tester, BeaconTool.mineKey, 'JN58td');
+      final path = formatPathTo(
+        Maidenhead.toPoint('JN58td'),
+        Maidenhead.toPoint('FN30as'),
+      );
+      expect(path, matches(RegExp(r'^\d+° · 6\d\d\d km$'))); // ~6500 km
+      expect(find.text(path), findsOneWidget);
+    });
+
+    test('formatting helpers', () {
+      expect(formatMinSec(const Duration(minutes: 2, seconds: 5)), '2:05');
+      expect(formatMinSec(Duration.zero), '0:00');
+      expect(
+        formatPathTo(const GeoPoint(0, 0), const GeoPoint(0, 10)),
+        '90° · 1112 km',
+      );
     });
   });
 }
