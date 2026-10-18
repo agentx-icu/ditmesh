@@ -1212,7 +1212,7 @@ class SPt extends S {
   String get toolsBeaconsPlace4u1un => 'Nações Unidas, Nova York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Canadá';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Territórios do Noroeste, Canadá';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Califórnia';
@@ -1261,6 +1261,285 @@ class SPt extends S {
 
   @override
   String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
+
+  @override
+  String get toolsFeedlineTitle => 'Perdas da linha';
+
+  @override
+  String get toolsFeedlineHint => 'Perdas de um coaxial, ROE no rádio, comprimentos de secções';
+
+  @override
+  String get toolsFeedlineCable => 'Cabo';
+
+  @override
+  String get toolsFeedlineLength => 'Comprimento (m)';
+
+  @override
+  String get toolsFeedlineFrequency => 'Frequência (MHz)';
+
+  @override
+  String get toolsFeedlineSwr => 'ROE na antena';
+
+  @override
+  String get toolsFeedlinePower => 'Potência entregue à linha (W)';
+
+  @override
+  String get toolsFeedlineInvalid => 'Comprimento ≥ 0, frequência e potência > 0, ROE ≥ 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => 'Perdas com carga adaptada';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'Perdas com esta ROE';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => 'ROE vista do rádio';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'Potência na antena';
+
+  @override
+  String get toolsFeedlineElectricalLength => 'Comprimento elétrico';
+
+  @override
+  String get toolsFeedlineSections => 'Secções de linha a esta frequência';
+
+  @override
+  String get toolsFeedlineImpedance => 'Impedância';
+
+  @override
+  String get toolsFeedlineVelocityFactor => 'Fator de velocidade';
+
+  @override
+  String get toolsFeedlineQuarterWave => 'Quarto de onda (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => 'Meia onda (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => 'Atenuações nominais: o cabo real, os conectores e a idade acrescentam mais. As perdas com ROE incluem as viagens adicionais da potência refletida pela linha.';
+
+  @override
+  String get toolsLinkTitle => 'Balanço de ligação';
+
+  @override
+  String get toolsLinkHint => 'Horizonte rádio, perdas em espaço livre e sinal recebido';
+
+  @override
+  String get toolsLinkHorizonSection => 'Horizonte rádio';
+
+  @override
+  String get toolsLinkHeightA => 'Altura da tua antena (m)';
+
+  @override
+  String get toolsLinkHeightB => 'Altura da antena deles (m)';
+
+  @override
+  String get toolsLinkInvalidHeight => 'Alturas ≥ 0';
+
+  @override
+  String get toolsLinkHorizonA => 'O teu horizonte';
+
+  @override
+  String get toolsLinkHorizonB => 'O horizonte deles';
+
+  @override
+  String get toolsLinkLineOfSight => 'Alcance em linha de vista';
+
+  @override
+  String get toolsLinkPathSection => 'Percurso';
+
+  @override
+  String get toolsLinkPower => 'Potência do transmissor (W)';
+
+  @override
+  String get toolsLinkTxLoss => 'Perdas da linha (dB)';
+
+  @override
+  String get toolsLinkTxGain => 'Ganho da tua antena (dBi)';
+
+  @override
+  String get toolsLinkRxGain => 'Ganho da antena deles (dBi)';
+
+  @override
+  String get toolsLinkFrequency => 'Frequência (MHz)';
+
+  @override
+  String get toolsLinkDistance => 'Distância (km)';
+
+  @override
+  String get toolsLinkInvalid => 'Potência, frequência e distância > 0; perdas da linha ≥ 0; os ganhos devem ser números';
+
+  @override
+  String get toolsLinkEirp => 'PIRE';
+
+  @override
+  String get toolsLinkErp => 'PAR';
+
+  @override
+  String get toolsLinkPathLoss => 'Perdas em espaço livre';
+
+  @override
+  String get toolsLinkReceived => 'Sinal no outro extremo';
+
+  @override
+  String get toolsLinkReceivedVoltage => 'Tensão no outro extremo (50 Ω)';
+
+  @override
+  String get toolsLinkSMeter => 'S-meter';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'Além do horizonte rádio para estas alturas de antena';
+
+  @override
+  String get toolsLinkNote => 'Valores em espaço livre: terreno, edifícios, árvores e o solo acrescentam perdas, por isso é o melhor caso. A PAR refere-se a um dipolo e a PIRE a um radiador isotrópico, com 2,15 dB de diferença.';
+
+  @override
+  String get toolsCircuitTitle => 'Circuitos de RF';
+
+  @override
+  String get toolsCircuitHint => 'Ressonância e reactância LC, atenuadores, redes de adaptação';
+
+  @override
+  String get toolsCircuitResonanceSection => 'Circuito ressonante';
+
+  @override
+  String get toolsCircuitFrequency => 'Frequência (MHz)';
+
+  @override
+  String get toolsCircuitInductance => 'Indutância (µH)';
+
+  @override
+  String get toolsCircuitCapacitance => 'Capacidade (pF)';
+
+  @override
+  String get toolsCircuitInductanceResult => 'Indutância';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'Capacidade';
+
+  @override
+  String get toolsCircuitResonanceHelp => 'Introduz dois valores; o terceiro é calculado.';
+
+  @override
+  String get toolsCircuitInvalid => 'Os valores devem ser > 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => 'Frequência de ressonância';
+
+  @override
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Reactância indutiva a $frequency';
+  }
+
+  @override
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Reactância capacitiva a $frequency';
+  }
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'Atenuador';
+
+  @override
+  String get toolsCircuitAttenuation => 'Atenuação (dB)';
+
+  @override
+  String get toolsCircuitImpedance => 'Impedância (Ω)';
+
+  @override
+  String get toolsCircuitPiSeries => 'π: resistência em série';
+
+  @override
+  String get toolsCircuitPiShunt => 'π: resistência à massa em cada extremo';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T: resistência em série em cada extremo';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T: resistência à massa';
+
+  @override
+  String get toolsCircuitPadSection => 'Rede de adaptação de perda mínima';
+
+  @override
+  String get toolsCircuitPadHigh => 'Impedância maior (Ω)';
+
+  @override
+  String get toolsCircuitPadLow => 'Impedância menor (Ω)';
+
+  @override
+  String get toolsCircuitPadInvalid => 'Ambas as impedâncias devem ser > 0 e diferentes';
+
+  @override
+  String get toolsCircuitPadSeries => 'Resistência em série (lado de maior impedância)';
+
+  @override
+  String get toolsCircuitPadShunt => 'Resistência em paralelo (lado de menor impedância)';
+
+  @override
+  String get toolsCircuitPadLoss => 'Perdas';
+
+  @override
+  String get toolsCircuitNote => 'Os valores de resistência são exatos; escolhe os valores normalizados mais próximos e confirma com um multímetro. A rede é a menor perda que uma rede resistiva consegue entre duas impedâncias, 5,7 dB de 75 Ω para 50 Ω.';
+
+  @override
+  String get toolsMatchTitle => 'Adaptação em L';
+
+  @override
+  String get toolsMatchHint => 'Valores de bobina e condensador para adaptar uma antena à linha';
+
+  @override
+  String get toolsMatchFrequency => 'Frequência (MHz)';
+
+  @override
+  String get toolsMatchResistance => 'Resistência da antena R (Ω)';
+
+  @override
+  String get toolsMatchReactance => 'Reactância da antena X (Ω)';
+
+  @override
+  String get toolsMatchReference => 'Impedância da linha Z₀ (Ω)';
+
+  @override
+  String get toolsMatchInvalid => 'Frequência, resistência e impedância da linha > 0; a reactância deve ser um número';
+
+  @override
+  String get toolsMatchSwrBefore => 'ROE antes da adaptação';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'Já adaptada; não é preciso rede.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return 'Solução $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'passa-baixo';
+
+  @override
+  String get toolsMatchHighPass => 'passa-alto';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'Em série com a antena';
+
+  @override
+  String get toolsMatchSeriesAtRadio => 'Em série com o rádio';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'Em paralelo na antena';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => 'Em paralelo no rádio';
+
+  @override
+  String get toolsMatchQ => 'Q carregado';
+
+  @override
+  String get toolsMatchNoElement => 'Não é preciso componente aqui';
+
+  @override
+  String get toolsMatchNote => 'Assumem-se componentes sem perdas. «Em série» fica entre os dois lados; «em paralelo» entre a linha e a massa. A forma passa-baixo também atenua harmónicas; a passa-alto costuma precisar de componentes mais pequenos.';
 
   @override
   String get learnReceiveTitle => 'Recepção';

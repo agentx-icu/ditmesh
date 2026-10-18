@@ -1218,7 +1218,7 @@ class SRu extends S {
   String get toolsBeaconsPlace4u1un => 'ООН, Нью-Йорк';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Юрика, Нунавут, Канада';
+  String get toolsBeaconsPlaceVe8at => 'Инувик, Северо-Западные территории, Канада';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'гора Умунхум, Калифорния';
@@ -1267,6 +1267,285 @@ class SRu extends S {
 
   @override
   String get toolsBeaconsPlaceYv5b => 'Каракас, Венесуэла';
+
+  @override
+  String get toolsFeedlineTitle => 'Потери в кабеле';
+
+  @override
+  String get toolsFeedlineHint => 'Потери в коаксиале, КСВ у трансивера, длины отрезков';
+
+  @override
+  String get toolsFeedlineCable => 'Кабель';
+
+  @override
+  String get toolsFeedlineLength => 'Длина (м)';
+
+  @override
+  String get toolsFeedlineFrequency => 'Частота (МГц)';
+
+  @override
+  String get toolsFeedlineSwr => 'КСВ у антенны';
+
+  @override
+  String get toolsFeedlinePower => 'Мощность на входе линии (Вт)';
+
+  @override
+  String get toolsFeedlineInvalid => 'Длина ≥ 0, частота и мощность > 0, КСВ ≥ 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => 'Потери при согласовании';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'Потери при этом КСВ';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => 'КСВ у трансивера';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'Мощность на антенне';
+
+  @override
+  String get toolsFeedlineElectricalLength => 'Электрическая длина';
+
+  @override
+  String get toolsFeedlineSections => 'Отрезки линии на этой частоте';
+
+  @override
+  String get toolsFeedlineImpedance => 'Волновое сопротивление';
+
+  @override
+  String get toolsFeedlineVelocityFactor => 'Коэффициент укорочения';
+
+  @override
+  String get toolsFeedlineQuarterWave => 'Четверть волны (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => 'Полволны (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => 'Затухание указано номинально: реальный кабель, разъёмы и возраст добавляют потерь. Потери при КСВ учитывают дополнительные пробеги отражённой мощности по линии.';
+
+  @override
+  String get toolsLinkTitle => 'Энергетический расчёт';
+
+  @override
+  String get toolsLinkHint => 'Радиогоризонт, потери в свободном пространстве и сигнал на другом конце';
+
+  @override
+  String get toolsLinkHorizonSection => 'Радиогоризонт';
+
+  @override
+  String get toolsLinkHeightA => 'Высота вашей антенны (м)';
+
+  @override
+  String get toolsLinkHeightB => 'Высота антенны корреспондента (м)';
+
+  @override
+  String get toolsLinkInvalidHeight => 'Высота ≥ 0';
+
+  @override
+  String get toolsLinkHorizonA => 'Ваш горизонт';
+
+  @override
+  String get toolsLinkHorizonB => 'Горизонт корреспондента';
+
+  @override
+  String get toolsLinkLineOfSight => 'Дальность прямой видимости';
+
+  @override
+  String get toolsLinkPathSection => 'Трасса';
+
+  @override
+  String get toolsLinkPower => 'Мощность передатчика (Вт)';
+
+  @override
+  String get toolsLinkTxLoss => 'Потери в кабеле (дБ)';
+
+  @override
+  String get toolsLinkTxGain => 'Усиление вашей антенны (дБи)';
+
+  @override
+  String get toolsLinkRxGain => 'Усиление антенны корреспондента (дБи)';
+
+  @override
+  String get toolsLinkFrequency => 'Частота (МГц)';
+
+  @override
+  String get toolsLinkDistance => 'Расстояние (км)';
+
+  @override
+  String get toolsLinkInvalid => 'Мощность, частота и расстояние > 0; потери в кабеле ≥ 0; усиление должно быть числом';
+
+  @override
+  String get toolsLinkEirp => 'ЭИИМ (EIRP)';
+
+  @override
+  String get toolsLinkErp => 'ЭИМ (ERP)';
+
+  @override
+  String get toolsLinkPathLoss => 'Потери в свободном пространстве';
+
+  @override
+  String get toolsLinkReceived => 'Сигнал на другом конце';
+
+  @override
+  String get toolsLinkReceivedVoltage => 'Напряжение на другом конце (50 Ом)';
+
+  @override
+  String get toolsLinkSMeter => 'S-метр';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'За радиогоризонтом при таких высотах антенн';
+
+  @override
+  String get toolsLinkNote => 'Значения для свободного пространства: рельеф, здания, деревья и земля добавляют потерь, так что это лучший случай. ERP отсчитывается от диполя, EIRP от изотропного излучателя, разница 2,15 дБ.';
+
+  @override
+  String get toolsCircuitTitle => 'ВЧ-цепи';
+
+  @override
+  String get toolsCircuitHint => 'LC-резонанс и реактивное сопротивление, аттенюаторы, согласующие делители';
+
+  @override
+  String get toolsCircuitResonanceSection => 'Резонансный контур';
+
+  @override
+  String get toolsCircuitFrequency => 'Частота (МГц)';
+
+  @override
+  String get toolsCircuitInductance => 'Индуктивность (мкГн)';
+
+  @override
+  String get toolsCircuitCapacitance => 'Ёмкость (пФ)';
+
+  @override
+  String get toolsCircuitInductanceResult => 'Индуктивность';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'Ёмкость';
+
+  @override
+  String get toolsCircuitResonanceHelp => 'Введите любые два значения, третье будет рассчитано.';
+
+  @override
+  String get toolsCircuitInvalid => 'Значения должны быть > 0';
+
+  @override
+  String get toolsCircuitResonantFrequency => 'Резонансная частота';
+
+  @override
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Индуктивное сопротивление на $frequency';
+  }
+
+  @override
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Ёмкостное сопротивление на $frequency';
+  }
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'Аттенюатор';
+
+  @override
+  String get toolsCircuitAttenuation => 'Затухание (дБ)';
+
+  @override
+  String get toolsCircuitImpedance => 'Сопротивление (Ом)';
+
+  @override
+  String get toolsCircuitPiSeries => 'П-образный: последовательный резистор';
+
+  @override
+  String get toolsCircuitPiShunt => 'П-образный: резистор на землю с каждой стороны';
+
+  @override
+  String get toolsCircuitTeeSeries => 'Т-образный: последовательный резистор с каждой стороны';
+
+  @override
+  String get toolsCircuitTeeShunt => 'Т-образный: резистор на землю';
+
+  @override
+  String get toolsCircuitPadSection => 'Согласующий делитель с минимальными потерями';
+
+  @override
+  String get toolsCircuitPadHigh => 'Большее сопротивление (Ом)';
+
+  @override
+  String get toolsCircuitPadLow => 'Меньшее сопротивление (Ом)';
+
+  @override
+  String get toolsCircuitPadInvalid => 'Оба сопротивления должны быть > 0 и различаться';
+
+  @override
+  String get toolsCircuitPadSeries => 'Последовательный резистор (сторона большего сопротивления)';
+
+  @override
+  String get toolsCircuitPadShunt => 'Параллельный резистор (сторона меньшего сопротивления)';
+
+  @override
+  String get toolsCircuitPadLoss => 'Потери';
+
+  @override
+  String get toolsCircuitNote => 'Значения резисторов точные: выберите ближайшие стандартные и проверьте мультиметром. Делитель даёт наименьшие потери, возможные для резистивной цепи между двумя сопротивлениями, 5,7 дБ для 75 Ом → 50 Ом.';
+
+  @override
+  String get toolsMatchTitle => 'Г-образное согласование';
+
+  @override
+  String get toolsMatchHint => 'Значения катушки и конденсатора для согласования антенны с линией';
+
+  @override
+  String get toolsMatchFrequency => 'Частота (МГц)';
+
+  @override
+  String get toolsMatchResistance => 'Сопротивление антенны R (Ом)';
+
+  @override
+  String get toolsMatchReactance => 'Реактивное сопротивление антенны X (Ом)';
+
+  @override
+  String get toolsMatchReference => 'Сопротивление линии Z₀ (Ом)';
+
+  @override
+  String get toolsMatchInvalid => 'Частота, сопротивление и сопротивление линии > 0; реактивное сопротивление должно быть числом';
+
+  @override
+  String get toolsMatchSwrBefore => 'КСВ до согласования';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'Уже согласовано, цепь не нужна.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return 'Вариант $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'ФНЧ';
+
+  @override
+  String get toolsMatchHighPass => 'ФВЧ';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'Последовательно с антенной';
+
+  @override
+  String get toolsMatchSeriesAtRadio => 'Последовательно с трансивером';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'Параллельно антенне';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => 'Параллельно трансиверу';
+
+  @override
+  String get toolsMatchQ => 'Нагруженная добротность Q';
+
+  @override
+  String get toolsMatchNoElement => 'Элемент здесь не нужен';
+
+  @override
+  String get toolsMatchNote => 'Элементы считаются без потерь. «Последовательно» ставится между двумя сторонами, «параллельно» между линией и землёй. ФНЧ дополнительно подавляет гармоники; ФВЧ часто обходится меньшими элементами.';
 
   @override
   String get learnReceiveTitle => 'Приём';

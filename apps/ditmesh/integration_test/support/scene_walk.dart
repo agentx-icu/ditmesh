@@ -23,9 +23,13 @@ import 'package:ditmesh/ui/network/bootstrap_page.dart';
 import 'package:ditmesh/ui/pages/me_page.dart';
 import 'package:ditmesh/ui/pages/reference_page.dart';
 import 'package:ditmesh/ui/reference/morse_pattern_text.dart';
+import 'package:ditmesh/ui/reference/reference_screen.dart';
 import 'package:ditmesh/ui/reference/text_to_morse_view.dart';
 import 'package:ditmesh/ui/reference/translator_screen.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
+import 'package:ditmesh/ui/tools/matching_tool.dart';
+import 'package:ditmesh/ui/tools/power_tool.dart';
+import 'package:ditmesh/ui/tools/radio_tools_screen.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
@@ -303,7 +307,8 @@ Future<void> walkShell(
   await shots.capture(tester, locale, 'network_bootstrap');
 }
 
-/// Reference: the handbook, the translator and Listen. The chat app exposes these as secondary Morse tools.
+/// Reference: the handbook, the translator, Listen and the radio tools. The
+/// chat app exposes these as secondary Morse tools.
 Future<void> walkReference(
   WidgetTester tester,
   ShotHarness shots,
@@ -332,5 +337,56 @@ Future<void> walkReference(
   await tapTooltip(tester, s.listenTitle);
   expectScreen(ListenScreen);
   await shots.capture(tester, locale, 'listen');
+  await popIfCan(tester);
+  await walkRadioTools(tester, s);
+}
+
+/// Radio tools, from the Reference app bar: the power tool converts 100 W
+/// and the L-network tool matches a 25 Ω antenna, so the pure-Dart maths
+/// and the localized labels render on the real platform. Ends back on
+/// Reference. Not a capture scene: the 13-scene contract is shared by six
+/// platform galleries and the CI imports.
+Future<void> walkRadioTools(WidgetTester tester, S s) async {
+  await tester.tap(find.byKey(ReferenceScreen.radioToolsKey));
+  await settle(tester);
+  expectScreen(RadioToolsScreen);
+  for (final tool in RadioTool.values) {
+    await tester.ensureVisible(find.byKey(tool.tileKey));
+    expect(find.text(tool.title(s)), findsOneWidget, reason: tool.name);
+  }
+
+  await tester.ensureVisible(find.byKey(RadioTool.power.tileKey));
+  await tester.tap(find.byKey(RadioTool.power.tileKey));
+  await settle(tester);
+  expectScreen(PowerTool);
+  await tester.enterText(find.byKey(PowerTool.valueKey), '100');
+  await settle(tester);
+  expect(
+    find.text('50.0 dBm · 20.0 dBW'),
+    findsOneWidget,
+    reason: '100 W as a level',
+  );
+  expect(
+    find.text('S9+123'),
+    findsOneWidget,
+    reason: '100 W on the HF S-meter',
+  );
+  await popIfCan(tester);
+
+  await tester.ensureVisible(find.byKey(RadioTool.matching.tileKey));
+  await tester.tap(find.byKey(RadioTool.matching.tileKey));
+  await settle(tester);
+  expectScreen(MatchingTool);
+  await tester.enterText(find.byKey(MatchingTool.frequencyKey), '7.1');
+  await tester.enterText(find.byKey(MatchingTool.resistanceKey), '25');
+  await settle(tester);
+  expect(
+    find.text(s.toolsMatchSolution(1, s.toolsMatchLowPass)),
+    findsOneWidget,
+    reason: 'low-pass L-network for 25 Ω',
+  );
+  expect(find.text('L 560 nH · 25.0 Ω'), findsOneWidget);
+  expect(find.text('C 448 pF · 50.0 Ω'), findsOneWidget);
+  await popIfCan(tester);
   await popIfCan(tester);
 }

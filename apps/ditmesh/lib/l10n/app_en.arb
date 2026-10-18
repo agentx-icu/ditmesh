@@ -1638,7 +1638,7 @@
   "@toolsBeaconsPlace4u1un": {
     "description": "Beacon tool: location of beacon 4U1UN"
   },
-  "toolsBeaconsPlaceVe8at": "Eureka, Nunavut, Canada",
+  "toolsBeaconsPlaceVe8at": "Inuvik, Northwest Territories, Canada",
   "@toolsBeaconsPlaceVe8at": {
     "description": "Beacon tool: location of beacon VE8AT"
   },
@@ -1705,6 +1705,388 @@
   "toolsBeaconsPlaceYv5b": "Caracas, Venezuela",
   "@toolsBeaconsPlaceYv5b": {
     "description": "Beacon tool: location of beacon YV5B"
+  },
+  "toolsFeedlineTitle": "Feedline loss",
+  "@toolsFeedlineTitle": {
+    "description": "Feedline loss tool title"
+  },
+  "toolsFeedlineHint": "Coax loss for a run, SWR at the radio, stub lengths",
+  "@toolsFeedlineHint": {
+    "description": "Feedline loss tool subtitle"
+  },
+  "toolsFeedlineCable": "Cable",
+  "@toolsFeedlineCable": {
+    "description": "Feedline tool: label of the cable type dropdown"
+  },
+  "toolsFeedlineLength": "Length (m)",
+  "@toolsFeedlineLength": {
+    "description": "Feedline tool: label of the run length field, metres"
+  },
+  "toolsFeedlineFrequency": "Frequency (MHz)",
+  "@toolsFeedlineFrequency": {
+    "description": "Feedline tool: label of the frequency field"
+  },
+  "toolsFeedlineSwr": "SWR at the antenna",
+  "@toolsFeedlineSwr": {
+    "description": "Feedline tool: label of the SWR-at-the-antenna field (1 for a matched antenna)"
+  },
+  "toolsFeedlinePower": "Power into the line (W)",
+  "@toolsFeedlinePower": {
+    "description": "Feedline tool: label of the transmitter power field, watts"
+  },
+  "toolsFeedlineInvalid": "Length must be 0 or more, frequency above 0, SWR 1 or more and power above 0",
+  "@toolsFeedlineInvalid": {
+    "description": "Feedline tool: error when a field holds an impossible value"
+  },
+  "toolsFeedlineMatchedLoss": "Matched loss",
+  "@toolsFeedlineMatchedLoss": {
+    "description": "Feedline tool: result row with the loss into a matched (SWR 1:1) load"
+  },
+  "toolsFeedlineTotalLoss": "Loss with this SWR",
+  "@toolsFeedlineTotalLoss": {
+    "description": "Feedline tool: result row with the loss including the extra loss caused by the antenna SWR"
+  },
+  "toolsFeedlineSwrAtRadio": "SWR seen at the radio",
+  "@toolsFeedlineSwrAtRadio": {
+    "description": "Feedline tool: result row with the SWR measured at the transmitter end, lower than at the antenna because of line loss"
+  },
+  "toolsFeedlinePowerAtAntenna": "Power at the antenna",
+  "@toolsFeedlinePowerAtAntenna": {
+    "description": "Feedline tool: result row with the power that reaches the antenna (watts and percentage)"
+  },
+  "toolsFeedlineElectricalLength": "Electrical length",
+  "@toolsFeedlineElectricalLength": {
+    "description": "Feedline tool: result row with the run length in electrical degrees and wavelengths"
+  },
+  "toolsFeedlineSections": "Line sections at this frequency",
+  "@toolsFeedlineSections": {
+    "description": "Feedline tool: header of the section giving the cable data and quarter / half wave lengths"
+  },
+  "toolsFeedlineImpedance": "Impedance",
+  "@toolsFeedlineImpedance": {
+    "description": "Feedline tool: result row with the characteristic impedance of the chosen cable"
+  },
+  "toolsFeedlineVelocityFactor": "Velocity factor",
+  "@toolsFeedlineVelocityFactor": {
+    "description": "Feedline tool: result row with the velocity factor of the chosen cable (e.g. 0.66)"
+  },
+  "toolsFeedlineQuarterWave": "Quarter wave (λ/4)",
+  "@toolsFeedlineQuarterWave": {
+    "description": "Feedline tool: result row with the physical length of a quarter wavelength of this cable"
+  },
+  "toolsFeedlineHalfWave": "Half wave (λ/2)",
+  "@toolsFeedlineHalfWave": {
+    "description": "Feedline tool: result row with the physical length of a half wavelength of this cable"
+  },
+  "toolsFeedlineNote": "Nominal attenuation figures: a real run, its connectors and its age add to them. The loss with SWR counts the extra trips the reflected power makes along the line.",
+  "@toolsFeedlineNote": {
+    "description": "Feedline tool: note at the bottom about the nominal data and the SWR loss"
+  },
+  "toolsLinkTitle": "Link budget",
+  "@toolsLinkTitle": {
+    "description": "Link budget tool title"
+  },
+  "toolsLinkHint": "Radio horizon, free-space path loss and the signal at the far end",
+  "@toolsLinkHint": {
+    "description": "Link budget tool subtitle"
+  },
+  "toolsLinkHorizonSection": "Radio horizon",
+  "@toolsLinkHorizonSection": {
+    "description": "Link tool: header of the radio-horizon section"
+  },
+  "toolsLinkHeightA": "Your antenna height (m)",
+  "@toolsLinkHeightA": {
+    "description": "Link tool: label of the user's antenna height field, metres above ground"
+  },
+  "toolsLinkHeightB": "Their antenna height (m)",
+  "@toolsLinkHeightB": {
+    "description": "Link tool: label of the other station's antenna height field, metres"
+  },
+  "toolsLinkInvalidHeight": "Heights must be 0 or more",
+  "@toolsLinkInvalidHeight": {
+    "description": "Link tool: error when a height is negative or not a number"
+  },
+  "toolsLinkHorizonA": "Your horizon",
+  "@toolsLinkHorizonA": {
+    "description": "Link tool: result row with the distance to the user's radio horizon"
+  },
+  "toolsLinkHorizonB": "Their horizon",
+  "@toolsLinkHorizonB": {
+    "description": "Link tool: result row with the distance to the other station's radio horizon"
+  },
+  "toolsLinkLineOfSight": "Line-of-sight range",
+  "@toolsLinkLineOfSight": {
+    "description": "Link tool: result row with the sum of both horizons, the maximum line-of-sight distance"
+  },
+  "toolsLinkPathSection": "Path",
+  "@toolsLinkPathSection": {
+    "description": "Link tool: header of the section with transmitter, antennas and distance"
+  },
+  "toolsLinkPower": "Transmitter power (W)",
+  "@toolsLinkPower": {
+    "description": "Link tool: label of the transmitter power field, watts"
+  },
+  "toolsLinkTxLoss": "Feedline loss (dB)",
+  "@toolsLinkTxLoss": {
+    "description": "Link tool: label of the transmitter feedline loss field, dB; may be left empty"
+  },
+  "toolsLinkTxGain": "Your antenna gain (dBi)",
+  "@toolsLinkTxGain": {
+    "description": "Link tool: label of the user's antenna gain field in dBi; may be left empty"
+  },
+  "toolsLinkRxGain": "Their antenna gain (dBi)",
+  "@toolsLinkRxGain": {
+    "description": "Link tool: label of the other station's antenna gain field in dBi; may be left empty"
+  },
+  "toolsLinkFrequency": "Frequency (MHz)",
+  "@toolsLinkFrequency": {
+    "description": "Link tool: label of the frequency field"
+  },
+  "toolsLinkDistance": "Distance (km)",
+  "@toolsLinkDistance": {
+    "description": "Link tool: label of the path distance field, kilometres"
+  },
+  "toolsLinkInvalid": "Power, frequency and distance must be above 0; feedline loss must be 0 or more; gains must be numbers",
+  "@toolsLinkInvalid": {
+    "description": "Link tool: error when a path field holds an impossible value (negative feedline loss included)"
+  },
+  "toolsLinkEirp": "EIRP",
+  "@toolsLinkEirp": {
+    "description": "Link tool: result row with the effective isotropic radiated power; keep the abbreviation"
+  },
+  "toolsLinkErp": "ERP",
+  "@toolsLinkErp": {
+    "description": "Link tool: result row with the effective radiated power relative to a dipole; keep the abbreviation"
+  },
+  "toolsLinkPathLoss": "Free-space path loss",
+  "@toolsLinkPathLoss": {
+    "description": "Link tool: result row with the free-space path loss in dB"
+  },
+  "toolsLinkReceived": "Signal at the far end",
+  "@toolsLinkReceived": {
+    "description": "Link tool: result row with the signal level at the other station's receiver, dBm"
+  },
+  "toolsLinkReceivedVoltage": "Voltage at the far end (50 Ω)",
+  "@toolsLinkReceivedVoltage": {
+    "description": "Link tool: result row with that signal as a voltage across 50 ohms (S9 is 50 µV)"
+  },
+  "toolsLinkSMeter": "S-meter",
+  "@toolsLinkSMeter": {
+    "description": "Link tool: result row with the S-meter reading of the received signal"
+  },
+  "toolsLinkBeyondHorizon": "Beyond the radio horizon for these antenna heights",
+  "@toolsLinkBeyondHorizon": {
+    "description": "Link tool: warning shown when the distance exceeds the line-of-sight range of the two heights"
+  },
+  "toolsLinkNote": "Free-space figures: terrain, buildings, trees and the ground add loss, so treat them as the best case. ERP is relative to a dipole and EIRP to an isotropic radiator, 2.15 dB apart.",
+  "@toolsLinkNote": {
+    "description": "Link tool: note at the bottom on the free-space assumption and ERP vs EIRP"
+  },
+  "toolsCircuitTitle": "RF circuits",
+  "@toolsCircuitTitle": {
+    "description": "RF circuits tool title"
+  },
+  "toolsCircuitHint": "LC resonance and reactance, attenuators, impedance pads",
+  "@toolsCircuitHint": {
+    "description": "RF circuits tool subtitle"
+  },
+  "toolsCircuitResonanceSection": "Resonant circuit",
+  "@toolsCircuitResonanceSection": {
+    "description": "Circuits tool: header of the LC resonance section"
+  },
+  "toolsCircuitFrequency": "Frequency (MHz)",
+  "@toolsCircuitFrequency": {
+    "description": "Circuits tool: label of the frequency field"
+  },
+  "toolsCircuitInductance": "Inductance (µH)",
+  "@toolsCircuitInductance": {
+    "description": "Circuits tool: label of the inductance field, microhenries"
+  },
+  "toolsCircuitCapacitance": "Capacitance (pF)",
+  "@toolsCircuitCapacitance": {
+    "description": "Circuits tool: label of the capacitance field, picofarads"
+  },
+  "toolsCircuitInductanceResult": "Inductance",
+  "@toolsCircuitInductanceResult": {
+    "description": "Circuits tool: result row with the inductance (value carries its own unit)"
+  },
+  "toolsCircuitCapacitanceResult": "Capacitance",
+  "@toolsCircuitCapacitanceResult": {
+    "description": "Circuits tool: result row with the capacitance (value carries its own unit)"
+  },
+  "toolsCircuitResonanceHelp": "Fill in any two; the third is calculated.",
+  "@toolsCircuitResonanceHelp": {
+    "description": "Circuits tool: helper text under the three resonance fields"
+  },
+  "toolsCircuitInvalid": "Values must be above 0",
+  "@toolsCircuitInvalid": {
+    "description": "Circuits tool: error when a value is zero, negative or not a number"
+  },
+  "toolsCircuitResonantFrequency": "Resonant frequency",
+  "@toolsCircuitResonantFrequency": {
+    "description": "Circuits tool: result row with the resonant frequency of L and C"
+  },
+  "toolsCircuitInductiveReactanceAt": "Inductive reactance at {frequency}",
+  "@toolsCircuitInductiveReactanceAt": {
+    "description": "Circuits tool: result row with the reactance of the coil at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms",
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsCircuitCapacitiveReactanceAt": "Capacitive reactance at {frequency}",
+  "@toolsCircuitCapacitiveReactanceAt": {
+    "description": "Circuits tool: result row with the reactance of the capacitor at the frequency named in the label (pre-formatted, e.g. 7.10 MHz), ohms",
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsCircuitAttenuatorSection": "Attenuator",
+  "@toolsCircuitAttenuatorSection": {
+    "description": "Circuits tool: header of the attenuator section"
+  },
+  "toolsCircuitAttenuation": "Attenuation (dB)",
+  "@toolsCircuitAttenuation": {
+    "description": "Circuits tool: label of the attenuation field, dB"
+  },
+  "toolsCircuitImpedance": "Impedance (Ω)",
+  "@toolsCircuitImpedance": {
+    "description": "Circuits tool: label of the system impedance field for the attenuator, ohms, 50 by default"
+  },
+  "toolsCircuitPiSeries": "π: series resistor",
+  "@toolsCircuitPiSeries": {
+    "description": "Circuits tool: result row with the series resistor of the pi attenuator"
+  },
+  "toolsCircuitPiShunt": "π: resistor to ground at each end",
+  "@toolsCircuitPiShunt": {
+    "description": "Circuits tool: result row with the two shunt resistors of the pi attenuator"
+  },
+  "toolsCircuitTeeSeries": "T: series resistor at each end",
+  "@toolsCircuitTeeSeries": {
+    "description": "Circuits tool: result row with the two series resistors of the T attenuator"
+  },
+  "toolsCircuitTeeShunt": "T: resistor to ground",
+  "@toolsCircuitTeeShunt": {
+    "description": "Circuits tool: result row with the shunt resistor of the T attenuator"
+  },
+  "toolsCircuitPadSection": "Minimum-loss pad",
+  "@toolsCircuitPadSection": {
+    "description": "Circuits tool: header of the minimum-loss impedance pad section"
+  },
+  "toolsCircuitPadHigh": "Higher impedance (Ω)",
+  "@toolsCircuitPadHigh": {
+    "description": "Circuits tool: label of the higher impedance field of the pad, ohms"
+  },
+  "toolsCircuitPadLow": "Lower impedance (Ω)",
+  "@toolsCircuitPadLow": {
+    "description": "Circuits tool: label of the lower impedance field of the pad, ohms"
+  },
+  "toolsCircuitPadInvalid": "Both impedances must be above 0 and different",
+  "@toolsCircuitPadInvalid": {
+    "description": "Circuits tool: error when the pad impedances are not positive or are equal"
+  },
+  "toolsCircuitPadSeries": "Series resistor (higher side)",
+  "@toolsCircuitPadSeries": {
+    "description": "Circuits tool: result row with the series resistor of the pad, on the higher-impedance side"
+  },
+  "toolsCircuitPadShunt": "Shunt resistor (lower side)",
+  "@toolsCircuitPadShunt": {
+    "description": "Circuits tool: result row with the shunt resistor of the pad, across the lower-impedance side"
+  },
+  "toolsCircuitPadLoss": "Loss",
+  "@toolsCircuitPadLoss": {
+    "description": "Circuits tool: result row with the loss of the pad, dB"
+  },
+  "toolsCircuitNote": "Resistor values are exact; pick the nearest standard values and check with a meter. The pad is the least loss a resistive network can manage between two impedances, 5.7 dB for 75 Ω to 50 Ω.",
+  "@toolsCircuitNote": {
+    "description": "Circuits tool: note at the bottom about standard values and the pad"
+  },
+  "toolsMatchTitle": "L-network match",
+  "@toolsMatchTitle": {
+    "description": "L-network matching tool title"
+  },
+  "toolsMatchHint": "Coil and capacitor values that match an antenna to the feedline",
+  "@toolsMatchHint": {
+    "description": "L-network matching tool subtitle"
+  },
+  "toolsMatchFrequency": "Frequency (MHz)",
+  "@toolsMatchFrequency": {
+    "description": "Matching tool: label of the frequency field"
+  },
+  "toolsMatchResistance": "Antenna resistance R (Ω)",
+  "@toolsMatchResistance": {
+    "description": "Matching tool: label of the antenna resistance field, ohms"
+  },
+  "toolsMatchReactance": "Antenna reactance X (Ω)",
+  "@toolsMatchReactance": {
+    "description": "Matching tool: label of the antenna reactance field, ohms, positive inductive; may be left empty"
+  },
+  "toolsMatchReference": "Line impedance Z₀ (Ω)",
+  "@toolsMatchReference": {
+    "description": "Matching tool: label of the feedline impedance field, ohms, 50 by default"
+  },
+  "toolsMatchInvalid": "Frequency, resistance and line impedance must be above 0; reactance must be a number",
+  "@toolsMatchInvalid": {
+    "description": "Matching tool: error when a field holds an impossible value"
+  },
+  "toolsMatchSwrBefore": "SWR before matching",
+  "@toolsMatchSwrBefore": {
+    "description": "Matching tool: result row with the SWR of the bare antenna on the line"
+  },
+  "toolsMatchAlreadyMatched": "Already matched; no network needed.",
+  "@toolsMatchAlreadyMatched": {
+    "description": "Matching tool: shown when the antenna already equals the line impedance"
+  },
+  "toolsMatchSolution": "Solution {index} · {kind}",
+  "@toolsMatchSolution": {
+    "description": "Matching tool: title of one solution card; index is 1, 2, 3…, kind is the translated low-pass / high-pass word",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsMatchLowPass": "low-pass",
+  "@toolsMatchLowPass": {
+    "description": "Matching tool: network kind inserted into the solution title (series coil, shunt capacitor)"
+  },
+  "toolsMatchHighPass": "high-pass",
+  "@toolsMatchHighPass": {
+    "description": "Matching tool: network kind inserted into the solution title (series capacitor, shunt coil)"
+  },
+  "toolsMatchSeriesAtAntenna": "In series with the antenna",
+  "@toolsMatchSeriesAtAntenna": {
+    "description": "Matching tool: row for the element in series on the antenna side"
+  },
+  "toolsMatchSeriesAtRadio": "In series with the radio",
+  "@toolsMatchSeriesAtRadio": {
+    "description": "Matching tool: row for the element in series on the radio side"
+  },
+  "toolsMatchShuntAcrossAntenna": "Across the antenna",
+  "@toolsMatchShuntAcrossAntenna": {
+    "description": "Matching tool: row for the element from line to ground on the antenna side"
+  },
+  "toolsMatchShuntAcrossRadio": "Across the radio",
+  "@toolsMatchShuntAcrossRadio": {
+    "description": "Matching tool: row for the element from line to ground on the radio side"
+  },
+  "toolsMatchQ": "Loaded Q",
+  "@toolsMatchQ": {
+    "description": "Matching tool: result row with the loaded Q of the network"
+  },
+  "toolsMatchNoElement": "No part needed here",
+  "@toolsMatchNoElement": {
+    "description": "Matching tool: value shown when a position of the network needs no component"
+  },
+  "toolsMatchNote": "Lossless parts assumed. 'In series' sits between the two sides; 'across' goes from the line to ground. The low-pass form also attenuates harmonics; the high-pass form often needs smaller parts.",
+  "@toolsMatchNote": {
+    "description": "Matching tool: note at the bottom explaining the wording and the two forms"
   },
   "learnReceiveTitle": "Receive",
   "@learnReceiveTitle": {

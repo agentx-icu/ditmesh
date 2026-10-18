@@ -1212,7 +1212,7 @@ class SDe extends S {
   String get toolsBeaconsPlace4u1un => 'Vereinte Nationen, New York';
 
   @override
-  String get toolsBeaconsPlaceVe8at => 'Eureka, Nunavut, Kanada';
+  String get toolsBeaconsPlaceVe8at => 'Inuvik, Nordwest-Territorien, Kanada';
 
   @override
   String get toolsBeaconsPlaceW6wx => 'Mt Umunhum, Kalifornien';
@@ -1261,6 +1261,285 @@ class SDe extends S {
 
   @override
   String get toolsBeaconsPlaceYv5b => 'Caracas, Venezuela';
+
+  @override
+  String get toolsFeedlineTitle => 'Kabeldämpfung';
+
+  @override
+  String get toolsFeedlineHint => 'Dämpfung einer Koaxstrecke, SWR am Funkgerät, Stub-Längen';
+
+  @override
+  String get toolsFeedlineCable => 'Kabel';
+
+  @override
+  String get toolsFeedlineLength => 'Länge (m)';
+
+  @override
+  String get toolsFeedlineFrequency => 'Frequenz (MHz)';
+
+  @override
+  String get toolsFeedlineSwr => 'SWR an der Antenne';
+
+  @override
+  String get toolsFeedlinePower => 'Leistung in die Leitung (W)';
+
+  @override
+  String get toolsFeedlineInvalid => 'Länge mindestens 0, Frequenz und Leistung über 0, SWR mindestens 1';
+
+  @override
+  String get toolsFeedlineMatchedLoss => 'Dämpfung bei Anpassung';
+
+  @override
+  String get toolsFeedlineTotalLoss => 'Dämpfung bei diesem SWR';
+
+  @override
+  String get toolsFeedlineSwrAtRadio => 'SWR am Funkgerät';
+
+  @override
+  String get toolsFeedlinePowerAtAntenna => 'Leistung an der Antenne';
+
+  @override
+  String get toolsFeedlineElectricalLength => 'Elektrische Länge';
+
+  @override
+  String get toolsFeedlineSections => 'Leitungsabschnitte bei dieser Frequenz';
+
+  @override
+  String get toolsFeedlineImpedance => 'Impedanz';
+
+  @override
+  String get toolsFeedlineVelocityFactor => 'Verkürzungsfaktor';
+
+  @override
+  String get toolsFeedlineQuarterWave => 'Viertelwelle (λ/4)';
+
+  @override
+  String get toolsFeedlineHalfWave => 'Halbwelle (λ/2)';
+
+  @override
+  String get toolsFeedlineNote => 'Nenn-Dämpfungswerte: echte Kabel, Stecker und Alterung kommen hinzu. Die Dämpfung mit SWR berücksichtigt die zusätzlichen Wege der reflektierten Leistung auf der Leitung.';
+
+  @override
+  String get toolsLinkTitle => 'Linkbudget';
+
+  @override
+  String get toolsLinkHint => 'Funkhorizont, Freiraumdämpfung und Signal am anderen Ende';
+
+  @override
+  String get toolsLinkHorizonSection => 'Funkhorizont';
+
+  @override
+  String get toolsLinkHeightA => 'Deine Antennenhöhe (m)';
+
+  @override
+  String get toolsLinkHeightB => 'Antennenhöhe der Gegenstation (m)';
+
+  @override
+  String get toolsLinkInvalidHeight => 'Höhen mindestens 0';
+
+  @override
+  String get toolsLinkHorizonA => 'Dein Horizont';
+
+  @override
+  String get toolsLinkHorizonB => 'Horizont der Gegenstation';
+
+  @override
+  String get toolsLinkLineOfSight => 'Sichtverbindungsreichweite';
+
+  @override
+  String get toolsLinkPathSection => 'Strecke';
+
+  @override
+  String get toolsLinkPower => 'Sendeleistung (W)';
+
+  @override
+  String get toolsLinkTxLoss => 'Kabeldämpfung (dB)';
+
+  @override
+  String get toolsLinkTxGain => 'Dein Antennengewinn (dBi)';
+
+  @override
+  String get toolsLinkRxGain => 'Antennengewinn der Gegenstation (dBi)';
+
+  @override
+  String get toolsLinkFrequency => 'Frequenz (MHz)';
+
+  @override
+  String get toolsLinkDistance => 'Entfernung (km)';
+
+  @override
+  String get toolsLinkInvalid => 'Leistung, Frequenz und Entfernung über 0; Kabeldämpfung mindestens 0; Gewinne müssen Zahlen sein';
+
+  @override
+  String get toolsLinkEirp => 'EIRP';
+
+  @override
+  String get toolsLinkErp => 'ERP';
+
+  @override
+  String get toolsLinkPathLoss => 'Freiraumdämpfung';
+
+  @override
+  String get toolsLinkReceived => 'Signal am anderen Ende';
+
+  @override
+  String get toolsLinkReceivedVoltage => 'Spannung am anderen Ende (50 Ω)';
+
+  @override
+  String get toolsLinkSMeter => 'S-Meter';
+
+  @override
+  String get toolsLinkBeyondHorizon => 'Jenseits des Funkhorizonts für diese Antennenhöhen';
+
+  @override
+  String get toolsLinkNote => 'Freiraumwerte: Gelände, Gebäude, Bäume und der Boden fügen Dämpfung hinzu, also der beste Fall. ERP bezieht sich auf einen Dipol, EIRP auf einen isotropen Strahler, 2,15 dB Unterschied.';
+
+  @override
+  String get toolsCircuitTitle => 'HF-Schaltungen';
+
+  @override
+  String get toolsCircuitHint => 'LC-Resonanz und Blindwiderstand, Dämpfungsglieder, Anpassglieder';
+
+  @override
+  String get toolsCircuitResonanceSection => 'Schwingkreis';
+
+  @override
+  String get toolsCircuitFrequency => 'Frequenz (MHz)';
+
+  @override
+  String get toolsCircuitInductance => 'Induktivität (µH)';
+
+  @override
+  String get toolsCircuitCapacitance => 'Kapazität (pF)';
+
+  @override
+  String get toolsCircuitInductanceResult => 'Induktivität';
+
+  @override
+  String get toolsCircuitCapacitanceResult => 'Kapazität';
+
+  @override
+  String get toolsCircuitResonanceHelp => 'Zwei Werte eingeben, der dritte wird berechnet.';
+
+  @override
+  String get toolsCircuitInvalid => 'Werte müssen über 0 liegen';
+
+  @override
+  String get toolsCircuitResonantFrequency => 'Resonanzfrequenz';
+
+  @override
+  String toolsCircuitInductiveReactanceAt(String frequency) {
+    return 'Induktiver Blindwiderstand bei $frequency';
+  }
+
+  @override
+  String toolsCircuitCapacitiveReactanceAt(String frequency) {
+    return 'Kapazitiver Blindwiderstand bei $frequency';
+  }
+
+  @override
+  String get toolsCircuitAttenuatorSection => 'Dämpfungsglied';
+
+  @override
+  String get toolsCircuitAttenuation => 'Dämpfung (dB)';
+
+  @override
+  String get toolsCircuitImpedance => 'Impedanz (Ω)';
+
+  @override
+  String get toolsCircuitPiSeries => 'π: Längswiderstand';
+
+  @override
+  String get toolsCircuitPiShunt => 'π: Querwiderstand an jedem Ende';
+
+  @override
+  String get toolsCircuitTeeSeries => 'T: Längswiderstand an jedem Ende';
+
+  @override
+  String get toolsCircuitTeeShunt => 'T: Querwiderstand';
+
+  @override
+  String get toolsCircuitPadSection => 'Anpassglied mit minimaler Dämpfung';
+
+  @override
+  String get toolsCircuitPadHigh => 'Höhere Impedanz (Ω)';
+
+  @override
+  String get toolsCircuitPadLow => 'Niedrigere Impedanz (Ω)';
+
+  @override
+  String get toolsCircuitPadInvalid => 'Beide Impedanzen müssen über 0 und verschieden sein';
+
+  @override
+  String get toolsCircuitPadSeries => 'Längswiderstand (hohe Seite)';
+
+  @override
+  String get toolsCircuitPadShunt => 'Querwiderstand (niedrige Seite)';
+
+  @override
+  String get toolsCircuitPadLoss => 'Dämpfung';
+
+  @override
+  String get toolsCircuitNote => 'Die Widerstandswerte sind exakt; wähle die nächsten Normwerte und messe nach. Das Anpassglied ist die geringste Dämpfung, die ein ohmsches Netzwerk zwischen zwei Impedanzen schafft, 5,7 dB für 75 Ω auf 50 Ω.';
+
+  @override
+  String get toolsMatchTitle => 'L-Glied-Anpassung';
+
+  @override
+  String get toolsMatchHint => 'Spulen- und Kondensatorwerte, die eine Antenne an die Leitung anpassen';
+
+  @override
+  String get toolsMatchFrequency => 'Frequenz (MHz)';
+
+  @override
+  String get toolsMatchResistance => 'Antennenwiderstand R (Ω)';
+
+  @override
+  String get toolsMatchReactance => 'Antennenblindwiderstand X (Ω)';
+
+  @override
+  String get toolsMatchReference => 'Leitungsimpedanz Z₀ (Ω)';
+
+  @override
+  String get toolsMatchInvalid => 'Frequenz, Widerstand und Leitungsimpedanz über 0; Blindwiderstand muss eine Zahl sein';
+
+  @override
+  String get toolsMatchSwrBefore => 'SWR vor der Anpassung';
+
+  @override
+  String get toolsMatchAlreadyMatched => 'Bereits angepasst, kein Netzwerk nötig.';
+
+  @override
+  String toolsMatchSolution(int index, String kind) {
+    return 'Lösung $index · $kind';
+  }
+
+  @override
+  String get toolsMatchLowPass => 'Tiefpass';
+
+  @override
+  String get toolsMatchHighPass => 'Hochpass';
+
+  @override
+  String get toolsMatchSeriesAtAntenna => 'In Reihe zur Antenne';
+
+  @override
+  String get toolsMatchSeriesAtRadio => 'In Reihe zum Funkgerät';
+
+  @override
+  String get toolsMatchShuntAcrossAntenna => 'Parallel zur Antenne';
+
+  @override
+  String get toolsMatchShuntAcrossRadio => 'Parallel zum Funkgerät';
+
+  @override
+  String get toolsMatchQ => 'Betriebsgüte Q';
+
+  @override
+  String get toolsMatchNoElement => 'Hier kein Bauteil nötig';
+
+  @override
+  String get toolsMatchNote => 'Verlustfreie Bauteile angenommen. „In Reihe“ liegt zwischen den beiden Seiten, „parallel“ von der Leitung nach Masse. Der Tiefpass dämpft auch Oberwellen; der Hochpass braucht oft kleinere Bauteile.';
 
   @override
   String get learnReceiveTitle => 'Empfangen';
