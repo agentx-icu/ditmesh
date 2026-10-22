@@ -1103,5 +1103,11 @@
   "chatConversationActions": "Aktionen für {name}",
   "chatDraftSaveFailed": "Der Entwurf konnte nicht gespeichert werden. Lass diese Ansicht offen oder sende ihn jetzt.",
   "chatSearchClearDates": "Zeitraum entfernen",
-  "chatGroupReconnectFailed": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen."
+  "chatGroupReconnectFailed": "{name} hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen.",
+  "errorUnsupportedDataVersion": "Diese Daten wurden mit einer neueren DitMesh-Version gespeichert. Aktualisiere die App, um sie zu öffnen. Die Dateien bleiben erhalten.",
+  "desktopCloseToTray": "Nach dem Schließen im Infobereich weiterlaufen",
+  "desktopCloseToTrayDescription": "Aus: Das Schließen des Fensters beendet die App. Erfordert einen verfügbaren Infobereich.",
+  "learnFlashNotice": "Kleine blinkende Anzeige. Bei Lichtempfindlichkeit vermeiden; bei reduzierter Bewegung leuchtet sie konstant.",
+  "learnHapticUnavailable": "Vibration ist auf diesem Gerät nicht verfügbar.",
+  "listenMissingCaptureTool": "Installiere pulseaudio-utils, um das Mikrofon unter Linux zu verwenden."
 }

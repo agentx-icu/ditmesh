@@ -3,9 +3,9 @@
 //   dart run tool/gen_tray_icons.dart            (from the repository root)
 //
 // Output (all rendered from the selected solid signal-tower/Morse glyph):
-//   tray_template_{16,22,32}.png  macOS template: black glyph on transparent,
+//   tray_template_{16,22,32,36,64}.png  macOS template: black glyph on transparent,
 //                                 AppKit tints it for light/dark menu bars.
-//   tray_icon_{16,22,32}.png      Linux (AppIndicator): white glyph on a
+//   tray_icon_{16,22,32,36,64}.png      Linux (AppIndicator): white glyph on a
 //                                 rounded dark-teal tile so it reads on any
 //                                 panel colour.
 //   tray_icon.ico                 Windows: tile renders at the small-icon
@@ -26,7 +26,7 @@ import 'package:image/image.dart' as img;
 
 import 'icon_glyph.dart';
 
-const List<int> _sizes = [16, 22, 32];
+const List<int> _sizes = [16, 22, 32, 36, 64];
 // What LoadImage(..., SM_CXSMICON) asks for at 100/125/150/200/250/300 %.
 const List<int> _icoSizes = [16, 20, 24, 32, 40, 48];
 const String _outDir = 'apps/ditmesh/assets/tray';

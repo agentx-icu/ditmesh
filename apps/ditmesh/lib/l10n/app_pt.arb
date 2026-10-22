@@ -1103,5 +1103,11 @@
   "chatConversationActions": "Ações para {name}",
   "chatDraftSaveFailed": "Não foi possível guardar o rascunho. Mantenha este ecrã aberto ou envie-o agora.",
   "chatSearchClearDates": "Limpar intervalo de datas",
-  "chatGroupReconnectFailed": "{name} recusou a nova ligação. O histórico mantém-se; pode tentar novamente."
+  "chatGroupReconnectFailed": "{name} recusou a nova ligação. O histórico mantém-se; pode tentar novamente.",
+  "errorUnsupportedDataVersion": "Estes dados foram salvos por uma versão mais recente do DitMesh. Atualize o aplicativo para abri-los. Os arquivos foram preservados.",
+  "desktopCloseToTray": "Continuar na bandeja ao fechar a janela",
+  "desktopCloseToTrayDescription": "Desativado: fechar a janela encerra o aplicativo. Requer uma bandeja disponível.",
+  "learnFlashNotice": "Indicador pequeno intermitente. Evite em caso de fotossensibilidade; Reduzir movimento o mantém fixo.",
+  "learnHapticUnavailable": "A vibração não está disponível neste dispositivo.",
+  "listenMissingCaptureTool": "Instale pulseaudio-utils para usar o microfone no Linux."
 }

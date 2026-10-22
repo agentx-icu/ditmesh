@@ -1116,5 +1116,11 @@
   "chatConversationActions": "{name} 的操作",
   "chatDraftSaveFailed": "草稿未能保存。请保持此页面打开，或立即发送。",
   "chatSearchClearDates": "清除日期范围",
-  "chatGroupReconnectFailed": "{name} 拒绝了重新连接。历史记录已保留；可以重试。"
+  "chatGroupReconnectFailed": "{name} 拒绝了重新连接。历史记录已保留；可以重试。",
+  "errorUnsupportedDataVersion": "此数据由较新版本的 DitMesh 保存。请更新应用后打开，原文件已保留。",
+  "desktopCloseToTray": "关闭窗口后继续在托盘运行",
+  "desktopCloseToTrayDescription": "关闭此项时，关闭窗口将退出应用。需要可用的系统托盘。",
+  "learnFlashNotice": "使用小范围闪光指示灯。光敏感用户请勿开启；减少动态效果时指示灯保持常亮。",
+  "learnHapticUnavailable": "此设备不支持振动。",
+  "listenMissingCaptureTool": "请安装 pulseaudio-utils 以在 Linux 上使用麦克风。"
 }

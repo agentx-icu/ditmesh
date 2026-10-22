@@ -47,3 +47,12 @@ Bootstrap 把固定的 `third_party/tim2tox/dart` 复制到被忽略的
 已提交的 `failed` 墓碑项中（该行自身的写入在重启前丢失，重新加载的行不显示失败，而
 DitMesh 显示为失败）。送达证据仍优先于失败。
 `packages/ditmesh_chat/test/failed_tombstone_retry_test.dart` 覆盖此情况。
+
+`0015-preserve-future-history.patch` 移植 Tim2Tox 提交
+`5341e64ed62b81a94a311c768a73863a3cffcbb1`，不改变固定的 submodule。
+读取与写入均先检查主文件和备份的 schema，向上传递
+`HistorySchemaNewerThanAppException` 并原样保留新格式数据。补丁已适配
+0010 的 receipt fence：录音消息仍须真正持久化才 ACK/发布。身份边界将异常
+映射为本地化的升级提示。回归覆盖 `history_schema_downgrade_test.dart`、
+`recorded_receive_durability_test.dart`、`recorded_resend_test.dart` 和
+`identity_persistence_test.dart`。

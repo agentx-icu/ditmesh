@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../../i18n/system_date_time.dart';
 import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_labels.dart';
@@ -18,10 +18,7 @@ class BackupPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    final created = DateFormat.yMd(
-      locale,
-    ).add_Hm().format(preview.createdAt.toLocal());
+    final created = formatSystemDateTime(context, preview.createdAt);
     final key = preview.publicKey;
     final included = [
       for (final c in BackupCategory.values)

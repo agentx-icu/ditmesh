@@ -14,6 +14,7 @@
 - [Release and store requirements](release/APP_STORE.md)
 - [Test pyramid](testing/TEST_PYRAMID.md)
 - [Current persistence inventory](testing/PERSISTENCE_AUDIT.md)
+- [Cross-platform audit and fixes](testing/CROSS_PLATFORM_AUDIT.md)
 - [Verification evidence and open findings](VALIDATION.md)
 - [Maintenance guide](HANDOVER.md)
 

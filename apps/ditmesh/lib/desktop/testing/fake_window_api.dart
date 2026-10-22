@@ -13,6 +13,8 @@ class FakeWindowApi implements WindowApi {
   final List<String> calls = [];
   Rect bounds;
   bool maximized;
+  bool fullScreen = false;
+  bool minimized = false;
   bool visible = false;
   bool focused = false;
   bool destroyed = false;
@@ -77,9 +79,21 @@ class FakeWindowApi implements WindowApi {
   }
 
   @override
+  Future<bool> isFullScreen() async => fullScreen;
+
+  @override
+  Future<bool> isMinimized() async => minimized;
+
+  @override
   Future<void> maximize() async {
     calls.add('maximize');
     maximized = true;
+  }
+
+  @override
+  Future<void> restore() async {
+    calls.add('restore');
+    minimized = false;
   }
 
   @override

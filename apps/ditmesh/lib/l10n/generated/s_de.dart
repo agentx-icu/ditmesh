@@ -3639,4 +3639,22 @@ class SDe extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name hat die erneute Verbindung abgelehnt. Der Verlauf bleibt erhalten; du kannst es erneut versuchen.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'Diese Daten wurden mit einer neueren DitMesh-Version gespeichert. Aktualisiere die App, um sie zu öffnen. Die Dateien bleiben erhalten.';
+
+  @override
+  String get desktopCloseToTray => 'Nach dem Schließen im Infobereich weiterlaufen';
+
+  @override
+  String get desktopCloseToTrayDescription => 'Aus: Das Schließen des Fensters beendet die App. Erfordert einen verfügbaren Infobereich.';
+
+  @override
+  String get learnFlashNotice => 'Kleine blinkende Anzeige. Bei Lichtempfindlichkeit vermeiden; bei reduzierter Bewegung leuchtet sie konstant.';
+
+  @override
+  String get learnHapticUnavailable => 'Vibration ist auf diesem Gerät nicht verfügbar.';
+
+  @override
+  String get listenMissingCaptureTool => 'Installiere pulseaudio-utils, um das Mikrofon unter Linux zu verwenden.';
 }

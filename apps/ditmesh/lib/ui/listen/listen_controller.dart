@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:morse_core/morse_core.dart';
@@ -143,7 +144,13 @@ final class ListenController extends ChangeNotifier {
       final bool? hasDevice = await _hasInputDevice();
       if (_isStale(attempt)) return;
       _fail(
-        hasDevice == false
+        error is ProcessException &&
+                const [
+                  'parecord',
+                  'pactl',
+                ].contains(error.executable.split('/').last)
+            ? ListenFailureKind.missingCaptureTool
+            : hasDevice == false
             ? ListenFailureKind.noInputDevice
             : ListenFailureKind.startFailed,
         error,

@@ -84,6 +84,8 @@ final class TrainingController extends ChangeNotifier {
       _settings = settings ?? TrainingSettings.defaults;
       _savedSettings = _settings;
       _loadError = null;
+    } on UnsupportedDataVersion {
+      rethrow;
     } on Object catch (error) {
       if (_disposed) return;
       _loadError = error;

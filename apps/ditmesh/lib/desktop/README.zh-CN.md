@@ -54,7 +54,7 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 `setCloseToTray(value)` 是设置开关（会持久化）；`showWindow()` 恢复被隐藏的窗口。
 
 `shortcuts.dart` 以纯 intent 的形式定义了 `desktopShortcutBindings()`（Cmd/Ctrl+K 搜索、+N 新消息、
-+M 侧音）。App 目前还没有安装它们；要启用，用 `Shortcuts(shortcuts: desktopShortcutBindings(),
++Shift+M 侧音）。App 目前还没有安装它们；要启用，用 `Shortcuts(shortcuts: desktopShortcutBindings(),
 child: Actions(actions: {...}, child: ...))` 包住外壳。
 
 ## 行为
@@ -62,12 +62,11 @@ child: Actions(actions: {...}, child: ...))` 包住外壳。
 - **窗口**：最小 360×640（类手机的竖屏仍可用；布局是响应式的），默认 1100×760 并在主显示器上居中，
   显示器更小时两者都缩到工作区大小（小面板上 Windows 200 % 缩放）。持久化的边界恢复到包含窗口中心的
   那块显示器上；若该显示器已不存在则使用主显示器。
-- **关闭**：`setPreventClose(true)` 始终开启，因此关闭请求会到达控制器。关闭到托盘开启**且**托盘可用时
+- **关闭**：`setPreventClose(true)` 始终开启，因此关闭请求会到达控制器。关闭到托盘默认关闭，可在“我”中设置；开启**且**托盘可用时
   窗口隐藏；否则（设置关闭，或没有托盘宿主）shell 持久化边界、运行 `onBeforeQuit`、销毁托盘和窗口——
   然后 runner 退出。从托盘菜单退出永远是真正的退出。
 - **托盘**：每个平台各自的图标，提示文本 = App 名称（+ " — N 未读"），菜单为
-  显示/隐藏 · 声音开/关 · 退出。声音复选框会持久化，但 `main()` 没有传入
-  `onToggleSound`，所以目前不会改变 App 的任何声音。在宿主传递点击的平台上（macOS、Windows）
+  显示/隐藏 · 退出；仅传入 `onToggleSound` 音频所有者时显示声音菜单。在宿主传递点击的平台上（macOS、Windows）
   左键切换窗口。每个托盘调用都被容错处理：没有托盘则禁用托盘，缺少方法（Linux 的提示文本）只记录一次日志。
 - **语言**：菜单标签、提示文本和未读窗口标题都是 `S` 字符串（`lib/l10n/app_*.arb` 中的 `desktop*` 键）；
   产品名（`DesktopShellConfig.appName`）是占位符，从不翻译。控制器在 `main()` 中构建，那时 `LocaleController`
@@ -80,12 +79,11 @@ child: Actions(actions: {...}, child: ...))` 包住外壳。
 
 - **Linux**：`tray_manager` 构建时需要 `libayatana-appindicator3-dev`（或旧的
   `libappindicator3-dev`），运行时需要一个 StatusNotifier 宿主（GNOME 需要 AppIndicator 扩展；
-  KDE / XFCE / Cinnamon 开箱即用）。没有宿主时第一个托盘调用会抛出异常，shell 以无托盘模式运行：
+  KDE / XFCE / Cinnamon 开箱即用）。隐藏前通过有超时的 `gdbus` 检查 `IsStatusNotifierHostRegistered`；无宿主时以无托盘模式运行：
   关闭即退出而不是隐藏。AppIndicator 不传递左键点击也不支持提示文本；上下文菜单是原生的（右键）。
-- **macOS**：图标是*模板*图像（`tray_template_32.png`，黑色 + alpha），以 `isTemplate: true` 传入，
-  因此不能带任何颜色。未读数作为状态栏项的标题显示在图标旁边。关闭最后一个窗口通常会终止 App
-  （`applicationShouldTerminateAfterLastWindowClosed`）；runner 的默认值没问题，因为关闭在到达 AppKit
-  之前就已被拦截。
+- **macOS**：图标是*模板*图像（`tray_template_36.png`，黑色 + alpha），以 `isTemplate: true` 传入，
+  因此不能带任何颜色。未读数作为状态栏项的标题显示在图标旁边。runner 禁用最后窗口自动终止，以等待关闭检查点完成；
+  显式退出仍通过 `NSApp.terminate` 结束进程，Dock 重开恢复并聚焦现有窗口。
 - **Windows**：托盘需要真正的 `.ico`（`tray_icon.ico`，16/20/24/32/40/48 px 帧，对应 100–300% DPI 的小图标尺寸）。边界以逻辑像素表示；
   `window_manager` 用设备像素比换算，因此两次会话之间的 DPI 变化由夹取处理，而不是由我们处理。
 
@@ -95,5 +93,9 @@ child: Actions(actions: {...}, child: ...))` 包住外壳。
 dart run tool/gen_tray_icons.dart     # from the repository root
 ```
 
-使用 `package:image`（App 的开发依赖）写出 `apps/ditmesh/assets/tray/tray_template_{16,22,32}.png`、
-`tray_icon_{16,22,32}.png` 和 `tray_icon.ico`。
+使用 `package:image`（App 的开发依赖）写出 `apps/ditmesh/assets/tray/tray_template_{16,22,32,36,64}.png`、
+`tray_icon_{16,22,32,36,64}.png` 和 `tray_icon.ico`。
+
+`DesktopInstance.acquire()` 在偏好和后端打开前运行。操作系统锁覆盖整个 support 根目录，
+持有至进程结束；独立的回环激活 sidecar 允许第二个进程唤起原窗口。最小化、最大化和
+全屏切换期间保留普通窗口边界。

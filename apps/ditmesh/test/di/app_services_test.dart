@@ -95,11 +95,30 @@ void main() {
         desktopShell: shell,
       );
       wired.start();
+      expect(await wired.didRequestAppExit(), AppExitResponse.exit);
       await shell.quit();
       expect(persistent.operations, ['persist', 'disconnect']);
       expect(window.calls, contains('destroy'));
       await wired.dispose();
       shell.dispose();
+    },
+  );
+
+  test(
+    'failed system quit keeps the identity live and may be retried',
+    () async {
+      final persistent = _PersistentIdentity()..failPersist = true;
+      final wired = AppServices(
+        identity: persistent,
+        chat: chat,
+        locale: locale,
+      );
+      expect(await wired.didRequestAppExit(), AppExitResponse.cancel);
+      expect(persistent.operations, ['persist']);
+      persistent.failPersist = false;
+      expect(await wired.didRequestAppExit(), AppExitResponse.exit);
+      expect(persistent.operations, ['persist', 'persist', 'disconnect']);
+      await wired.dispose();
     },
   );
 

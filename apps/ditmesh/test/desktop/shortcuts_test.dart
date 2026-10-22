@@ -26,6 +26,7 @@ void main() {
       _activatorFor(bindings, ToggleSidetoneIntent).trigger,
       LogicalKeyboardKey.keyM,
     );
+    expect(_activatorFor(bindings, ToggleSidetoneIntent).shift, isTrue);
   });
 
   test('uses Command on macOS and Control elsewhere', () {

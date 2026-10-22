@@ -86,6 +86,11 @@ final class TrainingSettings {
 
   /// Reads [toJson] output; missing or malformed keys fall back to defaults.
   factory TrainingSettings.fromJson(Map<String, Object?> json) {
+    UnsupportedDataVersion.check(
+      json['version'],
+      supported: 1,
+      document: 'Training settings',
+    );
     const d = TrainingSettings.defaults;
     final rawTrainer = json['trainer'];
     return TrainingSettings(

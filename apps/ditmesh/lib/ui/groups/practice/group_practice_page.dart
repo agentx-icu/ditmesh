@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../../i18n/l10n_extension.dart';
+import '../../../i18n/system_date_time.dart';
 import '../../../training/group_practice.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_controller_host.dart';
@@ -89,7 +89,9 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
               TextField(
                 key: const Key('gp-title'),
                 controller: title,
-                decoration: InputDecoration(label: FieldLabel(s.groupPracticeTitleField)),
+                decoration: InputDecoration(
+                  label: FieldLabel(s.groupPracticeTitleField),
+                ),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -135,9 +137,9 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
       book = await c.updateGroupPractice((b) => b.add(session));
     } on Object {
       if (mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(s.learnProgressSaveFailed)),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(s.learnProgressSaveFailed)));
       }
       return;
     }
@@ -161,7 +163,6 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final locale = Localizations.localeOf(context).toString();
     final sessions = _book.forConversation(widget.conversationId);
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.groupPracticeTitle)),
@@ -211,7 +212,7 @@ class _GroupPracticePageState extends State<GroupPracticePage> {
                         title: Text(session.title),
                         subtitle: Text(
                           '${groupRoleLabel(s, session.role)} · '
-                          '${DateFormat.yMd(locale).add_Hm().format(session.createdAt.toLocal())} · '
+                          '${formatSystemDateTime(context, session.createdAt)} · '
                           '${s.groupPracticeRoundsDone(session.summary.done, session.summary.rounds)}',
                         ),
                         trailing: const Icon(Icons.chevron_right),

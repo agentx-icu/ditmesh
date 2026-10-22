@@ -3620,4 +3620,22 @@ class SJa extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name への再接続が拒否されました。履歴は保持されています。再試行できます。';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'このデータは新しいバージョンの DitMesh で保存されています。アプリを更新して開いてください。元のファイルは保持されています。';
+
+  @override
+  String get desktopCloseToTray => 'ウインドウを閉じた後もトレイで実行';
+
+  @override
+  String get desktopCloseToTrayDescription => 'オフの場合、ウインドウを閉じると終了します。利用可能なシステムトレイが必要です。';
+
+  @override
+  String get learnFlashNotice => '小さな点滅ランプを使用します。光に敏感な方は使用を避けてください。動きを減らす設定では点灯を維持します。';
+
+  @override
+  String get learnHapticUnavailable => 'この端末では振動を利用できません。';
+
+  @override
+  String get listenMissingCaptureTool => 'Linux でマイクを使用するには pulseaudio-utils をインストールしてください。';
 }

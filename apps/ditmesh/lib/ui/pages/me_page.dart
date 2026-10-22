@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../di/app_settings.dart';
+import '../../desktop/desktop_shell_controller.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/language_settings_tile.dart';
@@ -82,6 +85,7 @@ class _MeBody extends StatelessWidget {
     final s = context.s;
     final theme = Theme.of(context);
     final backend = context.watch<AppSettings>().backendLabel;
+    final desktop = context.watch<DesktopShellController?>();
     return AccountPageBody(
       maxWidth: 640,
       children: [
@@ -158,6 +162,15 @@ class _MeBody extends StatelessWidget {
           onTap: () => KeySetupPage.open(context),
         ),
         const LanguageSettingsTile(),
+        if (desktop != null && desktop.isActive)
+          SwitchListTile(
+            key: const ValueKey('desktop-close-to-tray'),
+            title: Text(s.desktopCloseToTray),
+            subtitle: Text(s.desktopCloseToTrayDescription),
+            secondary: const Icon(Icons.desktop_windows_outlined),
+            value: desktop.closeToTray,
+            onChanged: (value) => unawaited(desktop.setCloseToTray(value)),
+          ),
         ListTile(
           leading: const Icon(Icons.palette_outlined),
           title: Text(s.appearanceTitle),

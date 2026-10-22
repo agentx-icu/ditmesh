@@ -3639,4 +3639,22 @@ class SFr extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name a refusé la reconnexion. L\'historique est conservé ; vous pouvez réessayer.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'Ces données ont été enregistrées avec une version plus récente de DitMesh. Mettez à jour l’application pour les ouvrir. Les fichiers ont été conservés.';
+
+  @override
+  String get desktopCloseToTray => 'Rester dans la zone de notification à la fermeture';
+
+  @override
+  String get desktopCloseToTrayDescription => 'Désactivé : fermer la fenêtre quitte l’application. Nécessite une zone de notification disponible.';
+
+  @override
+  String get learnFlashNotice => 'Petit voyant clignotant. À éviter en cas de photosensibilité ; Réduire les animations le garde fixe.';
+
+  @override
+  String get learnHapticUnavailable => 'La vibration n’est pas disponible sur cet appareil.';
+
+  @override
+  String get listenMissingCaptureTool => 'Installez pulseaudio-utils pour utiliser le microphone sous Linux.';
 }

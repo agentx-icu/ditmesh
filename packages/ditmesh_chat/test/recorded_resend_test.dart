@@ -314,8 +314,10 @@ void main() {
       await pair.connect();
       pair.dropToAlice = true;
       await pair.send();
-      await pair.until(() => pair.bobRows().isNotEmpty);
-      await pair.settle();
+      // The visible row precedes the durable receive receipt. Keep dropping
+      // until the first ACK actually left Bob, or the test can deliver that
+      // original ACK during reconnect and never exercise a lost receipt.
+      await pair.until(() => acksWithId(pair.bobSent, _id) == 1);
       expect(pair.bobRows(), hasLength(1));
       expect(pair.aliceRow().isReceived, isFalse);
       pair.dropLink();
@@ -424,7 +426,7 @@ void main() {
     pair.dropChunksToBob = true;
     pair.setBobOnline(true);
     await pair.a.getFriendList();
-    await pair.settle();
+    await pair.until(() => !pair.aliceRow().isPending);
     expect(pair.aliceRow().altMsgIds, contains('dmr:$_id'));
     expect(pair.aliceRow().isPending, isFalse);
     expect(pair.bobRows(), isEmpty);

@@ -65,6 +65,7 @@ void main() {
     );
     expect(TelegraphRecallStats.isNewer({'v': 2}), isTrue);
     expect(TelegraphRecallStats.isNewer({'v': 1}), isFalse);
-    expect(TelegraphRecallStats.fromJson({'v': 99}).answered(TelegraphCodebook.mainland), 0);
+    expect(() => TelegraphRecallStats.fromJson({'v': 99}),
+        throwsA(isA<UnsupportedDataVersion>()));
   });
 }

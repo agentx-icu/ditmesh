@@ -14,6 +14,7 @@
 - [发布与商店要求](release/APP_STORE.zh-CN.md)
 - [测试金字塔](testing/TEST_PYRAMID.zh-CN.md)
 - [当前持久化清单](testing/PERSISTENCE_AUDIT.zh-CN.md)
+- [跨平台检查与修复](testing/CROSS_PLATFORM_AUDIT.zh-CN.md)
 - [验证证据与未解决的发现项](VALIDATION.zh-CN.md)
 - [维护指南](HANDOVER.zh-CN.md)
 

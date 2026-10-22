@@ -349,6 +349,7 @@ class ListenStatusBanner extends StatelessWidget {
   static String failureText(S s, ListenFailureKind kind) => switch (kind) {
     ListenFailureKind.permissionDenied => s.listenPermissionDenied,
     ListenFailureKind.noInputDevice => s.listenNoInput,
+    ListenFailureKind.missingCaptureTool => s.listenMissingCaptureTool,
     ListenFailureKind.startFailed => s.listenStartFailed,
     ListenFailureKind.streamFailed => s.listenStreamFailed,
   };

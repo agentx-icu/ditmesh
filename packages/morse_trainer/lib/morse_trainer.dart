@@ -43,3 +43,4 @@ export 'src/trainer_settings.dart';
 export 'src/trainer_store.dart';
 export 'src/word_drill.dart';
 export 'src/word_lists.dart';
+export 'src/unsupported_data_version.dart';

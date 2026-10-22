@@ -6,6 +6,7 @@ import '../l10n/generated/s.dart';
 /// [S.errorUnknown]. Codes are the contract's stable strings, so this is the
 /// one place where they meet the ARB keys.
 String chatErrorMessage(S s, String code) => switch (code) {
+  'unsupported_data_version' => s.errorUnsupportedDataVersion,
   'wrong_password' => s.errorWrongPassword,
   'peer_offline' => s.errorPeerOffline,
   'invalid_tox_id' => s.errorInvalidToxId,

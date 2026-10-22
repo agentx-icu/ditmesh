@@ -1,3 +1,4 @@
+import 'unsupported_data_version.dart';
 import 'dart:math';
 
 import 'package:meta/meta.dart';
@@ -219,7 +220,11 @@ final class TelegraphRecallStats {
     final (seen, ok, help) = _entries[key] ?? (0, 0, 0);
     return TelegraphRecallStats({
       ..._entries,
-      key: (seen + 1, ok + (correct && !assisted ? 1 : 0), help + (assisted ? 1 : 0)),
+      key: (
+        seen + 1,
+        ok + (correct && !assisted ? 1 : 0),
+        help + (assisted ? 1 : 0),
+      ),
     });
   }
 
@@ -255,12 +260,20 @@ final class TelegraphRecallStats {
 
   /// Malformed or foreign-version documents load empty.
   static TelegraphRecallStats fromJson(Map<String, Object?>? json) {
+    UnsupportedDataVersion.check(
+      json?['v'],
+      supported: version,
+      document: 'Telegraph recall',
+    );
     if (json == null || json['v'] != version) return empty;
     final raw = json['entries'];
     if (raw is! Map) return empty;
     final out = <String, (int, int, int)>{};
     raw.forEach((k, v) {
-      if (k is String && v is List && v.length == 3 && v.every((x) => x is int)) {
+      if (k is String &&
+          v is List &&
+          v.length == 3 &&
+          v.every((x) => x is int)) {
         out[k] = (v[0] as int, v[1] as int, v[2] as int);
       }
     });

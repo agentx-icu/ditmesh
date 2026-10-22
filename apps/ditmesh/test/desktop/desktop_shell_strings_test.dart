@@ -20,6 +20,7 @@ _shell({TargetPlatform platform = TargetPlatform.linux, S? strings}) {
     config: DesktopShellConfig(
       store: InMemoryKeyValueStore(),
       platform: platform,
+      onToggleSound: (_) {},
       persistDebounce: Duration.zero,
     ),
     window: window,

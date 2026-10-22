@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:morse_trainer/morse_trainer.dart' show UnsupportedDataVersion;
 import 'package:morse_dsp/morse_dsp.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
@@ -71,6 +72,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
   TrainingController? _training;
   late final ClipPlayer _player = widget.player ?? SoloudClipPlayer();
   bool _unavailable = false;
+  Object? _unavailableError;
 
   @override
   void initState() {
@@ -80,7 +82,12 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
   }
 
   Future<void> _setup() async {
-    if (_unavailable) setState(() => _unavailable = false);
+    if (_unavailable) {
+      setState(() {
+        _unavailable = false;
+        _unavailableError = null;
+      });
+    }
     try {
       final dir =
           await (widget.profileRoot ?? () => _profileDirectory(context))();
@@ -96,19 +103,29 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
       previous
         ?..removeListener(_changed)
         ..dispose();
-    } on Object {
-      if (mounted) setState(() => _unavailable = true);
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _unavailable = true;
+          _unavailableError = error;
+        });
+      }
       return;
     }
     final TrainingController training;
     try {
       training = await (widget.training ?? _hostController)();
-    } on Object {
+    } on Object catch (error) {
       // Chat builds without an identity: attempts are scored, not recorded.
       // The offline build always has its profile, so a failure is a storage
       // problem: say so and offer a retry.
-      if (mounted && learningRetryable(context)) {
-        setState(() => _unavailable = true);
+      if (mounted &&
+          (error is UnsupportedDataVersion ||
+              learningRetryable(context, error))) {
+        setState(() {
+          _unavailable = true;
+          _unavailableError = error;
+        });
       }
       return;
     }
@@ -252,10 +269,10 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        learningUnavailableText(context),
+                        learningUnavailableText(context, _unavailableError),
                         textAlign: TextAlign.center,
                       ),
-                      if (learningRetryable(context)) ...[
+                      if (learningRetryable(context, _unavailableError)) ...[
                         const SizedBox(height: 12),
                         FilledButton.tonal(
                           key: const ValueKey('workbench-retry'),

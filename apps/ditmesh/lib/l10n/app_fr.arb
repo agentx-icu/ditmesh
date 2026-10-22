@@ -1103,5 +1103,11 @@
   "chatConversationActions": "Actions pour {name}",
   "chatDraftSaveFailed": "Le brouillon n'a pas pu être enregistré. Gardez cet écran ouvert ou envoyez-le maintenant.",
   "chatSearchClearDates": "Effacer la plage de dates",
-  "chatGroupReconnectFailed": "{name} a refusé la reconnexion. L'historique est conservé ; vous pouvez réessayer."
+  "chatGroupReconnectFailed": "{name} a refusé la reconnexion. L'historique est conservé ; vous pouvez réessayer.",
+  "errorUnsupportedDataVersion": "Ces données ont été enregistrées avec une version plus récente de DitMesh. Mettez à jour l’application pour les ouvrir. Les fichiers ont été conservés.",
+  "desktopCloseToTray": "Rester dans la zone de notification à la fermeture",
+  "desktopCloseToTrayDescription": "Désactivé : fermer la fenêtre quitte l’application. Nécessite une zone de notification disponible.",
+  "learnFlashNotice": "Petit voyant clignotant. À éviter en cas de photosensibilité ; Réduire les animations le garde fixe.",
+  "learnHapticUnavailable": "La vibration n’est pas disponible sur cet appareil.",
+  "listenMissingCaptureTool": "Installez pulseaudio-utils pour utiliser le microphone sous Linux."
 }

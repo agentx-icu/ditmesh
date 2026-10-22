@@ -21,7 +21,7 @@ DitMesh 与 MorseCQ 共用的 Flutter I/O 层（两个仓库各存一份完全�
               ┌───────────┼──────────────┬─────────────┐
         SidetoneSink  HapticSink     FlashSink     CompositeSink
         (flutter_soloud) (HapticFeedback  (ValueListenable
-                          + vibration)    + torch_light)
+                          + vibration)    + injected TorchApi)
 ```
 
 * `lib/src/` 下**一个文件只管一件事**。公共 API 从 `lib/morse_io.dart` 重新导出；测试替身从
@@ -39,16 +39,18 @@ DitMesh 与 MorseCQ 共用的 Flutter I/O 层（两个仓库各存一份完全�
   译码器。`KeyerTiming` 携带显式的点/划/间隔时长；在 App 中用 `KeyerTiming.fromMorseTiming` 构建。
 * 键控器的状态转换是 `MorseKeyEvent`（不是 Flutter 拥有的 `KeyEvent`）。
 
+`FlashOverlay` 使用 24 px 指示灯，不再覆盖整个页面；减少动态效果时保持常亮。
+`hapticsAvailable()` 独立检查振动硬件，与是否支持连续脉冲分开。
+
 ## 插件及选择这些版本的原因
 
 | 插件 | 版本 | 平台（pubspec `flutter.plugin.platforms`） | 说明 |
 | --- | --- | --- | --- |
 | `flutter_soloud` | `^4.1.7` | android, ios, linux, macos, windows (+web) | 5.x（5.0.0-pre.2+）改为 native-asset hooks，需要 `native_toolchain_c ^0.19.4` → `meta ^1.19`，而 Flutter 3.41.9 把 meta 固定在 1.17.0；pub 无法解析。4.1.7 是能解析的最新版本，且是经典 FFI 插件，因此 `flutter test` 永远不会编译 C 代码。 |
 | `vibration` | `^3.2.1` | android, ios | 时长精确的 start/cancel 脉冲；`hasCustomVibrationsSupport()` 为 false 时回退到 `HapticFeedback.heavyImpact()`。 |
-| `torch_light` | `^1.1.0` | android, ios | 2.0.0 需要 Dart 3.12 / Flutter 3.44。1.1.0 是普通的 `MethodChannel` 插件，在桌面端是惰性的，而且 `FlashSink` 在桌面端本来也不会调用它。 |
 
 每个插件都藏在一个接口后面（`SoloudApi`、`HapticApi`、`TorchApi`），并各有一个生产适配器
-（`FlutterSoloudApi`、`FlutterHapticApi`、`TorchLightApi`）。测试注入假实现；CI 永远不会触碰原生的
+（`FlutterSoloudApi`、`FlutterHapticApi`、`UnavailableTorchApi`）。测试注入假实现；CI 永远不会触碰原生的
 音频、振动或相机代码。
 
 ## 侧音方案
@@ -87,7 +89,7 @@ DitMesh 与 MorseCQ 共用的 Flutter I/O 层（两个仓库各存一份完全�
   App 送入后台。
 * 触觉反馈：`Vibration.vibrate(duration:)` 使用 `CHHapticEngine`（iPhone 8+）；`cancel()` 只对这类
   自定义触觉有效。脉冲起始延迟通常为 20–40 ms，这里无法测量。
-* 闪光灯：`torch_light` 不需要 Info.plist 条目，但相机不能被其他地方占用。
+* 手电筒默认禁用。需要此功能的产品必须注入 `TorchApi`，并自行验证权限和相机争用。
 
 ### Android
 * `flutter_soloud` 默认使用 AAudio 低延迟（MMAP）；在中端设备上验证 512 帧不会欠载，并且该音频流
@@ -95,11 +97,10 @@ DitMesh 与 MorseCQ 共用的 Flutter I/O 层（两个仓库各存一份完全�
 * 触觉反馈：`hasCustomVibrationsSupport()` 决定使用 start/cancel 还是 impact。需要
   `<uses-permission android:name="android.permission.VIBRATE"/>`。振幅控制因 OEM 而异；脉冲长度
   精度最好也只有 ± 约 10 ms。
-* 闪光灯：`torch_light` 需要声明 `android.permission.CAMERA` 和
-  `<uses-feature android:name="android.hardware.camera.flash"/>`。
+* 本包不链接相机插件。注入 `TorchApi` 的产品负责其原生 Android 声明。
 
 ### macOS / Windows / Linux
-* 触觉反馈和闪光灯会被编译进去，但由 `defaultTargetPlatform` 门控关闭
+* 触觉反馈和可选手电筒调用由 `defaultTargetPlatform` 门控关闭
   （`HapticSink.isEnabled == false`、`FlashSink.torchActive == false`）。
 * 键盘键控（`KeyboardKeyBinding`：空格 = 直键，左/右 Ctrl = 点/划）是主要输入方式；验证在
   Linux/Wayland 上 Ctrl 的抬键事件能到达，并且操作系统的按键重复不会泄漏（代码中已忽略重复事件）。

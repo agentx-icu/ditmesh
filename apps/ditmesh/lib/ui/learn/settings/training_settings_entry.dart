@@ -59,10 +59,10 @@ class _TrainingSettingsEntryState extends State<TrainingSettingsEntry> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          learningUnavailableText(context),
+                          learningUnavailableText(context, snapshot.error),
                           textAlign: TextAlign.center,
                         ),
-                        if (learningRetryable(context)) ...[
+                        if (learningRetryable(context, snapshot.error)) ...[
                           const SizedBox(height: 12),
                           FilledButton.tonal(
                             key: const ValueKey('training-settings-retry'),

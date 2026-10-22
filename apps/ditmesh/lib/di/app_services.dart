@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:ui' show AppExitResponse;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../desktop/desktop_shell_controller.dart';
@@ -38,7 +40,7 @@ final class NotificationApis {
 /// on the scope's [LocaleController]. Notifications read it at post time;
 /// the desktop shell is re-labelled through
 /// [DesktopShellController.updateStrings] on [start] and on every change.
-final class AppServices {
+final class AppServices with WidgetsBindingObserver {
   AppServices({
     required IdentityService identity,
     required ChatService chat,
@@ -112,6 +114,8 @@ final class AppServices {
   StreamSubscription<List<Conversation>>? _unreadSub;
   bool _started = false;
   bool _disposed = false;
+  Future<void>? _quitOperation;
+  static const _activation = MethodChannel('ditmesh/desktop_activation');
   final NetworkBootstrapService? networkBootstrap;
   final Stream<NetworkPathSnapshot>? networkSnapshots;
   NetworkChangeReBootstrapper? _networkWatcher;
@@ -122,6 +126,7 @@ final class AppServices {
   void start() {
     if (_started) return;
     _started = true;
+    WidgetsBinding.instance.addObserver(this);
     // Before attach(): a launch straight into the background emits its
     // `background` hint synchronously, and diagnostics must see it.
     if (chatEnabled) diagnostics.start();
@@ -157,6 +162,9 @@ final class AppServices {
     strings.addListener(_onStringsChanged);
     final shell = desktopShell;
     if (shell != null) {
+      _activation.setMethodCallHandler((call) async {
+        if (call.method == 'showWindow') await shell.showWindow();
+      });
       shell.addBeforeQuitListener(_beforeQuit);
       // The shell was built in main() before the LocaleController existed:
       // apply the persisted language now, then follow changes.
@@ -168,10 +176,30 @@ final class AppServices {
     }
   }
 
-  Future<void> _beforeQuit() async {
-    final identity = _identity;
-    await _flushDurable(identity, _onBackground);
-    await identity.disconnect();
+  Future<void> _beforeQuit() => _quitOperation ??= _saveAndDisconnect();
+
+  Future<void> _saveAndDisconnect() async {
+    try {
+      await _flushDurable(_identity, _onBackground);
+      await _identity.disconnect();
+    } on Object {
+      _quitOperation = null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    try {
+      await Future.wait([
+        _beforeQuit(),
+        if (desktopShell != null) desktopShell!.persistWindowState(),
+      ]);
+      return AppExitResponse.exit;
+    } on Object catch (error) {
+      debugPrint('[AppServices] could not save before quit: $error');
+      return AppExitResponse.cancel;
+    }
   }
 
   static Future<void> _flushDurable(
@@ -203,6 +231,8 @@ final class AppServices {
   /// (`flutter test` flags exactly that as a pending timer).
   Future<void> dispose() async {
     _disposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+    if (desktopShell != null) _activation.setMethodCallHandler(null);
     // The scope disposes its LocaleController right after calling us and
     // the resolver must have let go of it by then.
     strings.removeListener(_onStringsChanged);

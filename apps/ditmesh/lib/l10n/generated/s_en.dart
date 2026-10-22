@@ -3639,4 +3639,22 @@ class SEn extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name refused to reconnect. Its history is kept; you can retry.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'This data was saved by a newer version of DitMesh. Update the app to open it. Your files have been kept.';
+
+  @override
+  String get desktopCloseToTray => 'Keep running in the tray when the window closes';
+
+  @override
+  String get desktopCloseToTrayDescription => 'Off: closing the window quits. Requires a working system tray.';
+
+  @override
+  String get learnFlashNotice => 'Uses a small flashing indicator. Avoid if photosensitive; Reduce Motion keeps it steady.';
+
+  @override
+  String get learnHapticUnavailable => 'Vibration is unavailable on this device.';
+
+  @override
+  String get listenMissingCaptureTool => 'Install pulseaudio-utils to use the microphone on Linux.';
 }

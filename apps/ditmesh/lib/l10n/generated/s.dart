@@ -6733,6 +6733,42 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{name} refused to reconnect. Its history is kept; you can retry.'**
   String chatGroupReconnectFailed(String name);
+
+  /// Startup recovery for identity data written by a newer application; originals remain untouched.
+  ///
+  /// In en, this message translates to:
+  /// **'This data was saved by a newer version of DitMesh. Update the app to open it. Your files have been kept.'**
+  String get errorUnsupportedDataVersion;
+
+  /// Desktop setting controlling close versus quit.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the tray when the window closes'**
+  String get desktopCloseToTray;
+
+  /// Explains the desktop close setting and the requirement for a usable tray host.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: closing the window quits. Requires a working system tray.'**
+  String get desktopCloseToTrayDescription;
+
+  /// Explains the bounded light indicator and reduced-motion behavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a small flashing indicator. Avoid if photosensitive; Reduce Motion keeps it steady.'**
+  String get learnFlashNotice;
+
+  /// Displayed when the device has no usable vibration hardware.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibration is unavailable on this device.'**
+  String get learnHapticUnavailable;
+
+  /// Recovery instruction when the Linux recorder command cannot be started.
+  ///
+  /// In en, this message translates to:
+  /// **'Install pulseaudio-utils to use the microphone on Linux.'**
+  String get listenMissingCaptureTool;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

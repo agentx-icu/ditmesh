@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'desktop/desktop_platform.dart';
+import 'desktop/desktop_instance.dart';
+import 'desktop/linux_tray_host.dart';
 import 'desktop/desktop_shell_controller.dart';
 import 'desktop/init_desktop_shell.dart';
 import 'di/app_features.dart';
@@ -36,6 +38,15 @@ import 'training/guest_profile.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  DesktopInstance? instance;
+  if (isDesktopTarget(defaultTargetPlatform)) {
+    instance = await DesktopInstance.acquire(
+      await getApplicationSupportDirectory(),
+    );
+    // No preferences, profile migration or backend may run in a second process.
+    if (instance == null) exit(0);
+  }
+
   // One settings file for app-wide choices (language, theme, playback,
   // notifications and window bounds). Learning data lives per identity.
   final KeyValueStore settingsStore = await _openSettingsStore();
@@ -49,9 +60,13 @@ Future<void> main() async {
         // Product name, never translated; resolved through S so the desktop
         // shell has no English literal of its own.
         appName: currentS().appName,
+        trayHostAvailable: defaultTargetPlatform == TargetPlatform.linux
+            ? linuxTrayHostAvailable
+            : null,
         log: kDebugMode ? debugPrint : null,
       ),
     );
+    instance?.onActivate = desktopShell.showWindow;
   }
 
   runApp(

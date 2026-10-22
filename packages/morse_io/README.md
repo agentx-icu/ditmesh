@@ -22,7 +22,7 @@ repository): renders `morse_core` timelines to **sound**,
               ┌───────────┼──────────────┬─────────────┐
         SidetoneSink  HapticSink     FlashSink     CompositeSink
         (flutter_soloud) (HapticFeedback  (ValueListenable
-                          + vibration)    + torch_light)
+                          + vibration)    + injected TorchApi)
 ```
 
 * **One concern per file** under `lib/src/`. Public API is re-exported from
@@ -46,17 +46,20 @@ repository): renders `morse_core` timelines to **sound**,
   app.
 * Keyer transitions are `MorseKeyEvent` (not `KeyEvent`, which Flutter owns).
 
+`FlashOverlay` is a 24 px indicator rather than a page-covering strobe. It stays
+steady when reduced motion is enabled. `hapticsAvailable()` checks vibrator
+presence independently of continuous-pulse support.
+
 ## Plugins and why these versions
 
 | Plugin | Version | Platforms (pubspec `flutter.plugin.platforms`) | Notes |
 | --- | --- | --- | --- |
 | `flutter_soloud` | `^4.1.7` | android, ios, linux, macos, windows (+web) | 5.x (5.0.0-pre.2+) moved to native-asset hooks and needs `native_toolchain_c ^0.19.4` → `meta ^1.19`, which Flutter 3.41.9 pins to 1.17.0; pub cannot resolve it. 4.1.7 is the newest release that resolves and is a classic FFI plugin, so `flutter test` never compiles C. |
 | `vibration` | `^3.2.1` | android, ios | Duration-accurate start/cancel pulses; falls back to `HapticFeedback.heavyImpact()` when `hasCustomVibrationsSupport()` is false. |
-| `torch_light` | `^1.1.0` | android, ios | 2.0.0 requires Dart 3.12 / Flutter 3.44. 1.1.0 is a plain `MethodChannel` plugin, so it is inert on desktop and `FlashSink` never calls it there anyway. |
 
 Every plugin sits behind an interface (`SoloudApi`, `HapticApi`, `TorchApi`)
 with a production adapter (`FlutterSoloudApi`, `FlutterHapticApi`,
-`TorchLightApi`). Tests inject fakes; CI never touches native audio,
+`UnavailableTorchApi`). Tests inject fakes; CI never touches native audio,
 vibration or camera code.
 
 ## Sidetone approach
@@ -110,8 +113,8 @@ Nothing below can run in CI (no audio device, vibrator, camera or GPU).
 * Haptics: `Vibration.vibrate(duration:)` uses `CHHapticEngine` (iPhone 8+);
   `cancel()` only works for those custom haptics. Pulse start latency is
   typically 20–40 ms and cannot be measured here.
-* Torch: `torch_light` needs no Info.plist entry but the camera must not be
-  in use elsewhere.
+* Torch: disabled by default. Products opting in must supply a `TorchApi`
+  adapter and validate their own native permissions and camera contention.
 
 ### Android
 * `flutter_soloud` uses AAudio low-latency (MMAP) by default; verify on a
@@ -120,11 +123,11 @@ Nothing below can run in CI (no audio device, vibrator, camera or GPU).
 * Haptics: `hasCustomVibrationsSupport()` decides start/cancel vs impact.
   Requires `<uses-permission android:name="android.permission.VIBRATE"/>`.
   Amplitude control varies by OEM; pulse length accuracy is ± ~10 ms at best.
-* Torch: `torch_light` needs `android.permission.CAMERA` and
-  `<uses-feature android:name="android.hardware.camera.flash"/>` declared.
+* Torch: no native camera plugin is linked by this package. A product
+  supplying its own `TorchApi` owns any Android declarations it requires.
 
 ### macOS / Windows / Linux
-* Haptics and torch are compiled in but gated off by `defaultTargetPlatform`
+* Haptics and optional torch calls are gated off by `defaultTargetPlatform`
   (`HapticSink.isEnabled == false`, `FlashSink.torchActive == false`).
 * Keyboard keying (`KeyboardKeyBinding`: Space = straight, left/right Ctrl =
   dit/dah) is the primary input; verify key-up events arrive for Ctrl on

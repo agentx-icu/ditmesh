@@ -7,6 +7,7 @@ import 'package:ditmesh_chat/ditmesh_chat.dart';
 import 'package:ditmesh_chat/src/adapters/prefs_adapter.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:tim2tox_dart/interfaces/draft_preferences_service.dart';
+import 'package:tim2tox_dart/utils/history_schema_guard.dart';
 
 import 'helpers/fakes.dart';
 
@@ -28,6 +29,12 @@ class _FailingSecureStore extends MemorySecureStore {
     if (failWrite) throw StateError('secure store unavailable');
     await super.write(key, value);
   }
+}
+
+class _FutureHistoryEngine extends FakeChatEngine {
+  @override
+  Future<void> start(EngineSessionConfig config) async =>
+      throw const HistorySchemaNewerThanAppException(99, 2);
 }
 
 class _FailingPersistEngine extends FakeChatEngine {
@@ -82,6 +89,28 @@ void main() {
   tearDown(() async {
     await engine.dispose();
     await root.delete(recursive: true);
+  });
+
+  test('future history connects with an actionable upgrade error', () async {
+    engine = _FutureHistoryEngine();
+    final service = newService();
+    try {
+      await service.create(displayName: 'CQ');
+      await expectLater(
+        service.connect(),
+        throwsA(
+          isA<ChatException>().having(
+            (e) => e.code,
+            'code',
+            'unsupported_data_version',
+          ),
+        ),
+      );
+      expect(service.connectionStatus, ConnectionStatus.offline);
+      expect(engine.stopCalls, greaterThan(0));
+    } finally {
+      await service.dispose();
+    }
   });
 
   test(

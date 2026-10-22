@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,17 @@ List<String> _captureDebugPrint() {
 }
 
 void main() {
+  test('missing Linux capture command has an actionable failure', () async {
+    _captureDebugPrint();
+    final source = FakePcmSource(
+      startError: const ProcessException('parecord', [], 'not found', 2),
+    );
+    final controller = ListenController(source: source);
+    addTearDown(controller.dispose);
+    await controller.start();
+    expect(controller.failure?.kind.name, 'missingCaptureTool');
+  });
+
   test('start/stop lifecycle and decoded text', () async {
     final source = FakePcmSource();
     final controller = ListenController(source: source);

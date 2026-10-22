@@ -14,6 +14,9 @@ enum ListenFailureKind {
   /// including when the device list is unavailable on this platform.
   startFailed,
 
+  /// The Linux recorder could not execute parecord / pactl.
+  missingCaptureTool,
+
   /// The PCM stream reported an error after capture had started.
   streamFailed,
 }

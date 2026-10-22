@@ -58,6 +58,14 @@ class IdentityRecord {
 
   static IdentityRecord? fromJson(Object? json) {
     if (json is! Map) return null;
+    final version = json['version'];
+    if (version is int && version > 1) {
+      throw const ChatException(
+        'unsupported_data_version',
+        'Identity data requires a newer version of DitMesh',
+      );
+    }
+    if (version != null && (version is! int || version < 0)) return null;
     final toxId = json['toxId'];
     final name = json['displayName'];
     if (toxId is! String || toxId.isEmpty || name is! String) return null;
@@ -92,5 +100,10 @@ class IdentityRecord {
   }
 
   /// Flushed staging write followed by an atomic replacement.
-  Future<void> write(String path) => writeBytesAtomic(File(path), encode());
+  Future<void> write(String path) async {
+    // Check again at the write boundary, even if this record was cached before
+    // a restore. A newer schema must remain in place for the newer app to open.
+    await read(path);
+    await writeBytesAtomic(File(path), encode());
+  }
 }

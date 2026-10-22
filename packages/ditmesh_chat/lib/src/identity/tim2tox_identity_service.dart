@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
+import 'package:tim2tox_dart/utils/history_schema_guard.dart';
 
 import '../adapters/key_value_store.dart';
 import '../adapters/kv_snapshot.dart';
@@ -264,8 +265,7 @@ class Tim2ToxIdentityService
       _runMutation(() => _importBackup(bytes, password));
 
   @override
-  Future<BackupInventory> backupInventory() =>
-      _runMutation(_backupInventory);
+  Future<BackupInventory> backupInventory() => _runMutation(_backupInventory);
 
   @override
   Future<Uint8List> exportEncryptedBackup(EncryptedBackupRequest request) =>
@@ -345,6 +345,12 @@ class Tim2ToxIdentityService
       // Never leave a plaintext profile behind after a failed start.
       await _encryptProfileAtRest();
       if (e is ChatException) rethrow;
+      if (e is HistorySchemaNewerThanAppException) {
+        throw const ChatException(
+          'unsupported_data_version',
+          'Update the app to open this history',
+        );
+      }
       throw ChatException('connect_failed', 'Could not start Tox: $e');
     }
     _connecting = false;
@@ -488,5 +494,4 @@ class Tim2ToxIdentityService
       return false;
     }
   }
-
 }

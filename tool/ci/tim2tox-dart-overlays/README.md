@@ -60,3 +60,13 @@ failure only its committed `failed` tombstone records (the row's own write
 was lost before a restart, so the reloaded row does not say failed while
 DitMesh shows it failed). Delivery proof still beats the failure.
 `packages/ditmesh_chat/test/failed_tombstone_retry_test.dart` covers it.
+
+`0015-preserve-future-history.patch` ports Tim2Tox
+`5341e64ed62b81a94a311c768a73863a3cffcbb1` without changing the pinned
+submodule. Reads and writes check both the primary and backup schema before
+mutation, propagate `HistorySchemaNewerThanAppException`, and leave newer data
+verbatim. It is rebased over 0010's receipt fence, so a recorded receive still
+must commit before ACK/publication. The identity boundary maps this exception
+to the localized upgrade-required error. `history_schema_downgrade_test.dart`,
+`recorded_receive_durability_test.dart`, `recorded_resend_test.dart` and
+`identity_persistence_test.dart` verify preservation and receipt behavior.

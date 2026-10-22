@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../diagnostics/connection_diagnostics.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../../i18n/system_date_time.dart';
 import '../common/app_bar_title.dart';
 
 /// Connection diagnostics (F09): what the device observed about its own Tox
@@ -31,9 +31,7 @@ class ConnectionDiagnosticsPage extends StatelessWidget {
     final s = context.s;
     final diagnostics = context.watch<ConnectionDiagnostics>();
     final snap = diagnostics.snapshot(conversationId: conversationId);
-    final locale = Localizations.localeOf(context).toString();
-    String time(DateTime at) =>
-        DateFormat.yMd(locale).add_Hm().format(at.toLocal());
+    String time(DateTime at) => formatSystemDateTime(context, at);
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.diagTitle)),
       body: SafeArea(

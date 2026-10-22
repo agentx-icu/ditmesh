@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:torch_light/torch_light.dart';
 
 import 'sink.dart';
 
@@ -12,25 +11,16 @@ abstract interface class TorchApi {
   Future<void> disable();
 }
 
-/// Production [TorchApi] on top of the `torch_light` plugin (Android / iOS).
-final class TorchLightApi implements TorchApi {
-  const TorchLightApi();
-
+/// Default when no product-specific torch adapter is provided.
+/// Screen output stays available without linking a camera-device plugin.
+final class UnavailableTorchApi implements TorchApi {
+  const UnavailableTorchApi();
   @override
-  Future<bool> isAvailable() async {
-    try {
-      return await TorchLight.isTorchAvailable();
-    } on Object {
-      // MissingPluginException on desktop, or a camera-less device.
-      return false;
-    }
-  }
-
+  Future<bool> isAvailable() async => false;
   @override
-  Future<void> enable() => TorchLight.enableTorch();
-
+  Future<void> enable() async {}
   @override
-  Future<void> disable() => TorchLight.disableTorch();
+  Future<void> disable() async {}
 }
 
 /// Light output: a [ValueListenable] any widget can paint from (all five
@@ -46,7 +36,7 @@ final class FlashSink implements MorseSink {
     this.useTorch = false,
     TorchApi? torchApi,
     TargetPlatform? platformOverride,
-  }) : _torch = torchApi ?? const TorchLightApi(),
+  }) : _torch = torchApi ?? const UnavailableTorchApi(),
        _platformOverride = platformOverride;
 
   /// Ask for the camera torch in addition to the screen flash.

@@ -3620,4 +3620,22 @@ class SKo extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name 재연결이 거부되었습니다. 기록은 유지됩니다. 다시 시도할 수 있습니다.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => '이 데이터는 더 최신 버전의 DitMesh에서 저장되었습니다. 앱을 업데이트하여 여세요. 원본 파일은 보존되었습니다.';
+
+  @override
+  String get desktopCloseToTray => '창을 닫아도 트레이에서 계속 실행';
+
+  @override
+  String get desktopCloseToTrayDescription => '끄면 창을 닫을 때 앱이 종료됩니다. 사용 가능한 시스템 트레이가 필요합니다.';
+
+  @override
+  String get learnFlashNotice => '작은 표시등이 깜박입니다. 광과민성이 있으면 사용하지 마세요. 동작 줄이기 설정에서는 계속 켜집니다.';
+
+  @override
+  String get learnHapticUnavailable => '이 기기에서는 진동을 사용할 수 없습니다.';
+
+  @override
+  String get listenMissingCaptureTool => 'Linux에서 마이크를 사용하려면 pulseaudio-utils를 설치하세요.';
 }

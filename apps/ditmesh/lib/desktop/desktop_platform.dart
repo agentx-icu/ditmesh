@@ -22,8 +22,8 @@ bool isDesktopTarget(TargetPlatform platform) =>
 /// AppIndicator host; Windows needs a multi-resolution `.ico` because the
 /// tray loads it with `LoadImage(IMAGE_ICON)`, which rejects plain PNGs.
 abstract final class TrayIconAssets {
-  static const String macTemplate = 'assets/tray/tray_template_32.png';
-  static const String linuxPng = 'assets/tray/tray_icon_32.png';
+  static const String macTemplate = 'assets/tray/tray_template_36.png';
+  static const String linuxPng = 'assets/tray/tray_icon_64.png';
   static const String windowsIco = 'assets/tray/tray_icon.ico';
 
   /// The icon [platform] should load, or null when it has no tray.
@@ -47,9 +47,10 @@ class DesktopShellConfig {
     this.platform,
     this.minimumSize = const Size(360, 640),
     this.defaultSize = const Size(1100, 760),
-    this.closeToTray = true,
+    this.closeToTray = false,
     this.soundEnabled = true,
     this.onToggleSound,
+    this.trayHostAvailable,
     this.onBeforeQuit,
     this.persistDebounce = const Duration(milliseconds: 500),
     this.log,
@@ -74,6 +75,9 @@ class DesktopShellConfig {
 
   /// Initial value of the close-to-tray setting when nothing is persisted.
   final bool closeToTray;
+
+  /// Checks that the shell has a usable tray host, not only a loaded plugin.
+  final Future<bool> Function()? trayHostAvailable;
 
   /// Initial state of the tray's "Sound on/off" toggle.
   final bool soundEnabled;

@@ -7,6 +7,16 @@ import 'package:vibration/vibration.dart';
 import 'app_foreground.dart';
 import 'sink.dart';
 
+/// Whether this device has a vibrator, independently of continuous support.
+/// A missing plugin or failed capability query means the UI cannot offer it.
+Future<bool> hapticsAvailable() async {
+  try {
+    return await Vibration.hasVibrator();
+  } on Object {
+    return false;
+  }
+}
+
 /// The haptic primitives [HapticSink] relies on. Injected so tests never
 /// touch platform channels.
 abstract interface class HapticApi {

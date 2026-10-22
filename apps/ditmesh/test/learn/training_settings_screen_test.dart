@@ -13,6 +13,7 @@ import 'helpers/test_controller.dart';
 Future<(TestTraining, FakeLearnPlaybackFactory)> _pump(
   WidgetTester tester, {
   TrainingSettings? settings,
+  bool hasHaptics = true,
   // Tall enough that every tile is on screen without scrolling.
   Size size = const Size(390, 1600),
 }) async {
@@ -28,6 +29,7 @@ Future<(TestTraining, FakeLearnPlaybackFactory)> _pump(
       home: TrainingSettingsScreen(
         controller: t.controller,
         playback: playback,
+        hapticAvailability: () async => hasHaptics,
       ),
     ),
   );
@@ -35,12 +37,18 @@ Future<(TestTraining, FakeLearnPlaybackFactory)> _pump(
   return (t, playback);
 }
 
-Finder _switchFor(String title) => find.ancestor(
-  of: find.text(title),
-  matching: find.byType(SwitchListTile),
-);
+Finder _switchFor(String title) =>
+    find.ancestor(of: find.text(title), matching: find.byType(SwitchListTile));
 
 void main() {
+  testWidgets('haptics unavailable hardware disables the setting', (
+    tester,
+  ) async {
+    await _pump(tester, hasHaptics: false);
+    final tile = tester.widget<SwitchListTile>(_switchFor(en.learnHaptic));
+    expect(tile.onChanged, isNull);
+    expect(find.text(en.learnHapticUnavailable), findsOneWidget);
+  });
   testWidgets('shows the current values', (tester) async {
     await _pump(tester);
     expect(find.text(en.learnWpmValue('20')), findsOneWidget);

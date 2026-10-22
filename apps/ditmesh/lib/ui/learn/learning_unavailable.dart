@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:morse_trainer/morse_trainer.dart' show UnsupportedDataVersion;
 
 import '../../di/app_features.dart';
 import '../../i18n/l10n_extension.dart';
@@ -8,12 +9,18 @@ import '../../i18n/l10n_extension.dart';
 /// chat build the usual cause is "no identity yet" (the fix is to create
 /// one); the offline build always has its local profile, so a failure is a
 /// storage problem worth retrying.
-bool learningRetryable(BuildContext context) => !_chat(context);
+bool learningRetryable(BuildContext context, [Object? error]) =>
+    error is! UnsupportedDataVersion && !_chat(context);
 
 /// What a learning surface says when its data could not be opened.
-String learningUnavailableText(BuildContext context) => _chat(context)
-    ? context.s.learnIdentityRequired
-    : context.s.learnStorageUnavailable;
+String learningUnavailableText(BuildContext context, [Object? error]) {
+  if (error is UnsupportedDataVersion) {
+    return context.s.errorUnsupportedDataVersion;
+  }
+  return _chat(context)
+      ? context.s.learnIdentityRequired
+      : context.s.learnStorageUnavailable;
+}
 
 bool _chat(BuildContext context) {
   try {

@@ -1,3 +1,4 @@
+import 'unsupported_data_version.dart';
 import 'char_stats.dart';
 import 'confusion_matrix.dart';
 import 'daily_plan.dart';
@@ -354,6 +355,11 @@ final class TrainerProgress {
   /// validate them and fall back to a backup (the app's `FileTrainerStore`
   /// does).
   factory TrainerProgress.fromJson(Map<String, Object?> json) {
+    UnsupportedDataVersion.check(
+      json['version'],
+      supported: 1,
+      document: 'Training progress',
+    );
     final lastDay = json['lastPracticeDay'] as String?;
     final rawHistory = json['history'] as List<Object?>? ?? const <Object?>[];
     final rawSrs = json['srs'] as Map<String, Object?>?;

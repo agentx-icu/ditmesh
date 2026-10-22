@@ -40,7 +40,13 @@ abstract interface class WindowApi {
 
   Future<bool> isMaximized();
 
+  Future<bool> isFullScreen();
+
+  Future<bool> isMinimized();
+
   Future<void> maximize();
+
+  Future<void> restore();
 
   Future<bool> isVisible();
 

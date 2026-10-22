@@ -60,7 +60,7 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 restores a hidden window.
 
 `shortcuts.dart` defines `desktopShortcutBindings()` (Cmd/Ctrl+K search, +N
-new message, +M sidetone) as pure intents. The app does not install them yet;
+new message, +Shift+M sidetone) as pure intents. The app does not install them yet;
 to activate them, wrap the shell in `Shortcuts(shortcuts:
 desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
 
@@ -72,13 +72,13 @@ desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
   small panel). Persisted bounds are restored onto the display that contains
   the window's centre; if that display is gone the primary is used.
 - **Close**: `setPreventClose(true)` is always on, so a close request reaches
-  the controller. With close-to-tray on **and** a working tray the window
+  the controller. Close-to-tray defaults off and is configurable in Me. With it on **and** a working tray the window
   hides; otherwise (setting off, or no tray host) the shell persists bounds,
   runs `onBeforeQuit`, destroys the tray and the window — the runner then
   exits. Quit from the tray menu is always a real exit.
 - **Tray**: icon per platform, tooltip = app name (+ " — N unread messages"),
-  menu Show/Hide · Sound on/off · Quit. The sound checkbox is persisted, but
-  `main()` passes no `onToggleSound`, so it does not yet change any app sound. Left
+  menu Show/Hide · Quit, plus Sound only when an audio owner supplies
+  `onToggleSound`. Left
   click toggles the window where the host delivers clicks (macOS, Windows).
   Every tray call is tolerated: a missing tray disables the tray, a missing
   method (Linux tooltip) is logged once.
@@ -100,15 +100,15 @@ desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
 - **Linux**: `tray_manager` needs `libayatana-appindicator3-dev` (or the
   legacy `libappindicator3-dev`) at build time and a StatusNotifier host at
   run time (GNOME needs the AppIndicator extension; KDE / XFCE / Cinnamon work
-  out of the box). Without a host the first tray call throws and the shell
-  runs tray-less: close then quits instead of hiding. AppIndicator delivers no
+  out of the box). The shell checks `IsStatusNotifierHostRegistered` via bounded `gdbus`
+  before hiding. Without a host it runs tray-less: close then quits instead of hiding. AppIndicator delivers no
   left click and no tooltip; the context menu is native (right click).
-- **macOS**: the icon is a *template* image (`tray_template_32.png`, black +
+- **macOS**: the icon is a *template* image (`tray_template_36.png`, black +
   alpha) and is passed with `isTemplate: true`, so it must carry no colour.
   The unread count is shown as the status item's title next to the icon.
-  Closing the last window would normally terminate the app
-  (`applicationShouldTerminateAfterLastWindowClosed`); the runner's default
-  is fine because close is intercepted before it reaches AppKit.
+  The runner leaves last-window termination disabled so intercepted closes
+  can finish the durable checkpoint. Explicit Quit uses `NSApp.terminate`;
+  Dock reopen restores and focuses the existing window.
 - **Windows**: the tray needs a real `.ico` (`tray_icon.ico`, 16/20/24/32/40/48 px
   frames, the small-icon sizes of 100–300 % DPI). Bounds are logical pixels; `window_manager` converts using the
   device pixel ratio, so a DPI change between sessions is handled by the
@@ -120,6 +120,11 @@ desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
 dart run tool/gen_tray_icons.dart     # from the repository root
 ```
 
-Writes `apps/ditmesh/assets/tray/tray_template_{16,22,32}.png`,
-`tray_icon_{16,22,32}.png` and `tray_icon.ico` using `package:image`
+Writes `apps/ditmesh/assets/tray/tray_template_{16,22,32,36,64}.png`,
+`tray_icon_{16,22,32,36,64}.png` and `tray_icon.ico` using `package:image`
 (dev dependency of the app).
+
+`DesktopInstance.acquire()` runs before any preferences or backend opens.
+Its OS lock covers the support root until process exit; a separate loopback
+activation sidecar lets a second process restore the owner. Normal window
+bounds are retained across minimize, maximize and fullscreen transitions.

@@ -18,7 +18,6 @@ dependencies:
   # switch mutes it. See lib/src/audio_session_api.dart.
   audio_session: ^0.2.4
   vibration: ^3.2.1
-  torch_light: ^1.1.0
   # Keeps the screen on while a session needs it (Listen capture), so the
   # phone's auto-lock does not background the app and stop the microphone.
   wakelock_plus: ^1.5.0

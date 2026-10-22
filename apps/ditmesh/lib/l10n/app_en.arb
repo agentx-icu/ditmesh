@@ -5005,5 +5005,17 @@
         "type": "String"
       }
     }
-  }
+  },
+  "errorUnsupportedDataVersion": "This data was saved by a newer version of DitMesh. Update the app to open it. Your files have been kept.",
+  "desktopCloseToTray": "Keep running in the tray when the window closes",
+  "desktopCloseToTrayDescription": "Off: closing the window quits. Requires a working system tray.",
+  "learnFlashNotice": "Uses a small flashing indicator. Avoid if photosensitive; Reduce Motion keeps it steady.",
+  "learnHapticUnavailable": "Vibration is unavailable on this device.",
+  "listenMissingCaptureTool": "Install pulseaudio-utils to use the microphone on Linux.",
+  "@errorUnsupportedDataVersion": {"description": "Startup recovery for identity data written by a newer application; originals remain untouched."},
+  "@desktopCloseToTray": {"description": "Desktop setting controlling close versus quit."},
+  "@desktopCloseToTrayDescription": {"description": "Explains the desktop close setting and the requirement for a usable tray host."},
+  "@learnFlashNotice": {"description": "Explains the bounded light indicator and reduced-motion behavior."},
+  "@learnHapticUnavailable": {"description": "Displayed when the device has no usable vibration hardware."},
+  "@listenMissingCaptureTool": {"description": "Recovery instruction when the Linux recorder command cannot be started."}
 }

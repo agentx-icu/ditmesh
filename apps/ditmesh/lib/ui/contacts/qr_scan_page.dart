@@ -20,24 +20,16 @@ class QrScanPage extends StatefulWidget {
 }
 
 class _QrScanPageState extends State<QrScanPage> {
-  final MobileScannerController _controller = MobileScannerController(
-    formats: const [BarcodeFormat.qrCode],
-  );
   bool _done = false;
 
   /// A QR code was seen that is not a Tox ID; the hint text is resolved in
   /// [build] so it follows the locale.
   bool _sawForeignCode = false;
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _onDetect(BarcodeCapture capture) {
     if (_done) return;
     for (final Barcode code in capture.barcodes) {
+      if (code.format != BarcodeFormat.qrCode) continue;
       final String id = normalizeToxId(code.rawValue ?? '');
       if (isValidToxId(id)) {
         _done = true;
@@ -59,7 +51,8 @@ class _QrScanPageState extends State<QrScanPage> {
         fit: StackFit.expand,
         children: [
           MobileScanner(
-            controller: _controller,
+            // The plugin owns this controller and observes lifecycle changes.
+            // Passing a custom controller disables its pause/resume handling.
             onDetect: _onDetect,
             errorBuilder: (context, error) => QrScanErrorView(error: error),
           ),

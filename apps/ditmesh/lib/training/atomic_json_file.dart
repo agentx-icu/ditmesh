@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:morse_trainer/morse_trainer.dart' show UnsupportedDataVersion;
 
 /// A JSON document on disk that is written atomically and read defensively.
 ///
@@ -72,6 +73,20 @@ final class AtomicJsonFile {
   ) async {
     await file.parent.create(recursive: true);
     final tmp = tempFile;
+    // Validate before touching either document or recovery files. Future data
+    // is not corruption and must never be rotated into a backup.
+    if (await file.exists()) {
+      await _tryRead(file, (json) {
+        validate?.call(json);
+        return json;
+      });
+    }
+    if (await backupFile.exists()) {
+      await _tryRead(backupFile, (json) {
+        validate?.call(json);
+        return json;
+      });
+    }
     await tmp.writeAsString(encoded, flush: true);
     if (await file.exists()) {
       final previous = await _tryRead(file, (json) {
@@ -111,9 +126,13 @@ final class AtomicJsonFile {
       if (decoded is! Map<String, Object?>) return null;
       try {
         return decode(decoded);
+      } on UnsupportedDataVersion {
+        rethrow;
       } on Object {
         return null;
       }
+    } on UnsupportedDataVersion {
+      rethrow;
     } on FormatException {
       return null;
     } on FileSystemException {
@@ -145,7 +164,10 @@ final class AtomicJsonFile {
   Future<void> _setAside() async {
     try {
       if (await corruptFile.exists()) {
-        await corruptFile.delete();
+        final archive = File(
+          '${corruptFile.path}.${DateTime.now().microsecondsSinceEpoch}',
+        );
+        await corruptFile.rename(archive.path);
       }
       await file.rename(corruptFile.path);
     } on FileSystemException {

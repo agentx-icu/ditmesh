@@ -568,7 +568,7 @@ jobs:
         run: bash tool/ci/build_tim2tox.sh --target android --stage-only
       # Optional: with all four secrets the release is signed with the project
       # key (app/build.gradle.kts reads the DITMESH_ANDROID_* env verbatim);
-      # without them it is signed with the debug key.
+      # Branch validation may use the debug key; tagged builds reject it below.
       - name: Prepare release signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -589,6 +589,7 @@ jobs:
           DITMESH_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           DITMESH_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          bash tool/ci/require_android_signing.sh
           cd apps/ditmesh
           flutter build apk --release --dart-define=DITMESH_FAKE_BACKEND=false
           flutter build appbundle --release --dart-define=DITMESH_FAKE_BACKEND=false

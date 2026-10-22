@@ -30,7 +30,7 @@ bool usesCommandModifier(TargetPlatform platform) =>
     platform == TargetPlatform.macOS || platform == TargetPlatform.iOS;
 
 /// Default bindings: Cmd/Ctrl+K search, Cmd/Ctrl+N new message,
-/// Cmd/Ctrl+M mute sidetone. [platform] defaults to [defaultTargetPlatform].
+/// Cmd/Ctrl+Shift+M mute sidetone. [platform] defaults to [defaultTargetPlatform].
 Map<ShortcutActivator, Intent> desktopShortcutBindings({
   TargetPlatform? platform,
 }) {
@@ -40,7 +40,12 @@ Map<ShortcutActivator, Intent> desktopShortcutBindings({
   return <ShortcutActivator, Intent>{
     primary(LogicalKeyboardKey.keyK): const FocusSearchIntent(),
     primary(LogicalKeyboardKey.keyN): const NewMessageIntent(),
-    primary(LogicalKeyboardKey.keyM): const ToggleSidetoneIntent(),
+    SingleActivator(
+      LogicalKeyboardKey.keyM,
+      meta: command,
+      control: !command,
+      shift: true,
+    ): const ToggleSidetoneIntent(),
   };
 }
 

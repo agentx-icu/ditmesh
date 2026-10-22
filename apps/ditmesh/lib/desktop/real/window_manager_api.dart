@@ -44,7 +44,16 @@ class WindowManagerApi implements WindowApi {
   Future<bool> isMaximized() => windowManager.isMaximized();
 
   @override
+  Future<bool> isFullScreen() => windowManager.isFullScreen();
+
+  @override
+  Future<bool> isMinimized() => windowManager.isMinimized();
+
+  @override
   Future<void> maximize() => windowManager.maximize();
+
+  @override
+  Future<void> restore() => windowManager.restore();
 
   @override
   Future<bool> isVisible() => windowManager.isVisible();

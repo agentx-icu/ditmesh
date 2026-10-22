@@ -3677,4 +3677,22 @@ class SRu extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name отклонила повторное подключение. История сохранена; можно повторить попытку.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'Эти данные сохранены в более новой версии DitMesh. Обновите приложение, чтобы открыть их. Исходные файлы сохранены.';
+
+  @override
+  String get desktopCloseToTray => 'Работать в трее после закрытия окна';
+
+  @override
+  String get desktopCloseToTrayDescription => 'Если выключено, закрытие окна завершает приложение. Нужен доступный системный трей.';
+
+  @override
+  String get learnFlashNotice => 'Небольшой мигающий индикатор. Не используйте при светочувствительности; при уменьшении движения он горит постоянно.';
+
+  @override
+  String get learnHapticUnavailable => 'Вибрация недоступна на этом устройстве.';
+
+  @override
+  String get listenMissingCaptureTool => 'Установите pulseaudio-utils для использования микрофона в Linux.';
 }

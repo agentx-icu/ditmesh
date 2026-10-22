@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../../i18n/system_date_time.dart';
 import '../common/app_bar_title.dart';
 import '../responsive.dart';
 
@@ -56,7 +56,9 @@ final class RestoredPendingStore {
     }
     final tmp = File('${file.path}.tmp')
       ..writeAsStringSync(
-        jsonEncode({'items': [for (final i in keep) i.toJson()]}),
+        jsonEncode({
+          'items': [for (final i in keep) i.toJson()],
+        }),
         flush: true,
       );
     tmp.renameSync(file.path);
@@ -169,7 +171,6 @@ class _RestoredPendingPageState extends State<RestoredPendingPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final chat = Provider.of<ChatService?>(context, listen: false);
-    final locale = Localizations.localeOf(context).toString();
     return Scaffold(
       appBar: AppBar(
         title: AppBarTitle(s.pendingReviewTitle),
@@ -204,9 +205,7 @@ class _RestoredPendingPageState extends State<RestoredPendingPage> {
                     SelectableText(item.text),
                     Text(
                       s.pendingReviewQueuedAt(
-                        DateFormat.yMd(
-                          locale,
-                        ).add_Hm().format(item.queuedAt.toLocal()),
+                        formatSystemDateTime(context, item.queuedAt),
                       ),
                     ),
                   ],

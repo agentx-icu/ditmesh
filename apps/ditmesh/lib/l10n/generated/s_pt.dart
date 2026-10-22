@@ -3639,4 +3639,22 @@ class SPt extends S {
   String chatGroupReconnectFailed(String name) {
     return '$name recusou a nova ligação. O histórico mantém-se; pode tentar novamente.';
   }
+
+  @override
+  String get errorUnsupportedDataVersion => 'Estes dados foram salvos por uma versão mais recente do DitMesh. Atualize o aplicativo para abri-los. Os arquivos foram preservados.';
+
+  @override
+  String get desktopCloseToTray => 'Continuar na bandeja ao fechar a janela';
+
+  @override
+  String get desktopCloseToTrayDescription => 'Desativado: fechar a janela encerra o aplicativo. Requer uma bandeja disponível.';
+
+  @override
+  String get learnFlashNotice => 'Indicador pequeno intermitente. Evite em caso de fotossensibilidade; Reduzir movimento o mantém fixo.';
+
+  @override
+  String get learnHapticUnavailable => 'A vibração não está disponível neste dispositivo.';
+
+  @override
+  String get listenMissingCaptureTool => 'Instale pulseaudio-utils para usar o microfone no Linux.';
 }

@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/di/app_features.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:provider/provider.dart';
+import 'package:morse_trainer/morse_trainer.dart' show UnsupportedDataVersion;
+import 'package:ditmesh/ui/learn/learning_unavailable.dart';
 
 import '../learn/helpers/unavailable_training.dart';
 
@@ -27,6 +29,28 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('future data explains upgrading and cannot retry writes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: S.localizationsDelegates,
+        supportedLocales: S.supportedLocales,
+        locale: const Locale('en'),
+        home: Builder(
+          builder: (context) {
+            const error = UnsupportedDataVersion('training', 99);
+            expect(learningRetryable(context, error), isFalse);
+            return Text(learningUnavailableText(context, error));
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(s.errorUnsupportedDataVersion), findsOneWidget);
+    expect(find.text(s.learnIdentityRequired), findsNothing);
+  });
 
   testWidgets('offline: storage wording and a retry that loads again', (
     tester,

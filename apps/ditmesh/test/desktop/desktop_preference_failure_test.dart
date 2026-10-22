@@ -24,7 +24,11 @@ void main() {
     final store = FailingStore()..delayed = Completer<void>();
     final window = fake.FakeWindowApi();
     final shell = DesktopShellController(
-      config: DesktopShellConfig(store: store, platform: TargetPlatform.macOS),
+      config: DesktopShellConfig(
+        store: store,
+        platform: TargetPlatform.macOS,
+        closeToTray: true,
+      ),
       window: window,
       tray: fake.FakeTrayApi(),
       screen: fake.FakeScreenApi(),
@@ -43,7 +47,11 @@ void main() {
   test('failed desktop sound selection can be retried unchanged', () async {
     final store = FailingStore();
     final shell = DesktopShellController(
-      config: DesktopShellConfig(store: store, platform: TargetPlatform.macOS),
+      config: DesktopShellConfig(
+        store: store,
+        platform: TargetPlatform.macOS,
+        closeToTray: true,
+      ),
       window: fake.FakeWindowApi(),
       tray: fake.FakeTrayApi(),
       screen: fake.FakeScreenApi(),
@@ -60,7 +68,11 @@ void main() {
   test('failed close-to-tray selection can be retried unchanged', () async {
     final store = FailingStore();
     final shell = DesktopShellController(
-      config: DesktopShellConfig(store: store, platform: TargetPlatform.macOS),
+      config: DesktopShellConfig(
+        store: store,
+        platform: TargetPlatform.macOS,
+        closeToTray: true,
+      ),
       window: fake.FakeWindowApi(),
       tray: fake.FakeTrayApi(),
       screen: fake.FakeScreenApi(),
