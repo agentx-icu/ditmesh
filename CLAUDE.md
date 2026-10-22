@@ -10,6 +10,7 @@ DitMesh is the Morse-only Tox chat application split from MorseCQ. Current appli
 - Flutter 3.41.9 / Dart 3.11.5; bootstrap before root `dart pub get`; no subpackage dependency resolution.
 - Analyzer has zero issues, including infos. Keep the 500-line baseline empty; run complexity, import and UI-literal guards. UI prose goes in all ARB locales.
 - New behavior needs useful regression tests; verify mobile and desktop parity. Preserve stream/timer teardown and durable outbox/backup ownership semantics.
+- UI, layout, lifecycle, permission, media and packaging changes are checked against the `cross-platform-app-checklist` skill (https://github.com/agentx-icu/cross-platform-app-checklist); report its IDs as verified / to do / needs device / not applicable in the PR.
 - Documents are English + zh-CN pairs. Append change logs to plan edits. Screenshots come from the integration capture pipeline, never hand-edited PNGs.
 - Never commit build outputs, caches, native binaries, signing keys or generated registrants.
 - User policy: no RTK. Independent Codex agent review plus appropriate local verification is required.
