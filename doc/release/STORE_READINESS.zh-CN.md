@@ -117,7 +117,7 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
   --export-options /owner-controlled/ExportOptions.plist
 ```
 
-W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。28 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
 ## Release 安全应用诊断
 
