@@ -136,7 +136,7 @@ W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍�
 | X9 既有 release 日志、通知 payload/error 元数据和未知启动错误显示 | **可立即代码修复**：固定安全事件/类型、release 安全 sink、泛化 UI 及 marker 回归不需要账号或远端服务。独立诊断增量处理这些现存路径，不把 raw debug 输出直接持久化。 |
 | X9 逐构建源码自建符号及二进制准确配对 | **可立即代码补齐**：保留 Windows PDB/CodeView GUID+age、Android strip 前 ELF/build ID、Linux 独立 debug/build ID，以及 Apple archive dSYM UUID 清单。现有 iOS 主程序符号匹配只覆盖其中一部分；vendor engine 符号需准确上游构建/来源，缺失必须逐项说明。 |
 | X9 原生 crash reporter、上传、持久诊断内容/留存和支持流程 | 仍有产品/隐私决定及后续平台实现、设备符号化验证；这些选择不阻塞上面两个 code-only 子项。本任务不虚构遥测服务或账号。 |
-| I2 现有 Search/Contacts 键盘命令 | **可立即代码补齐**：既有 shortcut map 未安装到 App，modifier/label 纯测试不证明实际路由。独立增量接入已有动作；全局侧音命令目前没有声音 owner，应明确不可用而非创造新功能。 |
+| I2 现有 Search/Contacts 键盘命令 | **代码已由 [#36](https://github.com/agentx-icu/ditmesh/pull/36) 补齐**：既有动作已接入外壳并有实际按键路由回归；设备边界见下方 I2 后续节。全局侧音命令目前没有声音 owner，仍明确不可用。 |
 | P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
 | B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
 | 最终签名 iOS export/真机资格；可选 Mac App Store、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | iOS 已有受控 archive/export 入口，仍需既有负责人签名材料与真实签名设备证据；其他渠道先选择真实身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
