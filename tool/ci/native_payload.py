@@ -224,7 +224,8 @@ def check_installed_payload(root, archive_path):
             seen.add(name)
             if not entry.is_dir():
                 entries.append((entry, PurePosixPath(*parts[1:])))
-        if 'ditmesh/ditmesh.exe' not in seen:
+        expected_files = {relative.as_posix().casefold() for _, relative in entries}
+        if 'ditmesh.exe' not in expected_files:
             raise ValueError('Final ZIP is missing ditmesh.exe')
         for entry, relative in entries:
             installed = root.joinpath(*relative.parts)
@@ -237,6 +238,18 @@ def check_installed_payload(root, archive_path):
             if actual != expected:
                 raise ValueError(f'Installed file differs from final ZIP: {relative}')
             records.append({'path': str(relative), 'sha256': expected})
+    installed_files = set()
+    for installed in root.rglob('*'):
+        relative = installed.relative_to(root).as_posix().casefold()
+        if installed.is_symlink() or not installed.resolve().is_relative_to(root):
+            raise ValueError(f'Unexpected installed symlink or path: {relative}')
+        if installed.is_file():
+            if relative in installed_files:
+                raise ValueError(f'Unexpected installed case collision: {relative}')
+            installed_files.add(relative)
+    extra = installed_files - expected_files
+    if extra:
+        raise ValueError(f'Unexpected installed files: {sorted(extra)}')
     return records
 
 

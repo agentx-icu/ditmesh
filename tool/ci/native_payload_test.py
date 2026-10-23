@@ -55,6 +55,23 @@ class InstalledPayloadTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'differs.*asset'):
                 check_installed_payload(root, archive)
 
+    def test_unexpected_installed_files_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, archive = self.fixture(tmp)
+            (root / 'unexpected.dll').write_bytes(pe())
+            with self.assertRaisesRegex(ValueError, 'Unexpected installed'):
+                check_installed_payload(root, archive)
+
+    def test_executable_must_be_a_file_not_only_a_directory_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'installed'
+            root.mkdir()
+            archive = Path(tmp) / 'release.zip'
+            with zipfile.ZipFile(archive, 'w') as stream:
+                stream.writestr('ditmesh/ditmesh.exe/', b'')
+            with self.assertRaisesRegex(ValueError, 'missing ditmesh.exe'):
+                check_installed_payload(root, archive)
+
     def test_missing_installed_file_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, archive = self.fixture(tmp)

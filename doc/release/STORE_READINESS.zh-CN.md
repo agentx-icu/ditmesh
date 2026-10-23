@@ -81,7 +81,7 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 | X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
 | P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
 
-macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **53** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增四个 payload 测试覆盖资源变化、文件丢失、不安全/冲突 ZIP 路径和已装 symlink 越界；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **55** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增六个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
 
 ## 负责人材料交接表
 
