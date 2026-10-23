@@ -107,6 +107,10 @@ jobs:
           python3 tool/ci/macos_signing_test.py
           python3 tool/ci/store_preflight_test.py
           python3 tool/ci/windows_runtime_test.py
+          python3 tool/ci/apple_release_preflight_test.py
+          python3 tool/ci/ios_store_export_test.py
+          python3 tool/ci/desktop_jni_test.py
+          python3 tool/ci/gdb_close_trace_test.py
           python3 tool/ci/linux_installed_smoke_test.py
 
       - name: Screenshot import regression tests

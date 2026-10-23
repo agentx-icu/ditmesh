@@ -66,8 +66,12 @@ function Write-ExactProcessCrashEvents {
       foreach ($event in $events) {
         $document = [xml]$event.ToXml()
         $fields = @{}
-        foreach ($data in $document.Event.EventData.Data) {
-          $fields[[string]$data.Name] = [string]$data.InnerText
+        # Providers can emit empty/unnamed event data. XML's PowerShell dot
+        # adapter throws under StrictMode for absent nodes, so select real
+        # named elements without exposing unrelated event contents.
+        foreach ($data in $document.SelectNodes("/*[local-name()='Event']/*[local-name()='EventData']/*[local-name()='Data'][@Name]")) {
+          $name = $data.GetAttribute('Name')
+          if ($name) { $fields[$name] = [string]$data.InnerText }
         }
         if (-not $fields.ContainsKey('ProcessId') -or -not $fields.ContainsKey('AppPath')) { continue }
         $rawId = $fields['ProcessId']
@@ -118,6 +122,7 @@ function Write-ExactProcessCrashEvents {
     $report.collection = 'diagnostic_failed'
     $report['diagnostic_error_type'] = $_.Exception.GetType().FullName
     $report['diagnostic_hresult'] = $_.Exception.HResult
+    $report['diagnostic_script_line'] = $_.InvocationInfo.ScriptLineNumber
   }
   try {
     $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $OutputPath -Encoding utf8

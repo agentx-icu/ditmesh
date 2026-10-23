@@ -86,11 +86,39 @@ function Test-InstalledWindow([string]$Stage) {
   # Fresh runner preferences leave close-to-tray disabled. A forced cleanup
   # below must never turn a refused close or an orphan process into a pass.
   $crashContext = Get-ExactProcessCrashContext -Process $script:app -ExpectedExecutablePath $exe
+  $trace = $null
   try {
+    # Temporary opt-in investigation only. Final lifecycle qualification must
+    # run without a debugger; it can change native exception routing/timing.
+    if ($env:DITMESH_CLOSE_TRACE -eq 'gdb') {
+      $start = [Diagnostics.ProcessStartInfo]::new()
+      $start.FileName = (Get-Command python -CommandType Application).Source
+      $start.UseShellExecute = $false
+      $start.CreateNoWindow = $true
+      foreach ($argument in @((Join-Path $PSScriptRoot 'gdb_close_trace.py'), '--pid', [string]$script:app.Id,
+          '--exe', $exe, '--started-filetime-utc', [string]$crashContext.started_at_utc.ToFileTimeUtc(),
+          '--evidence-dir', $evidence, '--stage', $Stage)) {
+        $start.ArgumentList.Add($argument)
+      }
+      $trace = [Diagnostics.Process]::Start($start)
+      $ready = Join-Path $evidence "$Stage-gdb.ready"
+      $attachDeadline = [DateTime]::UtcNow.AddSeconds(20)
+      while (-not (Test-Path -LiteralPath $ready) -and -not $trace.HasExited -and [DateTime]::UtcNow -lt $attachDeadline) {
+        Start-Sleep -Milliseconds 100
+      }
+      if (-not (Test-Path -LiteralPath $ready)) { throw 'Scoped native diagnostic did not attach; inspect its JSON status' }
+    }
     if (-not $script:app.CloseMainWindow()) { throw 'Installed window did not accept the close request' }
     if (-not $script:app.WaitForExit(20000)) { throw 'Installed application did not quit after closing the fresh-profile window' }
     if ($script:app.ExitCode -ne 0) { throw "Installed application quit with exit $($script:app.ExitCode)" }
   } finally {
+    if ($null -ne $trace -and -not $trace.WaitForExit(5000)) {
+      # The app was started separately and is not in this diagnostic tree.
+      # Kill both wrapper and debugger, never leave an attached child behind;
+      # debugger cleanup alone can never count as target exit evidence.
+      $trace.Kill($true)
+      [void]$trace.WaitForExit(5000)
+    }
     Write-ExactProcessCrashEvents -Context $crashContext -OutputPath (Join-Path $evidence "$Stage-crash-events.json")
   }
   $report.stages.Add("$Stage visible window and graceful quit verified")

@@ -82,18 +82,36 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 | ID | 状态 | 证据／仍存边界 |
 |---|---|---|
 | W4、X6 | to do | 必需 Windows release-build CI 现执行最终 MSI 安装、payload、启动/关闭、删除文件后 repair、卸载；具体执行证据看最终 PR head 的 Windows job。本地 macOS 测试不执行 MSI、不证明 Windows 运行行为。签名、上一版本升级、Store 交付和普通用户资格仍由负责人完成。 |
-| X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
+| X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。其他目标保留自己的门禁；Ubuntu 与 iOS 增量见后文。 |
 | P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
 
-macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **75** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **111** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
 
 ## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
 
 必需 Linux release job 现把准确最终 DEB 交给 `linux_installed_smoke.py`。全新的官方 Ubuntu 24.04 容器先只安装 DEB 及其声明依赖，核 ELF 未解析依赖与运行工具并记录，再安装 X11 测试工具，避免构建 runner 的 SDK/依赖掩盖包依赖缺失。容器不用 privileged 模式、不挂载宿主桌面/用户数据；以既有非特权 `nobody` 用户和私有 XDG 目录运行已装 launcher，将安装文件字节/模式及 desktop/icon/launcher 与最终 DEB 对照，等待该 PID 的可见窗口和已装 Flutter/Tox mapped modules，发送正常 `WM_DELETE_WINDOW` 关闭请求，再卸包并拒绝包文件、注册态或进程残留。失败清场不能算优雅退出。
 
-共享 helper 的首次真实 CI 暴露并修复了加载器上下文与失败证据问题：入口 ELF 在清除 `LD_LIBRARY_PATH` 后先严格检查；单独检查 DSO 时只为该命令提供包内 `/opt/<app>/lib`，不向 GUI 导出环境、不放过系统依赖或 GLIBC 缺失，随后仍核实际 PID maps。证据逐文件复制，不更改宿主挂载目录的属主/权限，并预留宿主可写结果文件；记录失败不会遮蔽原始错误。14 个 helper 回归覆盖该边界、容器 stdin/超时清场及文件/架构负例，均不是实际安装证据。
+共享 helper 的首次真实 CI 暴露并修复了加载器上下文与失败证据问题：入口 ELF 在清除 `LD_LIBRARY_PATH` 后先严格检查；单独检查 DSO 时只为该命令提供包内 `/opt/<app>/lib`，不向 GUI 导出环境、不放过系统依赖或 GLIBC 缺失，随后仍核实际 PID maps。证据逐文件复制，不更改宿主挂载目录的属主/权限，并预留宿主可写结果文件；记录失败不会遮蔽原始错误。18 个 helper 回归覆盖 loader 存在/架构/闭包与该边界、容器 stdin/超时清场及文件/架构负例，均不是实际安装证据。
+
+运行时加载的 GL/EGL/GLES 调度库现为显式 DEB 依赖（`libegl1`、`libgl1`、`libgles2`），RPM 补对应 SONAME Requires。干净检查在安装测试工具前解析每个准确 loader SONAME，核原生 ELF 头，再清除 `LD_LIBRARY_PATH` 检查其完整 `ldd` 闭包；Mesa DRI 软件驱动仍只是测试设施。宿主偶有的 JDK 也不能改变桌面 bundle：仅 Android 使用的 `path_provider_android` 带来可选 `jni` desktop CMake，但 DitMesh 无桌面 Java 调用；Linux/Windows 在 generated plugins 前关闭该可选发现，不改 Android。回归真实执行锁定上游 JNI CMake，通过可发现的合成 JDK 复现旧的 `libdartjni` 捆绑，再证明新策略排除它且仍能构建/安装另一原生库；fixture 不替代最终包执行。
 
 `linux-installer-evidence` 保留 DEB 哈希、拉取镜像 digest、OS/架构/包/依赖清单、已装文件哈希、实际 PID/maps/窗口和卸载结果，失败也保留日志。范围仅为 **Ubuntu 24.04 x86_64 DEB／X11／1280×800／scale 1／软件渲染**；不证明 RPM/Fedora、Wayland、硬件/音频/摄像头、真实 peer 会话、上一版升级或商店批准。W4/X6 在这些更大边界仍为 **to do**，新子检查的真实执行证据须看最终 PR head 的 Linux job；其他目标保留自己的门禁。
+
+## 受控 iOS archive/export 增量 — 2026-10-23
+
+`bash tool/build_ios_store.sh --unsigned-archive` 现可在禁用签名、强制真实 Tox 后端且不访问账号的条件下生成 device archive。iOS job 保留既有 unsigned IPA，另建 archive，核唯一 App 及其可执行主程序、arm64 原生库存、版本/构建号、源码声明用途文案、App/SDK privacy manifests、嵌入 Tim2Tox framework 和无测试 hooks，并强制主程序/dSYM UUID 一致。独立 `ios-store-readiness-archive` tar artifact 保留符号、symlink 和 executable mode，不进入十二资产公开发行契约；其首次真实 CI 执行仍待完成。
+
+有既有负责人材料后，同一入口只接受 `--team-id`、`--certificate-sha1`、`--export-options` 和全新 `--output`。负责人本地 plist 必须明确 `method=app-store-connect`、`destination=export`、manual 签名、所选 team/证书 SHA-1，以及仅用于 `icu.agentx.ditmesh` 的既有 profile；构建前快照已验证政策。直接调用 `xcodebuild archive` 和本地 `-exportArchive`，不带自动 provisioning/设备注册参数，不上传，也不接受任意 Flutter/Xcode 参数。最终 IPA 必须通过递归签名完整性、distribution authority、实际 signer 指纹、离线证书链、profile 的 team/app/证书/到期和 release entitlements 对照，才写入 `distribution.json`。没有负责人既有 Keychain identity/profile，本轮**不执行**签名导出；不得把这些文件或私钥交到工单/artifact。通用 `package_artifacts.sh --mode distribution` 在 Android 外仍显式拒绝；这是独立的显式 iOS 入口。
+
+负责人受控 Mac 的本地导出命令：
+
+```sh
+bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
+  --certificate-sha1 "$DITMESH_IOS_CERT_SHA1" \
+  --export-options /owner-controlled/ExportOptions.plist
+```
+
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 111 项通过，shell 语法、ShellCheck、actionlint 通过。本地 JNI fixture 用测试专用 `DITMESH_TEST_PACKAGE_CONFIG` 仅读原 clean checkout 的同 lock package 配置，CI 使用当前 checkout 自己 resolve 的配置；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
 ## 剩余工程与决定
 
@@ -104,7 +122,7 @@ macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置�
 | X9 release 应用/原生 crash 捕获、逐构建符号归档及符号化、脱敏/轮转/留存 | 先选本地或远端收集、允许的数据/留存/支持流程及隐私披露，再集成 reporter；本任务不虚构遥测服务或账号。 |
 | P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
 | B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
-| 正式 iOS/Mac App Store archive、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | 选择真实渠道/身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
+| 最终签名 iOS export/真机资格；可选 Mac App Store、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | iOS 已有受控 archive/export 入口，仍需既有负责人签名材料与真实签名设备证据；其他渠道先选择真实身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
 | F1/F2 帧时序/启动/体积预算，以及完整 X1/X4/X6 设备/升级矩阵 | 先定支持硬件和预算，再测已安装 release 与旧版升级路径；容器/窗口检查不能替代测量。 |
 
 ## 负责人材料交接表
@@ -114,7 +132,7 @@ macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置�
 | 平台／渠道 | 材料与用途 | 获取或核实位置 | 当前阻塞 |
 |---|---|---|---|
 | 所选渠道通用 | 明确渠道/地区、发行主体、应用归属、公开应用/包 ID、上一版版本/构建号与签名指纹，建立不可随意改变的升级身份。 | 所选商店应用记录及上一版已签名发布档案；与 `icu.agentx.ditmesh`、`apps/ditmesh/pubspec.yaml` 对照。 | 未确定渠道或核实归属/上一版记录；不得编造 ID，也不能假设首次发布。 |
-| iOS／iPadOS App Store | Apple team ID、bundle/app 记录、签名/provisioning 负责人、设备可用范围、当前 SDK 接受证据、archive/TestFlight 记录，用于正式签名审核构建。 | [Apple Developer 账号](https://developer.apple.com/account/) → Certificates, Identifiers & Profiles；[App Store Connect](https://appstoreconnect.apple.com/) → My Apps → 应用记录 / TestFlight / Pricing and Availability。私有签名材料由持有人保存在 Keychain 或批准的 CI 秘密存储。 | 缺已确认的 app/team、distribution 签名或可接受的正式 archive；unsigned IPA 和 macOS ad-hoc 签名不能替代。 |
+| iOS／iPadOS App Store | Apple team ID、bundle/app 记录、既有 Distribution 证书公开 SHA-1/到期及绑定此 app/证书的 App Store profile 名称/UUID、签名负责人、设备范围、archive/TestFlight 记录，用于受控签名导出与审核构建。 | [Apple Developer 账号](https://developer.apple.com/account/) → Membership / Certificates, Identifiers & Profiles → Profiles；负责人 Mac Keychain Access → My Certificates；[App Store Connect](https://appstoreconnect.apple.com/) → My Apps → 应用记录 / TestFlight / Pricing and Availability。私有签名材料由持有人保存在 Keychain 或批准的 CI 秘密存储。 | 缺已确认的 app/team、distribution 签名或可接受的正式 archive；unsigned IPA 和 macOS ad-hoc 签名不能替代。 |
 | Mac App Store（若选） | 独立 macOS 平台/app 身份、distribution provisioning、沙盒能力评估和签名 archive，验证 Store 路径。 | Apple Developer → Identifiers / Profiles；App Store Connect → 应用 → macOS 平台和构建。 | 现有 PKG/ZIP 只验证站外包路径；Store 签名及沙盒网络/文件/设备测试未完成。 |
 | macOS 站外 Developer ID | Developer ID Application/Installer 的公开证书主体、到期/指纹，以及安全签名/公证配置负责人，用于最终 bundle/PKG 签名与公证证据。 | Apple Developer → Certificates；macOS Keychain Access → My Certificates；持有人的 `notarytool` 配置。只交接公证 submission ID/状态及 stapling/Gatekeeper 报告，不交接私钥、密码或 profile 内容。 | 当前 ad-hoc 只证明完整性；正式签名、公证/stapling 和隔离下载后的干净 Mac 安装待做。 |
 | Google Play／Android | Play 开发者/app 记录、上传证书 SHA-256、独立 Play app-signing 交付证书/lineage、递增 versionCode、适用测试及 production-access 证据，确保上传和安装升级身份。 | [Play Console](https://play.google.com/console/) → 应用 → Setup / App integrity 核证书/签名；Test and release 核轨道/资格。持有人直接在仓库 Settings → Secrets and variables → Actions 配置四个 `ANDROID_KEYSTORE_*` / `ANDROID_KEY_*` secret，以及公开变量 `DITMESH_ANDROID_CERT_SHA256`。 | 缺已核上传 key/指纹或归属；交付身份、账号特定发布资格、生成 APK/16 KB 运行及升级证据仍需补齐。 |
