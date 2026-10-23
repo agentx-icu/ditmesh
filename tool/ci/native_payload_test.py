@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import zipfile
 
-from native_payload import check_android, check_tree
+from native_payload import check_android, check_tree, check_installed_payload
 
 
 def elf(machine=183, align=0x4000, loads=1):
@@ -28,6 +28,57 @@ def pe(machine=0x8664):
 
 def macho(cpu=0x100000c):
     return struct.pack('<IIIIIIII', 0xfeedfacf, cpu, 0, 2, 0, 0, 0, 0)
+
+
+class InstalledPayloadTests(unittest.TestCase):
+    def fixture(self, directory, extra=None):
+        root = Path(directory) / 'installed'
+        root.mkdir(exist_ok=True)
+        (root / 'data').mkdir(exist_ok=True)
+        (root / 'ditmesh.exe').write_bytes(pe())
+        (root / 'data/app.so').write_bytes(elf(62))
+        (root / 'data/asset.txt').write_text('release asset')
+        archive = Path(directory) / 'release.zip'
+        with zipfile.ZipFile(archive, 'w') as stream:
+            for path in root.rglob('*'):
+                if path.is_file():
+                    stream.write(path, 'ditmesh/' + path.relative_to(root).as_posix())
+            if extra:
+                stream.writestr(extra, b'extra')
+        return root, archive
+
+    def test_installed_assets_and_binaries_match_final_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, archive = self.fixture(tmp)
+            self.assertEqual(len(check_installed_payload(root, archive)), 3)
+            (root / 'data/asset.txt').write_text('changed asset')
+            with self.assertRaisesRegex(ValueError, 'differs.*asset'):
+                check_installed_payload(root, archive)
+
+    def test_missing_installed_file_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, archive = self.fixture(tmp)
+            (root / 'data/app.so').unlink()
+            with self.assertRaisesRegex(ValueError, 'Missing.*app.so'):
+                check_installed_payload(root, archive)
+
+    def test_zip_paths_and_case_collisions_fail_closed(self):
+        for entry in ('other/ditmesh.exe', 'ditmesh/../escape', 'ditmesh//empty',
+                      'ditmesh/C:/drive', 'ditmesh\\bad', 'ditmesh/DITMESH.EXE'):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as tmp:
+                root, archive = self.fixture(tmp, entry)
+                with self.assertRaisesRegex(ValueError, 'Unsafe or duplicate'):
+                    check_installed_payload(root, archive)
+
+    def test_installed_symlink_cannot_escape_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, archive = self.fixture(tmp)
+            (root / 'data/asset.txt').unlink()
+            outside = Path(tmp) / 'outside.txt'
+            outside.write_text('release asset')
+            (root / 'data/asset.txt').symlink_to(outside)
+            with self.assertRaisesRegex(ValueError, 'Missing installed'):
+                check_installed_payload(root, archive)
 
 
 class NativePayloadTests(unittest.TestCase):

@@ -430,6 +430,22 @@ jobs:
           $wix | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Package (.msi, .zip)
         run: bash tool/ci/package_artifacts.sh --target windows
+      - name: Smoke installed Windows release
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $msi = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.msi' -File)
+          $zip = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.zip' -File)
+          if ($msi.Count -ne 1 -or $zip.Count -ne 1) { throw 'Expected exactly one final MSI and ZIP' }
+          ./tool/ci/test_windows_installer.ps1 -MsiPath $msi[0].FullName -PayloadZipPath $zip[0].FullName -EvidenceDirectory "$env:RUNNER_TEMP/ditmesh-msi-evidence"
+      - name: Upload Windows installer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-evidence
+          path: ${{ runner.temp }}/ditmesh-msi-evidence
+          if-no-files-found: warn
+          retention-days: 14
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:

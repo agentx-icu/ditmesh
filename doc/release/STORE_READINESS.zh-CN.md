@@ -69,6 +69,38 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 4. **发布/审核负责人：**提供真实审核说明和可达测试 peer/QR 联系人，说明离线/屏蔽与 bootstrap 依赖，不把 fake-backend 截图当成真实聊天证据。完成截图/图标/年龄/内容/本地化/无障碍材料并从审核网络核公开 URL，分开核 iPhone/iPad/Mac 素材。
 5. **QA/发布负责人：**关联确切构建 SHA/工具链/header/安装器/签名报告和测试轨道或签名后干净主机安装/升级/卸载证据。覆盖旧数据、沙盒权限、拒绝/恢复、重启/离线/握手、备份恢复和 16 KB 运行。灰度发布指定停止负责人；通常通过更高版本修复，不能假定商店版本可降级或数据 schema 向下兼容。保留先前签名制品与迁移兼容恢复方案。
 
+## Windows 已安装包增量验证 — 2026-10-23
+
+本次增量从已合并 PR #34（`909ad76a4bc67d01aed8a10029a6b290ba36d885`）开始。Windows job 现在把最终 MSI 安装到含空格路径，将全部已装文件与配对最终 ZIP 逐个核 SHA-256（包括 Flutter 资源和 ELF AOT snapshot），并对安装后的 payload 运行原生头校验。它等待所启动 PID 的真实主窗口，发送正常关闭请求并要求零退出；随后删除已装 Flutter engine、执行 MSI repair、重复 payload/窗口校验、卸载并拒绝残留安装文件或进程。即使失败，也上传 MSI 日志、准确 MSI/ZIP SHA-256、payload 报告、数据路径与各阶段结果。失败清场不能把测试改成通过。
+
+`test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，也不改 registry 或已有用户数据。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
+
+| ID | 状态 | 证据／仍存边界 |
+|---|---|---|
+| W4、X6 | to do | 必需 Windows release-build CI 现执行最终 MSI 安装、payload、启动/关闭、删除文件后 repair、卸载；具体执行证据看最终 PR head 的 Windows job。本地 macOS 测试不执行 MSI、不证明 Windows 运行行为。签名、上一版本升级、Store 交付和普通用户资格仍由负责人完成。 |
+| X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
+| P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
+
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **53** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增四个 payload 测试覆盖资源变化、文件丢失、不安全/冲突 ZIP 路径和已装 symlink 越界；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+
+## 负责人材料交接表
+
+这是待提供材料的请求清单，不代表账号或应用记录已经存在。公开 ID、证书指纹和脱敏证据可记录到发布工单；秘密值由账号持有人直接配置进已批准的秘密存储。不要在聊天、PR 或仓库发送密码、私钥、keystore、provisioning profile 或 API token。本任务不创建账号/凭据、不改角色、不接受协议，也不发布。
+
+| 平台／渠道 | 材料与用途 | 获取或核实位置 | 当前阻塞 |
+|---|---|---|---|
+| 所选渠道通用 | 明确渠道/地区、发行主体、应用归属、公开应用/包 ID、上一版版本/构建号与签名指纹，建立不可随意改变的升级身份。 | 所选商店应用记录及上一版已签名发布档案；与 `icu.agentx.ditmesh`、`apps/ditmesh/pubspec.yaml` 对照。 | 未确定渠道或核实归属/上一版记录；不得编造 ID，也不能假设首次发布。 |
+| iOS／iPadOS App Store | Apple team ID、bundle/app 记录、签名/provisioning 负责人、设备可用范围、当前 SDK 接受证据、archive/TestFlight 记录，用于正式签名审核构建。 | [Apple Developer 账号](https://developer.apple.com/account/) → Certificates, Identifiers & Profiles；[App Store Connect](https://appstoreconnect.apple.com/) → My Apps → 应用记录 / TestFlight / Pricing and Availability。私有签名材料由持有人保存在 Keychain 或批准的 CI 秘密存储。 | 缺已确认的 app/team、distribution 签名或可接受的正式 archive；unsigned IPA 和 macOS ad-hoc 签名不能替代。 |
+| Mac App Store（若选） | 独立 macOS 平台/app 身份、distribution provisioning、沙盒能力评估和签名 archive，验证 Store 路径。 | Apple Developer → Identifiers / Profiles；App Store Connect → 应用 → macOS 平台和构建。 | 现有 PKG/ZIP 只验证站外包路径；Store 签名及沙盒网络/文件/设备测试未完成。 |
+| macOS 站外 Developer ID | Developer ID Application/Installer 的公开证书主体、到期/指纹，以及安全签名/公证配置负责人，用于最终 bundle/PKG 签名与公证证据。 | Apple Developer → Certificates；macOS Keychain Access → My Certificates；持有人的 `notarytool` 配置。只交接公证 submission ID/状态及 stapling/Gatekeeper 报告，不交接私钥、密码或 profile 内容。 | 当前 ad-hoc 只证明完整性；正式签名、公证/stapling 和隔离下载后的干净 Mac 安装待做。 |
+| Google Play／Android | Play 开发者/app 记录、上传证书 SHA-256、独立 Play app-signing 交付证书/lineage、递增 versionCode、适用测试及 production-access 证据，确保上传和安装升级身份。 | [Play Console](https://play.google.com/console/) → 应用 → Setup / App integrity 核证书/签名；Test and release 核轨道/资格。持有人直接在仓库 Settings → Secrets and variables → Actions 配置四个 `ANDROID_KEYSTORE_*` / `ANDROID_KEY_*` secret，以及公开变量 `DITMESH_ANDROID_CERT_SHA256`。 | 缺已核上传 key/指纹或归属；交付身份、账号特定发布资格、生成 APK/16 KB 运行及升级证据仍需补齐。 |
+| Microsoft Store 托管 MSI/EXE（若选） | Partner Center 产品身份、可信代码签名证书的公开身份、固定版本 HTTPS 安装器 URL/哈希、静默参数与认证说明，建立发行者和托管包信任。 | [Partner Center](https://partner.microsoft.com/dashboard/) → Apps and games → 产品 / submission；现有证书提供方后台；发行者所选的内容不可变下载托管。私有签名访问仅配置到批准的安全环境。 | 安装器及全部内嵌 PE 仍需可信签名、固定 HTTPS 托管及上一版本升级证据。本任务不购买证书、不部署托管、不提审。 |
+| Microsoft Store MSIX（若选） | 预留包 identity/publisher、能力清单、WACK/升级证据及签名包记录。 | Partner Center → 产品 → Product identity / packages。 | 尚未实现 MSIX 打包路径；Store 重签是不同路径，不能为满足托管 MSI 行而要求购买证书。 |
+| Linux 站外／可选商店 | 支持的发行版/架构矩阵、上一版包及维护者归属；若选择，补 Flathub app-ID 权利或 Snap publisher/name/confinement 批准。 | 旧版已签名发布档案；[Flathub 文档](https://docs.flathub.org/docs/for-app-authors/submission)及 [Snapcraft dashboard](https://dashboard.snapcraft.io/)。 | 干净安装/升级/桌面集成/portal 尚无证据。实际 Flathub manifest/提交按现行 AI 政策交由人处理；不假设已选择任何可选商店。 |
+| 中国大陆 Android（若选） | 明确具体商店、地区/包类型、已验证主体/app 身份，以及该渠道实际要求的资质/备案、隐私/SDK 审核证据。 | 发行者的 Huawei AppGallery Connect、小米或其他所选官方开发者后台，按当前渠道细则核实。 | 尚未选渠道/地区；后台专属规则及适用性仍由负责人确认，不从中文界面推导统一备案义务。 |
+| 所选渠道的隐私／安全／审核资料 | 准确的隐私/SDK 清单，privacy/terms/support URL，加密出口分类，年龄/受众/内容回答，分语言/设备截图图标，真实 peer 审核指引，以及适用的删除/举报/响应流程。 | App Store Connect → App Information / App Privacy / App Review / 加密问题；Play Console → App content / Store listing；Partner Center → submission properties / age ratings / certification notes；公共 `site/` 源码与实际产品/运营负责人。审核专用访问只填各后台受保护审核字段。 | 产品负责人尚未建立 UGC 响应与删除请求流程，亦未签核披露/出口问卷；有源码链接不能替代。 |
+| QA／发布证据 | 准确产物哈希、CI head/run/job 链接、签名安装/旧版升级/卸载结果及设备矩阵，区分仓库验证和渠道可发布性。 | GitHub Actions artifacts 和负责人真机/干净机器报告，绑定同一最终字节及签名身份。 | 硬件、商店交付版本、上一版升级及审核网络可达性仍须执行；同版本 MSI repair 不是升级资格验证。 |
+
 ## 已执行的本地验证
 
 2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **49** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
