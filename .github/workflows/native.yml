@@ -396,6 +396,10 @@ jobs:
           done
           [[ -f "$dir/pthreadVC3.dll" ]] && echo "bundled: $dir/pthreadVC3.dll" || echo "note: pthreadVC3.dll not bundled (only needed if tim2tox_ffi.dll imports it)"
           bash tool/ci/assert_no_test_hooks.sh "$dir/tim2tox_ffi.dll"
+          python3 tool/ci/native_payload.py "$dir" --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --require-windows-manifest > build/evidence-windows-runner.json
+      - name: Native Unicode and long-path regression with final EXE manifest
+        run: |
+          python3 tool/ci/windows_path_probe.py --exe apps/ditmesh/build/windows/x64/runner/Release/ditmesh.exe --evidence-dir build/evidence/windows-path
       - name: Upload Windows runner
         uses: actions/upload-artifact@v4
         with:
@@ -459,6 +463,16 @@ jobs:
           name: windows-installer-evidence
           path: ${{ runner.temp }}/ditmesh-msi-evidence
           if-no-files-found: warn
+          retention-days: 14
+      - name: Upload Windows path and manifest evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-path-evidence
+          path: |
+            build/evidence/windows-path
+            build/evidence-windows-runner.json
+          if-no-files-found: error
           retention-days: 14
       - name: Upload packages
         uses: actions/upload-artifact@v4

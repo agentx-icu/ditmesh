@@ -89,6 +89,14 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 
 macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **111** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
 
+## Windows 长路径前提增量 — 2026-10-23
+
+W3 复核发现应用未声明 `longPathAware`，而原生文件传输将未加扩展前缀的 Unicode 路径交给 Tim2Tox 的 `_wfopen`、`_wstat64`、`_wunlink` wrapper。runner 现补 opt-in，保留 PerMonitorV2 和 Windows 10/11 兼容声明。[Microsoft 长路径规则](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation)还要求宿主已有 `LongPathsEnabled=1`；本任务不更改 registry 或机器策略。
+
+必需 Windows CI 将**实际 EXE 的 RT_MANIFEST #1**作为 resource/data image 读取，不执行其代码或加载依赖。检查全部嵌入语言、准确命名空间和唯一设置，拒绝缺失、false、重复或伪命名空间的长路径/DPI 声明。最终 runner、直接从最终 ZIP 读取的 EXE，以及 MSI 安装后和 repair 后的 EXE 均执行；源码 XML 不充当产物证据。
+
+独立的一次性 hosted-runner probe 嵌入最终 EXE 提取的 manifest，以 MSVC release CRT 编译锁定的 `file_io_compat.cpp`。在不加扩展前缀、含 Unicode/空格且长于 260 个 UTF-16 单元的路径上建目录，调用真实 FFI wrapper 写入/读取/核对字节、查大小，再改名、删除文件和目录。第二个 EXE 使用同一代码、只把 `longPathAware` 改为 false；必须被嵌入 manifest 门禁拒绝，并在 Win32 长路径边界失败。`windows-path-evidence` 保留最终 EXE/ZIP 哈希、资源策略、原生源码哈希、只读宿主策略和正反例日志。probe 不等于已安装 App 的文件传输端到端验证；普通用户的重定向/网络 home、shell/plugins、旧版数据、可移动卷及真实已安装 FFI 流程仍为 **needs device**。W3/X6 只对最终 PR head Windows job 实际执行的案例成立。
+
 ## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
 
 必需 Linux release job 现把准确最终 DEB 交给 `linux_installed_smoke.py`。全新的官方 Ubuntu 24.04 容器先只安装 DEB 及其声明依赖，核 ELF 未解析依赖与运行工具并记录，再安装 X11 测试工具，避免构建 runner 的 SDK/依赖掩盖包依赖缺失。容器不用 privileged 模式、不挂载宿主桌面/用户数据；以既有非特权 `nobody` 用户和私有 XDG 目录运行已装 launcher，将安装文件字节/模式及 desktop/icon/launcher 与最终 DEB 对照，等待该 PID 的可见窗口和已装 Flutter/Tox mapped modules，发送正常 `WM_DELETE_WINDOW` 关闭请求，再卸包并拒绝包文件、注册态或进程残留。失败清场不能算优雅退出。
@@ -125,7 +133,10 @@ W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍�
 
 | 剩余工程 | 前提／阻塞 |
 |---|---|
-| X9 release 应用/原生 crash 捕获、逐构建符号归档及符号化、脱敏/轮转/留存 | 先选本地或远端收集、允许的数据/留存/支持流程及隐私披露，再集成 reporter；本任务不虚构遥测服务或账号。 |
+| X9 既有 release 日志、通知 payload/error 元数据和未知启动错误显示 | **可立即代码修复**：固定安全事件/类型、release 安全 sink、泛化 UI 及 marker 回归不需要账号或远端服务。独立诊断增量处理这些现存路径，不把 raw debug 输出直接持久化。 |
+| X9 逐构建源码自建符号及二进制准确配对 | **可立即代码补齐**：保留 Windows PDB/CodeView GUID+age、Android strip 前 ELF/build ID、Linux 独立 debug/build ID，以及 Apple archive dSYM UUID 清单。现有 iOS 主程序符号匹配只覆盖其中一部分；vendor engine 符号需准确上游构建/来源，缺失必须逐项说明。 |
+| X9 原生 crash reporter、上传、持久诊断内容/留存和支持流程 | 仍有产品/隐私决定及后续平台实现、设备符号化验证；这些选择不阻塞上面两个 code-only 子项。本任务不虚构遥测服务或账号。 |
+| I2 现有 Search/Contacts 键盘命令 | **可立即代码补齐**：既有 shortcut map 未安装到 App，modifier/label 纯测试不证明实际路由。独立增量接入已有动作；全局侧音命令目前没有声音 owner，应明确不可用而非创造新功能。 |
 | P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
 | B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
 | 最终签名 iOS export/真机资格；可选 Mac App Store、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | iOS 已有受控 archive/export 入口，仍需既有负责人签名材料与真实签名设备证据；其他渠道先选择真实身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
