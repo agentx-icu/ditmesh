@@ -4,3 +4,5 @@
 // Release packages carry the backend for the build host's architecture.
 // Debug keeps standard architectures so Flutter can select arm64 destinations.
 ARCHS = $(NATIVE_ARCH_ACTUAL)
+// Xcode otherwise injects get-task-allow into ad-hoc Release signatures.
+CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO

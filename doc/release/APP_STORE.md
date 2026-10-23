@@ -11,14 +11,7 @@
 
 ## Distribution configuration
 
-| Platform | Configuration |
-|---|---|
-| iOS | App Store Connect record, Apple team, distribution certificate, provisioning profile and archive upload |
-| macOS | Developer ID signing and notarization |
-| Android | Release/upload keystore, store account and APK/AAB signing |
-| Windows / Linux | Installer runtime checks and publisher signing where applicable |
-
-Store signing credentials in CI secrets or local signing configuration.
+The [dated store audit and owner-action matrix](STORE_READINESS.md) distinguishes current GitHub validation packages from future store channels, including iOS/iPadOS/Mac App Store, Developer ID, Play, Microsoft MSI versus MSIX, and selected Linux/domestic Android candidates. No store is currently certified ready. `package_artifacts.sh --mode distribution` only supports Android signing preflight; other formal distribution paths fail explicitly until implemented and verified. Formal credentials belong in secret storage, never in Git.
 
 ## Product and privacy metadata
 
@@ -29,6 +22,8 @@ Camera access serves QR contacts; microphone access serves local Morse decoding;
 Explain contact blocking and peer-to-peer content handling in moderation metadata.
 
 ## Android: SDK levels and 16 KB pages
+
+Policy/SDK observations below were checked on **2026-10-23**; reopen the [official dynamic sources](STORE_READINESS.md#official-policysource-index) before each release.
 
 | Setting | Value | Where |
 |---|---|---|
@@ -54,15 +49,9 @@ Predictive back is enabled (`android:enableOnBackInvokedCallback="true"`); Andro
 
 ## iOS: export compliance (`ITSAppUsesNonExemptEncryption`)
 
-`Info.plist` declares `ITSAppUsesNonExemptEncryption = true`: every build contains libsodium (Tox). This repository does not classify that use; the owner decides the classification in App Store Connect, and the result is recorded here.
+`Info.plist` retains `ITSAppUsesNonExemptEncryption = true` pending the release owner's documented classification of the actual Tox/libsodium use. Encryption's presence alone does not decide whether an exemption applies. Follow [Apple's current export questionnaire](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance/) and obtain any applicable documents; record the decision, scope, date and responsible owner before submission. Add a compliance code only if Apple supplies one for that classification. Change the flag only when supported by the recorded classification; do not copy another app's answer or bypass the questions.
 
-1. On the first upload, answer the export-compliance questions in App Store Connect (App Information › App Encryption Documentation, or per build under TestFlight › Manage Compliance). If the use qualifies for an exemption (e.g. encryption limited to authentication or to published standards used for data transport), record which; otherwise obtain the ERN / CCATS or self-classification report and file the annual self-classification where required.
-2. When App Store Connect issues an export compliance code for the approved classification, add it to `apps/ditmesh/ios/Runner/Info.plist` as `ITSEncryptionExportComplianceCode` (a non-empty string). From then on every uploaded build answers the questions automatically and TestFlight builds are no longer held as "Missing Compliance".
-3. Record the decision below (category or document ids, date, who decided).
-
-Do not set `ITSAppUsesNonExemptEncryption` to `false` to skip the questions: that is a false declaration for this app. MorseCQ (no networking, no libsodium) declares `false`; do not copy its plist value here. `test/platform/mobile_platform_config_test.dart` checks the flag and refuses an empty compliance code.
-
-Decision log: none yet (owner action).
+Decision log: none yet (owner action). The existing platform test conservatively pins the pending flag and rejects an empty compliance code; it does not classify export law.
 
 ## Data at rest on the device
 

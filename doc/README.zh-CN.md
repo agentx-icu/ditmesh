@@ -12,6 +12,7 @@
 
 - [构建、CI 与打包](operations/BUILD_AND_DEPLOY.zh-CN.md)
 - [发布与商店要求](release/APP_STORE.zh-CN.md)
+- [商店准备、证据与负责人阻塞](release/STORE_READINESS.zh-CN.md)
 - [测试金字塔](testing/TEST_PYRAMID.zh-CN.md)
 - [当前持久化清单](testing/PERSISTENCE_AUDIT.zh-CN.md)
 - [跨平台检查与修复](testing/CROSS_PLATFORM_AUDIT.zh-CN.md)

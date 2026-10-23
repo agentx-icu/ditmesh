@@ -63,6 +63,8 @@ flutter run -d macos
 
 参见[构建与打包](doc/operations/BUILD_AND_DEPLOY.zh-CN.md)、[发布要求](doc/release/APP_STORE.zh-CN.md)、[应用职责](doc/APP_SPLIT.zh-CN.md)、[测试金字塔](doc/testing/TEST_PYRAMID.zh-CN.md)。全部文档见[文档索引](doc/README.zh-CN.md)。
 
+[商店准备矩阵](doc/release/STORE_READINESS.zh-CN.md)记录实际发行路径、签名预检和负责人阻塞。CI/构建通过不代表商店审核通过。
+
 ## 开发检查
 
 在工作区根目录解析依赖，不在子包单独运行：

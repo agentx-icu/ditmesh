@@ -13,7 +13,7 @@
 # tagged builds require an exactly matching vX.Y.Z tag. Every package must
 # carry the Tox backend (libtim2tox_ffi); a build without it is refused.
 #
-#   tool/ci/package_artifacts.sh --target <linux|windows|macos|android|ios> [--arch <arm64|x86_64>]
+#   tool/ci/package_artifacts.sh --target <linux|windows|macos|android|ios> [--arch <arm64|x86_64>] [--mode validation|distribution]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,15 +22,27 @@ source "$SCRIPT_DIR/common.sh"
 
 TARGET=""
 ARCH=""
+MODE="validation"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --target) TARGET="${2:-}"; shift 2 ;;
+    --mode) MODE="${2:-}"; shift 2 ;;
     --arch) ARCH="${2:-}"; shift 2 ;;
     --help|-h) sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) ci_die "Unknown option: $1" ;;
   esac
 done
 [[ -n "$TARGET" ]] || ci_die "--target is required"
+case "$MODE" in validation|distribution) ;; *) ci_die "Unknown mode: $MODE" ;; esac
+# These draft artifacts have no configured Developer ID/notarization, App Store,
+# Authenticode/Store, or Linux store publishing chain. Never imply otherwise.
+if [[ "$MODE" == distribution && "$TARGET" != android ]]; then
+  ci_die "$TARGET distribution is not configured; see doc/release/STORE_READINESS.md (owner signing/store evidence required)"
+fi
+if [[ "$TARGET" == android && ( "$MODE" == distribution || "${GITHUB_REF_TYPE:-}" == tag ) ]]; then
+  MODE=distribution
+  DITMESH_DISTRIBUTION=1 bash "$SCRIPT_DIR/require_android_signing.sh"
+fi
 
 REPO_ROOT="$(ci_repo_root)"
 APP_DIR="$REPO_ROOT/apps/ditmesh"
@@ -77,6 +89,7 @@ package_linux() {
   stage="$DIST_DIR/.stage/ditmesh"
   mkdir -p "$stage"
   cp -a "$bundle/." "$stage/"
+  python3 "$SCRIPT_DIR/native_payload.py" "$stage" --format elf --arch x86_64 --entry ditmesh
   tar -C "$DIST_DIR/.stage" -czf "$DIST_DIR/$BASE-linux-x86_64.tar.gz" ditmesh
 
   ci_require_cmd cpack
@@ -102,6 +115,7 @@ package_windows() {
   stage="$DIST_DIR/.stage/ditmesh"
   mkdir -p "$stage"
   cp -R "$runner/." "$stage/"
+  python3 "$SCRIPT_DIR/native_payload.py" "$stage" --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot
   (cd "$DIST_DIR/.stage" && 7z a -tzip -bd -bso0 "$(ci_windows_path "$DIST_DIR")/$BASE-windows-x64.zip" ditmesh)
 
   ci_require_cmd cpack
@@ -113,6 +127,8 @@ package_windows() {
     -DDITMESH_PACKAGE_ARCH=x64 >/dev/null
   (cd "$installer" && cpack -C Release -G WIX)
   copy_one "$installer" '*.msi' "$DIST_DIR/$BASE-windows-x64.msi"
+  powershell.exe -NoProfile -File "$(ci_windows_path "$SCRIPT_DIR/windows_installer_metadata.ps1")" \
+    -Path "$(ci_windows_path "$DIST_DIR/$BASE-windows-x64.msi")"
   rm -rf "$DIST_DIR/.stage"
 }
 
@@ -126,7 +142,12 @@ package_macos() {
   lipo "$app/Contents/Frameworks/libtim2tox_ffi.dylib" -verify_arch "$ARCH"
   check_apple_metadata "$app/Contents/Info.plist"
 
+  python3 "$SCRIPT_DIR/native_payload.py" "$app" --format macho --arch "$ARCH" --entry Contents/MacOS/DitMesh
   python3 "$SCRIPT_DIR/macos_runtime.py" "$app"
+  [[ -f "$app/Contents/Resources/PrivacyInfo.xcprivacy" ]] || ci_die "macOS app privacy manifest missing"
+  # Last bundle mutation: seal nested code before the containing bundle.
+  python3 "$SCRIPT_DIR/macos_signing.py" "$app" \
+    --seal-with-entitlements "$APP_DIR/macos/Runner/Release.entitlements"
 
   # ditto keeps the bundle's symlinks, modes and signature intact.
   ditto -c -k --sequesterRsrc --keepParent "$app" "$DIST_DIR/$BASE-macos-$ARCH.zip"
@@ -170,6 +191,15 @@ package_android() {
       done
     done
   done
+  python3 "$SCRIPT_DIR/native_payload.py" "$apk" --format android
+  python3 "$SCRIPT_DIR/native_payload.py" "$aab" --format android
+  if [[ "$MODE" == distribution ]]; then
+    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab" --distribution \
+      --version "$VERSION" --build-number "$BUILD_NUMBER"
+  else
+    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab" \
+      --version "$VERSION" --build-number "$BUILD_NUMBER"
+  fi
   cp "$apk" "$DIST_DIR/$BASE-android.apk"
   cp "$aab" "$DIST_DIR/$BASE-android.aab"
 }
@@ -179,6 +209,7 @@ package_ios() {
   [[ -d "$app" ]] || ci_die "iOS app not found: $app"
   require_ffi "$app/Frameworks/tim2tox_ffi.framework/tim2tox_ffi" ios
   check_apple_metadata "$app/Info.plist"
+  python3 "$SCRIPT_DIR/native_payload.py" "$app" --format macho --arch arm64 --entry Runner
   # Unsigned: sideload tools (AltStore, Sideloadly) or a re-sign step sign it.
   payload="$DIST_DIR/.ipa/Payload"
   mkdir -p "$payload"

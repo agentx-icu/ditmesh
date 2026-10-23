@@ -12,6 +12,7 @@
 
 - [Build, CI and packaging](operations/BUILD_AND_DEPLOY.md)
 - [Release and store requirements](release/APP_STORE.md)
+- [Store readiness, evidence and owner blockers](release/STORE_READINESS.md)
 - [Test pyramid](testing/TEST_PYRAMID.md)
 - [Current persistence inventory](testing/PERSISTENCE_AUDIT.md)
 - [Cross-platform audit and fixes](testing/CROSS_PLATFORM_AUDIT.md)

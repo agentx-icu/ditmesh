@@ -511,6 +511,10 @@ jobs:
           otool -L "$dylib" | head -20
           codesign --verify --strict "$dylib"
           bash tool/ci/assert_no_test_hooks.sh "$dylib"
+      - name: Verify macOS release signature and entitlements
+        run: |
+          python3 tool/ci/macos_signing.py apps/ditmesh/build/macos/Build/Products/Release/DitMesh.app
+          python3 tool/ci/macos_signing_test.py
       - name: Upload macOS app
         uses: actions/upload-artifact@v4
         with:
@@ -588,6 +592,7 @@ jobs:
           DITMESH_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           DITMESH_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           DITMESH_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          DITMESH_ANDROID_CERT_SHA256: ${{ vars.DITMESH_ANDROID_CERT_SHA256 }}
         run: |
           bash tool/ci/require_android_signing.sh
           cd apps/ditmesh
@@ -624,6 +629,11 @@ jobs:
           [[ $bad -eq 0 ]] || exit 1
           echo "every 64-bit library is 16 KB aligned and the APK is zip-aligned for 16 KB"
       - name: Package (.apk, .aab)
+        env:
+          DITMESH_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          DITMESH_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          DITMESH_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          DITMESH_ANDROID_CERT_SHA256: ${{ vars.DITMESH_ANDROID_CERT_SHA256 }}
         run: bash tool/ci/package_artifacts.sh --target android
       - name: Upload packages
         uses: actions/upload-artifact@v4

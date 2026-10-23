@@ -6,6 +6,8 @@ Continuation of session `2040fe6b-e1a5-4700-b27d-83749f68844b`, starting from Di
 
 This is a source audit plus explicitly named local tests. A **verified** row states the bounded scope actually exercised; it never certifies every OS/device combination. Earlier runs remain in [VALIDATION.md](../VALIDATION.md), with their original revision and limitations.
 
+Store follow-up (2026-10-23): [current channels, P4/P8/P9/W4/X6 evidence and owner blockers](../release/STORE_READINESS.md). This dated record does not overwrite the historical validation below.
+
 ## Confirmed changes
 
 - Acquire a process lock for the entire desktop application-support root before preferences/backend startup; secondary processes request owner activation. Keep the lock inode and let OS process termination release it. Independently spawned processes verify contention, activation and crash release.

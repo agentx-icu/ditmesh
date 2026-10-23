@@ -102,6 +102,10 @@ jobs:
           python3 tool/ci/macos_runtime_test.py
           python3 tool/ci/android_ndk_test.py
           python3 tool/ci/android_release_signing_test.py
+          python3 tool/ci/android_artifact_signing_test.py
+          python3 tool/ci/native_payload_test.py
+          python3 tool/ci/macos_signing_test.py
+          python3 tool/ci/store_preflight_test.py
 
       - name: Screenshot import regression tests
         run: python3 tool/screenshots/capture_import_test.py

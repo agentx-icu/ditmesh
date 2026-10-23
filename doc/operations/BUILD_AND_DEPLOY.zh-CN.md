@@ -58,6 +58,8 @@ tag 发布等待验证和必要应用构建；`vX.Y.Z` tag 必须与 `apps/ditme
 
 工作流语义见 [GitHub 官方文档](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)；实际执行证据见[验证记录](../VALIDATION.zh-CN.md)。
 
+打包现逐 app/engine/plugin 核真实 PE/ELF/Mach-O 架构，并检查实际 Windows MSI 目标元数据。Android 核 APK/AAB 全部原生库和最终签名；tag/distribution 需要负责人在 `DITMESH_ANDROID_CERT_SHA256` 提供预期证书 SHA-256。APK ZIP 16 KB 放置适用于未压缩 `.so`，AAB 生成 APK/设备证据仍须补齐。macOS 在 staging 后由内到外签验证包，逐最终代码签名/权限核验并禁止 `get-task-allow`。默认 `--mode validation`；未实现的正式 `--mode distribution` 直接失败，不回退未签/ad-hoc 替代包。参见[渠道矩阵与命令](../release/STORE_READINESS.zh-CN.md)。
+
 ## 签名
 
 iOS 配置 Apple 分发证书和描述文件，macOS 配置 Developer ID 签名及公证，Android 配置发布/上传密钥。凭据保存在 CI secrets 或本地签名配置中。见[发布要求](../release/APP_STORE.zh-CN.md)与 [Flutter iOS 部署文档](https://docs.flutter.dev/deployment/ios)。
