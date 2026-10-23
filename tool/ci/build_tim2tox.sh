@@ -777,7 +777,11 @@ build_windows() {
   # VCPKG_TARGET_TRIPLET must be EXPLICIT or the arm64 runners get x64 libs.
   prepare_cmake_build_dir "$build_dir"
   ci_log "[$TARGET] configuring tim2tox ($NATIVE_BUILD_TYPE, $vcpkg_triplet)"
-  VCPKG_ROOT="$vcpkg_root_win" cmake -S "$source_dir_win" -B "$build_dir_win" \
+  # Git Bash otherwise rewrites the leading /O2 and /INCREMENTAL switches as
+  # C:/Program Files/Git/... paths. Exclude only these flag-valued options;
+  # every actual source/toolchain path is still converted explicitly above.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_C_FLAGS_RELEASE=;-DCMAKE_CXX_FLAGS_RELEASE=;-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=${MSYS2_ARG_CONV_EXCL:+;$MSYS2_ARG_CONV_EXCL}" \
+    VCPKG_ROOT="$vcpkg_root_win" cmake -S "$source_dir_win" -B "$build_dir_win" \
     "${generator_args[@]}" \
     -DCMAKE_TOOLCHAIN_FILE="$toolchain_file" \
     -DVCPKG_TARGET_TRIPLET="$vcpkg_triplet" \
@@ -790,6 +794,7 @@ build_windows() {
       tail -40 "$build_dir/cmake-configure.log" >&2
       ci_die "[$TARGET] cmake configure failed (log: $build_dir/cmake-configure.log)"
     }
+  python3 "$SCRIPT_DIR/native_symbols.py" verify-msvc-flags "$build_dir/CMakeCache.txt"
   ci_log "[$TARGET] building tim2tox_ffi"
   cmake --build "$build_dir_win" --config "$NATIVE_BUILD_TYPE" --target tim2tox_ffi --parallel "$(ci_cpu_count)" \
     >"$build_dir/cmake-build.log" 2>&1 || {

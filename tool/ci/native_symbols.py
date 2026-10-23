@@ -32,6 +32,21 @@ def sha256(path):
         return hashlib.file_digest(source, "sha256").hexdigest()
 
 
+def verify_msvc_flags(cache):
+    values = {}
+    for line in Path(cache).read_text(encoding="utf-8").splitlines():
+        if not line.startswith(("#", "//")) and ":" in line and "=" in line:
+            key, value = line.split("=", 1)
+            values[key.split(":", 1)[0]] = value
+    expected = {"CMAKE_C_FLAGS_RELEASE": "/O2 /Ob2 /DNDEBUG /Zi",
+                "CMAKE_CXX_FLAGS_RELEASE": "/O2 /Ob2 /DNDEBUG /Zi",
+                "CMAKE_SHARED_LINKER_FLAGS_RELEASE": "/INCREMENTAL:NO /DEBUG:FULL /OPT:REF /OPT:ICF"}
+    for key, value in expected.items():
+        if values.get(key) != value:
+            raise ValueError("MSVC Release options were missing or changed before compilation: " + key)
+    return expected
+
+
 def elf_identity(path, require_debug=False):
     data = Path(path).read_bytes()
     if data[:4] != b"\x7fELF" or data[4:6] not in (b"\x01\x01", b"\x02\x01"):
@@ -305,10 +320,14 @@ def main():
     check.add_argument("binary")
     check.add_argument("--manifest", required=True)
     check.add_argument("--output")
+    flags = commands.add_parser("verify-msvc-flags")
+    flags.add_argument("cache")
     args = parser.parse_args()
     if args.command == "capture":
         result = capture(args.binary, args.platform, args.output, pdb=args.pdb, dsym=args.dsym,
                          objcopy=args.objcopy, strip=args.strip)
+    elif args.command == "verify-msvc-flags":
+        result = verify_msvc_flags(args.cache)
     else:
         result = verify(args.binary, args.manifest)
         if args.output:

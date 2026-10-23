@@ -78,6 +78,20 @@ class NativeSymbolTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
+    def test_msvc_release_cache_preserves_optimization_and_symbol_flags_without_path_conversion(self):
+        cache = self.root / "CMakeCache.txt"
+        valid = ("CMAKE_C_FLAGS_RELEASE:STRING=/O2 /Ob2 /DNDEBUG /Zi\n"
+                 "CMAKE_CXX_FLAGS_RELEASE:STRING=/O2 /Ob2 /DNDEBUG /Zi\n"
+                 "CMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING=/INCREMENTAL:NO /DEBUG:FULL /OPT:REF /OPT:ICF\n")
+        cache.write_text(valid)
+        self.assertIn('/O2', symbols.verify_msvc_flags(cache)['CMAKE_CXX_FLAGS_RELEASE'])
+        for broken in (valid.replace('/O2', 'C:/Program Files/Git/O2'), valid.replace('/O2', '/Od'),
+                       valid.replace('/DNDEBUG ', ''), valid.replace('/Zi', ''),
+                       valid.replace('/DEBUG:FULL', '/DEBUG:FASTLINK')):
+            cache.write_text(broken)
+            with self.subTest(broken=broken), self.assertRaisesRegex(ValueError, 'MSVC Release options'):
+                symbols.verify_msvc_flags(cache)
+
     def test_pe_pdb_guid_and_age_pair_and_reject_other_builds(self):
         binary, pdb = self.root / "ffi.dll", self.root / "ffi.pdb"
         pe_fixture(binary)
