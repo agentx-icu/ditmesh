@@ -105,6 +105,8 @@ macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置�
 
 `bash tool/build_ios_store.sh --unsigned-archive` 现可在禁用签名、强制真实 Tox 后端且不访问账号的条件下生成 device archive。iOS job 保留既有 unsigned IPA，另建 archive，核唯一 App 及其可执行主程序、arm64 原生库存、版本/构建号、源码声明用途文案、App/SDK privacy manifests、嵌入 Tim2Tox framework 和无测试 hooks，并强制主程序/dSYM UUID 一致。独立 `ios-store-readiness-archive` tar artifact 保留符号、symlink 和 executable mode，不进入十二资产公开发行契约；[344251c 首次真实 CI 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254413764)已通过：20 个 arm64 原生对象、15 份 privacy manifest、主程序/dSYM UUID 匹配，使用 Xcode 26.6／iPhoneOS 26.5 SDK。这是 unsigned archive 证据，最终 PR head 仍重跑。
 
+按 [Apple SDK 最低要求](https://developer.apple.com/news/upcoming-requirements/)，2026-04-28 起上传 App Store Connect 的 iOS/iPadOS 构建须使用 Xcode 26 或更新版本和 iOS/iPadOS 26 SDK。受控入口现在对 archive 及最终 IPA 的实际 `Info.plist` 共用检查：`DTSDKName` 须为完整 `iphoneos` 版本且 major ≥ 26，`DTXcode` 须为有效四位版本且 ≥ 2600；缺失、畸形、模拟器或任一独立旧值均失败，不以部署最低版本或 runner 选择替代实际产物。unsigned archive 同样执行，避免误标兼容性；每次发布仍须重查政策，门槛不是商店接受证明。
+
 有既有负责人材料后，同一入口只接受 `--team-id`、`--certificate-sha1`、`--export-options` 和全新 `--output`。负责人本地 plist 必须明确 `method=app-store-connect`、`destination=export`、manual 签名、所选 team/证书 SHA-1，以及仅用于 `icu.agentx.ditmesh` 的既有 profile；构建前快照已验证政策。直接调用 `xcodebuild archive` 和本地 `-exportArchive`，不带自动 provisioning/设备注册参数，不上传，也不接受任意 Flutter/Xcode 参数。最终 IPA 必须通过递归签名完整性、distribution authority、实际 signer 指纹、离线证书链、profile 的 team/app/证书/到期和 release entitlements 对照，才写入 `distribution.json`。没有负责人既有 Keychain identity/profile，本轮**不执行**签名导出；不得把这些文件或私钥交到工单/artifact。通用 `package_artifacts.sh --mode distribution` 在 Android 外仍显式拒绝；这是独立的显式 iOS 入口。
 
 负责人受控 Mac 的本地导出命令：
@@ -115,7 +117,7 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
   --export-options /owner-controlled/ExportOptions.plist
 ```
 
-W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 111 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
 ## 剩余工程与决定
 
@@ -156,7 +158,7 @@ W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍�
 
 ## 官方政策与来源索引
 
-除上面明确标记未读完整者外，核验日期均为 **2026-10-23**。每次发布重开动态来源，构建检查器不硬编码政策截止日期。
+除上面明确标记未读完整者外，核验日期均为 **2026-10-23**。每次发布重开动态来源，构建检查器按已生效的 SDK 最低版本检查实际产物，不使用未来截止日期触发逻辑。
 
 - Apple：[App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)（UGC 1.2、审核访问 2.1、隐私/删除 5.1.1）；[privacy manifests](https://developer.apple.com/documentation/bundleresources/privacy-manifest-files)、[required API reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitypereasons)、[出口合规](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance/)、[签名](https://developer.apple.com/library/archive/technotes/tn2206/_index.html)、[公证](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。针对移动及其他列明平台的 required-reason 执行规则不能直接泛化到所有 macOS 渠道。
 - Android/Play：[应用签名](https://developer.android.com/studio/publish/app-signing)、[apksigner](https://developer.android.com/tools/apksigner)、[JAR 验证](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/jar/JarFile.html)、[16 KB](https://developer.android.com/guide/practices/page-sizes)、[target API](https://support.google.com/googleplay/android-developer/answer/11926878)、[User Data](https://support.google.com/googleplay/android-developer/answer/10144311)、[账号删除](https://support.google.com/googleplay/android-developer/answer/13327111)、[UGC](https://support.google.com/googleplay/android-developer/answer/9876937)。本日普通手机/平板新应用和更新要求 API 36；16 KB 指引称自 2027-02-01 阻止不支持的更新。发布时核实际适用性及控制台账号测试例外。

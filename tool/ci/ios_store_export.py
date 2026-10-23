@@ -103,6 +103,17 @@ def commands(repo, output, options):
     return archive, export
 
 
+def submission_toolchain(info):
+    # Apple's 2026-04-28 submission floor applies to the built archive and IPA,
+    # independently of the deployment target or the runner's selected Xcode.
+    sdk = info.get("DTSDKName")
+    version = re.fullmatch(r"iphoneos([1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){0,2}", sdk) if isinstance(sdk, str) else None
+    xcode = info.get("DTXcode")
+    valid_xcode = isinstance(xcode, str) and re.fullmatch(r"[1-9][0-9]{3}", xcode)
+    if not version or int(version[1]) < 26 or not valid_xcode or int(xcode) < 2600:
+        raise ValueError("App Store archive/export requires iOS 26 SDK and Xcode 26 or later in valid built metadata")
+
+
 def inspect_app(repo, app, output):
     # Reuse the same final-native and declaration gates as package CI.
     info = plistlib.loads((app / "Info.plist").read_bytes())
@@ -118,6 +129,7 @@ def inspect_app(repo, app, output):
     with executable.open("rb") as stream:
         if stream.read(4) not in MACHO_MAGICS:
             raise ValueError("App executable must be included in the native Mach-O inventory")
+    submission_toolchain(info)
     output.mkdir(parents=True, exist_ok=True)
     expected_version = run(["bash", str(repo / "tool/ci/release_version.sh")],
                            cwd=repo, capture_output=True, text=True).stdout.strip()

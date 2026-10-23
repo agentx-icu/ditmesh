@@ -101,6 +101,28 @@ class IosStoreExportTests(unittest.TestCase):
             self.assertNotIn("-allowProvisioningDeviceRegistration", command)
         self.assertIn(str(self.root / "apps/ditmesh/ios/Runner.xcworkspace"), archive)
 
+    def test_submission_toolchain_accepts_current_complete_versions(self):
+        for sdk, xcode in (("iphoneos26", "2600"), ("iphoneos26.0", "2600"),
+                           ("iphoneos26.5", "2660"), ("iphoneos26.5.1", "2661"),
+                           ("iphoneos27.0", "2700")):
+            with self.subTest(sdk=sdk, xcode=xcode):
+                store.submission_toolchain({"DTSDKName": sdk, "DTXcode": xcode})
+
+    def test_submission_toolchain_rejects_pre_april_2026_floor_and_independent_mismatch(self):
+        for sdk, xcode in (("iphoneos18.5", "1640"), ("iphoneos18.5", "2660"),
+                           ("iphoneos26.5", "1640"), ("iphoneos25.9", "2599")):
+            with self.subTest(sdk=sdk, xcode=xcode), self.assertRaisesRegex(ValueError, "iOS 26.*Xcode 26"):
+                store.submission_toolchain({"DTSDKName": sdk, "DTXcode": xcode})
+
+    def test_submission_toolchain_rejects_missing_malformed_or_simulator_metadata(self):
+        for sdk in (None, "", 26, True, "iphoneos", "iphoneos26beta", "iphoneos26.5suffix",
+                    "iphoneos26.", "iphoneos026.5", "iphonesimulator26.5", " iphoneos26.5"):
+            with self.subTest(sdk=sdk), self.assertRaisesRegex(ValueError, "SDK"):
+                store.submission_toolchain({"DTSDKName": sdk, "DTXcode": "2660"})
+        for xcode in (None, "", 2660, True, "26.6", "266", "26600", "2660beta", " 2660", "02660"):
+            with self.subTest(xcode=xcode), self.assertRaisesRegex(ValueError, "Xcode"):
+                store.submission_toolchain({"DTSDKName": "iphoneos26.5", "DTXcode": xcode})
+
     def test_signing_authority_must_be_distribution_not_development(self):
         self.assertEqual(store.distribution_authority("Authority=Apple Distribution: Owner (ABCDE12345)\nAuthority=Apple Root CA"),
                          "Apple Distribution: Owner (ABCDE12345)")
@@ -199,7 +221,8 @@ class IosStoreExportTests(unittest.TestCase):
         app.mkdir(parents=True)
         (app / "Info.plist").write_bytes(plistlib.dumps({
             "CFBundleExecutable": "Runner", "CFBundleShortVersionString": "1.2.3",
-            "CFBundleVersion": "4", "CFBundleIdentifier": store.BUNDLE_ID}))
+            "CFBundleVersion": "4", "CFBundleIdentifier": store.BUNDLE_ID,
+            "DTSDKName": "iphoneos26.5", "DTXcode": "2660"}))
         (app / "Runner").write_bytes(b"\xcf\xfa\xed\xfe")
         (app / "Runner").chmod(0o755)
         framework = app / "Frameworks/tim2tox_ffi.framework"
@@ -235,8 +258,9 @@ class IosStoreExportTests(unittest.TestCase):
         with patch.object(store, "run", side_effect=self.app_runner):
             with self.assertRaisesRegex(ValueError, "framework privacy manifest"):
                 store.inspect_app(self.root, app, self.root / "missing")
-        (app / "Info.plist").write_bytes(plistlib.dumps({"CFBundleExecutable": "Runner",
-                                                         "CFBundleShortVersionString": "9.9.9"}))
+        info = plistlib.loads((app / "Info.plist").read_bytes())
+        info["CFBundleShortVersionString"] = "9.9.9"
+        (app / "Info.plist").write_bytes(plistlib.dumps(info))
         with patch.object(store, "run", side_effect=self.app_runner):
             with self.assertRaisesRegex(ValueError, "version does not match"):
                 store.inspect_app(self.root, app, self.root / "version")
@@ -257,6 +281,35 @@ class IosStoreExportTests(unittest.TestCase):
             with patch.object(store, "symbol_uuids", return_value={"arm64": "A"}):
                 store.inspect_archive(self.root, self.root)
         self.assertTrue((self.root / "archive-evidence/symbols.json").is_file())
+
+    def test_archive_checks_actual_built_toolchain_before_commands(self):
+        app = self.root / "Runner.xcarchive/Products/Applications/Runner.app"
+        self.app_fixture(app)
+        info_path = app / "Info.plist"
+        info = plistlib.loads(info_path.read_bytes())
+        info.update(DTSDKName="iphoneos18.5", DTXcode="1640")
+        info_path.write_bytes(plistlib.dumps(info))
+        with patch.object(store, "run") as runner:
+            with self.assertRaisesRegex(ValueError, "iOS 26.*Xcode 26"):
+                store.inspect_archive(self.root, self.root)
+            runner.assert_not_called()
+
+    def test_export_checks_actual_ipa_toolchain_before_signature_or_distribution_report(self):
+        (self.root / "ipa").mkdir()
+        (self.root / "ipa/App.ipa").write_bytes(b"fixture, not an exported application")
+        def runner(command, **kwargs):
+            self.assertEqual(command[0], "ditto")
+            app = Path(command[-1]) / "Payload/Runner.app"
+            self.app_fixture(app)
+            info_path = app / "Info.plist"
+            info = plistlib.loads(info_path.read_bytes())
+            info["DTXcode"] = "1640"
+            info_path.write_bytes(plistlib.dumps(info))
+        with patch.object(store, "run", side_effect=runner) as invoked:
+            with self.assertRaisesRegex(ValueError, "iOS 26.*Xcode 26"):
+                store.inspect_export(self.root, self.root, "ABCDE12345", self.fingerprint, "fixture")
+            self.assertEqual(invoked.call_count, 1)
+        self.assertFalse((self.root / "export-evidence/distribution.json").exists())
 
     def test_archive_rejects_external_app_ancestor_framework_and_symbols_links(self):
         for linked_path in ("Products/Applications/Runner.app", "Products/Applications",
