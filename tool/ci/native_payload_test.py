@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import zipfile
 
-from native_payload import check_android, check_tree, check_installed_payload
+from native_payload import check_android, check_tree, check_installed_payload, check_windows_crt
 
 
 def elf(machine=183, align=0x4000, loads=1):
@@ -28,6 +28,34 @@ def pe(machine=0x8664):
 
 def macho(cpu=0x100000c):
     return struct.pack('<IIIIIIII', 0xfeedfacf, cpu, 0, 2, 0, 0, 0, 0)
+
+
+class WindowsCrtTests(unittest.TestCase):
+    required = ('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')
+
+    def test_runtime_inventory_and_notice_are_required(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in self.required:
+                (root / name).write_bytes(pe())
+            with self.assertRaisesRegex(ValueError, 'notice'):
+                check_windows_crt(root)
+            (root / 'licenses').mkdir()
+            (root / 'licenses/MSVC-runtime.txt').write_text('Microsoft runtime provenance')
+            check_windows_crt(root)
+            (root / 'vcruntime140_1.dll').unlink()
+            with self.assertRaisesRegex(ValueError, 'vcruntime140_1'):
+                check_windows_crt(root)
+
+    def test_debug_crt_is_forbidden_in_release(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in self.required + ('msvcp140d.dll',):
+                (root / name).write_bytes(pe())
+            (root / 'licenses').mkdir()
+            (root / 'licenses/MSVC-runtime.txt').write_text('Microsoft runtime provenance')
+            with self.assertRaisesRegex(ValueError, 'Debug'):
+                check_windows_crt(root)
 
 
 class InstalledPayloadTests(unittest.TestCase):

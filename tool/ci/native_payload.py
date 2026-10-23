@@ -209,6 +209,20 @@ def check_android(archive):
     return result
 
 
+def check_windows_crt(root):
+    """App-local release CRT inventory; PE CPU checks run through check_tree."""
+    root = Path(root)
+    required = ('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')
+    for name in required:
+        if not (root / name).is_file():
+            raise ValueError(f'Windows release runtime missing: {name}')
+    if not (root / 'licenses/MSVC-runtime.txt').is_file():
+        raise ValueError('Windows release runtime provenance/license notice missing')
+    for path in root.glob('*.dll'):
+        if re.fullmatch(r'(?:msvcp|vcruntime|concrt)140.*d\.dll', path.name, re.I):
+            raise ValueError(f'Debug runtime is forbidden in release: {path.name}')
+
+
 def check_installed_payload(root, archive_path):
     """Compare every final ZIP file with its installed counterpart, including assets."""
     root = Path(root).resolve()
@@ -260,6 +274,7 @@ def main():
     parser.add_argument('--entry', help='required main executable relative to payload root')
     parser.add_argument('--flutter-windows-aot', action='store_true')
     parser.add_argument('--arch', choices=('x86_64', 'arm64', 'arm', 'x86'))
+    parser.add_argument('--require-windows-crt', action='store_true')
     parser.add_argument('--expected-zip', type=Path, help='Compare installed Windows files against the final ZIP')
     args = parser.parse_args()
     if args.flutter_windows_aot and args.format != 'pe':
@@ -268,6 +283,10 @@ def main():
         parser.error('--arch is required for a native directory')
     result = check_android(args.path) if args.format == 'android' else check_tree(
         args.path, args.format, args.arch, args.entry, args.flutter_windows_aot)
+    if args.require_windows_crt:
+        if args.format != 'pe':
+            parser.error('--require-windows-crt requires --format pe')
+        check_windows_crt(args.path)
     if args.expected_zip:
         if args.format != 'pe':
             parser.error('--expected-zip requires --format pe')

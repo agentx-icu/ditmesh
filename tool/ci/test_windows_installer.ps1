@@ -41,14 +41,24 @@ function Invoke-Msi([string]$Stage, [string[]]$Arguments, [switch]$AllowAbsent) 
 }
 
 function Assert-InstalledPayload([string]$Stage) {
-  foreach ($file in @('ditmesh.exe', 'flutter_windows.dll', 'data/app.so', 'data/icudtl.dat', 'tim2tox_ffi.dll', 'libsodium.dll')) {
+  foreach ($file in @('ditmesh.exe', 'flutter_windows.dll', 'data/app.so', 'data/icudtl.dat', 'tim2tox_ffi.dll', 'libsodium.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
     if (-not (Test-Path -LiteralPath (Join-Path $installRoot $file) -PathType Leaf)) {
       throw "MSI omitted required release payload: $file"
     }
   }
-  & python $preflight $installRoot --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --expected-zip $zip |
+  & python $preflight $installRoot --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --expected-zip $zip |
     Out-File -FilePath (Join-Path $evidence "$Stage.json") -Encoding utf8
   if ($LASTEXITCODE -ne 0) { throw "Installed payload verification failed: $Stage" }
+  $runtimeFiles = @(Get-ChildItem -LiteralPath $installRoot -Filter '*.dll' -File |
+    Where-Object { $_.Name -match '^(msvcp140|vcruntime140|concrt140).*\.dll$' })
+  foreach ($file in $runtimeFiles) {
+    $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+    if ($signature.Status -ne 'Valid' -or $null -eq $signature.SignerCertificate -or
+        $signature.SignerCertificate.Subject -notmatch '(^|,\s*)O=Microsoft Corporation(,|$)') {
+      throw "Installed Microsoft runtime signature is invalid or not Microsoft: $($file.Name)"
+    }
+  }
+  $report.stages.Add("$Stage Microsoft CRT signatures verified")
   $report.stages.Add("$Stage hashes and native architecture verified")
 }
 
@@ -67,11 +77,11 @@ function Test-InstalledWindow([string]$Stage) {
   # A startup error page is also a real window. Require the installed native
   # engine and Tox bridge to be loaded by this exact PID, not another copy.
   $loadedPaths = @($script:app.Modules | ForEach-Object { [IO.Path]::GetFullPath($_.FileName) })
-  foreach ($library in @('flutter_windows.dll', 'tim2tox_ffi.dll')) {
+  foreach ($library in @('flutter_windows.dll', 'tim2tox_ffi.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
     $expectedPath = [IO.Path]::GetFullPath((Join-Path $installRoot $library))
     if ($expectedPath -notin $loadedPaths) { throw "Installed runtime was not loaded by the launched PID: $library" }
   }
-  $report.stages.Add("$Stage installed engine and Tox bridge loaded by PID $($script:app.Id)")
+  $report.stages.Add("$Stage installed engine, Tox bridge and release CRT loaded by PID $($script:app.Id)")
   # Fresh runner preferences leave close-to-tray disabled. A forced cleanup
   # below must never turn a refused close or an orphan process into a pass.
   if (-not $script:app.CloseMainWindow()) { throw 'Installed window did not accept the close request' }

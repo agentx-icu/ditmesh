@@ -73,6 +73,10 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 
 本次增量从已合并 PR #34（`909ad76a4bc67d01aed8a10029a6b290ba36d885`）开始。Windows job 现在把最终 MSI 安装到含空格路径，将全部已装文件与配对最终 ZIP 逐个核 SHA-256（包括 Flutter 资源和 ELF AOT snapshot），并对安装后的 payload 运行原生头校验。它等待所启动 PID 的真实主窗口，确认该 PID 从安装目录加载 Flutter engine 和 Tox bridge，再发送正常关闭请求并要求零退出；随后删除已装 Flutter engine、执行 MSI repair、重复 payload/窗口校验、卸载并拒绝残留安装文件或进程。即使失败，也上传 MSI 日志、准确 MSI/ZIP SHA-256、payload 报告、数据路径与各阶段结果。失败清场不能把测试改成通过。
 
+另一个产物级缺口已在 [PR #34 的最终 Windows artifact](https://github.com/agentx-icu/ditmesh/actions/runs/39886381714) 复现：ZIP 含 15 个 DLL，却没有 `msvcp140.dll`、`vcruntime140.dll`、`vcruntime140_1.dll`，而真实 `ditmesh.exe`、`tim2tox_ffi.dll` 的导入表均需要这三项。hosted runner 预装 Visual Studio 会掩盖干净机器失败。Windows CMake install 现通过 `InstallRequiredSystemLibraries` 从所选 MSVC 工具链获取 release CRT，要求三项 x64 依赖并拒绝 debug runtime，携带 `licenses/MSVC-runtime.txt` 来源/条款说明。打包检查 runtime 清单和所有原生架构；MSI 安装测试要求 CRT 具有有效 Microsoft Authenticode 签名，并确认同一启动 PID 加载的是三个 app-local DLL。Microsoft CRT 的签名不会替 DitMesh 自身 EXE、插件或 MSI 签名。
+
+2026-10-23 重核：[Flutter app-local 分发](https://docs.flutter.dev/platform-integration/windows/building#building-your-own-zip-file-for-windows)、[CMake runtime 发现](https://cmake.org/cmake/help/latest/module/InstallRequiredSystemLibraries.html)、[Microsoft 再分发条件](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files)。发布负责人仍须归档实际 Visual Studio 许可/再分发依据，并随应用更新维护 app-local runtime。notice 只记来源，不表示应用 GPL 许可重新授权 Microsoft 组件，也不代表本任务接受任何协议。
+
 `test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，也不改 registry 或已有用户数据。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
 
 | ID | 状态 | 证据／仍存边界 |
@@ -81,7 +85,7 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 | X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
 | P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
 
-macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **55** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增六个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **61** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
 
 ## 负责人材料交接表
 
