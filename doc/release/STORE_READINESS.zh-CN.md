@@ -85,11 +85,13 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 | X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
 | P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
 
-macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **70** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **75** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
 
 ## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
 
 必需 Linux release job 现把准确最终 DEB 交给 `linux_installed_smoke.py`。全新的官方 Ubuntu 24.04 容器先只安装 DEB 及其声明依赖，核 ELF 未解析依赖与运行工具并记录，再安装 X11 测试工具，避免构建 runner 的 SDK/依赖掩盖包依赖缺失。容器不用 privileged 模式、不挂载宿主桌面/用户数据；以既有非特权 `nobody` 用户和私有 XDG 目录运行已装 launcher，将安装文件字节/模式及 desktop/icon/launcher 与最终 DEB 对照，等待该 PID 的可见窗口和已装 Flutter/Tox mapped modules，发送正常 `WM_DELETE_WINDOW` 关闭请求，再卸包并拒绝包文件、注册态或进程残留。失败清场不能算优雅退出。
+
+共享 helper 的首次真实 CI 暴露并修复了加载器上下文与失败证据问题：入口 ELF 在清除 `LD_LIBRARY_PATH` 后先严格检查；单独检查 DSO 时只为该命令提供包内 `/opt/<app>/lib`，不向 GUI 导出环境、不放过系统依赖或 GLIBC 缺失，随后仍核实际 PID maps。证据逐文件复制，不更改宿主挂载目录的属主/权限，并预留宿主可写结果文件；记录失败不会遮蔽原始错误。14 个 helper 回归覆盖该边界、容器 stdin/超时清场及文件/架构负例，均不是实际安装证据。
 
 `linux-installer-evidence` 保留 DEB 哈希、拉取镜像 digest、OS/架构/包/依赖清单、已装文件哈希、实际 PID/maps/窗口和卸载结果，失败也保留日志。范围仅为 **Ubuntu 24.04 x86_64 DEB／X11／1280×800／scale 1／软件渲染**；不证明 RPM/Fedora、Wayland、硬件/音频/摄像头、真实 peer 会话、上一版升级或商店批准。W4/X6 在这些更大边界仍为 **to do**，新子检查的真实执行证据须看最终 PR head 的 Linux job；其他目标保留自己的门禁。
 
