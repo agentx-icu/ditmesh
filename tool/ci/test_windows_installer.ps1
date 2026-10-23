@@ -16,6 +16,7 @@ $evidence = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $installRoot = Join-Path $env:RUNNER_TEMP ('DitMesh installer smoke ' + [guid]::NewGuid().ToString('N'))
 $exe = Join-Path $installRoot 'ditmesh.exe'
 $preflight = Join-Path $PSScriptRoot 'native_payload.py'
+. (Join-Path $PSScriptRoot 'windows_crash_events.ps1')
 $app = $null
 $installAttempted = $false
 $installed = $false
@@ -84,9 +85,14 @@ function Test-InstalledWindow([string]$Stage) {
   $report.stages.Add("$Stage installed engine, Tox bridge and release CRT loaded by PID $($script:app.Id)")
   # Fresh runner preferences leave close-to-tray disabled. A forced cleanup
   # below must never turn a refused close or an orphan process into a pass.
-  if (-not $script:app.CloseMainWindow()) { throw 'Installed window did not accept the close request' }
-  if (-not $script:app.WaitForExit(20000)) { throw 'Installed application did not quit after closing the fresh-profile window' }
-  if ($script:app.ExitCode -ne 0) { throw "Installed application quit with exit $($script:app.ExitCode)" }
+  $crashContext = Get-ExactProcessCrashContext -Process $script:app -ExpectedExecutablePath $exe
+  try {
+    if (-not $script:app.CloseMainWindow()) { throw 'Installed window did not accept the close request' }
+    if (-not $script:app.WaitForExit(20000)) { throw 'Installed application did not quit after closing the fresh-profile window' }
+    if ($script:app.ExitCode -ne 0) { throw "Installed application quit with exit $($script:app.ExitCode)" }
+  } finally {
+    Write-ExactProcessCrashEvents -Context $crashContext -OutputPath (Join-Path $evidence "$Stage-crash-events.json")
+  }
   $report.stages.Add("$Stage visible window and graceful quit verified")
 }
 
