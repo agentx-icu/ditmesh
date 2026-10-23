@@ -119,14 +119,51 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
 
 W4/X6/P4 remain **to do** for actual distribution, policy/SDK reason audit and signed installed-device qualification; X9 now retains matched main iOS symbols but does not implement production crash capture or prove a symbolicated device crash. Twenty-seven store-export and five Apple metadata regressions cover command/policy boundaries, invalid profile/signer/entitlements, missing or escaping executable, archive structure, privacy/signature checks and failure propagation; synthetic fixtures do not prove a real archive or signature. The local total is 116 Python tests, with shell syntax/ShellCheck/actionlint passing. The JNI fixture uses the isolated checkout’s resolved lockfile configuration; it executes the actual upstream plugin source rather than a copied replacement. Five PowerShell schema groups additionally exercise exact identity, ignored unrelated/missing event data, offset boundaries and field redaction; they are not real Windows event API evidence.
 
+## Release-safe application diagnostics
+
+The existing raw-exception console paths in settings, notifications, lifecycle,
+preferences, chat and audio adapters now run only in debug builds; the shared
+`morse_io` audio-session and wakelock adapters use the same debug-only policy.
+Omitting the desktop shell log sink is silent, including the release `main()`
+configuration. Notification-center failures always report a fixed event and an
+allowlisted error category, without payloads, account/peer IDs, exception values
+or stacks. Unknown startup failures use the existing localized generic message;
+known chat error codes still use their localized contract messages.
+
+Before binding/startup, framework and unhandled-async hooks report only a fixed
+origin and safe error category in release/profile. Supplied stacks, Flutter
+context and information collectors are not rendered because they can contain
+application data. Debug builds retain the previous handlers and developer
+details. No log file, support export, upload, new permission or retention policy
+is introduced. This is a privacy fix and a minimal safe console error entry,
+not a native crash reporter or a claim of readable production stacks.
+
+Three marker regressions first reproduced the desktop fallback, notification
+payload/error disclosure and raw startup UI, then passed after the fixes.
+Diagnostics boundary tests exercise the release branch with `debugMode: false`,
+including hostile `toString`, stack/context markers and preserved debug
+handlers. A separate CI invocation sets `dart.vm.product=true` and asserts the
+actual release constants while exercising real preference-save and shared
+audio/wake failure catches. A failed diagnostic writer is contained without
+recursive fallback or changing the original business failure. These are
+hermetic tests, not installed-release/device evidence.
+
+| Checklist | Status | Evidence / remaining work |
+|---|---|---|
+| X9 existing raw-log and startup-error disclosure | verified in automated regression tests | `application_diagnostics_test.dart`, `notification_center_test.dart`, `native_backend_startup_test.dart`, `startup_gate_test.dart`, `desktop_shell_controller_test.dart`; compiled release marker checks on each platform remain to do. |
+| X5 shared-code parity | verified in source and hermetic tests | Shared Dart policy reaches Android/iOS/macOS/Windows/Linux; both `morse_io` guards match MorseCQ. Native/OS logs still need installed-device audit. |
+| X9 native capture, readable exact-build stacks and symbol inventory | to do | Separate engineering work; it does not require choosing a telemetry service before archiving available build symbols. |
+| P4/P7 support-data disclosure and screen capture | to do / needs device | No collection or upload added; this change does not establish store privacy approval or screen-capture protection. |
+
 ## Remaining engineering and decisions
 
 The owner material table is not the whole backlog. Passing these installation checks must not be reported as completing every code-solvable checklist item.
 
 | Remaining work | Prerequisite / blocker |
 |---|---|
-| X9 build symbols | Source-built FFI and runner symbols now have separate 14-day CI artifacts and final-payload identity gates (details below). This closes an engineering prerequisite; it does not require a telemetry account. Full crash symbolication still needs an actual device crash and the exact vendor symbols where applicable. |
-| X9 release error privacy and crash collection | Existing raw-log/error disclosure fixes proceed separately. A new native crash reporter, persistent diagnostics or remote collection needs payload/retention/support/privacy decisions; those decisions do not block removing existing leaks or saving build symbols. |
+| X9 existing release logging, notification metadata and unknown startup-error display | **Code completed in [#38](https://github.com/agentx-icu/ditmesh/pull/38):** release-safe events/types and sinks, generic UI, framework/async hooks and marker regressions now cover the existing paths; see the privacy follow-up above. This does not establish native crash collection or persistent diagnostics. |
+| X9 build symbols | Source-built FFI and runner symbols have separate 14-day CI artifacts and final-payload identity gates (details below); this PR must pass its final-head platform/package checks before claiming that subset verified. Full crash symbolication still needs an actual device crash and exact vendor symbols. |
+| X9 complete native crash capture and any persistent/support diagnostics | Select reporter/data/retention/support policy and privacy disclosures where applicable; subsequent platform implementation and installed-release crash verification remain. These decisions do not block the code-only privacy or symbol work. No telemetry service/account is invented here. |
 | P7 app-switcher/screen-capture protection | Product owner must define which chat/identity content may appear per platform, then implementation and installed-device verification remain. |
 | B4 guaranteed mobile background delivery | Current product does not promise it. A new guarantee needs a platform-budget/transport architecture and product decision; it cannot be inferred from the existing background estimate. |
 | Final signed iOS export/device qualification; optional Mac App Store, Developer ID/notarization, Windows code signing or MSIX channel implementation | iOS has a controlled archive/export entry but needs existing owner signing materials and real signed-device evidence; select other channels/identities and supply secure signing configuration; `--mode distribution` remains fail-closed outside Android. The remaining work includes code and verification, not only credentials. |

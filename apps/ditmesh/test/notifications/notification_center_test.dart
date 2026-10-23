@@ -110,6 +110,28 @@ final Object screenA = Object();
 final Object screenB = Object();
 
 void main() {
+  test(
+    'notification failures do not print payload or exception values',
+    () async {
+      final h = await harness();
+      final output = <String?>[];
+      final previous = debugPrint;
+      debugPrint = (message, {wrapWidth}) => output.add(message);
+      addTearDown(() => debugPrint = previous);
+      h.api.showError = StateError('PRIVATE_NOTIFICATION_ERROR');
+      await h.receive('PRIVATE_MESSAGE_MARKER');
+      h.api.cancelError = StateError('PRIVATE_CANCEL_ERROR');
+      h.foreground.value = true;
+      h.center.claimActiveConversation(kAnnConv, Object());
+      await pumpEventQueue();
+      expect(output.join('\n'), contains('notificationShow'));
+      expect(output.join('\n'), contains('notificationCancel'));
+      expect(output.join('\n'), contains('StateError'));
+      expect(output.join('\n'), isNot(contains(kAnn)));
+      expect(output.join('\n'), isNot(contains('PRIVATE_')));
+      expect(output.join('\n'), isNot(contains('conv:')));
+    },
+  );
   group('inbound messages', () {
     test(
       'late recording enriches existing message without another notification',

@@ -131,3 +131,10 @@ jobs:
             (cd "$dir" && flutter test --exclude-tags=needs-native)
             echo "::endgroup::"
           done
+
+      - name: Diagnostics compiled product-policy regressions
+        run: >-
+          flutter test --no-pub
+          apps/ditmesh/test/diagnostics/diagnostics_product_policy_test.dart
+          --dart-define=dart.vm.product=true
+          --dart-define=DITMESH_TEST_PRODUCT_POLICY=true
