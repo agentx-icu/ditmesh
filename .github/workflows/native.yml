@@ -447,8 +447,6 @@ jobs:
       - name: Smoke installed Windows release
         shell: pwsh
         timeout-minutes: 12
-        env:
-          DITMESH_CLOSE_TRACE: gdb
         run: |
           $msi = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.msi' -File)
           $zip = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.zip' -File)

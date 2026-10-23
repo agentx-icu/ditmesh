@@ -27,7 +27,6 @@ set confirm off
 set print frame-arguments none
 set print entry-values no
 set print frame-info location-and-address
-handle all stop print pass
 handle SIGSEGV stop print pass
 handle SIGABRT stop print pass
 handle SIGILL stop print pass

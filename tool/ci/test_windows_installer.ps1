@@ -24,6 +24,7 @@ $report = [ordered]@{
   platform = [Environment]::OSVersion.VersionString
   msi_sha256 = (Get-FileHash -LiteralPath $msi -Algorithm SHA256).Hash
   zip_sha256 = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
+  debugger_requested = ($env:DITMESH_CLOSE_TRACE -eq 'gdb')
   stages = [System.Collections.Generic.List[string]]::new()
   outcome = 'running'
 }

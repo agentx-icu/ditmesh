@@ -77,7 +77,9 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 
 2026-10-23 重核：[Flutter app-local 分发](https://docs.flutter.dev/platform-integration/windows/building#building-your-own-zip-file-for-windows)、[CMake runtime 发现](https://cmake.org/cmake/help/latest/module/InstallRequiredSystemLibraries.html)、[Microsoft 再分发条件](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files)。发布负责人仍须归档实际 Visual Studio 许可/再分发依据，并随应用更新维护 app-local runtime。notice 只记来源，不表示应用 GPL 许可重新授权 Microsoft 组件，也不代表本任务接受任何协议。
 
-`test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，也不改 registry 或已有用户数据。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
+`test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，不覆盖 KnownFolder/profile 注册表设置或改已有用户数据；Windows Installer 按测试产品管理自身注册态。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
+
+严格关闭检查在修复前真实复现 `0xC000041D`。[344251c 的受限 GDB 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254413827)在 `flutter_windows.dll` RVA `0x1cda0` 捕获故障：`FlutterDesktopViewControllerDestroy` 销毁子 HWND 时重入 `FlutterDesktopViewControllerHandleTopLevelWindowProc`，锁定 SDK 的原生 view 已清空；`window_manager` 只发 `WM_QUIT`，未先销毁父窗口。runner 现于 COM 反初始化前显式走既有 `window.Destroy()`，让 `OnDestroy` 先清空客户端 controller，避免原生销毁期间重入；无 controller 时也不再重载字体。不屏蔽其他消息或异常。工作流已移除取证 opt-in；最终 [PR checks](https://github.com/agentx-icu/ditmesh/pull/35/checks)须在**无调试器**下证明安装/repair 两次启动均正常零退出，MSI evidence 记录 `debugger_requested=false`。可选 hosted-only 取证不等于生产 crash 收集或最终资格。
 
 | ID | 状态 | 证据／仍存边界 |
 |---|---|---|
@@ -93,13 +95,15 @@ macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置�
 
 共享 helper 的首次真实 CI 暴露并修复了加载器上下文与失败证据问题：入口 ELF 在清除 `LD_LIBRARY_PATH` 后先严格检查；单独检查 DSO 时只为该命令提供包内 `/opt/<app>/lib`，不向 GUI 导出环境、不放过系统依赖或 GLIBC 缺失，随后仍核实际 PID maps。证据逐文件复制，不更改宿主挂载目录的属主/权限，并预留宿主可写结果文件；记录失败不会遮蔽原始错误。18 个 helper 回归覆盖 loader 存在/架构/闭包与该边界、容器 stdin/超时清场及文件/架构负例，均不是实际安装证据。
 
+[DitMesh 在 344251c 首次真实 clean-DEB 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254414014)已过已装文件、loader 闭包、可见窗口与实际 engine/FFI maps，随后正常关闭时 abort：插件同步销毁 GTK/GL，早于 Flutter view/compositor 完成清理。Linux 最终退出现于既有偏好/会话保存/cleanup 屏障与 tray 销毁之后，走 Flutter 标准 `SystemNavigator.pop` GApplication 路径；close-to-tray 仍 hide，Windows/macOS 保留各自插件入口。4 个真实 MethodChannel/controller 回归覆盖保存完成顺序、tray 状态和平台分支，包含红→绿复现；相关桌面测试本地共 42 项通过。最终 DEB 仍须在 CI 完成可见启动、正常零退出与卸载。
+
 运行时加载的 GL/EGL/GLES 调度库现为显式 DEB 依赖（`libegl1`、`libgl1`、`libgles2`），RPM 补对应 SONAME Requires。干净检查在安装测试工具前解析每个准确 loader SONAME，核原生 ELF 头，再清除 `LD_LIBRARY_PATH` 检查其完整 `ldd` 闭包；Mesa DRI 软件驱动仍只是测试设施。宿主偶有的 JDK 也不能改变桌面 bundle：仅 Android 使用的 `path_provider_android` 带来可选 `jni` desktop CMake，但 DitMesh 无桌面 Java 调用；Linux/Windows 在 generated plugins 前关闭该可选发现，不改 Android。回归真实执行锁定上游 JNI CMake，通过可发现的合成 JDK 复现旧的 `libdartjni` 捆绑，再证明新策略排除它且仍能构建/安装另一原生库；fixture 不替代最终包执行。
 
 `linux-installer-evidence` 保留 DEB 哈希、拉取镜像 digest、OS/架构/包/依赖清单、已装文件哈希、实际 PID/maps/窗口和卸载结果，失败也保留日志。范围仅为 **Ubuntu 24.04 x86_64 DEB／X11／1280×800／scale 1／软件渲染**；不证明 RPM/Fedora、Wayland、硬件/音频/摄像头、真实 peer 会话、上一版升级或商店批准。W4/X6 在这些更大边界仍为 **to do**，新子检查的真实执行证据须看最终 PR head 的 Linux job；其他目标保留自己的门禁。
 
 ## 受控 iOS archive/export 增量 — 2026-10-23
 
-`bash tool/build_ios_store.sh --unsigned-archive` 现可在禁用签名、强制真实 Tox 后端且不访问账号的条件下生成 device archive。iOS job 保留既有 unsigned IPA，另建 archive，核唯一 App 及其可执行主程序、arm64 原生库存、版本/构建号、源码声明用途文案、App/SDK privacy manifests、嵌入 Tim2Tox framework 和无测试 hooks，并强制主程序/dSYM UUID 一致。独立 `ios-store-readiness-archive` tar artifact 保留符号、symlink 和 executable mode，不进入十二资产公开发行契约；其首次真实 CI 执行仍待完成。
+`bash tool/build_ios_store.sh --unsigned-archive` 现可在禁用签名、强制真实 Tox 后端且不访问账号的条件下生成 device archive。iOS job 保留既有 unsigned IPA，另建 archive，核唯一 App 及其可执行主程序、arm64 原生库存、版本/构建号、源码声明用途文案、App/SDK privacy manifests、嵌入 Tim2Tox framework 和无测试 hooks，并强制主程序/dSYM UUID 一致。独立 `ios-store-readiness-archive` tar artifact 保留符号、symlink 和 executable mode，不进入十二资产公开发行契约；[344251c 首次真实 CI 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254413764)已通过：20 个 arm64 原生对象、15 份 privacy manifest、主程序/dSYM UUID 匹配，使用 Xcode 26.6／iPhoneOS 26.5 SDK。这是 unsigned archive 证据，最终 PR head 仍重跑。
 
 有既有负责人材料后，同一入口只接受 `--team-id`、`--certificate-sha1`、`--export-options` 和全新 `--output`。负责人本地 plist 必须明确 `method=app-store-connect`、`destination=export`、manual 签名、所选 team/证书 SHA-1，以及仅用于 `icu.agentx.ditmesh` 的既有 profile；构建前快照已验证政策。直接调用 `xcodebuild archive` 和本地 `-exportArchive`，不带自动 provisioning/设备注册参数，不上传，也不接受任意 Flutter/Xcode 参数。最终 IPA 必须通过递归签名完整性、distribution authority、实际 signer 指纹、离线证书链、profile 的 team/app/证书/到期和 release entitlements 对照，才写入 `distribution.json`。没有负责人既有 Keychain identity/profile，本轮**不执行**签名导出；不得把这些文件或私钥交到工单/artifact。通用 `package_artifacts.sh --mode distribution` 在 Android 外仍显式拒绝；这是独立的显式 iOS 入口。
 
@@ -111,7 +115,7 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
   --export-options /owner-controlled/ExportOptions.plist
 ```
 
-W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 111 项通过，shell 语法、ShellCheck、actionlint 通过。本地 JNI fixture 用测试专用 `DITMESH_TEST_PACKAGE_CONFIG` 仅读原 clean checkout 的同 lock package 配置，CI 使用当前 checkout 自己 resolve 的配置；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 111 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
 ## 剩余工程与决定
 
