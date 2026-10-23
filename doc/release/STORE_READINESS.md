@@ -196,15 +196,16 @@ shell actions. Native commands are keyless, leaving Cmd+K/N to one Flutter
 handler. They remain visible/disabled outside ready identity/accepted terms,
 when a route covers the shell, during text/IME input, when inactive, after
 teardown or when scene ownership is ambiguous. Dart revalidates at dispatch;
+owner tickets reject requests queued for a prior session, and native reply revisions prevent late failures from overwriting newer Dart state;
 native code also rejects missing/hidden windows, native editors/presentations
 and inactive/disconnected scenes. iOS <26 and the single-scene policy remain
 compatible, without extra permissions or signing inputs.
 
 | ID | Status | Evidence / remaining gate |
 |---|---|---|
-| I2 | needs device | The previously missing native bridge is implemented. Seven bridge regressions plus the 20 keyboard cases pass; real Swift/FFI archive builds. Actual iPadOS 26+ menu rendering, touch/pointer/keyboard activation and disabled-state/scene behavior still require OS/device evidence. |
+| I2 | needs device | The previously missing native bridge is implemented. Eight bridge regressions plus the 20 keyboard cases pass; real Swift/FFI archive builds. Actual iPadOS 26+ menu rendering, touch/pointer/keyboard activation and disabled-state/scene behavior still require OS/device evidence. |
 | I3 | verified | Bridge invocation preserves editor/IME ownership and rejects stale/outgoing owners and ready-to-onboarding transitions in fake-backend channel tests; real IME/keyboard interoperability remains a device check. |
-| X5 | verified | Reuses the same existing shell actions and S labels; other platforms retain Flutter-only commands. No duplicate native key registration, multi-scene support or shared sound behavior is added. |
+| X5 | verified | Reuses the same existing shell actions and S labels; other platforms retain Flutter-only commands. A compiled Swift state regression covers current/late false/error replies and ownership; no duplicate native key registration, multi-scene support or shared sound behavior is added. |
 | X6 | to do | Local Xcode 26.4.1 / iPhoneOS 26.4 unsigned real-FFI archive proves Swift compilation and 20 arm64 Mach-O/15 privacy manifests plus matching Runner symbols. Final-head CI and installed/signed device qualification remain separate. |
 
 Implementation sources checked 2026-10-23: Apple's [UIKit menu guidance](https://developer.apple.com/videos/play/wwdc2025/243/) (programmatic menus, keyless commands and visible disabled items), local UIKit 26.4 headers, and Flutter's [UIScene/channel lifecycle guide](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate). The Flutter host keeps channel registration in `didInitializeImplicitFlutterEngine`; `FlutterSceneDelegate` remains the scene lifecycle superclass. This is the bounded two-command addition, not a claim that every app toolbar action has native menu coverage or that App Review passed.

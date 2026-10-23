@@ -13,8 +13,14 @@ import '../account/test_app.dart';
 
 const _channel = MethodChannel(IosMenuCommands.channelName);
 const _codec = StandardMethodCodec();
+String _nativeOwner = '';
 
-Future<Object?> _invoke(WidgetTester tester, Object? command) async {
+Future<Object?> _invoke(WidgetTester tester, Object? command) => _rawInvoke(
+  tester,
+  command is String ? {'command': command, 'owner': _nativeOwner} : command,
+);
+
+Future<Object?> _rawInvoke(WidgetTester tester, Object? command) async {
   final reply = await tester.binding.defaultBinaryMessenger
       .handlePlatformMessage(
         IosMenuCommands.channelName,
@@ -26,11 +32,14 @@ Future<Object?> _invoke(WidgetTester tester, Object? command) async {
 
 List<Map<Object?, Object?>> _record(WidgetTester tester) {
   final states = <Map<Object?, Object?>>[];
+  _nativeOwner = '';
   tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(_channel, (
     call,
   ) async {
     expect(call.method, 'update');
-    states.add(call.arguments as Map<Object?, Object?>);
+    final state = call.arguments as Map<Object?, Object?>;
+    _nativeOwner = state['owner'] as String;
+    states.add(state);
     return true;
   });
   addTearDown(
@@ -65,8 +74,10 @@ void main() {
       'search': 'Search conversations',
       'contacts': 'Contacts',
       'enabled': true,
+      'owner': _nativeOwner,
     });
     expect(await _invoke(tester, 'sideTone'), isFalse);
+    expect(await _rawInvoke(tester, 'search'), isFalse);
     expect(await _invoke(tester, {'command': 'contacts'}), isFalse);
     expect(await _invoke(tester, 'search'), isTrue);
     await settle(tester);
@@ -157,6 +168,7 @@ void main() {
         'search': '搜索会话',
         'contacts': '联系人',
         'enabled': true,
+        'owner': _nativeOwner,
       });
     },
   );
@@ -186,11 +198,45 @@ void main() {
       final old = Object(), current = Object();
       commands.bind(old, search: () => count += 100, contacts: () {});
       commands.bind(current, search: () => count++, contacts: () {});
+      await commands.publish(
+        title: 'Chat',
+        search: 'Search',
+        contacts: 'Contacts',
+      );
       commands.unbind(old);
       expect(await _invoke(tester, 'search'), isTrue);
       expect(count, 1);
       commands.unbind(current);
       expect(await _invoke(tester, 'search'), isFalse);
+      await commands.dispose();
+    },
+  );
+
+  testWidgets(
+    'queued old-owner command cannot invoke the replacement session',
+    (tester) async {
+      final states = _record(tester);
+      var count = 0;
+      final commands = IosMenuCommands(canInvoke: () => true, onChanged: () {});
+      commands.bind(Object(), search: () => count += 100, contacts: () {});
+      await commands.publish(
+        title: 'Chat',
+        search: 'Search',
+        contacts: 'Contacts',
+      );
+      final oldState = states.last;
+      final oldRequest = {'command': 'search', 'owner': oldState['owner']};
+      commands.bind(Object(), search: () => count++, contacts: () {});
+      await commands.publish(
+        title: 'Chat',
+        search: 'Search',
+        contacts: 'Contacts',
+      );
+      expect(states.last['owner'], isNot(oldState['owner']));
+      expect(await _invoke(tester, oldRequest), isFalse);
+      expect(count, 0);
+      expect(await _invoke(tester, 'search'), isTrue);
+      expect(count, 1);
       await commands.dispose();
     },
   );
@@ -203,6 +249,7 @@ void main() {
     final older = IosMenuCommands(canInvoke: () => true, onChanged: () {});
     final newer = IosMenuCommands(canInvoke: () => true, onChanged: () {});
     newer.bind(Object(), search: () => count++, contacts: () {});
+    await newer.publish(title: 'Chat', search: 'Search', contacts: 'Contacts');
     await older.dispose();
     expect(await _invoke(tester, 'search'), isTrue);
     expect(count, 1);

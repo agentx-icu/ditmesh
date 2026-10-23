@@ -117,7 +117,7 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
   --export-options /owner-controlled/ExportOptions.plist
 ```
 
-W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。28 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
 ## 剩余工程与决定
 
@@ -189,14 +189,15 @@ iPadOS 26+ 现已为既有搜索/联系人动作添加真实 UIKit 菜单代码�
 本地化 `UICommand`、`SceneDelegate` 的唯一活跃场景校验，以及连接现有外壳动作的 Flutter 通道。
 原生命令不带按键，Cmd+K/N 仍仅由 Flutter 一个 handler 处理。身份/条款未就绪、其他路由覆盖、
 文本/IME 输入、应用非活跃、销毁后或场景归属不明确时，命令保留可见但禁用。Dart 在派发时重查，
+owner 票据拒绝旧会话排队请求，原生回复版本检查防止迟到失败覆盖新状态；
 原生端也拒绝缺失/隐藏窗口、原生编辑器/覆盖页面和非活跃/断开场景。iOS <26 和单场景策略保持
 兼容，无新增权限或签名材料。
 
 | ID | Status | 证据／剩余门槛 |
 |---|---|---|
-| I2 | needs device | 原先缺少的原生桥代码已实现，7 个桥接回归加 20 个键盘用例通过，真实 Swift/FFI archive 编译通过；iPadOS 26+ 实际菜单显示、触摸/指针/键盘调用、灰显和场景行为仍需 OS/设备证据。 |
+| I2 | needs device | 原先缺少的原生桥代码已实现，8 个桥接回归加 20 个键盘用例通过，真实 Swift/FFI archive 编译通过；iPadOS 26+ 实际菜单显示、触摸/指针/键盘调用、灰显和场景行为仍需 OS/设备证据。 |
 | I3 | verified | 假后端通道回归验证编辑器/IME 所有权、旧 owner 拒绝和 ready→onboarding 过渡；真实 IME/键盘互通仍待设备验证。 |
-| X5 | verified | 复用同一现有外壳动作和 S 文案，其他平台仍走 Flutter 快捷键；未注册重复原生按键，未增加多场景或共享声音行为。 |
+| X5 | verified | 复用同一现有外壳动作和 S 文案，其他平台仍走 Flutter 快捷键；Swift 状态回归覆盖当前/迟到 false/error 回复及 owner，未注册重复原生按键，未增加多场景或共享声音行为。 |
 | X6 | to do | 本机 Xcode 26.4.1 / iPhoneOS 26.4 已以真实 FFI unsigned archive 验证 Swift 编译、20 个 arm64 Mach-O、15 个 privacy manifest 及匹配的 Runner 符号；最终 head CI、已安装签名设备资格另计。 |
 
 2026-10-23 已核 [Apple UIKit 菜单指引](https://developer.apple.com/videos/play/wwdc2025/243/)

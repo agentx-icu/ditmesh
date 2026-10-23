@@ -25,8 +25,10 @@
 不安装该菜单，既有单场景声明保持不变。
 
 `desktop/ios_menu_commands_test.dart` 在完整假后端 App 上穿过真实方法通道边界，覆盖有效/未知/
-畸形命令、路由覆盖、编辑器/IME、inactive/resumed、启动/退出 ready、销毁、owner 替换和语言变更。
-桥接加既有按键套件共 27 项通过；本机 Xcode 26.4.1 / iPhoneOS 26.4 已实际编译 Swift 及真实 FFI
+畸形命令、路由覆盖、编辑器/IME、inactive/resumed、启动/退出 ready、销毁、owner 替换、旧会话排队请求和语言变更。
+桥接加既有按键套件共 28 项通过；编译执行的 Swift 状态回归验证当前/迟到 false/error 回复不会
+锁死可用状态或覆盖新状态，原生请求携带原始 owner 票据。本机 Xcode 26.4.1 / iPhoneOS 26.4
+已实际编译 Swift 及真实 FFI
 arm64 unsigned archive（20 个 Mach-O、15 个 privacy manifest、Runner/dSYM 匹配）。菜单的实际
 显示、触摸/指针/键盘调用、灰显和场景资格仍为 **needs device**；不能再把原生代码缺失藏在该状态下。
 没有正式签名导出或商店操作。

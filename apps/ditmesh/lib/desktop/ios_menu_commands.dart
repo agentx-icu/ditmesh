@@ -15,10 +15,12 @@ class IosMenuCommands {
 
   static const channelName = 'icu.agentx.ditmesh/menu_commands';
   static IosMenuCommands? _active;
+  static int _nextOwner = 0;
   final MethodChannel _channel;
   final bool Function() canInvoke;
   final VoidCallback onChanged;
   Object? _owner;
+  String _ownerToken = '';
   VoidCallback? _search;
   VoidCallback? _contacts;
   Map<String, Object>? _last;
@@ -32,6 +34,7 @@ class IosMenuCommands {
     required VoidCallback contacts,
   }) {
     _owner = owner;
+    _ownerToken = '${++_nextOwner}';
     _search = search;
     _contacts = contacts;
     onChanged();
@@ -40,6 +43,7 @@ class IosMenuCommands {
   void unbind(Object owner) {
     if (!identical(_owner, owner)) return;
     _owner = null;
+    _ownerToken = '';
     _search = null;
     _contacts = null;
     onChanged();
@@ -49,7 +53,9 @@ class IosMenuCommands {
     if (!identical(_active, this) || call.method != 'invoke' || !enabled) {
       return false;
     }
-    switch (call.arguments) {
+    final arguments = call.arguments;
+    if (arguments is! Map || arguments['owner'] != _ownerToken) return false;
+    switch (arguments['command']) {
       case 'search':
         _search!();
       case 'contacts':
@@ -71,6 +77,7 @@ class IosMenuCommands {
       'search': search,
       'contacts': contacts,
       'enabled': enabled,
+      'owner': _ownerToken,
     };
     if (mapEquals(_last, state)) return;
     _last = state;
@@ -90,6 +97,7 @@ class IosMenuCommands {
   Future<void> dispose() async {
     _disposed = true;
     _owner = null;
+    _ownerToken = '';
     _search = null;
     _contacts = null;
     if (!identical(_active, this)) return;

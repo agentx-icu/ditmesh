@@ -157,12 +157,12 @@ final class DitmeshMenuChannel {
   static let identifier = UIMenu.Identifier("icu.agentx.ditmesh.chat")
   private var channel: FlutterMethodChannel?
   private var labels: (title: String, search: String, contacts: String)?
-  private var enabled = false
+  private let state = DitmeshMenuState()
   private weak var scene: UIWindowScene?
 
   var canInvoke: Bool {
     guard #available(iOS 26.0, *), UIDevice.current.userInterfaceIdiom == .pad,
-      enabled, let scene, scene.activationState == .foregroundActive,
+      state.enabled, let scene, scene.activationState == .foregroundActive,
       let window = scene.windows.first(where: { $0.isKeyWindow }), !window.isHidden,
       window.rootViewController?.presentedViewController == nil,
       !hasTextInputResponder(window)
@@ -186,13 +186,14 @@ final class DitmeshMenuChannel {
         let title = data["title"] as? String, !title.isEmpty,
         let search = data["search"] as? String, !search.isEmpty,
         let contacts = data["contacts"] as? String, !contacts.isEmpty,
-        let enabled = data["enabled"] as? Bool
+        let enabled = data["enabled"] as? Bool,
+        let owner = data["owner"] as? String, !enabled || !owner.isEmpty
       else {
         result(FlutterError(code: "INVALID_MENU", message: "Invalid menu state", details: nil))
         return
       }
       self.labels = (title, search, contacts)
-      self.enabled = enabled
+      self.state.update(enabled: enabled, owner: owner)
       self.refresh()
       result(true)
     }
@@ -221,11 +222,12 @@ final class DitmeshMenuChannel {
   }
 
   func invoke(_ command: String) {
-    guard canInvoke, command == "search" || command == "contacts" else { return }
-    channel?.invokeMethod("invoke", arguments: command) { [weak self] response in
+    guard canInvoke, let invocation = state.begin(command) else { return }
+    channel?.invokeMethod("invoke", arguments: invocation.arguments) { [weak self] response in
       // Dart revalidates route/focus/readiness at invocation, closing a stale
-      // menu-state race. Failure leaves the commands visible and disabled.
-      if (response as? Bool) != true { self?.enabled = false; self?.refresh() }
+      // menu-state race. A delayed response cannot overwrite a newer update.
+      guard let self else { return }
+      if self.state.needsRefresh(after: response, for: invocation) { self.refresh() }
     }
   }
 }

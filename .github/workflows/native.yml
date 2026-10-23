@@ -700,6 +700,10 @@ jobs:
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
         run: dart pub get --enforce-lockfile
+      - name: Native menu ownership and delayed-reply regression
+        run: |
+          swiftc apps/ditmesh/ios/Runner/DitmeshMenuState.swift tool/ci/ios_menu_state_test.swift -o "$RUNNER_TEMP/ios-menu-state-test"
+          "$RUNNER_TEMP/ios-menu-state-test"
       # Tim2ToxFFI.podspec vendors the XCFramework from apps/ditmesh/ios/Frameworks.
       - name: Stage tim2tox_ffi.xcframework into the app
         run: |

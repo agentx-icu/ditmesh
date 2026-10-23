@@ -33,8 +33,10 @@ install this menu and the existing single-scene declaration is unchanged.
 `desktop/ios_menu_commands_test.dart` exercises the real method-channel boundary
 against the fake-backend full app, including valid/unknown/malformed commands,
 covering route/editor/IME, inactive/resumed, startup/ready exit, disposal, owner
-replacement and locale changes. The bridge plus prior key-event suites pass
-27 tests. Actual Swift and a real-FFI arm64 unsigned archive compile on local
+replacement, queued old-session requests and locale changes. A compiled Swift
+state fixture proves current/late false/error replies cannot latch availability or
+overwrite newer state; native invocations carry the original owner ticket. The bridge plus prior key-event suites pass
+28 tests. Actual Swift and a real-FFI arm64 unsigned archive compile on local
 Xcode 26.4.1 / iPhoneOS 26.4 (20 Mach-O files, 15 privacy manifests, matching
 Runner/dSYM). Actual iPadOS menu presentation, touch/pointer/keyboard activation,
 disabled-state display and scene qualification remain **needs device**, not a
