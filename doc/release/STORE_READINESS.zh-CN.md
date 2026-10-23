@@ -154,8 +154,9 @@ wake 失败 catch。诊断 writer 失败会被隔离，不递归 fallback，也�
 
 | 剩余工程 | 前提／阻塞 |
 |---|---|
-| X9 逐构建原生符号归档、二进制／符号身份检查及符号化 | 已有编译输出仍需代码接入，包括 PDB GUID／age、ELF build ID／debuglink、逐 Apple binary／dSYM UUID；不以前置远端服务或账号阻塞。缺失 vendor 符号需准确构建／revision 来源。 |
-| X9 完整原生 crash 捕获，以及任何持久化／支持诊断 | 按实际范围选择 reporter、数据／留存／支持政策与隐私披露，仍需已安装 release crash 和 marker 验证；本任务不虚构遥测服务或账号。 |
+| X9 既有 release 日志、通知元数据和未知启动错误显示 | **代码已由 [#38](https://github.com/agentx-icu/ditmesh/pull/38) 补齐**：现有路径已有 release 安全事件/类型与 sink、泛化 UI、framework/async hook 及 marker 回归，见上方隐私增量；不代表原生 crash 收集或持久诊断已完成。 |
+| X9 构建符号 | 源码 FFI/runner 符号已有独立保留 14 天的 CI 制品和最终产物身份门禁，详见下节；本 PR 最终 head 的平台/包检查通过后，才可确认这个子集已验证。完整崩溃符号化仍需真实设备故障和匹配厂商符号。 |
+| X9 完整原生 crash 捕获，以及任何持久/支持诊断 | 按实际范围选择 reporter、数据/留存/支持政策与隐私披露，之后仍需平台实现及已安装 release crash 验证；这些决定不阻塞 code-only 的隐私或符号工程。本任务不虚构遥测服务/账号。 |
 | P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
 | B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
 | 最终签名 iOS export/真机资格；可选 Mac App Store、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | iOS 已有受控 archive/export 入口，仍需既有负责人签名材料与真实签名设备证据；其他渠道先选择真实身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
@@ -213,3 +214,20 @@ wake 失败 catch。诊断 writer 失败会被隔离，不递归 fallback，也�
 Cmd/Ctrl+Shift+M 因没有共享音频所有者继续未绑定。iPadOS 26 的原生 `UIMainMenuSystem`
 覆盖是单独的产品/工程范围；Flutter `Shortcuts` 不宣称实现原生菜单，也不关闭 I2 设备矩阵缺口。
 这项有界代码修复无需新增账号、证书、原生权限或商店操作。
+
+## X9 后续：准确匹配构建的符号
+
+必需 native job 为源码自有的 Release FFI 生成调试信息，保留优化、`NDEBUG`、架构和 release CRT。符号目录与可运行原生包分开；缓存同时保存二进制和符号，命中缓存也必须通过身份门禁。`native-symbols-<target>`、`app-symbols-<target>` 是独立的 **Actions 14 天制品**，不加入公开 12 个发布资产。发布负责人须在 Actions 过期前保存所支持版本的准确配对制品；本任务不创建外部存储或留存服务。
+
+| 产物 | 身份与证据 |
+|---|---|
+| Linux/Android 源码 FFI；Linux 原生 runner | strip 前保存 DWARF；要求 GNU build-id、非空调试信息、`.gnu_debuglink` 文件名/CRC 及符号内容哈希。真实优化 Linux fixture 还用 `addr2line` 解析已知函数和源码行。 |
+| Windows 源码 FFI 与原生 runner | 保留 `/O2`/release CRT，独立生成完整 PDB；要求最终 PE RSDS GUID/age 与归档 PDB info stream 相同，并核对符号内容哈希。Windows CI 执行真实 MSVC Release fixture。 |
+| Apple 源码 FFI 与原生 runner | 保存实际 dSYM，逐架构 UUID、DWARF compile unit 和内容哈希匹配。iOS archive 主符号须独立匹配该 archive 主程序，内嵌 FFI 匹配 device FFI 符号。 |
+| Dart AOT | 各 App 构建保存自己的 `--split-debug-info`（APK/AAB、iOS archive 分目录），记录准确 Flutter engine revision、Dart 版本、目标和最终包内 AOT 哈希；**不声称**跨格式 UUID 等价。不启用混淆或运行时采集。参见 [Flutter 符号化说明](https://docs.flutter.dev/deployment/obfuscate)。 |
+
+配对读取真正最终 ZIP、DEB、RPM、TAR、PKG、APK、AAB、unsigned IPA 中的原生文件，不只看源码或 stage；MSI 安装后和修复后再次检查 runner/FFI，原生命周期及整个 payload 相等门禁保留。iOS archive 另检自己的主程序/dSYM 与内嵌 FFI。报告保存最终包/二进制哈希；缺身份、符号、debuglink 或必要 native entry 均失败。最终 PR head 必须真实执行这些检查，才可确认 X9 这个子集。
+
+Linux 已知模块内地址可用 `addr2line -Cf -e <归档.debug> <模块相对地址>`；Apple 工具需要匹配 dSYM/架构与 image load address，Windows 调试器需要匹配 GUID/age 的 PDB。不能用新版本符号代替旧构建。真实故障产生可读应用/原生帧仍为 **needs device**，二进制身份回归不冒充真机 crash。
+
+这些制品覆盖源码 FFI/runner 和 Dart，不等于所有厂商符号齐备。Flutter 3.41.9 engine 的 `flutter_windows.dll`、`libflutter.so`/`libflutter_linux_gtk.so`、`Flutter.framework` 需从**报告中的准确 engine revision 与 target**对应的官方 Flutter SDK/engine 制品或 Flutter 维护者取得匹配 PDB/dSYM/DWARF；缺失时明确是外部材料缺口。插件/预编译 codec/ML 与 vcpkg 库需相应 `pubspec.lock`/vcpkg pin 源码或厂商发布的准确符号，并核对 build-id/UUID/GUID-age；系统帧需真机相同 OS build 的 Apple/Microsoft/发行版符号包。本任务不伪造这些文件，也不声称自有符号能覆盖它们。原生 crash 收集及持久/上传诊断政策另行决定，现有日志隐私修复独立跟踪。

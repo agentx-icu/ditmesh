@@ -108,7 +108,7 @@ Mac release UI 构建使用 `DITMESH_FAKE_BACKEND=true` 和 `DITMESH_ALLOW_MISSI
 | X6 | to do | macOS release UI build compiles native changes; real-backend packaging/install/upgrade matrix still owed. |
 | X7 | needs device | Interrupted OS UI, permission revocation and background process death still need a device campaign. |
 | X8 | needs device | Existing network/DHT tests and VALIDATION.md retained; carrier NAT64/VPN/captive portal/device handover owed. |
-| X9 | to do | Connection diagnostics exist; production application/native crash collection and readable archived-symbol process incomplete. |
+| X9 | to do | 源码 FFI/runner 与同次构建 Dart 符号已有独立 CI 归档和最终 native 身份门禁；准确覆盖范围及最终 head 证据见 STORE_READINESS。真实设备故障符号化、匹配厂商符号和生产采集/留存政策仍未完成，不能仅凭符号配对关闭本项。 |
 
 ## 仍需完成
 
