@@ -155,8 +155,8 @@ def check_elf_pages(data, label):
 
 
 def check_android(archive):
-    result = []
-    with zipfile.ZipFile(archive) as stream:
+    result, inventory = [], {}
+    with zipfile.ZipFile(archive) as stream, Path(archive).open('rb') as source:
         names = stream.namelist()
         if len(names) != len(set(names)):
             raise ValueError(f'{archive}: duplicate ZIP entries')
@@ -171,11 +171,32 @@ def check_android(archive):
             abi = parts[pos + 1] if pos + 1 < len(parts) else ''
             if abi not in ANDROID_ABIS:
                 raise ValueError(f'{name}: unsupported Android ABI')
+            if pos not in (0, 1) or len(parts) != pos + 3:
+                raise ValueError(f'{name}: invalid Android library layout')
             data = stream.read(name)
             result.append(verify(data, 'elf', ANDROID_ABIS[abi], name))
             check_elf_pages(data, name)
+            if pos == 0 or parts[0] == 'base':
+                inventory.setdefault(abi, set()).add(parts[-1])
+            info = stream.getinfo(name)
+            if pos == 0 and info.compress_type == zipfile.ZIP_STORED:
+                source.seek(info.header_offset)
+                local = source.read(30)
+                if len(local) != 30 or local[:4] != b'PK\x03\x04':
+                    raise ValueError(f'{name}: invalid ZIP local header')
+                name_size, extra_size = struct.unpack_from('<HH', local, 26)
+                offset = info.header_offset + 30 + name_size + extra_size
+                alignment = 16384 if data[4] == 2 else 4096
+                if offset % alignment:
+                    raise ValueError(f'{name}: uncompressed APK ZIP offset is not {alignment}-byte aligned')
     if not result:
         raise ValueError(f'{archive}: no native libraries')
+    for abi, libraries in inventory.items():
+        missing = {'libapp.so', 'libflutter.so', 'libtim2tox_ffi.so'} - libraries
+        if missing:
+            raise ValueError(f'{abi}: missing runtime libraries: {sorted(missing)}')
+    if not inventory:
+        raise ValueError(f'{archive}: no base native runtime')
     return result
 
 

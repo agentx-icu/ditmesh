@@ -32,7 +32,7 @@
 | P8 | not applicable | 当前无购买、订阅、广告或付费数字权益。增加变现前重开，按所选商店/地区核支付规则。 |
 | P9 | to do | 已有条款接受、本地身份删除、持久屏蔽与支持链接；没有可实证的举报处理/响应/移除运营流程或商店控制台分类。P2P 不会自动豁免聊天的 UGC/账号删除政策。 |
 | W4 | to do | `package_artifacts.sh` 核五平台 staging payload 的真实原生头；`native_payload.py` 覆盖 app/engine/plugin/FFI；CPack 拒绝未经支持的 Windows 标签，检查实际 MSI template。新增 macOS 最终 ad-hoc seal/strict 签名/get-task-allow 门禁。正式渠道签名/公证和干净安装生命周期仍待补证据。 |
-| X6 | to do | Analyze 跑真实 JAR 签名/篡改/未签 entry、错误 engine/plugin/ELF/PE/Mach-O、CPack 元数据和 distribution 拒绝负例；Native 跑真实 payload/签名门禁，macOS 跑实际 codesign 篡改 fixture。最终 APK ZIP 对齐与 APK/AAB 全部原生 ELF 头均检查。商店交付 APK、AAB 生成 APK 的对齐、16 KB 运行、沙盒/安装器升级与设备/审核矩阵仍需发布证据。 |
+| X6 | to do | Analyze 跑真实 JAR 签名/篡改/未签 entry、错误 engine/plugin/ELF/PE/Mach-O、CPack 元数据和 distribution 拒绝负例；Native 跑真实 payload/签名门禁，macOS 跑实际 codesign 篡改 fixture。packager 核最终 APK ZIP 对齐、APK/AAB 全部原生 ELF 头、每 ABI 的 app/engine/FFI 清单及最终 APK ID/version/build 与发布源码一致。商店交付 APK、AAB 生成 APK 的对齐、16 KB 运行、沙盒/安装器升级与设备/审核矩阵仍需发布证据。 |
 
 此前本地 macOS UI 构建的签名完整，但最终 entitlements 含 `get-task-allow=true`。Release 现设 `CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO`，最终签名门禁逐代码对象拒绝该权限。本地源码/fixture/build 与 CI 结果须分别报告；合成二进制头或 CMake fixture 不是 ARM 应用或 MSI 安装成功。
 
@@ -67,7 +67,7 @@ Android ELF PT_LOAD 对齐适用于每个打包的 64 位原生库；ZIP 16 KB �
 
 ## 已执行的本地验证
 
-2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **43** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
+2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **45** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
 
 这些结果不包含 GUI/聊天 smoke、安装到 `/Applications`、Apple 公证、本地移动/Windows/Linux 构建、商店交付或审核。CI 平台构建作为 PR 独立证据；阻塞/未执行目标不能标成功。
 

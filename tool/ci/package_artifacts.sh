@@ -194,9 +194,11 @@ package_android() {
   python3 "$SCRIPT_DIR/native_payload.py" "$apk" --format android
   python3 "$SCRIPT_DIR/native_payload.py" "$aab" --format android
   if [[ "$MODE" == distribution ]]; then
-    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab" --distribution
+    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab" --distribution \
+      --version "$VERSION" --build-number "$BUILD_NUMBER"
   else
-    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab"
+    python3 "$SCRIPT_DIR/android_artifact_signing.py" "$apk" "$aab" \
+      --version "$VERSION" --build-number "$BUILD_NUMBER"
   fi
   cp "$apk" "$DIST_DIR/$BASE-android.apk"
   cp "$aab" "$DIST_DIR/$BASE-android.aab"

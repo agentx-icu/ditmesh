@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 
 
 def run(command):
@@ -20,6 +21,11 @@ def run(command):
 
 
 def check_aab(path):
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)) or not {
+                'BundleConfig.pb', 'base/manifest/AndroidManifest.xml'}.issubset(names):
+            raise ValueError('AAB integrity: duplicate entries or missing bundle structure')
     result = run(['jarsigner', '-J-Duser.language=en', '-J-Duser.country=US',
                   '-verify', '-strict', str(path)])
     output = result.stdout + result.stderr
@@ -61,18 +67,22 @@ def check_reports(apk, aab, distribution, expected):
     return actual
 
 
-def find_apksigner():
-    direct = shutil.which('apksigner')
+def find_build_tool(name):
+    direct = shutil.which(name)
     if direct:
         return direct
     root = os.environ.get('ANDROID_SDK_ROOT') or os.environ.get('ANDROID_HOME')
     if not root:
-        raise ValueError('ANDROID_HOME/ANDROID_SDK_ROOT or apksigner on PATH is required')
-    candidates = list((Path(root) / 'build-tools').glob('*/apksigner'))
+        raise ValueError(f'ANDROID_HOME/ANDROID_SDK_ROOT or {name} on PATH is required')
+    candidates = list((Path(root) / 'build-tools').glob(f'*/{name}'))
     candidates = [path for path in candidates if re.fullmatch(r'\d+(?:\.\d+)+', path.parent.name)]
     if not candidates:
-        raise ValueError('No stable Android build-tools apksigner found')
+        raise ValueError(f'No stable Android build-tools {name} found')
     return str(max(candidates, key=lambda path: tuple(map(int, path.parent.name.split('.')))))
+
+
+def find_apksigner():
+    return find_build_tool('apksigner')
 
 
 def check_apk(path):
@@ -82,15 +92,31 @@ def check_apk(path):
     return result.stdout
 
 
+def check_identity(badging, version, build, distribution):
+    package = re.search(r"^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", badging, re.M)
+    if not package or (package[1], package[2], package[3]) != ('icu.agentx.ditmesh', str(build), version):
+        raise ValueError('Final APK application ID/version/build do not match release source')
+    if distribution and 'application-debuggable' in badging:
+        raise ValueError('Distribution/tag APK is debuggable')
+    return {'application_id': package[1], 'version': package[3], 'build': package[2]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('apk', type=Path)
     parser.add_argument('aab', type=Path)
     parser.add_argument('--distribution', action='store_true')
+    parser.add_argument('--version', required=True)
+    parser.add_argument('--build-number', required=True)
     args = parser.parse_args()
     actual = check_reports(check_apk(args.apk), check_aab(args.aab), args.distribution,
                            os.environ.get('DITMESH_ANDROID_CERT_SHA256', ''))
+    badging = run([find_build_tool('aapt2'), 'dump', 'badging', str(args.apk)])
+    if badging.returncode:
+        raise ValueError('Cannot inspect final APK manifest with aapt2')
+    identity = check_identity(badging.stdout, args.version, args.build_number, args.distribution)
     print(json.dumps({'apk_and_upload_certificate_sha256': actual,
+                      'apk_identity': identity,
                       'mode': 'distribution-signing' if args.distribution else 'validation',
                       'play_delivered_certificate': 'not evaluated; owner must verify in Play Console'}))
 
@@ -98,6 +124,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, zipfile.BadZipFile, subprocess.SubprocessError) as error:
         print(f'Android artifact signing: {error}', file=sys.stderr)
         sys.exit(1)

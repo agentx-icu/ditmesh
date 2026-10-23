@@ -119,7 +119,7 @@ class NativePayloadTests(unittest.TestCase):
         payloads = {'arm64-v8a': elf(), 'x86_64': elf(62)}
         if mutate:
             mutate(payloads)
-        with zipfile.ZipFile(archive, 'w') as stream:
+        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as stream:
             for abi, data in payloads.items():
                 for name in ('libapp.so', 'libflutter.so', 'libtim2tox_ffi.so'):
                     stream.writestr(f'{prefix}/{abi}/{name}', data)
@@ -135,6 +135,27 @@ class NativePayloadTests(unittest.TestCase):
                     archive = self.android(root, lambda p: p.update({'arm64-v8a': invalid}))
                     with self.assertRaises(ValueError):
                         check_android(archive)
+
+    def test_uncompressed_apk_zip_offset_and_runtime_inventory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / 'app.apk'
+            with zipfile.ZipFile(archive, 'w') as stream:
+                for name in ('libapp.so', 'libflutter.so', 'libtim2tox_ffi.so'):
+                    stream.writestr(f'lib/arm64-v8a/{name}', elf())
+            with self.assertRaisesRegex(ValueError, 'ZIP offset'):
+                check_android(archive)
+            with zipfile.ZipFile(archive, 'w') as stream:
+                for name in ('libapp.so', 'libflutter.so', 'libtim2tox_ffi.so'):
+                    entry = zipfile.ZipInfo(f'lib/arm64-v8a/{name}')
+                    offset = stream.fp.tell() + 30 + len(entry.filename.encode())
+                    padding = (-offset - 4) % 16384
+                    entry.extra = struct.pack('<HH', 0xcafe, padding) + bytes(padding)
+                    stream.writestr(entry, elf())
+            self.assertEqual(len(check_android(archive)), 3)
+            with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as stream:
+                stream.writestr('lib/arm64-v8a/libtim2tox_ffi.so', elf())
+            with self.assertRaisesRegex(ValueError, 'missing runtime'):
+                check_android(archive)
 
 
 if __name__ == '__main__':

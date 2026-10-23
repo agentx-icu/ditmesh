@@ -3,11 +3,12 @@ from pathlib import Path
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
 
-from android_artifact_signing import check_aab, check_apk, check_reports, find_apksigner
+from android_artifact_signing import check_aab, check_apk, check_identity, check_reports, find_apksigner
 
 
 @unittest.skipUnless(shutil.which('jarsigner') and shutil.which('keytool'), 'JDK required')
@@ -29,6 +30,7 @@ class JarIntegrityTests(unittest.TestCase):
     def signed(self):
         path = self.root / 'app.aab'
         with zipfile.ZipFile(path, 'w') as stream:
+            stream.writestr('BundleConfig.pb', b'fixture bundle config')
             stream.writestr('base/manifest/AndroidManifest.xml', b'fixture payload')
         subprocess.run(['jarsigner', '-keystore', str(self.key), '-storepass',
                         'fixture-password', str(path), 'fixture'], capture_output=True, check=True)
@@ -67,7 +69,7 @@ class JarIntegrityTests(unittest.TestCase):
             self.skipTest('aapt2 and platform android.jar required')
         manifest = self.root / 'AndroidManifest.xml'
         manifest.write_text('''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            package="icu.agentx.signingfixture" android:versionCode="1" android:versionName="1">
+            package="icu.agentx.ditmesh" android:versionCode="1" android:versionName="1.0">
             <uses-sdk android:minSdkVersion="24"/>
             <application android:hasCode="false"/></manifest>''')
         apk = self.root / 'fixture.apk'
@@ -78,6 +80,12 @@ class JarIntegrityTests(unittest.TestCase):
         apk_report, aab_report = check_apk(apk), check_aab(self.signed())
         expected = check_reports(apk_report, aab_report, False, '')
         self.assertEqual(check_reports(apk_report, aab_report, True, expected), expected)
+        result = subprocess.run([sys.executable, str(Path(__file__).with_name('android_artifact_signing.py')),
+                                 str(apk), str(self.root / 'app.aab'), '--distribution',
+                                 '--version', '1.0', '--build-number', '1'],
+                                env={**os.environ, 'DITMESH_ANDROID_CERT_SHA256': expected},
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
         with self.assertRaisesRegex(ValueError, 'match'):
             check_reports(apk_report, aab_report, True, '12' * 32)
         with zipfile.ZipFile(apk, 'a') as stream:
@@ -108,6 +116,16 @@ class SigningIdentityTests(unittest.TestCase):
             check_reports(apk, aab, True, self.fingerprint)
         with self.assertRaisesRegex(ValueError, 'match'):
             check_reports(apk, aab.replace(self.fingerprint, '12' * 32), False, '')
+
+    def test_stale_version_wrong_app_id_and_debuggable_manifest_are_rejected(self):
+        badging = "package: name='icu.agentx.ditmesh' versionCode='2' versionName='1.1.0'"
+        self.assertEqual(check_identity(badging, '1.1.0', '2', True)['build'], '2')
+        for invalid in (badging.replace('icu.agentx.ditmesh', 'other.app'),
+                        badging.replace("versionCode='2'", "versionCode='1'"),
+                        badging.replace("versionName='1.1.0'", "versionName='1.0.0'"),
+                        badging + '\napplication-debuggable'):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                check_identity(invalid, '1.1.0', '2', True)
 
 
 if __name__ == '__main__':
