@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -50,6 +51,18 @@ foreach(target IN ITEMS positive negative)
   target_compile_options(${{target}} PRIVATE /utf-8)
 endforeach()
 ''', encoding='utf-8')
+
+
+def negative_boundary(code, output):
+    match = re.fullmatch(r'CreateDirectoryW failure code=(3|206) utf16_length=([0-9]+) '
+                         r'parent_utf16_length=([0-9]+) parent_directory_verified=true '
+                         r'created_short_directories=([0-9]+)\s*', output)
+    if (code != 1 or not match or int(match[2]) <= 260
+            or not 0 < int(match[3]) <= 260 or int(match[4]) < 1):
+        raise ValueError('Without the opt-in, the same native probe must fail at the verified long-path boundary')
+    return {'error_code': int(match[1]), 'utf16_path_length': int(match[2]),
+            'parent_utf16_length': int(match[3]), 'parent_directory_verified': True,
+            'created_short_directories': int(match[4])}
 
 
 def probe(executable, evidence):
@@ -106,8 +119,8 @@ def probe(executable, evidence):
                     report['native_io'] = json.loads(output)
                     if report['native_io'].get('outcome') != 'passed' or report['native_io'].get('utf16_path_length', 0) <= 260:
                         raise ValueError('Native path probe did not verify a long path')
-                elif code != 1 or 'CreateDirectoryW failure code=206 ' not in output:
-                    raise ValueError('Without the opt-in, the same native probe must fail at the long-path boundary')
+                else:
+                    report['negative_native_io'] = negative_boundary(code, output)
             report['negative_native_io_rejected'] = True
         report['outcome'] = 'passed'
     except Exception as error:

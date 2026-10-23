@@ -95,7 +95,7 @@ W3 复核发现应用未声明 `longPathAware`，而原生文件传输将未加�
 
 必需 Windows CI 将**实际 EXE 的 RT_MANIFEST #1**作为 resource/data image 读取，不执行其代码或加载依赖。检查全部嵌入语言、准确命名空间和唯一设置，拒绝缺失、false、重复或伪命名空间的长路径/DPI 声明。最终 runner、直接从最终 ZIP 读取的 EXE，以及 MSI 安装后和 repair 后的 EXE 均执行；源码 XML 不充当产物证据。
 
-独立的一次性 hosted-runner probe 嵌入最终 EXE 提取的 manifest，以 MSVC release CRT 编译锁定的 `file_io_compat.cpp`。在不加扩展前缀、含 Unicode/空格且长于 260 个 UTF-16 单元的路径上建目录，调用真实 FFI wrapper 写入/读取/核对字节、查大小，再改名、删除文件和目录。第二个 EXE 使用同一代码、只把 `longPathAware` 改为 false；必须被嵌入 manifest 门禁拒绝，并在 Win32 长路径边界失败。`windows-path-evidence` 保留最终 EXE/ZIP 哈希、资源策略、原生源码哈希、只读宿主策略和正反例日志。probe 不等于已安装 App 的文件传输端到端验证；普通用户的重定向/网络 home、shell/plugins、旧版数据、可移动卷及真实已安装 FFI 流程仍为 **needs device**。W3/X6 只对最终 PR head Windows job 实际执行的案例成立。
+独立的一次性 hosted-runner probe 嵌入最终 EXE 提取的 manifest，以 MSVC release CRT 编译锁定的 `file_io_compat.cpp`。在不加扩展前缀、含 Unicode/空格且长于 260 个 UTF-16 单元的路径上建目录，调用真实 FFI wrapper 写入/读取/核对字节、查大小，再改名、删除文件和目录。第二个 EXE 使用同一代码、只把 `longPathAware` 改为 false；必须被嵌入 manifest 门禁拒绝，并在 Win32 长路径边界失败。负例还须证明先前短目录创建成功、长度不超过 260 UTF-16 的父目录经 `GetFileAttributesW` 实时确认为目录，随后仅在超过 260 处以 Win32 3 或 206 和 exit 1 失败；拒绝权限错误、父缺失、短路径、无关错误或 zero exit。`windows-path-evidence` 保留最终 EXE/ZIP 哈希、资源策略、原生源码哈希、只读宿主策略和正反例日志。probe 不等于已安装 App 的文件传输端到端验证；普通用户的重定向/网络 home、shell/plugins、旧版数据、可移动卷及真实已安装 FFI 流程仍为 **needs device**。W3/X6 只对最终 PR head Windows job 实际执行的案例成立。
 
 ## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
 

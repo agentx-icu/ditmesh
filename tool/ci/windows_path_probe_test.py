@@ -8,6 +8,30 @@ import windows_path_probe as probe
 
 
 class WindowsPathProbeTests(unittest.TestCase):
+    def test_negative_boundary_requires_existing_parent_and_successful_short_directory_prelude(self):
+        for code in (3, 206):
+            output = (f'CreateDirectoryW failure code={code} utf16_length=278 '
+                      'parent_utf16_length=248 parent_directory_verified=true created_short_directories=6\n')
+            result = probe.negative_boundary(1, output)
+            self.assertEqual(result['error_code'], code)
+            self.assertEqual(result['utf16_path_length'], 278)
+            self.assertTrue(result['parent_directory_verified'])
+
+    def test_arbitrary_failure_or_unproved_long_path_is_not_a_negative_success(self):
+        valid = ('CreateDirectoryW failure code=3 utf16_length=278 '
+                 'parent_utf16_length=248 parent_directory_verified=true created_short_directories=6\n')
+        cases = [(0, valid), (2, valid), (1, valid.replace('code=3', 'code=5')),
+                 (1, valid.replace('code=3', 'code=183')),
+                 (1, valid.replace('utf16_length=278', 'utf16_length=260')),
+                 (1, valid.replace('parent_utf16_length=248', 'parent_utf16_length=278')),
+                 (1, valid.replace('parent_directory_verified=true', 'parent_directory_verified=false')),
+                 (1, valid.replace('created_short_directories=6', 'created_short_directories=0')),
+                 (1, 'CreateDirectoryW failure code=3 utf16_length=278\n'),
+                 (1, 'unrelated error\n' + valid)]
+        for code, output in cases:
+            with self.subTest(code=code, output=output), self.assertRaisesRegex(ValueError, 'verified long-path boundary'):
+                probe.negative_boundary(code, output)
+
     def test_project_matches_pinned_ffi_cpp20_and_release_dynamic_crt(self):
         # file_io_compat.cpp uses C++20 char8_t/std::u8string on Windows.
         with tempfile.TemporaryDirectory() as directory:

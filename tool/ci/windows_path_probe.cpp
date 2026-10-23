@@ -25,13 +25,24 @@ int wmain(int argc, wchar_t** argv) {
     }
     std::vector<fs::path> directories;
     fs::path directory = root;
+    size_t short_directories = 0;
     while (directory.native().size() < 320) {
+      const size_t parent_length = directory.native().size();
+      const DWORD parent_attributes = GetFileAttributesW(directory.c_str());
+      const bool parent_is_directory = parent_attributes != INVALID_FILE_ATTRIBUTES &&
+          (parent_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+      if (!parent_is_directory) throw std::runtime_error("Probe parent directory is absent");
       directory /= L"数据 path α 01234567890123456789";
       if (!CreateDirectoryW(directory.c_str(), nullptr)) {
-        std::cerr << "CreateDirectoryW failure code=" << GetLastError()
-                  << " utf16_length=" << directory.native().size() << '\n';
+        const DWORD error = GetLastError();
+        std::cerr << "CreateDirectoryW failure code=" << error
+                  << " utf16_length=" << directory.native().size()
+                  << " parent_utf16_length=" << parent_length
+                  << " parent_directory_verified=true"
+                  << " created_short_directories=" << short_directories << '\n';
         return 1;
       }
+      if (directory.native().size() <= MAX_PATH) ++short_directories;
       directories.push_back(directory);
     }
     const fs::path file = directory / L"接收 文件 01.bin";
