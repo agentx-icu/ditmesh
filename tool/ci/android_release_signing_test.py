@@ -20,7 +20,7 @@ class AndroidSigningTests(unittest.TestCase):
         self.assertEqual(self.run_gate(False, []).returncode, 0)
 
     def test_tag_requires_every_signing_input(self):
-        keys = ['KEYSTORE', 'KEYSTORE_PASSWORD', 'KEY_ALIAS', 'KEY_PASSWORD']
+        keys = ['KEYSTORE', 'KEYSTORE_PASSWORD', 'KEY_ALIAS', 'KEY_PASSWORD', 'CERT_SHA256']
         self.assertEqual(self.run_gate(True, keys).returncode, 0)
         for missing in keys:
             with self.subTest(missing=missing):

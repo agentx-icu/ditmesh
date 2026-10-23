@@ -11,14 +11,7 @@
 
 ## 分发配置
 
-| 平台 | 配置 |
-|---|---|
-| iOS | App Store Connect 记录、Apple Team、分发证书、描述文件及归档上传 |
-| macOS | Developer ID 签名与公证 |
-| Android | 发布/上传密钥、商店账号及 APK/AAB 签名 |
-| Windows / Linux | 安装包运行检查及适用的发行者签名 |
-
-签名凭据保存在 CI secrets 或本地签名配置中。
+[带日期的商店审计与负责人动作矩阵](STORE_READINESS.zh-CN.md)区分当前 GitHub 验证包和未来商店，包括 iOS/iPadOS/Mac App Store、Developer ID、Play、Microsoft MSI 与 MSIX、所选 Linux/国内 Android 候选。当前没有宣称任何商店已可上架。`package_artifacts.sh --mode distribution` 仅支持 Android 签名预检，其他正式发行路径在实现并验证前明确失败。正式凭据只存于密钥存储，不入 Git。
 
 ## 产品与隐私信息
 
@@ -29,6 +22,8 @@
 内容管理说明涵盖联系人屏蔽及点对点内容处理方式。
 
 ## Android：SDK 级别与 16 KB 页
+
+下列政策/SDK 观察核验于 **2026-10-23**；每次发布重开[官方动态来源](STORE_READINESS.zh-CN.md#官方政策与来源索引)。
 
 | 设置 | 值 | 位置 |
 |---|---|---|
@@ -54,15 +49,9 @@ for so in apk/lib/*/*.so; do echo "$so"; llvm-readelf -lW "$so" | grep -E '^\s+L
 
 ## iOS：出口合规（`ITSAppUsesNonExemptEncryption`）
 
-`Info.plist` 声明 `ITSAppUsesNonExemptEncryption = true`：每个构建都包含 libsodium（Tox）。本仓库不对这一用途做分类；由所有者在 App Store Connect 中决定分类，并把结果记录在此。
+`Info.plist` 暂保留 `ITSAppUsesNonExemptEncryption = true`，待发布负责人记录实际 Tox/libsodium 用途的分类决定。存在加密并不能单独判断是否适用豁免。按 [Apple 当前出口问卷](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance/)准备适用材料，提交前记录决定、范围、日期与负责人。只有 Apple 对该分类提供合规代码时才添加。修改此 flag 需要已记录分类依据，不能照抄其他应用的答案或绕过问卷。
 
-1. 首次上传时，在 App Store Connect 回答出口合规问题（App Information › App Encryption Documentation，或在 TestFlight › Manage Compliance 按构建回答）。若该用途符合豁免（例如加密仅用于身份验证，或仅使用公开标准做数据传输），记录是哪一项；否则获取 ERN / CCATS 或自分类报告，并按要求提交年度自分类。
-2. App Store Connect 为已批准的分类签发出口合规代码后，把它作为 `ITSEncryptionExportComplianceCode`（非空字符串）加入 `apps/ditmesh/ios/Runner/Info.plist`。此后每个上传的构建都会自动回答这些问题，TestFlight 构建不再因"Missing Compliance"被扣住。
-3. 在下方记录决定（类别或文档编号、日期、决定人）。
-
-不要为了跳过问题而把 `ITSAppUsesNonExemptEncryption` 改成 `false`：对本应用而言那是虚假声明。MorseCQ（无联网、无 libsodium）声明的是 `false`，不要把它的 plist 值复制过来。`test/platform/mobile_platform_config_test.dart` 检查该标志，并拒绝空的合规代码。
-
-决定记录：暂无（待所有者处理）。
+决定记录：尚无（负责人待办）。现有平台测试保守固定待分类 flag、拒绝空合规代码；测试不判断出口法律分类。
 
 ## 设备上的静态数据
 

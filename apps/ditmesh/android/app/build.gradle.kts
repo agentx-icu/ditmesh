@@ -94,6 +94,12 @@ val ditmeshReleaseSigning: Map<String, String>? = run {
         "keyPassword" to "DITMESH_ANDROID_KEY_PASSWORD",
     ).mapValues { System.getenv(it.value).orEmpty() }
     if (env.values.all { it.isNotEmpty() }) return@run env
+    if (env.values.any { it.isNotEmpty() }) {
+        throw GradleException("Partial DITMESH_ANDROID_* signing configuration; refusing fallback")
+    }
+    if (System.getenv("DITMESH_DISTRIBUTION") == "1") {
+        throw GradleException("Distribution requires complete DITMESH_ANDROID_* release signing")
+    }
     val file = rootProject.file("key.properties").takeIf { it.isFile } ?: return@run null
     val props = Properties().apply { file.inputStream().use { load(it) } }
     ditmeshSigningKeys.associateWith { props.getProperty(it).orEmpty() }

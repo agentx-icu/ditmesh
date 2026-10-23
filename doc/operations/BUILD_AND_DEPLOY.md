@@ -61,6 +61,8 @@ bash tool/ci/package_artifacts.sh --target macos
 
 GitHub's workflow filter/needs behavior is documented in [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). Executed results are in the [verification record](../VALIDATION.md).
 
+Packaging now checks actual PE/ELF/Mach-O architecture across the app, engine and plugins, with Windows MSI target metadata checked on the produced installer. Android checks all APK/AAB native libraries and final APK/AAB signatures; tag/distribution builds require the owner's expected certificate SHA-256 in `DITMESH_ANDROID_CERT_SHA256`. APK ZIP 16 KB placement applies to uncompressed `.so`; AAB-generated APK/device evidence remains required. macOS signs validation bundles inside out after staging, checks every final code signature/entitlement, and forbids `get-task-allow`. `--mode validation` is the default; unsupported formal `--mode distribution` paths fail rather than emit an unsigned/ad-hoc substitute. See the [channel matrix and commands](../release/STORE_READINESS.md).
+
 ## Signing
 
 Configure Apple distribution certificates and provisioning for iOS, Developer ID signing and notarization for macOS, and a release/upload keystore for Android. Store credentials in CI secrets or local signing configuration. See [release requirements](../release/APP_STORE.md) and [Flutter iOS deployment](https://docs.flutter.dev/deployment/ios).

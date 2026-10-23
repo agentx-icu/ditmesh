@@ -63,6 +63,8 @@ flutter run -d macos
 
 See [build and packaging](doc/operations/BUILD_AND_DEPLOY.md), [release requirements](doc/release/APP_STORE.md), [application responsibilities](doc/APP_SPLIT.md) and the [test pyramid](doc/testing/TEST_PYRAMID.md). All documents are listed in the [documentation index](doc/README.md).
 
+The [store readiness matrix](doc/release/STORE_READINESS.md) lists actual distribution paths, signing preflight and owner blockers. CI/build success does not establish store submission approval.
+
 ## Development checks
 
 Run dependency resolution at the workspace root, not inside a package:

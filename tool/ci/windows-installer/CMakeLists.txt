@@ -13,6 +13,10 @@ if(NOT EXISTS "${DITMESH_INSTALLER_SOURCE_DIR}/ditmesh.exe")
   message(FATAL_ERROR "No ditmesh.exe in ${DITMESH_INSTALLER_SOURCE_DIR}")
 endif()
 
+if(NOT DITMESH_PACKAGE_ARCH STREQUAL "x64")
+  message(FATAL_ERROR "DitMesh currently packages only the validated Windows x64 target")
+endif()
+
 set(_app_dir "${CMAKE_CURRENT_LIST_DIR}/../../../apps/ditmesh")
 
 # CPACK_PACKAGE_NAME is the WiX product name: what Add/Remove Programs shows.
