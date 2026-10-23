@@ -38,6 +38,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  // window_manager posts WM_QUIT without destroying the HWND. Clear the
+  // controller through OnDestroy before native view destruction can reenter
+  // our window procedure, and while the COM apartment is still available.
+  window.Destroy();
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

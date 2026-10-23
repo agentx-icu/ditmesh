@@ -69,6 +69,87 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 4. **发布/审核负责人：**提供真实审核说明和可达测试 peer/QR 联系人，说明离线/屏蔽与 bootstrap 依赖，不把 fake-backend 截图当成真实聊天证据。完成截图/图标/年龄/内容/本地化/无障碍材料并从审核网络核公开 URL，分开核 iPhone/iPad/Mac 素材。
 5. **QA/发布负责人：**关联确切构建 SHA/工具链/header/安装器/签名报告和测试轨道或签名后干净主机安装/升级/卸载证据。覆盖旧数据、沙盒权限、拒绝/恢复、重启/离线/握手、备份恢复和 16 KB 运行。灰度发布指定停止负责人；通常通过更高版本修复，不能假定商店版本可降级或数据 schema 向下兼容。保留先前签名制品与迁移兼容恢复方案。
 
+## Windows 已安装包增量验证 — 2026-10-23
+
+本次增量从已合并 PR #34（`909ad76a4bc67d01aed8a10029a6b290ba36d885`）开始。Windows job 现在把最终 MSI 安装到含空格路径，将全部已装文件与配对最终 ZIP 逐个核 SHA-256（包括 Flutter 资源和 ELF AOT snapshot），并对安装后的 payload 运行原生头校验。它等待所启动 PID 的真实主窗口，确认该 PID 从安装目录加载 Flutter engine 和 Tox bridge，再发送正常关闭请求并要求零退出；随后删除已装 Flutter engine、执行 MSI repair、重复 payload/窗口校验、卸载并拒绝残留安装文件或进程。即使失败，也上传 MSI 日志、准确 MSI/ZIP SHA-256、payload 报告、数据路径与各阶段结果。失败清场不能把测试改成通过。
+
+另一个产物级缺口已在 [PR #34 的最终 Windows artifact](https://github.com/agentx-icu/ditmesh/actions/runs/39886381714) 复现：ZIP 含 15 个 DLL，却没有 `msvcp140.dll`、`vcruntime140.dll`、`vcruntime140_1.dll`，而真实 `ditmesh.exe`、`tim2tox_ffi.dll` 的导入表均需要这三项。hosted runner 预装 Visual Studio 会掩盖干净机器失败。Windows CMake install 现通过 `InstallRequiredSystemLibraries` 从所选 MSVC 工具链获取 release CRT，要求三项 x64 依赖并拒绝 debug runtime，携带 `licenses/MSVC-runtime.txt` 来源/条款说明。打包检查 runtime 清单和所有原生架构；MSI 安装测试要求 CRT 具有有效 Microsoft Authenticode 签名，并确认同一启动 PID 加载的是三个 app-local DLL。Microsoft CRT 的签名不会替 DitMesh 自身 EXE、插件或 MSI 签名。
+
+2026-10-23 重核：[Flutter app-local 分发](https://docs.flutter.dev/platform-integration/windows/building#building-your-own-zip-file-for-windows)、[CMake runtime 发现](https://cmake.org/cmake/help/latest/module/InstallRequiredSystemLibraries.html)、[Microsoft 再分发条件](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files)。发布负责人仍须归档实际 Visual Studio 许可/再分发依据，并随应用更新维护 app-local runtime。notice 只记来源，不表示应用 GPL 许可重新授权 Microsoft 组件，也不代表本任务接受任何协议。
+
+`test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，不覆盖 KnownFolder/profile 注册表设置或改已有用户数据；Windows Installer 按测试产品管理自身注册态。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
+
+严格关闭检查在修复前真实复现 `0xC000041D`。[344251c 的受限 GDB 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254413827)在 `flutter_windows.dll` RVA `0x1cda0` 捕获故障：`FlutterDesktopViewControllerDestroy` 销毁子 HWND 时重入 `FlutterDesktopViewControllerHandleTopLevelWindowProc`，锁定 SDK 的原生 view 已清空；`window_manager` 只发 `WM_QUIT`，未先销毁父窗口。runner 现于 COM 反初始化前显式走既有 `window.Destroy()`，让 `OnDestroy` 先清空客户端 controller，避免原生销毁期间重入；无 controller 时也不再重载字体。不屏蔽其他消息或异常。工作流已移除取证 opt-in；最终 [PR checks](https://github.com/agentx-icu/ditmesh/pull/35/checks)须在**无调试器**下证明安装/repair 两次启动均正常零退出，MSI evidence 记录 `debugger_requested=false`。可选 hosted-only 取证不等于生产 crash 收集或最终资格。
+
+| ID | 状态 | 证据／仍存边界 |
+|---|---|---|
+| W4、X6 | to do | 必需 Windows release-build CI 现执行最终 MSI 安装、payload、启动/关闭、删除文件后 repair、卸载；具体执行证据看最终 PR head 的 Windows job。本地 macOS 测试不执行 MSI、不证明 Windows 运行行为。签名、上一版本升级、Store 交付和普通用户资格仍由负责人完成。 |
+| X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。其他目标保留自己的门禁；Ubuntu 与 iOS 增量见后文。 |
+| P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
+
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **111** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+
+## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
+
+必需 Linux release job 现把准确最终 DEB 交给 `linux_installed_smoke.py`。全新的官方 Ubuntu 24.04 容器先只安装 DEB 及其声明依赖，核 ELF 未解析依赖与运行工具并记录，再安装 X11 测试工具，避免构建 runner 的 SDK/依赖掩盖包依赖缺失。容器不用 privileged 模式、不挂载宿主桌面/用户数据；以既有非特权 `nobody` 用户和私有 XDG 目录运行已装 launcher，将安装文件字节/模式及 desktop/icon/launcher 与最终 DEB 对照，等待该 PID 的可见窗口和已装 Flutter/Tox mapped modules，发送正常 `WM_DELETE_WINDOW` 关闭请求，再卸包并拒绝包文件、注册态或进程残留。失败清场不能算优雅退出。
+
+共享 helper 的首次真实 CI 暴露并修复了加载器上下文与失败证据问题：入口 ELF 在清除 `LD_LIBRARY_PATH` 后先严格检查；单独检查 DSO 时只为该命令提供包内 `/opt/<app>/lib`，不向 GUI 导出环境、不放过系统依赖或 GLIBC 缺失，随后仍核实际 PID maps。证据逐文件复制，不更改宿主挂载目录的属主/权限，并预留宿主可写结果文件；记录失败不会遮蔽原始错误。18 个 helper 回归覆盖 loader 存在/架构/闭包与该边界、容器 stdin/超时清场及文件/架构负例，均不是实际安装证据。
+
+[DitMesh 在 344251c 首次真实 clean-DEB 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254414014)已过已装文件、loader 闭包、可见窗口与实际 engine/FFI maps，随后正常关闭时 abort：插件同步销毁 GTK/GL，早于 Flutter view/compositor 完成清理。Linux 最终退出现于既有偏好/会话保存/cleanup 屏障与 tray 销毁之后，走 Flutter 标准 `SystemNavigator.pop` GApplication 路径；close-to-tray 仍 hide，Windows/macOS 保留各自插件入口。4 个真实 MethodChannel/controller 回归覆盖保存完成顺序、tray 状态和平台分支，包含红→绿复现；相关桌面测试本地共 42 项通过。最终 DEB 仍须在 CI 完成可见启动、正常零退出与卸载。
+
+运行时加载的 GL/EGL/GLES 调度库现为显式 DEB 依赖（`libegl1`、`libgl1`、`libgles2`），RPM 补对应 SONAME Requires。干净检查在安装测试工具前解析每个准确 loader SONAME，核原生 ELF 头，再清除 `LD_LIBRARY_PATH` 检查其完整 `ldd` 闭包；Mesa DRI 软件驱动仍只是测试设施。宿主偶有的 JDK 也不能改变桌面 bundle：仅 Android 使用的 `path_provider_android` 带来可选 `jni` desktop CMake，但 DitMesh 无桌面 Java 调用；Linux/Windows 在 generated plugins 前关闭该可选发现，不改 Android。回归真实执行锁定上游 JNI CMake，通过可发现的合成 JDK 复现旧的 `libdartjni` 捆绑，再证明新策略排除它且仍能构建/安装另一原生库；fixture 不替代最终包执行。
+
+`linux-installer-evidence` 保留 DEB 哈希、拉取镜像 digest、OS/架构/包/依赖清单、已装文件哈希、实际 PID/maps/窗口和卸载结果，失败也保留日志。范围仅为 **Ubuntu 24.04 x86_64 DEB／X11／1280×800／scale 1／软件渲染**；不证明 RPM/Fedora、Wayland、硬件/音频/摄像头、真实 peer 会话、上一版升级或商店批准。W4/X6 在这些更大边界仍为 **to do**，新子检查的真实执行证据须看最终 PR head 的 Linux job；其他目标保留自己的门禁。
+
+## 受控 iOS archive/export 增量 — 2026-10-23
+
+`bash tool/build_ios_store.sh --unsigned-archive` 现可在禁用签名、强制真实 Tox 后端且不访问账号的条件下生成 device archive。iOS job 保留既有 unsigned IPA，另建 archive，核唯一 App 及其可执行主程序、arm64 原生库存、版本/构建号、源码声明用途文案、App/SDK privacy manifests、嵌入 Tim2Tox framework 和无测试 hooks，并强制主程序/dSYM UUID 一致。独立 `ios-store-readiness-archive` tar artifact 保留符号、symlink 和 executable mode，不进入十二资产公开发行契约；[344251c 首次真实 CI 执行](https://github.com/agentx-icu/ditmesh/actions/runs/39904141214/job/120254413764)已通过：20 个 arm64 原生对象、15 份 privacy manifest、主程序/dSYM UUID 匹配，使用 Xcode 26.6／iPhoneOS 26.5 SDK。这是 unsigned archive 证据，最终 PR head 仍重跑。
+
+按 [Apple SDK 最低要求](https://developer.apple.com/news/upcoming-requirements/)，2026-04-28 起上传 App Store Connect 的 iOS/iPadOS 构建须使用 Xcode 26 或更新版本和 iOS/iPadOS 26 SDK。受控入口现在对 archive 及最终 IPA 的实际 `Info.plist` 共用检查：`DTSDKName` 须为完整 `iphoneos` 版本且 major ≥ 26，`DTXcode` 须为有效四位版本且 ≥ 2600；缺失、畸形、模拟器或任一独立旧值均失败，不以部署最低版本或 runner 选择替代实际产物。unsigned archive 同样执行，避免误标兼容性；每次发布仍须重查政策，门槛不是商店接受证明。
+
+有既有负责人材料后，同一入口只接受 `--team-id`、`--certificate-sha1`、`--export-options` 和全新 `--output`。负责人本地 plist 必须明确 `method=app-store-connect`、`destination=export`、manual 签名、所选 team/证书 SHA-1，以及仅用于 `icu.agentx.ditmesh` 的既有 profile；构建前快照已验证政策。直接调用 `xcodebuild archive` 和本地 `-exportArchive`，不带自动 provisioning/设备注册参数，不上传，也不接受任意 Flutter/Xcode 参数。最终 IPA 必须通过递归签名完整性、distribution authority、实际 signer 指纹、离线证书链、profile 的 team/app/证书/到期和 release entitlements 对照，才写入 `distribution.json`。没有负责人既有 Keychain identity/profile，本轮**不执行**签名导出；不得把这些文件或私钥交到工单/artifact。通用 `package_artifacts.sh --mode distribution` 在 Android 外仍显式拒绝；这是独立的显式 iOS 入口。
+
+负责人受控 Mac 的本地导出命令：
+
+```sh
+bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
+  --certificate-sha1 "$DITMESH_IOS_CERT_SHA1" \
+  --export-options /owner-controlled/ExportOptions.plist
+```
+
+W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
+
+## 剩余工程与决定
+
+负责人材料表不是全部 backlog。安装检查通过，不能被表述为所有可通过代码解决的 checklist 项已经完成。
+
+| 剩余工程 | 前提／阻塞 |
+|---|---|
+| X9 release 应用/原生 crash 捕获、逐构建符号归档及符号化、脱敏/轮转/留存 | 先选本地或远端收集、允许的数据/留存/支持流程及隐私披露，再集成 reporter；本任务不虚构遥测服务或账号。 |
+| P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
+| B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
+| 最终签名 iOS export/真机资格；可选 Mac App Store、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | iOS 已有受控 archive/export 入口，仍需既有负责人签名材料与真实签名设备证据；其他渠道先选择真实身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
+| F1/F2 帧时序/启动/体积预算，以及完整 X1/X4/X6 设备/升级矩阵 | 先定支持硬件和预算，再测已安装 release 与旧版升级路径；容器/窗口检查不能替代测量。 |
+
+## 负责人材料交接表
+
+这是待提供材料的请求清单，不代表账号或应用记录已经存在。公开 ID、证书指纹和脱敏证据可记录到发布工单；秘密值由账号持有人直接配置进已批准的秘密存储。不要在聊天、PR 或仓库发送密码、私钥、keystore、provisioning profile 或 API token。本任务不创建账号/凭据、不改角色、不接受协议，也不发布。
+
+| 平台／渠道 | 材料与用途 | 获取或核实位置 | 当前阻塞 |
+|---|---|---|---|
+| 所选渠道通用 | 明确渠道/地区、发行主体、应用归属、公开应用/包 ID、上一版版本/构建号与签名指纹，建立不可随意改变的升级身份。 | 所选商店应用记录及上一版已签名发布档案；与 `icu.agentx.ditmesh`、`apps/ditmesh/pubspec.yaml` 对照。 | 未确定渠道或核实归属/上一版记录；不得编造 ID，也不能假设首次发布。 |
+| iOS／iPadOS App Store | Apple team ID、bundle/app 记录、既有 Distribution 证书公开 SHA-1/到期及绑定此 app/证书的 App Store profile 名称/UUID、签名负责人、设备范围、archive/TestFlight 记录，用于受控签名导出与审核构建。 | [Apple Developer 账号](https://developer.apple.com/account/) → Membership / Certificates, Identifiers & Profiles → Profiles；负责人 Mac Keychain Access → My Certificates；[App Store Connect](https://appstoreconnect.apple.com/) → My Apps → 应用记录 / TestFlight / Pricing and Availability。私有签名材料由持有人保存在 Keychain 或批准的 CI 秘密存储。 | 缺已确认的 app/team、distribution 签名或可接受的正式 archive；unsigned IPA 和 macOS ad-hoc 签名不能替代。 |
+| Mac App Store（若选） | 独立 macOS 平台/app 身份、distribution provisioning、沙盒能力评估和签名 archive，验证 Store 路径。 | Apple Developer → Identifiers / Profiles；App Store Connect → 应用 → macOS 平台和构建。 | 现有 PKG/ZIP 只验证站外包路径；Store 签名及沙盒网络/文件/设备测试未完成。 |
+| macOS 站外 Developer ID | Developer ID Application/Installer 的公开证书主体、到期/指纹，以及安全签名/公证配置负责人，用于最终 bundle/PKG 签名与公证证据。 | Apple Developer → Certificates；macOS Keychain Access → My Certificates；持有人的 `notarytool` 配置。只交接公证 submission ID/状态及 stapling/Gatekeeper 报告，不交接私钥、密码或 profile 内容。 | 当前 ad-hoc 只证明完整性；正式签名、公证/stapling 和隔离下载后的干净 Mac 安装待做。 |
+| Google Play／Android | Play 开发者/app 记录、上传证书 SHA-256、独立 Play app-signing 交付证书/lineage、递增 versionCode、适用测试及 production-access 证据，确保上传和安装升级身份。 | [Play Console](https://play.google.com/console/) → 应用 → Setup / App integrity 核证书/签名；Test and release 核轨道/资格。持有人直接在仓库 Settings → Secrets and variables → Actions 配置四个 `ANDROID_KEYSTORE_*` / `ANDROID_KEY_*` secret，以及公开变量 `DITMESH_ANDROID_CERT_SHA256`。 | 缺已核上传 key/指纹或归属；交付身份、账号特定发布资格、生成 APK/16 KB 运行及升级证据仍需补齐。 |
+| Microsoft Store 托管 MSI/EXE（若选） | Partner Center 产品身份、可信代码签名证书的公开身份、固定版本 HTTPS 安装器 URL/哈希、静默参数与认证说明，建立发行者和托管包信任。 | [Partner Center](https://partner.microsoft.com/dashboard/) → Apps and games → 产品 / submission；现有证书提供方后台；发行者所选的内容不可变下载托管。私有签名访问仅配置到批准的安全环境。 | 安装器及全部内嵌 PE 仍需可信签名、固定 HTTPS 托管及上一版本升级证据。本任务不购买证书、不部署托管、不提审。 |
+| Windows Visual C++ runtime | 实际 MSVC/toolset 版本、适用 Visual Studio 许可/再分发证据及 app-local 维护负责人，建立 Microsoft 组件的权利和维护路径。 | Visual Studio Help → About → License Terms、[Visual Studio 许可目录](https://visualstudio.microsoft.com/license-terms/)和所用工具链的 redistributable list；与 `licenses/MSVC-runtime.txt`、CI 证书/哈希报告核对。 | Microsoft DLL 有效签名或 CI 成功不证明发行者拥有再分发权，也不接受协议；分发前由负责人归档依据。 |
+| Microsoft Store MSIX（若选） | 预留包 identity/publisher、能力清单、WACK/升级证据及签名包记录。 | Partner Center → 产品 → Product identity / packages。 | 尚未实现 MSIX 打包路径；Store 重签是不同路径，不能为满足托管 MSI 行而要求购买证书。 |
+| Linux 站外／可选商店 | 支持的发行版/架构矩阵、上一版包及维护者归属；若选择，补 Flathub app-ID 权利或 Snap publisher/name/confinement 批准。 | 旧版已签名发布档案；[Flathub 文档](https://docs.flathub.org/docs/for-app-authors/submission)及 [Snapcraft dashboard](https://dashboard.snapcraft.io/)。 | 干净安装/升级/桌面集成/portal 尚无证据。实际 Flathub manifest/提交按现行 AI 政策交由人处理；不假设已选择任何可选商店。 |
+| 中国大陆 Android（若选） | 明确具体商店、地区/包类型、已验证主体/app 身份，以及该渠道实际要求的资质/备案、隐私/SDK 审核证据。 | 发行者的 Huawei AppGallery Connect、小米或其他所选官方开发者后台，按当前渠道细则核实。 | 尚未选渠道/地区；后台专属规则及适用性仍由负责人确认，不从中文界面推导统一备案义务。 |
+| 所选渠道的隐私／安全／审核资料 | 准确的隐私/SDK 清单，privacy/terms/support URL，加密出口分类，年龄/受众/内容回答，分语言/设备截图图标，真实 peer 审核指引，以及适用的删除/举报/响应流程。 | App Store Connect → App Information / App Privacy / App Review / 加密问题；Play Console → App content / Store listing；Partner Center → submission properties / age ratings / certification notes；公共 `site/` 源码与实际产品/运营负责人。审核专用访问只填各后台受保护审核字段。 | 产品负责人尚未建立 UGC 响应与删除请求流程，亦未签核披露/出口问卷；有源码链接不能替代。 |
+| QA／发布证据 | 准确产物哈希、CI head/run/job 链接、签名安装/旧版升级/卸载结果及设备矩阵，区分仓库验证和渠道可发布性。 | GitHub Actions artifacts 和负责人真机/干净机器报告，绑定同一最终字节及签名身份。 | 硬件、商店交付版本、上一版升级及审核网络可达性仍须执行；同版本 MSI repair 不是升级资格验证。 |
+
 ## 已执行的本地验证
 
 2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **49** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
@@ -77,7 +158,7 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 
 ## 官方政策与来源索引
 
-除上面明确标记未读完整者外，核验日期均为 **2026-10-23**。每次发布重开动态来源，构建检查器不硬编码政策截止日期。
+除上面明确标记未读完整者外，核验日期均为 **2026-10-23**。每次发布重开动态来源，构建检查器按已生效的 SDK 最低版本检查实际产物，不使用未来截止日期触发逻辑。
 
 - Apple：[App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)（UGC 1.2、审核访问 2.1、隐私/删除 5.1.1）；[privacy manifests](https://developer.apple.com/documentation/bundleresources/privacy-manifest-files)、[required API reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitypereasons)、[出口合规](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance/)、[签名](https://developer.apple.com/library/archive/technotes/tn2206/_index.html)、[公证](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。针对移动及其他列明平台的 required-reason 执行规则不能直接泛化到所有 macOS 渠道。
 - Android/Play：[应用签名](https://developer.android.com/studio/publish/app-signing)、[apksigner](https://developer.android.com/tools/apksigner)、[JAR 验证](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/jar/JarFile.html)、[16 KB](https://developer.android.com/guide/practices/page-sizes)、[target API](https://support.google.com/googleplay/android-developer/answer/11926878)、[User Data](https://support.google.com/googleplay/android-developer/answer/10144311)、[账号删除](https://support.google.com/googleplay/android-developer/answer/13327111)、[UGC](https://support.google.com/googleplay/android-developer/answer/9876937)。本日普通手机/平板新应用和更新要求 API 36；16 KB 指引称自 2027-02-01 阻止不支持的更新。发布时核实际适用性及控制台账号测试例外。

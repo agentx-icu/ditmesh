@@ -6,9 +6,10 @@ ELF: refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
 Mach-O: github.com/apple-oss-distributions/xnu/tree/main/EXTERNAL_HEADERS/mach-o
 """
 import argparse
+import hashlib
 import json
 import mmap
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import struct
 import sys
@@ -208,6 +209,64 @@ def check_android(archive):
     return result
 
 
+def check_windows_crt(root):
+    """App-local release CRT inventory; PE CPU checks run through check_tree."""
+    root = Path(root)
+    required = ('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')
+    for name in required:
+        if not (root / name).is_file():
+            raise ValueError(f'Windows release runtime missing: {name}')
+    if not (root / 'licenses/MSVC-runtime.txt').is_file():
+        raise ValueError('Windows release runtime provenance/license notice missing')
+    for path in root.glob('*.dll'):
+        if re.fullmatch(r'(?:msvcp|vcruntime|concrt)140.*d\.dll', path.name, re.I):
+            raise ValueError(f'Debug runtime is forbidden in release: {path.name}')
+
+
+def check_installed_payload(root, archive_path):
+    """Compare every final ZIP file with its installed counterpart, including assets."""
+    root = Path(root).resolve()
+    records, entries, seen = [], [], set()
+    with zipfile.ZipFile(archive_path) as archive:
+        for entry in archive.infolist():
+            parts = entry.filename.rstrip('/').split('/')
+            name = entry.filename.rstrip('/').casefold()
+            if ('\\' in entry.filename or ':' in entry.filename or
+                    any(part in ('', '.', '..') for part in parts) or
+                    parts[0] != 'ditmesh' or name in seen):
+                raise ValueError(f'Unsafe or duplicate ZIP entry: {entry.filename}')
+            seen.add(name)
+            if not entry.is_dir():
+                entries.append((entry, PurePosixPath(*parts[1:])))
+        expected_files = {relative.as_posix().casefold() for _, relative in entries}
+        if 'ditmesh.exe' not in expected_files:
+            raise ValueError('Final ZIP is missing ditmesh.exe')
+        for entry, relative in entries:
+            installed = root.joinpath(*relative.parts)
+            if not installed.is_file() or not installed.resolve().is_relative_to(root):
+                raise ValueError(f'Missing installed file: {relative}')
+            with archive.open(entry) as stream:
+                expected = hashlib.file_digest(stream, 'sha256').hexdigest()
+            with installed.open('rb') as stream:
+                actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+            if actual != expected:
+                raise ValueError(f'Installed file differs from final ZIP: {relative}')
+            records.append({'path': str(relative), 'sha256': expected})
+    installed_files = set()
+    for installed in root.rglob('*'):
+        relative = installed.relative_to(root).as_posix().casefold()
+        if installed.is_symlink() or not installed.resolve().is_relative_to(root):
+            raise ValueError(f'Unexpected installed symlink or path: {relative}')
+        if installed.is_file():
+            if relative in installed_files:
+                raise ValueError(f'Unexpected installed case collision: {relative}')
+            installed_files.add(relative)
+    extra = installed_files - expected_files
+    if extra:
+        raise ValueError(f'Unexpected installed files: {sorted(extra)}')
+    return records
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('path', type=Path)
@@ -215,6 +274,8 @@ def main():
     parser.add_argument('--entry', help='required main executable relative to payload root')
     parser.add_argument('--flutter-windows-aot', action='store_true')
     parser.add_argument('--arch', choices=('x86_64', 'arm64', 'arm', 'x86'))
+    parser.add_argument('--require-windows-crt', action='store_true')
+    parser.add_argument('--expected-zip', type=Path, help='Compare installed Windows files against the final ZIP')
     args = parser.parse_args()
     if args.flutter_windows_aot and args.format != 'pe':
         parser.error('--flutter-windows-aot requires --format pe')
@@ -222,6 +283,15 @@ def main():
         parser.error('--arch is required for a native directory')
     result = check_android(args.path) if args.format == 'android' else check_tree(
         args.path, args.format, args.arch, args.entry, args.flutter_windows_aot)
+    if args.require_windows_crt:
+        if args.format != 'pe':
+            parser.error('--require-windows-crt requires --format pe')
+        check_windows_crt(args.path)
+    if args.expected_zip:
+        if args.format != 'pe':
+            parser.error('--expected-zip requires --format pe')
+        result = {'native_payload': result,
+                  'installed_files': check_installed_payload(args.path, args.expected_zip)}
     print(json.dumps(result, indent=2))
 
 
