@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import '../i18n/key_value_store.dart';
 import '../notifications/notification_prefs.dart';
 import '../ui/chat/morse_playback_settings.dart';
@@ -177,7 +178,7 @@ final class AppPreferences implements IdentityDataStore {
         if (identical(_dirty[key]?.version, write.version)) {
           _saveErrors[key] = error;
         }
-        debugPrint('[AppPreferences] save failed for $key: $error\n$stack');
+        debugLog(() => '[AppPreferences] save failed for $key: $error\n$stack');
       }
     });
   }

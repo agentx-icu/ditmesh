@@ -1,6 +1,6 @@
 import 'package:app_badge_plus/app_badge_plus.dart';
-import 'package:flutter/foundation.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import 'badge_api.dart';
 import 'notification_platform.dart';
 
@@ -29,7 +29,7 @@ final class AppBadgePlusApi implements BadgeApi {
       return _supported = await AppBadgePlus.isSupported();
     } catch (error) {
       // MissingPluginException in unit tests, or an unsupported launcher.
-      debugPrint('[AppBadgePlusApi] isSupported failed: $error');
+      debugLog(() => '[AppBadgePlusApi] isSupported failed: $error');
       return false;
     }
   }
@@ -40,7 +40,7 @@ final class AppBadgePlusApi implements BadgeApi {
     try {
       await AppBadgePlus.updateBadge(count < 0 ? 0 : count);
     } catch (error) {
-      debugPrint('[AppBadgePlusApi] updateBadge($count) failed: $error');
+      debugLog(() => '[AppBadgePlusApi] updateBadge($count) failed: $error');
     }
   }
 }

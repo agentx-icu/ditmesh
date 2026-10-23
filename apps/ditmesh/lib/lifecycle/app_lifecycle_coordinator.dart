@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import '../notifications/notification_platform.dart';
 import 'background_task_api.dart';
 import 'lifecycle_hint.dart';
@@ -259,6 +260,6 @@ class AppLifecycleCoordinator with WidgetsBindingObserver {
   }
 
   static void _report(String what, Object error, StackTrace stack) {
-    debugPrint('[AppLifecycleCoordinator] $what failed: $error\n$stack');
+    debugLog(() => '[AppLifecycleCoordinator] $what failed: $error\n$stack');
   }
 }

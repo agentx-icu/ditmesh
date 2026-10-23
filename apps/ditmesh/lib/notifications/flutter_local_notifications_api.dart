@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import '../i18n/current_strings.dart';
 import '../l10n/generated/s.dart';
 import 'local_notifications_api.dart';
@@ -417,7 +418,9 @@ final class FlutterLocalNotificationsApi implements LocalNotificationsApi {
   }
 
   static void _report(String what, Object error, StackTrace stack) {
-    debugPrint('[FlutterLocalNotificationsApi] $what failed: $error\n$stack');
+    debugLog(
+      () => '[FlutterLocalNotificationsApi] $what failed: $error\n$stack',
+    );
   }
 }
 
