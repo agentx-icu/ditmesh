@@ -71,7 +71,7 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 
 ## Windows 已安装包增量验证 — 2026-10-23
 
-本次增量从已合并 PR #34（`909ad76a4bc67d01aed8a10029a6b290ba36d885`）开始。Windows job 现在把最终 MSI 安装到含空格路径，将全部已装文件与配对最终 ZIP 逐个核 SHA-256（包括 Flutter 资源和 ELF AOT snapshot），并对安装后的 payload 运行原生头校验。它等待所启动 PID 的真实主窗口，发送正常关闭请求并要求零退出；随后删除已装 Flutter engine、执行 MSI repair、重复 payload/窗口校验、卸载并拒绝残留安装文件或进程。即使失败，也上传 MSI 日志、准确 MSI/ZIP SHA-256、payload 报告、数据路径与各阶段结果。失败清场不能把测试改成通过。
+本次增量从已合并 PR #34（`909ad76a4bc67d01aed8a10029a6b290ba36d885`）开始。Windows job 现在把最终 MSI 安装到含空格路径，将全部已装文件与配对最终 ZIP 逐个核 SHA-256（包括 Flutter 资源和 ELF AOT snapshot），并对安装后的 payload 运行原生头校验。它等待所启动 PID 的真实主窗口，确认该 PID 从安装目录加载 Flutter engine 和 Tox bridge，再发送正常关闭请求并要求零退出；随后删除已装 Flutter engine、执行 MSI repair、重复 payload/窗口校验、卸载并拒绝残留安装文件或进程。即使失败，也上传 MSI 日志、准确 MSI/ZIP SHA-256、payload 报告、数据路径与各阶段结果。失败清场不能把测试改成通过。
 
 `test_windows_installer.ps1` 只允许 GitHub-hosted Windows Actions runner，在安装前拒绝既有 DitMesh 进程、由 KnownFolder 派生的应用数据或已注册 MSI ProductCode。应用使用一次性 hosted 账号的真实 Roaming/Local AppData；改变 `APPDATA` 不能重定向 `path_provider_windows`，所以本测试不声称有临时 app-data 根，也不改 registry 或已有用户数据。禁止在普通用户机器执行。全新 profile 默认关闭即退出；测试不启用 close-to-tray，也不把强杀当作优雅退出。
 

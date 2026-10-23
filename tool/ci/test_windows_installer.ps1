@@ -64,6 +64,14 @@ function Test-InstalledWindow([string]$Stage) {
   Start-Sleep -Seconds 10
   $script:app.Refresh()
   if ($script:app.HasExited) { throw "Installed application exited during startup: $($script:app.ExitCode)" }
+  # A startup error page is also a real window. Require the installed native
+  # engine and Tox bridge to be loaded by this exact PID, not another copy.
+  $loadedPaths = @($script:app.Modules | ForEach-Object { [IO.Path]::GetFullPath($_.FileName) })
+  foreach ($library in @('flutter_windows.dll', 'tim2tox_ffi.dll')) {
+    $expectedPath = [IO.Path]::GetFullPath((Join-Path $installRoot $library))
+    if ($expectedPath -notin $loadedPaths) { throw "Installed runtime was not loaded by the launched PID: $library" }
+  }
+  $report.stages.Add("$Stage installed engine and Tox bridge loaded by PID $($script:app.Id)")
   # Fresh runner preferences leave close-to-tray disabled. A forced cleanup
   # below must never turn a refused close or an orphan process into a pass.
   if (-not $script:app.CloseMainWindow()) { throw 'Installed window did not accept the close request' }
