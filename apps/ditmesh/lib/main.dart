@@ -32,6 +32,7 @@ import 'ui/account/account_routes.dart';
 import 'ui/account/backup_file_gateway.dart';
 import 'ui/learn/settings/training_settings_entry.dart';
 import 'ui/shell/app_shell.dart';
+import 'ui/shell/ios_menu_host.dart';
 import 'ui/theme.dart';
 import 'training/guest_profile.dart';
 
@@ -176,7 +177,7 @@ class DitmeshApp extends StatelessWidget {
             darkTheme: DitmeshTheme.dark(style: appearance.style),
             themeMode: appearance.themeMode,
             themeAnimationDuration: Duration.zero,
-            home: const StartupGate(child: AppShell()),
+            home: const IosMenuHost(child: StartupGate(child: AppShell())),
             routes: {
               kTrainingSettingsRoute: (_) => const TrainingSettingsEntry(),
             },

@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../desktop/shortcuts.dart';
+import '../../desktop/ios_menu_commands.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../notifications/connection_banner_policy.dart';
 import '../../notifications/notification_center.dart';
@@ -79,6 +80,7 @@ class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
   final ShellRouter _router = ShellRouter();
   final FocusNode _commandFocus = FocusNode(debugLabel: 'shell-commands');
+  IosMenuCommands? _menuCommands;
   NotificationCenter? _center;
   StreamSubscription<NotificationTapTarget>? _taps;
 
@@ -108,6 +110,8 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    _menuCommands = context.read<IosMenuCommands?>();
+    _menuCommands?.bind(this, search: _focusSearch, contacts: _newMessage);
     // Notification taps open what they point at. The centre keeps the
     // newest tap until it is routed here, so a tap that cold-started the
     // app (or came while the unlock screen showed) is not lost.
@@ -121,6 +125,7 @@ class _AppShellState extends State<AppShell> {
   void dispose() {
     unawaited(_taps?.cancel());
     unawaited(_router.dispose());
+    _menuCommands?.unbind(this);
     _commandFocus.dispose();
     super.dispose();
   }
@@ -230,17 +235,11 @@ class _AppShellState extends State<AppShell> {
         actions: <Type, Action<Intent>>{
           FocusSearchIntent: _ShellCommandAction<FocusSearchIntent>(
             enabled: _canUseShortcut,
-            onInvoke: () {
-              _select(_tabOf(ChatPage));
-              _router.focusSearch();
-            },
+            onInvoke: _focusSearch,
           ),
           NewMessageIntent: _ShellCommandAction<NewMessageIntent>(
             enabled: _canUseShortcut,
-            onInvoke: () {
-              _select(_tabOf(ChatPage));
-              _router.openContacts();
-            },
+            onInvoke: _newMessage,
           ),
         },
         child: Focus(
@@ -260,6 +259,18 @@ class _AppShellState extends State<AppShell> {
     return FocusManager.instance.primaryFocus?.context
             ?.findAncestorWidgetOfExactType<EditableText>() ==
         null;
+  }
+
+  void _focusSearch() {
+    if (!_canUseShortcut()) return;
+    _select(_tabOf(ChatPage));
+    _router.focusSearch();
+  }
+
+  void _newMessage() {
+    if (!_canUseShortcut()) return;
+    _select(_tabOf(ChatPage));
+    _router.openContacts();
   }
 
   Widget _buildShell(BuildContext context) {

@@ -20,6 +20,26 @@ K/N only; Shift+M remains unbound without a shared sidetone owner. Localized
 tooltips publish K/N. Native keyboard/trackpad, non-US layouts, iPad Full Keyboard
 Access and the native iPadOS 26 menu are not established by widget variants.
 
+## I2 follow-up — native iPad menu bridge (2026-10-23)
+
+The missing native code is now implemented for the two commands already wired
+above: UIKit `buildMenu`/`UICommand` plus single-active-scene validation, a typed
+Flutter method channel, and the existing localized Search/Contacts labels.
+Startup/identity/terms, current route, focused editors/IME, lifecycle and owner
+teardown are rechecked before invocation; stale/outgoing owners cannot replace
+current actions. UIKit installs no duplicate key commands. iOS <26 does not
+install this menu and the existing single-scene declaration is unchanged.
+
+`desktop/ios_menu_commands_test.dart` exercises the real method-channel boundary
+against the fake-backend full app, including valid/unknown/malformed commands,
+covering route/editor/IME, inactive/resumed, startup/ready exit, disposal, owner
+replacement and locale changes. The bridge plus prior key-event suites pass
+27 tests. Actual Swift and a real-FFI arm64 unsigned archive compile on local
+Xcode 26.4.1 / iPhoneOS 26.4 (20 Mach-O files, 15 privacy manifests, matching
+Runner/dSYM). Actual iPadOS menu presentation, touch/pointer/keyboard activation,
+disabled-state display and scene qualification remain **needs device**, not a
+claim that the native implementation is absent. No signed export/store action.
+
 ## Confirmed changes
 
 - Acquire a process lock for the entire desktop application-support root before preferences/backend startup; secondary processes request owner activation. Keep the lock inode and let OS process termination release it. Independently spawned processes verify contention, activation and crash release.
@@ -63,7 +83,7 @@ The independent review found and reproduced primary/current + backup/future over
 | D6 | needs device | Light/dark source and widget cases reviewed; measured contrast and OS color filters remain owed. |
 | D7 | verified | morse_io flash_overlay_test.dart: bounded lamp, reduced-motion steady indicator and input passthrough. |
 | I1 | needs device | Touch/focus widgets reviewed; measure every essential control on smallest supported device. |
-| I2 | needs device | Active K/N shell behavior is verified by `desktop/shell_shortcuts_test.dart` key-event/route/IME tests on macOS/Windows/Linux variants. Shift+M stays unbound; native input and iPad menus remain owed. |
+| I2 | needs device | Active K/N shell behavior is verified by `desktop/shell_shortcuts_test.dart` key-event/route/IME tests on macOS/Windows/Linux variants. Shift+M stays unbound; the native iPad Search/Contacts menu is implemented and bridge/build tested, while actual OS presentation and native input qualification remain owed. |
 | I3 | not applicable | Morse composer is read-only and sends keyed input; ordinary text fields do not use Enter-to-send. |
 | I4 | needs device | PopScope/source and prior Android back evidence reviewed; release predictive-back/iOS gestures owed. |
 | I5 | needs device | Semantics/keying tests pass; VoiceOver, TalkBack, Narrator and Orca end-to-end flows remain owed. |

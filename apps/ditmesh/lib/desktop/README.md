@@ -69,10 +69,18 @@ intercept focused text editors, IME composition, dialogs or covering routes.
 There is no system-wide keyboard hook.
 
 `ToggleSidetoneIntent` and Cmd/Ctrl+Shift+M remain definitions only: the app has
-no shared sound owner, so the shell does not install that binding. This Flutter
-shortcut wiring does not populate the native iPadOS 26 menu bar. Native menu
-coverage, hardware keyboards/trackpads, non-US layouts and Full Keyboard Access
-still need their separately scoped implementation or device evidence.
+no shared sound owner, so the shell does not install that binding.
+
+On iPadOS 26+, `IosMenuHost` supplies existing localized labels to the UIKit
+Chat menu (Search conversations and Contacts). `AppDelegate.buildMenu` uses
+keyless `UICommand` entries; K/N remain owned solely by Flutter. The scene
+bridge requires one active scene and revalidates at invocation. Commands stay
+visible but disabled before identity/terms readiness, over another route, in
+editors/IME, when inactive or after shell teardown. iOS <26 retains its existing
+behavior and the scene manifest still disables multiple scenes. Actual menu
+presentation, touch/pointer activation, hardware keyboards, non-US layouts and
+Full Keyboard Access still need OS/device evidence; compiling a bridge is not
+that evidence. No global mute or additional app command was introduced.
 
 ## Behaviour
 
