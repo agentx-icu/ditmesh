@@ -3,7 +3,7 @@
 
 Play's AAB upload key and Play's installed-app signing key are separate:
 https://developer.android.com/studio/publish/app-signing
-JAR strict warning codes: docs.oracle.com/en/java/javase/17/docs/specs/man/jarsigner.html
+JAR integrity: docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/jar/JarFile.html
 """
 import argparse
 import json
@@ -26,19 +26,13 @@ def check_aab(path):
         if len(names) != len(set(names)) or not {
                 'BundleConfig.pb', 'base/manifest/AndroidManifest.xml'}.issubset(names):
             raise ValueError('AAB integrity: duplicate entries or missing bundle structure')
-    result = run(['jarsigner', '-J-Duser.language=en', '-J-Duser.country=US',
-                  '-verify', '-strict', str(path)])
-    output = result.stdout + result.stderr
-    # Code 4 includes Android's normal self-signed/untrusted chain. Do not
-    # discard integrity (1), unsigned-entry (16), or usage/alias/TSA errors.
-    # Reject other code-4 causes explicitly, with locale fixed above.
-    bad_certificate = re.search(r'expired|not yet valid|disabled|treated as unsigned', output, re.I)
-    if result.returncode not in (0, 4) or 'jar verified' not in output or bad_certificate:
-        raise ValueError(f'AAB integrity verification failed: {output.strip()}')
-    result = run(['keytool', '-J-Duser.language=en', '-J-Duser.country=US',
-                  '-printcert', '-jarfile', str(path)])
+    # Some Gradle AABs place signing metadata last. A recent jarsigner -strict
+    # also applies streaming JarInputStream rules and flags that ordering as
+    # unsigned. Verify every payload with random-access JarFile instead; never
+    # ignore unsigned-entry errors or rely on certificate metadata alone.
+    result = run(['java', str(Path(__file__).with_name('VerifyAndroidBundle.java')), str(path)])
     if result.returncode:
-        raise ValueError('Cannot read verified AAB signing certificate')
+        raise ValueError(f'AAB integrity verification failed: {result.stderr.strip()}')
     return result.stdout
 
 
@@ -52,12 +46,17 @@ def digest(value):
 def check_reports(apk, aab, distribution, expected):
     if distribution and re.search(r'CN\s*=\s*Android\s*Debug\b', apk + aab, re.I):
         raise ValueError('Android debug certificate is forbidden for distribution/tags')
+    # Build-tools versions label verified signer schemes differently. Only
+    # actual upload-signer certificates count, never a source stamp/public key.
+    prefix = (r'(?:Signer #\d+|V\d+(?:\.\d+)? Signer(?: #\d+)?:|'
+              r'Signer \(minSdkVersion=\d+(?: \(dev release=true\))?, maxSdkVersion=\d+\))')
     apk_digests = {digest(value) for value in re.findall(
-        r'certificate SHA-256 digest:\s*([0-9a-fA-F:]+)', apk)}
+        rf'^{prefix} certificate SHA-256 digest:\s*([0-9a-fA-F:]+)$', apk, re.M)}
+    counts = re.findall(r'^Number of signers: (\d+)$', apk, re.M)
     # One upload signer is the current DitMesh release contract. A rotated or
     # multi-signer channel needs explicit lineage handling, never a guessed key.
     aab_digests = re.findall(r'SHA256:\s*([0-9a-fA-F:]+)', aab)
-    if len(apk_digests) != 1 or len(aab_digests) != 1:
+    if counts != ['1'] or len(apk_digests) != 1 or len(aab_digests) != 1:
         raise ValueError('Expected exactly one APK signer and one AAB upload certificate')
     actual = next(iter(apk_digests))
     if actual != digest(aab_digests[0]):

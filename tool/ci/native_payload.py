@@ -96,13 +96,15 @@ def verify(data, format_name, arch, label):
         actual = architectures(data, format_name)
         if arch not in actual:
             raise ValueError(f'architecture {sorted(actual)} cannot run as {arch}')
-        return {'path': label, 'architectures': sorted(actual)}
+        return {'path': label, 'format': format_name, 'architectures': sorted(actual)}
     except (ValueError, IndexError, struct.error) as error:
         raise ValueError(f'{label}: {error}') from error
 
 
-def check_tree(directory, format_name, arch, entry=None):
+def check_tree(directory, format_name, arch, entry=None, flutter_windows=False):
     root = Path(directory).resolve()
+    if flutter_windows and (format_name != 'pe' or not (root / 'data/app.so').is_file()):
+        raise ValueError('Flutter Windows release requires data/app.so AOT snapshot')
     if entry:
         executable = root / entry
         if not executable.is_file() or not executable.resolve().is_relative_to(root):
@@ -127,7 +129,13 @@ def check_tree(directory, format_name, arch, entry=None):
                     raise ValueError(f'{path}: missing native format header')
                 continue
             with mmap.mmap(stream.fileno(), 0, access=mmap.ACCESS_READ) as data:
-                result.append(verify(data, format_name, arch, str(path.relative_to(root))))
+                relative = path.relative_to(root).as_posix()
+                # Flutter gen_snapshot emits app-aot-elf on Windows too. This
+                # canonical snapshot is CPU-specific data consumed by Dart,
+                # not a PE plugin. Never exempt arbitrary foreign libraries.
+                # flutter/flutter 3.41.9: base/build.dart; targets/windows.dart.
+                expected_format = 'elf' if flutter_windows and relative == 'data/app.so' else format_name
+                result.append(verify(data, expected_format, arch, relative))
     if not result:
         raise ValueError('No native runtime binaries found')
     return result
@@ -205,12 +213,15 @@ def main():
     parser.add_argument('path', type=Path)
     parser.add_argument('--format', choices=('elf', 'pe', 'macho', 'android'), required=True)
     parser.add_argument('--entry', help='required main executable relative to payload root')
+    parser.add_argument('--flutter-windows-aot', action='store_true')
     parser.add_argument('--arch', choices=('x86_64', 'arm64', 'arm', 'x86'))
     args = parser.parse_args()
+    if args.flutter_windows_aot and args.format != 'pe':
+        parser.error('--flutter-windows-aot requires --format pe')
     if args.format != 'android' and not args.arch:
         parser.error('--arch is required for a native directory')
     result = check_android(args.path) if args.format == 'android' else check_tree(
-        args.path, args.format, args.arch, args.entry)
+        args.path, args.format, args.arch, args.entry, args.flutter_windows_aot)
     print(json.dumps(result, indent=2))
 
 

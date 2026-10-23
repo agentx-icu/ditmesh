@@ -32,6 +32,7 @@ class JarIntegrityTests(unittest.TestCase):
         with zipfile.ZipFile(path, 'w') as stream:
             stream.writestr('BundleConfig.pb', b'fixture bundle config')
             stream.writestr('base/manifest/AndroidManifest.xml', b'fixture payload')
+            stream.writestr('base/res/drawable/common_google_signin_btn_disabled.xml', b'signed resource')
         subprocess.run(['jarsigner', '-keystore', str(self.key), '-storepass',
                         'fixture-password', str(path), 'fixture'], capture_output=True, check=True)
         return path
@@ -44,6 +45,22 @@ class JarIntegrityTests(unittest.TestCase):
         path = self.signed()
         with zipfile.ZipFile(path, 'a') as stream:
             stream.writestr('base/unsigned.txt', b'not authenticated')
+        with self.assertRaisesRegex(ValueError, 'integrity'):
+            check_aab(path)
+
+    def test_manifest_last_and_disabled_resource_names_retain_jarfile_integrity(self):
+        path = self.signed()
+        with zipfile.ZipFile(path) as stream:
+            entries = {name: stream.read(name) for name in stream.namelist()}
+        with zipfile.ZipFile(path, 'w') as stream:
+            for name in sorted(entries, key=lambda name: name.startswith('META-INF/')):
+                stream.writestr(name, entries[name])
+        self.assertIn('SHA256:', check_aab(path))
+
+    def test_ordinary_meta_inf_service_is_not_exempt_signature_metadata(self):
+        path = self.signed()
+        with zipfile.ZipFile(path, 'a') as stream:
+            stream.writestr('META-INF/services/unsigned-service', b'unsigned payload')
         with self.assertRaisesRegex(ValueError, 'integrity'):
             check_aab(path)
 
@@ -99,7 +116,7 @@ class SigningIdentityTests(unittest.TestCase):
 
     def reports(self, debug=False):
         owner = 'CN=Android Debug' if debug else 'CN=Release'
-        return (f'Signer #1 certificate DN: {owner}\nSigner #1 certificate SHA-256 digest: {self.fingerprint}',
+        return (f'Number of signers: 1\nSigner #1 certificate DN: {owner}\nSigner #1 certificate SHA-256 digest: {self.fingerprint}',
                 f'Owner: {owner}\nSHA256: {self.fingerprint}')
 
     def test_expected_identity_required_for_distribution(self):
@@ -126,6 +143,19 @@ class SigningIdentityTests(unittest.TestCase):
                         badging + '\napplication-debuggable'):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 check_identity(invalid, '1.1.0', '2', True)
+
+    def test_scheme_labels_do_not_confuse_source_stamps_with_upload_identity(self):
+        apk, aab = self.reports()
+        for prefix in ('V3.0 Signer:', 'V3.2 Signer:',
+                       'Signer (minSdkVersion=33, maxSdkVersion=2147483647)'):
+            self.assertEqual(check_reports(apk.replace('Signer #1', prefix), aab,
+                                           True, self.fingerprint), self.fingerprint)
+        stamp = '\nSource Stamp Signer certificate SHA-256 digest: ' + '12' * 32
+        self.assertEqual(check_reports(apk + stamp, aab, True, self.fingerprint), self.fingerprint)
+        for invalid in (apk.replace('Signer #1', 'Source Stamp Signer'),
+                        apk.replace('Number of signers: 1', 'Number of signers: 2')):
+            with self.assertRaises(ValueError):
+                check_reports(invalid, aab, True, self.fingerprint)
 
 
 if __name__ == '__main__':

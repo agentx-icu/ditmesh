@@ -49,13 +49,17 @@ bash tool/ci/package_artifacts.sh --target macos --arch arm64 --mode validation
 bash tool/ci/package_artifacts.sh --target android --mode distribution
 ```
 
-Android tag 即使没传 `--mode distribution` 也强制正式签名门禁。CI 使用四项 secrets（`ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`）和仓库变量 `DITMESH_ANDROID_CERT_SHA256`。部分签名配置会失败，不能静默选择其他密钥。APK 用 `apksigner` 验证密码学完整性；AAB 用 `jarsigner -verify -strict`。允许 Android 正常自签证书的信任链 warning，但拒绝无效/过期/禁用算法签名、未签 entries、APK/AAB 不同密钥、debug 身份、缺失/错误预期身份。当前单 signer 合约遇证书链或密钥轮换须显式评审更新。
+Android tag 即使没传 `--mode distribution` 也强制正式签名门禁。CI 使用四项 secrets（`ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`）和仓库变量 `DITMESH_ANDROID_CERT_SHA256`。部分签名配置会失败，不能静默选择其他密钥。APK 用 `apksigner` 验证密码学完整性；AAB 用 JDK `JarFile` verifier：每个 payload 读到 EOF，必须有唯一、已验证且当前有效的叶子签名证书，再与 APK 及负责人指纹比对。Android 自签证书属正常情况，但拒绝禁用算法、篡改/未签条目、APK/AAB 不同密钥、debug 身份、缺失/错误预期身份。普通 `META-INF/services` 资源不属于豁免的签名元数据。当前单 signer 合约遇多个上传身份或密钥轮换须显式评审更新。
 
 其他平台尚未实现正式渠道签名，`--mode distribution` 在打包前直接失败。这是明确的阻塞状态，不是商店提交命令；这些平台普通 tag 的 draft 包仍是验证制品。
 
 `native_payload.py` 读取真实 PE/ELF/Mach-O 头；Linux/Windows 仍为 x64，macOS 用显式目标。runner CPU、模拟运行的工具 ABI、编译目标、engine 可用性、包元数据、商店目标须分开记录。改目录或包名不会产生目标支持。macOS 最后修改后先签内层代码再签父 bundle，并逐代码对象核 Release 权限。ad-hoc 验证不证明 Developer ID、公证或 Mac App Store 接受。
 
 Android ELF PT_LOAD 对齐适用于每个打包的 64 位原生库；ZIP 16 KB 放置适用于**未压缩** `.so`。上传 Play 前另用 bundletool 核 AAB 的 `PAGE_ALIGNMENT_16K` 和所生成 APK，再将商店/测试轨道构建安装到 16 KB 设备。NDK 源码版本或单个 APK ZIP 通过不足以证明 AAB 交付链。
+
+Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/app.so`，固定版本的 [Flutter AOT compiler](https://github.com/flutter/flutter/blob/3.41.9/packages/flutter_tools/lib/src/base/build.dart) 与 [Windows bundle target](https://github.com/flutter/flutter/blob/3.41.9/packages/flutter_tools/lib/src/build_system/targets/windows.dart)有直接依据。packager 显式启用 `--flutter-windows-aot`，仅此路径允许 ELF，并继续核 ELF CPU 与 PE app/engine 目标一致；其他异格式插件、缺失/错误 CPU 快照仍失败。首轮 Windows CI 构建暴露此格式差异，下载的真实 runner 共 **17** 个运行时文件在本地通过修复后的检查。实际 MSI 生成/元数据仍由 Windows CI 验证。Android signer 解析也分开已验证 scheme/SDK-range 标签与 source stamp，强制只有一个当前 signer 身份。
+
+[2563e68 的真实 Gradle AAB 任务](https://github.com/agentx-icu/ditmesh/actions/runs/39884174843/job/120189735884)构建了 75.3 MB bundle，原生对齐检查通过，随后暴露文本解析误判：jarsigner 对 manifest-last 输出流式 warning，所列资源含 `common_google_signin_btn_*_disabled.xml`，旧检查器把路径中的 `disabled` 当作禁用算法。改为 [JDK JarFile API](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/jar/JarFile.html)逐 entry 验密码学完整性，不解析人读 warning 或套用流式 manifest 顺序假设。已签名 manifest-last fixture 包含同类资源名；篡改、追加未签条目和普通 META-INF service 仍失败。失败任务未上传 AAB，回归 fixture 仅复现其顺序/命名条件，不冒充该真实应用 bundle。
 
 ## 请求商店审核前的负责人动作
 
@@ -67,7 +71,7 @@ Android ELF PT_LOAD 对齐适用于每个打包的 64 位原生库；ZIP 16 KB �
 
 ## 已执行的本地验证
 
-2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **45** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
+2026-10-23，Flutter 3.41.9 / Dart 3.11.5、Xcode 26.4 SDK：`tool/ci/*test.py` 共 **49** 项回归全通过，包含实际临时 keytool/jarsigner/apksigner/aapt2 与 codesign fixture。按固定源码和仓库 overlays 重建 Tim2Tox release 并 stage，真实后端 macOS ARM64 Release 构建通过（**39.0 MB**）。应用 **22** 个原生代码对象通过架构、最低 OS、strict 签名和最终权限门禁。生成 PKG/ZIP 后分别解包，其 22 个代码对象再次通过，app/FFI/privacy-manifest 哈希与构建一致。ShellCheck、actionlint、源码 guards、`git diff --check` 通过。
 
 这些结果不包含 GUI/聊天 smoke、安装到 `/Applications`、Apple 公证、本地移动/Windows/Linux 构建、商店交付或审核。CI 平台构建作为 PR 独立证据；阻塞/未执行目标不能标成功。
 
@@ -76,7 +80,7 @@ Android ELF PT_LOAD 对齐适用于每个打包的 64 位原生库；ZIP 16 KB �
 除上面明确标记未读完整者外，核验日期均为 **2026-10-23**。每次发布重开动态来源，构建检查器不硬编码政策截止日期。
 
 - Apple：[App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)（UGC 1.2、审核访问 2.1、隐私/删除 5.1.1）；[privacy manifests](https://developer.apple.com/documentation/bundleresources/privacy-manifest-files)、[required API reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitypereasons)、[出口合规](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance/)、[签名](https://developer.apple.com/library/archive/technotes/tn2206/_index.html)、[公证](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。针对移动及其他列明平台的 required-reason 执行规则不能直接泛化到所有 macOS 渠道。
-- Android/Play：[应用签名](https://developer.android.com/studio/publish/app-signing)、[apksigner](https://developer.android.com/tools/apksigner)、[JAR 验证](https://docs.oracle.com/en/java/javase/17/docs/specs/man/jarsigner.html)、[16 KB](https://developer.android.com/guide/practices/page-sizes)、[target API](https://support.google.com/googleplay/android-developer/answer/11926878)、[User Data](https://support.google.com/googleplay/android-developer/answer/10144311)、[账号删除](https://support.google.com/googleplay/android-developer/answer/13327111)、[UGC](https://support.google.com/googleplay/android-developer/answer/9876937)。本日普通手机/平板新应用和更新要求 API 36；16 KB 指引称自 2027-02-01 阻止不支持的更新。发布时核实际适用性及控制台账号测试例外。
+- Android/Play：[应用签名](https://developer.android.com/studio/publish/app-signing)、[apksigner](https://developer.android.com/tools/apksigner)、[JAR 验证](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/jar/JarFile.html)、[16 KB](https://developer.android.com/guide/practices/page-sizes)、[target API](https://support.google.com/googleplay/android-developer/answer/11926878)、[User Data](https://support.google.com/googleplay/android-developer/answer/10144311)、[账号删除](https://support.google.com/googleplay/android-developer/answer/13327111)、[UGC](https://support.google.com/googleplay/android-developer/answer/9876937)。本日普通手机/平板新应用和更新要求 API 36；16 KB 指引称自 2027-02-01 阻止不支持的更新。发布时核实际适用性及控制台账号测试例外。
 - Microsoft：[Store 政策](https://learn.microsoft.com/en-us/windows/apps/publish/store-policies) 7.20，于 2026-10-22 生效；10.2.9 针对非游戏 HTTPS MSI/EXE。[MSI/EXE](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msi/app-package-requirements)、[MSIX](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/app-package-requirements)、[MSI 架构 template](https://learn.microsoft.com/en-us/windows/win32/msi/template-summary)。旧支持文案与生效政策冲突时按适用现行政策处理，不将 MSI 要求泛化为 Store-signed MSIX。
 - Linux：[Flathub 强制要求](https://docs.flathub.org/docs/for-app-authors/requirements)（含当前 AI 材料/提交交互限制）、[质量指南](https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines)、[Snap 沙盒](https://documentation.ubuntu.com/security/security-features/privilege-restriction/snap-confinement/)、[Snap 渠道](https://documentation.ubuntu.com/snapcraft/stable/reference/channels/)。本次仓库改动不生成 Flathub manifest，不提交或参与 Flathub 审核交互。
 - 国内候选：[华为审核要求](https://developer.huawei.com/consumer/cn/doc/app/50104)、[小米审核入口](https://dev.mi.com/distribute/doc/details?pId=1139)。本次未能完整读取动态/登录内容，选定渠道后由负责人核控制台最新要求。

@@ -113,6 +113,31 @@ class NativePayloadTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Dangling'):
                 check_tree(root, 'elf', 'x86_64')
 
+    def test_windows_flutter_aot_snapshot_is_elf_but_must_match_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'app.exe').write_bytes(pe())
+            (root / 'data').mkdir()
+            snapshot = root / 'data/app.so'
+            snapshot.write_bytes(elf(62))
+            with self.assertRaisesRegex(ValueError, 'format'):
+                check_tree(root, 'pe', 'x86_64')
+            self.assertEqual(len(check_tree(root, 'pe', 'x86_64', flutter_windows=True)), 2)
+            snapshot.write_bytes(elf())
+            with self.assertRaisesRegex(ValueError, 'architecture'):
+                check_tree(root, 'pe', 'x86_64', flutter_windows=True)
+            snapshot.write_bytes(elf(62))
+            (root / 'plugin.dll').write_bytes(elf(62))
+            with self.assertRaisesRegex(ValueError, 'plugin.*format'):
+                check_tree(root, 'pe', 'x86_64', flutter_windows=True)
+            (root / 'plugin.dll').unlink()
+            snapshot.write_bytes(pe())
+            with self.assertRaisesRegex(ValueError, 'Expected elf'):
+                check_tree(root, 'pe', 'x86_64', flutter_windows=True)
+            snapshot.unlink()
+            with self.assertRaisesRegex(ValueError, 'requires data/app.so'):
+                check_tree(root, 'pe', 'x86_64', flutter_windows=True)
+
     def android(self, root, mutate=None, bundle=False):
         archive = root / ('app.aab' if bundle else 'app.apk')
         prefix = 'base/lib' if bundle else 'lib'
