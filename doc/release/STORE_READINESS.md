@@ -165,3 +165,26 @@ Verified **2026-10-23**, unless explicitly marked unreadable above. Reopen these
 - Microsoft: [Store policy](https://learn.microsoft.com/en-us/windows/apps/publish/store-policies), version 7.20, effective 2026-10-22; 10.2.9 governs the non-game HTTPS MSI/EXE path. [MSI/EXE requirements](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msi/app-package-requirements), [MSIX requirements](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/app-package-requirements), [MSI architecture template](https://learn.microsoft.com/en-us/windows/win32/msi/template-summary). Where older support text conflicts with effective policy, use the applicable current policy; do not generalize MSI requirements to Store-signed MSIX.
 - Linux: [Flathub requirements](https://docs.flathub.org/docs/for-app-authors/requirements) (including current AI-material/submission interaction restrictions), [quality guidelines](https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines), [Snap confinement](https://documentation.ubuntu.com/security/security-features/privilege-restriction/snap-confinement/), [Snap channels](https://documentation.ubuntu.com/snapcraft/stable/reference/channels/). This repository change does not create a Flathub manifest or submit/interact with a Flathub review.
 - Domestic candidates: [Huawei review requirements](https://developer.huawei.com/consumer/cn/doc/app/50104), [Xiaomi review entry](https://dev.mi.com/distribute/doc/details?pId=1139). Dynamic/authenticated content could not be fully read in this audit; owner must verify current console requirements after selecting a channel.
+
+## I2 follow-up: existing shell commands
+
+The existing search/new-message definitions are now bound in the active shell:
+macOS Cmd+K/N and Windows/Linux Ctrl+K/N. Search selects Chat and focuses the
+existing filter; New Message uses Contacts without stacking routes. The bindings
+ignore key repeats and leave focused editors/IME and covering dialogs/routes to
+their own handlers. Tooltips expose the supported shortcuts. The fake-backend
+full-app key-event tests cover all three desktop platform variants; these are
+software behavior evidence, not physical keyboard or installed-release proof.
+
+| ID | Status | Evidence / remaining gate |
+|---|---|---|
+| I2 | needs device | `test/desktop/shell_shortcuts_test.dart` verifies K/N modifiers, repeat, focus/filter, route and editor/IME behavior on macOS/Windows/Linux variants. Native keyboard/trackpad, non-US layouts and Full Keyboard Access remain device checks. |
+| I3 | verified | Focused editors retain command ownership and IME composing values in the shortcut regression; this does not establish real IME/device interoperability. |
+| X5 | verified | One shared shell handler and the same key-event cases cover all three desktop modifier policies; no platform plugin or protocol changes. |
+| X6 | to do | Final-head CI release builds remain required; widget key events do not establish installed signed/store behavior. |
+
+Cmd/Ctrl+Shift+M stays unbound because no shared audio owner exists. Native
+`UIMainMenuSystem` coverage on iPadOS 26 is a separate product/engineering scope;
+Flutter `Shortcuts` does not claim to implement that menu or close I2's device
+matrix. No new account, certificate, native permission or store action is needed
+for this bounded code fix.

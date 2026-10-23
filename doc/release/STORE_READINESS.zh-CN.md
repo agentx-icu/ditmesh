@@ -165,3 +165,21 @@ W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍�
 - Microsoft：[Store 政策](https://learn.microsoft.com/en-us/windows/apps/publish/store-policies) 7.20，于 2026-10-22 生效；10.2.9 针对非游戏 HTTPS MSI/EXE。[MSI/EXE](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msi/app-package-requirements)、[MSIX](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/app-package-requirements)、[MSI 架构 template](https://learn.microsoft.com/en-us/windows/win32/msi/template-summary)。旧支持文案与生效政策冲突时按适用现行政策处理，不将 MSI 要求泛化为 Store-signed MSIX。
 - Linux：[Flathub 强制要求](https://docs.flathub.org/docs/for-app-authors/requirements)（含当前 AI 材料/提交交互限制）、[质量指南](https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines)、[Snap 沙盒](https://documentation.ubuntu.com/security/security-features/privilege-restriction/snap-confinement/)、[Snap 渠道](https://documentation.ubuntu.com/snapcraft/stable/reference/channels/)。本次仓库改动不生成 Flathub manifest，不提交或参与 Flathub 审核交互。
 - 国内候选：[华为审核要求](https://developer.huawei.com/consumer/cn/doc/app/50104)、[小米审核入口](https://dev.mi.com/distribute/doc/details?pId=1139)。本次未能完整读取动态/登录内容，选定渠道后由负责人核控制台最新要求。
+
+## I2 后续：接入既有外壳命令
+
+活跃外壳现已绑定已有搜索/新消息定义：macOS Cmd+K/N，Windows/Linux Ctrl+K/N。
+搜索选中聊天并聚焦现有筛选框；新消息复用联系人入口，不堆叠路由。忽略按键重复，并将已聚焦
+编辑器/IME、覆盖对话框和路由的按键留给各自处理。提示文本展示已支持快捷键。完整 App 的假后端
+键盘事件回归覆盖三个桌面平台变体；这属于软件行为证据，不是实体键盘或安装后的正式包证明。
+
+| ID | Status | 证据／剩余门槛 |
+|---|---|---|
+| I2 | needs device | `test/desktop/shell_shortcuts_test.dart` 覆盖三桌面变体的 K/N 修饰键、重复、搜索焦点/筛选词、路由和编辑器/IME；实体键盘/触控板、非美式布局和全键盘控制仍待设备检查。 |
+| I3 | verified | 快捷键回归验证编辑器命令所有权及 IME 组字值保持；不等于真实 IME/设备互通验证。 |
+| X5 | verified | 一个共享外壳 handler 与同组键盘事件用例覆盖三个桌面修饰键策略；未改平台插件或协议。 |
+| X6 | to do | 最终 head 的 CI release 构建仍必须通过；widget 按键不证明已安装签名包/商店行为。 |
+
+Cmd/Ctrl+Shift+M 因没有共享音频所有者继续未绑定。iPadOS 26 的原生 `UIMainMenuSystem`
+覆盖是单独的产品/工程范围；Flutter `Shortcuts` 不宣称实现原生菜单，也不关闭 I2 设备矩阵缺口。
+这项有界代码修复无需新增账号、证书、原生权限或商店操作。

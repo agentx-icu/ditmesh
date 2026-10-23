@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
+import '../../desktop/shortcuts.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../notifications/connection_banner_policy.dart';
 import '../../notifications/notification_center.dart';
@@ -77,6 +78,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
   final ShellRouter _router = ShellRouter();
+  final FocusNode _commandFocus = FocusNode(debugLabel: 'shell-commands');
   NotificationCenter? _center;
   StreamSubscription<NotificationTapTarget>? _taps;
 
@@ -95,6 +97,12 @@ class _AppShellState extends State<AppShell> {
   void _select(int index) {
     if (index < 0 || index == _selectedIndex) return;
     setState(() => _selectedIndex = index);
+    // Hiding a tab unfocuses its editor to the route scope (above Shortcuts).
+    // Keep keyboard commands in the exposed shell after that handoff, without
+    // taking focus from a route that covers the shell.
+    if (ModalRoute.of(context)?.isCurrent ?? true) {
+      _commandFocus.requestFocus();
+    }
   }
 
   @override
@@ -113,6 +121,7 @@ class _AppShellState extends State<AppShell> {
   void dispose() {
     unawaited(_taps?.cancel());
     unawaited(_router.dispose());
+    _commandFocus.dispose();
     super.dispose();
   }
 
@@ -210,6 +219,50 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    return Shortcuts(
+      shortcuts: {
+        for (final entry in desktopShortcutBindings(
+          platform: Theme.of(context).platform,
+        ).entries)
+          if (entry.value is! ToggleSidetoneIntent) entry.key: entry.value,
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          FocusSearchIntent: _ShellCommandAction<FocusSearchIntent>(
+            enabled: _canUseShortcut,
+            onInvoke: () {
+              _select(_tabOf(ChatPage));
+              _router.focusSearch();
+            },
+          ),
+          NewMessageIntent: _ShellCommandAction<NewMessageIntent>(
+            enabled: _canUseShortcut,
+            onInvoke: () {
+              _select(_tabOf(ChatPage));
+              _router.openContacts();
+            },
+          ),
+        },
+        child: Focus(
+          focusNode: _commandFocus,
+          autofocus: true,
+          skipTraversal: true,
+          child: _buildShell(context),
+        ),
+      ),
+    );
+  }
+
+  bool _canUseShortcut() {
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return false;
+    // Editors keep their own shortcuts and in-progress IME composition.
+    // Returning disabled also leaves the key available to their handlers.
+    return FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<EditableText>() ==
+        null;
+  }
+
+  Widget _buildShell(BuildContext context) {
     final s = context.s;
     final layout = layoutClassOf(context);
     final body = KeyedSubtree(
@@ -293,6 +346,22 @@ class _AppShellState extends State<AppShell> {
           ),
         );
     }
+  }
+}
+
+class _ShellCommandAction<T extends Intent> extends Action<T> {
+  _ShellCommandAction({required this.enabled, required this.onInvoke});
+
+  final bool Function() enabled;
+  final VoidCallback onInvoke;
+
+  @override
+  bool isEnabled(T intent) => enabled();
+
+  @override
+  Object? invoke(T intent) {
+    onInvoke();
+    return null;
   }
 }
 
