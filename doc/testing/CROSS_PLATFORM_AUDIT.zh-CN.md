@@ -8,6 +8,15 @@
 
 商店后续审计（2026-10-23）：[当前渠道、P4/P8/P9/W4/X6 证据与负责人阻塞](../release/STORE_READINESS.zh-CN.md)。此记录不覆盖下方历史验证。
 
+## I2 后续：活跃外壳快捷键（2026-10-23）
+
+`desktop/shell_shortcuts_test.dart` 在使用假后端的完整 `DitmeshApp` 中发送真实 Flutter
+按下/抬起/重复事件，覆盖 macOS、Windows、Linux 平台变体：正确/错误修饰键、按住只请求一次、
+现有搜索与筛选词焦点、从其他页选中聊天、复用联系人路由/返回，以及文本编辑、IME、对话框保护。
+既有纯映射测试仅作补充。当前外壳只安装 K/N，Shift+M 因无共享侧音所有者继续未绑定；本地化
+提示展示 K/N。Widget 平台变体不等于实体键盘/触控板、非美式布局、iPad 全键盘控制和 iPadOS 26
+原生菜单栏验证。
+
 ## 已确认并实施
 
 - 桌面启动先锁定整个应用支持目录，再打开设置、迁移和后端；第二进程请求激活原窗口，锁文件不删除，锁持有到进程结束。使用独立子进程验证争用、激活和崩溃释放。
@@ -51,7 +60,7 @@ Mac release UI 构建使用 `DITMESH_FAKE_BACKEND=true` 和 `DITMESH_ALLOW_MISSI
 | D6 | needs device | Light/dark source and widget cases reviewed; measured contrast and OS color filters remain owed. |
 | D7 | verified | morse_io flash_overlay_test.dart: bounded lamp, reduced-motion steady indicator and input passthrough. |
 | I1 | needs device | Touch/focus widgets reviewed; measure every essential control on smallest supported device. |
-| I2 | needs device | Cmd/Ctrl conventions and Shift+M regression tested; native keyboard/trackpad and iPad menus owed. |
+| I2 | needs device | `desktop/shell_shortcuts_test.dart` 已以 macOS/Windows/Linux 变体的键盘事件、路由和 IME 回归验证活跃 K/N；Shift+M 未绑定，原生输入与 iPad 菜单仍待完成。 |
 | I3 | not applicable | Morse composer is read-only and sends keyed input; ordinary text fields do not use Enter-to-send. |
 | I4 | needs device | PopScope/source and prior Android back evidence reviewed; release predictive-back/iOS gestures owed. |
 | I5 | needs device | Semantics/keying tests pass; VoiceOver, TalkBack, Narrator and Orca end-to-end flows remain owed. |
