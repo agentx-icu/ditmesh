@@ -210,6 +210,28 @@ wake 失败 catch。诊断 writer 失败会被隔离，不递归 fallback，也�
 | X5 | verified | 一个共享外壳 handler 与同组键盘事件用例覆盖三个桌面修饰键策略；未改平台插件或协议。 |
 | X6 | to do | 最终 head 的 CI release 构建仍必须通过；widget 按键不证明已安装签名包/商店行为。 |
 
-Cmd/Ctrl+Shift+M 因没有共享音频所有者继续未绑定。iPadOS 26 的原生 `UIMainMenuSystem`
-覆盖是单独的产品/工程范围；Flutter `Shortcuts` 不宣称实现原生菜单，也不关闭 I2 设备矩阵缺口。
+Cmd/Ctrl+Shift+M 因没有共享音频所有者继续未绑定。下方原生菜单增量通过 UIKit 接入这两个动作；Flutter `Shortcuts` 本身不实现原生菜单，也不关闭 I2 设备矩阵缺口。
 这项有界代码修复无需新增账号、证书、原生权限或商店操作。
+
+## I2 iPad 原生菜单桥
+
+iPadOS 26+ 现已为既有搜索/联系人动作添加真实 UIKit 菜单代码：`AppDelegate.buildMenu` 中的
+本地化 `UICommand`、`SceneDelegate` 的唯一活跃场景校验，以及连接现有外壳动作的 Flutter 通道。
+原生命令不带按键，Cmd+K/N 仍仅由 Flutter 一个 handler 处理。身份/条款未就绪、其他路由覆盖、
+文本/IME 输入、应用非活跃、销毁后或场景归属不明确时，命令保留可见但禁用。Dart 在派发时重查，
+owner 票据拒绝旧会话排队请求，原生回复版本检查防止迟到失败覆盖新状态；
+原生端也拒绝缺失/隐藏窗口、原生编辑器/覆盖页面和非活跃/断开场景。iOS <26 和单场景策略保持
+兼容，无新增权限或签名材料。
+
+| ID | Status | 证据／剩余门槛 |
+|---|---|---|
+| I2 | needs device | 原先缺少的原生桥代码已实现，8 个桥接回归加 20 个键盘用例通过，真实 Swift/FFI archive 编译通过；iPadOS 26+ 实际菜单显示、触摸/指针/键盘调用、灰显和场景行为仍需 OS/设备证据。 |
+| I3 | verified | 假后端通道回归验证编辑器/IME 所有权、旧 owner 拒绝和 ready→onboarding 过渡；真实 IME/键盘互通仍待设备验证。 |
+| X5 | verified | 复用同一现有外壳动作和 S 文案，其他平台仍走 Flutter 快捷键；Swift 状态回归覆盖当前/迟到 false/error 回复及 owner，未注册重复原生按键，未增加多场景或共享声音行为。 |
+| X6 | to do | 本机 Xcode 26.4.1 / iPhoneOS 26.4 已以真实 FFI unsigned archive 验证 Swift 编译、20 个 arm64 Mach-O、15 个 privacy manifest 及匹配的 Runner 符号；最终 head CI、已安装签名设备资格另计。 |
+
+2026-10-23 已核 [Apple UIKit 菜单指引](https://developer.apple.com/videos/play/wwdc2025/243/)
+（代码生成菜单、无按键命令、不可用项可见灰显）、本机 UIKit 26.4 headers 和
+[Flutter UIScene/通道生命周期指引](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate)。
+通道仍在 `didInitializeImplicitFlutterEngine` 注册，`FlutterSceneDelegate` 仍负责 scene 生命周期。
+这是有界的两个既有动作接线，不宣称每个工具栏动作都已原生菜单化，也不等于 App Review 批准。

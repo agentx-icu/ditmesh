@@ -220,8 +220,29 @@ software behavior evidence, not physical keyboard or installed-release proof.
 | X5 | verified | One shared shell handler and the same key-event cases cover all three desktop modifier policies; no platform plugin or protocol changes. |
 | X6 | to do | Final-head CI release builds remain required; widget key events do not establish installed signed/store behavior. |
 
-Cmd/Ctrl+Shift+M stays unbound because no shared audio owner exists. Native
-`UIMainMenuSystem` coverage on iPadOS 26 is a separate product/engineering scope;
-Flutter `Shortcuts` does not claim to implement that menu or close I2's device
-matrix. No new account, certificate, native permission or store action is needed
+Cmd/Ctrl+Shift+M stays unbound because no shared audio owner exists. The following native-menu addition connects these two actions through UIKit;
+Flutter `Shortcuts` alone does not implement that menu or close I2's device matrix. No new account, certificate, native permission or store action is needed
 for this bounded code fix.
+
+## I2 native iPad menu bridge
+
+For the existing Search/Contacts commands, iPadOS 26+ now has actual UIKit menu
+code: localized `UICommand` entries in `AppDelegate.buildMenu`, single active
+scene validation via `SceneDelegate`, and a Flutter channel to the existing
+shell actions. Native commands are keyless, leaving Cmd+K/N to one Flutter
+handler. They remain visible/disabled outside ready identity/accepted terms,
+when a route covers the shell, during text/IME input, when inactive, after
+teardown or when scene ownership is ambiguous. Dart revalidates at dispatch;
+owner tickets reject requests queued for a prior session, and native reply revisions prevent late failures from overwriting newer Dart state;
+native code also rejects missing/hidden windows, native editors/presentations
+and inactive/disconnected scenes. iOS <26 and the single-scene policy remain
+compatible, without extra permissions or signing inputs.
+
+| ID | Status | Evidence / remaining gate |
+|---|---|---|
+| I2 | needs device | The previously missing native bridge is implemented. Eight bridge regressions plus the 20 keyboard cases pass; real Swift/FFI archive builds. Actual iPadOS 26+ menu rendering, touch/pointer/keyboard activation and disabled-state/scene behavior still require OS/device evidence. |
+| I3 | verified | Bridge invocation preserves editor/IME ownership and rejects stale/outgoing owners and ready-to-onboarding transitions in fake-backend channel tests; real IME/keyboard interoperability remains a device check. |
+| X5 | verified | Reuses the same existing shell actions and S labels; other platforms retain Flutter-only commands. A compiled Swift state regression covers current/late false/error replies and ownership; no duplicate native key registration, multi-scene support or shared sound behavior is added. |
+| X6 | to do | Local Xcode 26.4.1 / iPhoneOS 26.4 unsigned real-FFI archive proves Swift compilation and 20 arm64 Mach-O/15 privacy manifests plus matching Runner symbols. Final-head CI and installed/signed device qualification remain separate. |
+
+Implementation sources checked 2026-10-23: Apple's [UIKit menu guidance](https://developer.apple.com/videos/play/wwdc2025/243/) (programmatic menus, keyless commands and visible disabled items), local UIKit 26.4 headers, and Flutter's [UIScene/channel lifecycle guide](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate). The Flutter host keeps channel registration in `didInitializeImplicitFlutterEngine`; `FlutterSceneDelegate` remains the scene lifecycle superclass. This is the bounded two-command addition, not a claim that every app toolbar action has native menu coverage or that App Review passed.
