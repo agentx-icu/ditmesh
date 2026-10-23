@@ -27,7 +27,14 @@ final class ApplicationDiagnostics {
   final bool debugMode;
   final void Function(String)? _write;
 
-  void _emit(String message) => (_write ?? debugPrint)(message);
+  void _emit(String message) {
+    try {
+      (_write ?? debugPrint)(message);
+    } on Object {
+      // A failed diagnostic sink must not mask the original failure or retry
+      // through a runtime fallback that would print raw application details.
+    }
+  }
 
   /// Lazy so release builds never stringify raw exceptions or platform data.
   void debug(String Function() message) {

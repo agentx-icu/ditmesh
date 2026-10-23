@@ -136,8 +136,10 @@ crash reporter，也不宣称生产堆栈已可读。
 
 三个 marker 回归先复现桌面 fallback、通知 payload／异常泄漏与启动页原文展示，再于
 修复后通过。另有诊断边界单测用 `debugMode: false` 验证 release 分支，覆盖恶意
-`toString`、stack／context marker 和 debug 处理器保留；这是隔离单测，不冒充
-已安装 release／真机证据。
+`toString`、stack／context marker 和 debug 处理器保留。独立 CI 调用设置
+`dart.vm.product=true`，断言实际 release 常量，并执行真正的偏好保存与共享音频／
+wake 失败 catch。诊断 writer 失败会被隔离，不递归 fallback，也不改变原业务失败。
+这些是隔离单测，不冒充已安装 release／真机证据。
 
 | Checklist | 状态 | 证据／剩余工作 |
 |---|---|---|

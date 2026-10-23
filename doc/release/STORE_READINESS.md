@@ -142,7 +142,11 @@ Three marker regressions first reproduced the desktop fallback, notification
 payload/error disclosure and raw startup UI, then passed after the fixes.
 Diagnostics boundary tests exercise the release branch with `debugMode: false`,
 including hostile `toString`, stack/context markers and preserved debug
-handlers. These are hermetic tests, not installed-release/device evidence.
+handlers. A separate CI invocation sets `dart.vm.product=true` and asserts the
+actual release constants while exercising real preference-save and shared
+audio/wake failure catches. A failed diagnostic writer is contained without
+recursive fallback or changing the original business failure. These are
+hermetic tests, not installed-release/device evidence.
 
 | Checklist | Status | Evidence / remaining work |
 |---|---|---|

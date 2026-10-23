@@ -40,6 +40,34 @@ void main() {
     expect(output, ['debug detail']);
   });
 
+  test('a failing diagnostic writer never escapes an error hook', () {
+    final previousFlutter = FlutterError.onError;
+    final previousDispatcher = PlatformDispatcher.instance.onError;
+    addTearDown(() {
+      FlutterError.onError = previousFlutter;
+      PlatformDispatcher.instance.onError = previousDispatcher;
+    });
+    var attempts = 0;
+    ApplicationDiagnostics(
+      debugMode: false,
+      write: (_) {
+        attempts++;
+        throw StateError('PRIVATE_WRITER_FAILURE');
+      },
+    ).installErrorHandlers();
+    expect(
+      () => FlutterError.onError!(
+        FlutterErrorDetails(exception: _PrivateError()),
+      ),
+      returnsNormally,
+    );
+    expect(
+      PlatformDispatcher.instance.onError!(_PrivateError(), StackTrace.current),
+      isTrue,
+    );
+    expect(attempts, 2, reason: 'no recursive logging fallback');
+  });
+
   test(
     'safe records contain only a fixed event and allowlisted error type',
     () {
