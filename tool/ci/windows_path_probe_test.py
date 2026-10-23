@@ -8,6 +8,19 @@ import windows_path_probe as probe
 
 
 class WindowsPathProbeTests(unittest.TestCase):
+    def test_project_matches_pinned_ffi_cpp20_and_release_dynamic_crt(self):
+        # file_io_compat.cpp uses C++20 char8_t/std::u8string on Windows.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ffi = root / 'pinned FFI/file_io_compat.cpp'
+            probe.fixture_project(root, root / 'positive.manifest', root / 'negative.manifest', ffi)
+            cmake = (root / 'CMakeLists.txt').read_text()
+            self.assertIn('set(CMAKE_CXX_STANDARD 20)', cmake)
+            self.assertIn('set(CMAKE_CXX_STANDARD_REQUIRED ON)', cmake)
+            self.assertIn('set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)', cmake)
+            self.assertIn(ffi.as_posix(), cmake)
+            self.assertIn('foreach(target IN ITEMS positive negative)', cmake)
+
     def test_ordinary_host_is_refused_before_any_file_or_process_mutation(self):
         with tempfile.TemporaryDirectory() as directory:
             evidence = Path(directory) / 'must-not-exist'

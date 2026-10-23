@@ -11,6 +11,11 @@
 
 namespace fs = std::filesystem;
 
+std::string Utf8Path(const fs::path& path) {
+  const std::u8string bytes = path.u8string();
+  return std::string(bytes.begin(), bytes.end());
+}
+
 int wmain(int argc, wchar_t** argv) {
   try {
     if (argc != 2) throw std::runtime_error("Expected one private probe root");
@@ -31,7 +36,7 @@ int wmain(int argc, wchar_t** argv) {
     }
     const fs::path file = directory / L"接收 文件 01.bin";
     const fs::path renamed = directory / L"改名 文件 02.bin";
-    const std::string name = file.u8string();
+    const std::string name = Utf8Path(file);
     const std::array<unsigned char, 6> content = {0, 1, 127, 128, 254, 255};
     FILE* stream = tim2tox::file_io::OpenUtf8(name, "wb");
     if (!stream) throw std::runtime_error("FFI OpenUtf8 write failed");
@@ -51,7 +56,7 @@ int wmain(int argc, wchar_t** argv) {
       throw std::runtime_error("FFI read/close failed");
     }
     if (!MoveFileExW(file.c_str(), renamed.c_str(), 0)) throw std::runtime_error("Win32 rename failed");
-    if (!tim2tox::file_io::RemoveUtf8(renamed.u8string())) throw std::runtime_error("FFI RemoveUtf8 failed");
+    if (!tim2tox::file_io::RemoveUtf8(Utf8Path(renamed))) throw std::runtime_error("FFI RemoveUtf8 failed");
     if (GetFileAttributesW(renamed.c_str()) != INVALID_FILE_ATTRIBUTES) {
       throw std::runtime_error("Deleted file still exists");
     }
