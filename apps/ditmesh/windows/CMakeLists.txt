@@ -62,6 +62,7 @@ set(ENV{NO_XIPH_LIBS} 1)
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../../tool/ci/desktop_jni.cmake")
 include(flutter/generated_plugins.cmake)
 
 
