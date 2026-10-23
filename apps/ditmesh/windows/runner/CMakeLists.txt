@@ -19,6 +19,13 @@ add_executable(${BINARY_NAME} WIN32
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
+# Release remains optimized with the existing CRT/NDEBUG settings. The PDB is
+# archived separately, never installed in the user payload.
+target_compile_options(${BINARY_NAME} PRIVATE "$<$<CONFIG:Release>:/Zi>")
+target_link_options(${BINARY_NAME} PRIVATE "$<$<CONFIG:Release>:/DEBUG:FULL>"
+  "$<$<CONFIG:Release>:/OPT:REF>" "$<$<CONFIG:Release>:/OPT:ICF>")
+set_target_properties(${BINARY_NAME} PROPERTIES
+  PDB_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/native-symbol-source")
 
 # Add preprocessor definitions for the build version.
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION=\"${FLUTTER_VERSION}\"")
