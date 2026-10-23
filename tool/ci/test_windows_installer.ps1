@@ -48,7 +48,7 @@ function Assert-InstalledPayload([string]$Stage) {
       throw "MSI omitted required release payload: $file"
     }
   }
-  & python $preflight $installRoot --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --expected-zip $zip |
+  & python $preflight $installRoot --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --require-windows-manifest --expected-zip $zip |
     Out-File -FilePath (Join-Path $evidence "$Stage.json") -Encoding utf8
   if ($LASTEXITCODE -ne 0) { throw "Installed payload verification failed: $Stage" }
   $runtimeFiles = @(Get-ChildItem -LiteralPath $installRoot -Filter '*.dll' -File |
