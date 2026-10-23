@@ -127,15 +127,44 @@ bash tool/build_ios_store.sh --team-id "$DITMESH_APPLE_TEAM_ID" \
 
 W4/X6/P4 在实际分发、业务/SDK reason audit 和签名真机资格上仍为 **to do**；X9 现保留 UUID 匹配的 iOS 主程序符号，但不实现生产 crash 收集，也不证明真机 crash 已符号化。27 个 store-export 加 5 个 Apple metadata 回归覆盖命令/政策边界、无效 profile/signer/entitlements、缺失或越界主程序、archive 结构、隐私/签名检查和失败传播；合成 fixture 不证明真实 archive/签名。本地 Python 共 116 项通过，shell 语法、ShellCheck、actionlint 通过。JNI fixture 使用本隔离 checkout 已 resolve 的 lock 配置，执行真正的上游插件源码；另有 5 组 PowerShell schema 回归覆盖准确身份、无关/空事件数据忽略、offset 边界和字段脱敏，不冒充实际 Windows event API 证据。
 
+## Release 安全应用诊断
+
+设置、通知、生命周期、偏好、聊天和音频适配器中既有的原始异常控制台输出现仅在
+debug 构建运行；共享 `morse_io` 的音频会话和 wakelock 适配器采用相同策略。
+桌面 shell 未提供日志 sink 时保持静默，包括 release `main()` 的配置。
+NotificationCenter 失败始终只记录固定事件与允许列表内的错误类别，不记录 payload、
+账号／联系人 ID、异常值或堆栈。未知启动错误使用既有本地化通用文案；已知聊天错误码
+仍使用本地化契约文案。
+
+binding／启动之前安装 framework 与未处理异步错误入口，release/profile 只输出固定
+来源和安全错误类别。不渲染传入的 stack、Flutter context 或 information collector，
+因为它们可能包含应用数据。debug 保留此前错误处理器和开发细节。本次不新增日志文件、
+支持导出、上传、权限或留存政策。这是隐私修复和最小安全控制台错误入口，不是原生
+crash reporter，也不宣称生产堆栈已可读。
+
+三个 marker 回归先复现桌面 fallback、通知 payload／异常泄漏与启动页原文展示，再于
+修复后通过。另有诊断边界单测用 `debugMode: false` 验证 release 分支，覆盖恶意
+`toString`、stack／context marker 和 debug 处理器保留。独立 CI 调用设置
+`dart.vm.product=true`，断言实际 release 常量，并执行真正的偏好保存与共享音频／
+wake 失败 catch。诊断 writer 失败会被隔离，不递归 fallback，也不改变原业务失败。
+这些是隔离单测，不冒充已安装 release／真机证据。
+
+| Checklist | 状态 | 证据／剩余工作 |
+|---|---|---|
+| X9 既有原始日志与启动错误泄漏 | 自动回归 verified | `application_diagnostics_test.dart`、`notification_center_test.dart`、`native_backend_startup_test.dart`、`startup_gate_test.dart`、`desktop_shell_controller_test.dart`；各平台编译 release marker 检查仍待做。 |
+| X5 共享代码一致性 | 源码与隔离测试 verified | 共享 Dart 策略覆盖 Android／iOS／macOS／Windows／Linux；两处 `morse_io` guard 与 MorseCQ 一致；原生／系统日志仍需已安装真机审计。 |
+| X9 原生捕获、可读且准确匹配构建的堆栈与符号清单 | to do | 独立工程项；保存已有构建符号无需先选择遥测服务。 |
+| P4／P7 支持数据披露与屏幕采集 | to do／needs device | 未新增收集或上传；本次不能证明商店隐私获批或屏幕采集保护。 |
+
 ## 剩余工程与决定
 
 负责人材料表不是全部 backlog。安装检查通过，不能被表述为所有可通过代码解决的 checklist 项已经完成。
 
 | 剩余工程 | 前提／阻塞 |
 |---|---|
-| X9 既有 release 日志、通知 payload/error 元数据和未知启动错误显示 | **可立即代码修复**：固定安全事件/类型、release 安全 sink、泛化 UI 及 marker 回归不需要账号或远端服务。独立诊断增量处理这些现存路径，不把 raw debug 输出直接持久化。 |
-| X9 逐构建源码自建符号及二进制准确配对 | **可立即代码补齐**：保留 Windows PDB/CodeView GUID+age、Android strip 前 ELF/build ID、Linux 独立 debug/build ID，以及 Apple archive dSYM UUID 清单。现有 iOS 主程序符号匹配只覆盖其中一部分；vendor engine 符号需准确上游构建/来源，缺失必须逐项说明。 |
-| X9 原生 crash reporter、上传、持久诊断内容/留存和支持流程 | 仍有产品/隐私决定及后续平台实现、设备符号化验证；这些选择不阻塞上面两个 code-only 子项。本任务不虚构遥测服务或账号。 |
+| X9 既有 release 日志、通知元数据和未知启动错误显示 | **代码已由 [#38](https://github.com/agentx-icu/ditmesh/pull/38) 补齐**：现有路径已有 release 安全事件/类型与 sink、泛化 UI、framework/async hook 及 marker 回归，见上方隐私增量；不代表原生 crash 收集或持久诊断已完成。 |
+| X9 逐构建源码符号与准确二进制配对 | **可立即代码补齐，见 [#40](https://github.com/agentx-icu/ditmesh/pull/40)**：保留 Windows PDB GUID/age、ELF build ID/debuglink、Apple dSYM UUID，并配对最终产物。无需远端服务/账号前置条件；vendor 符号需准确上游构建/来源。 |
+| X9 完整原生 crash 捕获，以及任何持久/支持诊断 | 按实际范围选择 reporter、数据/留存/支持政策与隐私披露，之后仍需平台实现及已安装 release crash 验证；这些决定不阻塞 code-only 的隐私或符号工程。本任务不虚构遥测服务/账号。 |
 | I2 现有 Search/Contacts 键盘命令 | **代码已由 [#36](https://github.com/agentx-icu/ditmesh/pull/36) 补齐**：既有动作已接入外壳并有实际按键路由回归；设备边界见下方 I2 后续节。全局侧音命令目前没有声音 owner，仍明确不可用。 |
 | P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
 | B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |

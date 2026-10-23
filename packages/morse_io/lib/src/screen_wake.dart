@@ -75,9 +75,11 @@ final class SerializedScreenWake implements ScreenWakeApi {
           _applied = target;
         } on Object catch (e) {
           _applied = null;
-          debugPrint(
-            'morse_io: wakelock ${target ? 'enable' : 'disable'} failed: $e',
-          );
+          if (kDebugMode) {
+            debugPrint(
+              'morse_io: wakelock ${target ? 'enable' : 'disable'} failed: $e',
+            );
+          }
           if (_wanted == target) {
             return;
           }

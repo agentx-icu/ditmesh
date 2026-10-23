@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import '../l10n/generated/s.dart';
 import 'badge_api.dart';
 import 'badge_writer.dart';
@@ -460,7 +461,7 @@ class NotificationCenter {
     try {
       await _notifications.show(request);
     } catch (error, stack) {
-      _report('show(${request.payload})', error, stack);
+      _report('show', error, stack);
     }
   }
 
@@ -477,11 +478,15 @@ class NotificationCenter {
     try {
       await _notifications.cancel(stableNotificationId(payload));
     } catch (error, stack) {
-      _report('cancel($payload)', error, stack);
+      _report('cancel', error, stack);
     }
   }
 
   static void _report(String what, Object error, StackTrace stack) {
-    debugPrint('[NotificationCenter] $what failed: $error\n$stack');
+    applicationDiagnostics.report(switch (what) {
+      'show' => DiagnosticEvent.notificationShow,
+      'cancel' => DiagnosticEvent.notificationCancel,
+      _ => DiagnosticEvent.notificationOther,
+    }, error);
   }
 }

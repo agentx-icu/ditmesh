@@ -93,12 +93,13 @@ class DesktopShellConfig {
   /// How long to wait after the last move/resize before persisting bounds.
   final Duration persistDebounce;
 
-  /// Diagnostic sink (defaults to [debugPrint]); the shell is cosmetic and
+  /// Optional diagnostic sink; omitted means silent. The shell is cosmetic and
   /// never throws to its caller.
   final void Function(String message)? log;
 
-  /// [log] or [debugPrint].
-  void Function(String message) get logger => log ?? debugPrint;
+  void Function(String message) get logger => log ?? _discardLog;
+
+  static void _discardLog(String message) {}
 
   TargetPlatform get effectivePlatform => platform ?? defaultTargetPlatform;
 

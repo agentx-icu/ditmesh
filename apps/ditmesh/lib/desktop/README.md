@@ -42,6 +42,9 @@ if (isDesktopTarget(defaultTargetPlatform)) {
 }
 ```
 
+An omitted `log` sink is silent; `main()` opts into raw shell diagnostics only
+in debug builds.
+
 `initDesktopShell` must run **after** `WidgetsFlutterBinding.ensureInitialized()`
 and **before** `runApp`: `window_manager` creates the window hidden, the shell
 restores the persisted bounds (clamped to the current displays) and only then

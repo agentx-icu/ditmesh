@@ -39,6 +39,8 @@ if (isDesktopTarget(defaultTargetPlatform)) {
 }
 ```
 
+未提供 `log` sink 时保持静默；`main()` 仅在 debug 构建启用原始 shell 诊断。
+
 `initDesktopShell` 必须在 `WidgetsFlutterBinding.ensureInitialized()` **之后**、`runApp` **之前**运行：
 `window_manager` 以隐藏状态创建窗口，shell 恢复持久化的边界（夹取到当前显示器范围内），
 然后才显示窗口，因此没有可见的跳动。
