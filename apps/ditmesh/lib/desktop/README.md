@@ -62,10 +62,20 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 `setCloseToTray(value)` is the settings toggle (persisted); `showWindow()`
 restores a hidden window.
 
-`shortcuts.dart` defines `desktopShortcutBindings()` (Cmd/Ctrl+K search, +N
-new message, +Shift+M sidetone) as pure intents. The app does not install them yet;
-to activate them, wrap the shell in `Shortcuts(shortcuts:
-desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
+`AppShell` installs the search and new-message bindings from `shortcuts.dart`.
+Cmd+K on macOS (Ctrl+K on Windows/Linux) selects Chat and focuses its existing
+conversation search without clearing the filter. Cmd/Ctrl+N selects Chat and
+opens the existing Contacts route to choose a recipient; repeats cannot stack
+contacts. The search icon and Contacts button show the platform shortcut in
+their localized tooltips. Commands are scoped to the exposed shell and do not
+intercept focused text editors, IME composition, dialogs or covering routes.
+There is no system-wide keyboard hook.
+
+`ToggleSidetoneIntent` and Cmd/Ctrl+Shift+M remain definitions only: the app has
+no shared sound owner, so the shell does not install that binding. This Flutter
+shortcut wiring does not populate the native iPadOS 26 menu bar. Native menu
+coverage, hardware keyboards/trackpads, non-US layouts and Full Keyboard Access
+still need their separately scoped implementation or device evidence.
 
 ## Behaviour
 

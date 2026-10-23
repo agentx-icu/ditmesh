@@ -8,6 +8,18 @@ This is a source audit plus explicitly named local tests. A **verified** row sta
 
 Store follow-up (2026-10-23): [current channels, P4/P8/P9/W4/X6 evidence and owner blockers](../release/STORE_READINESS.md). This dated record does not overwrite the historical validation below.
 
+## I2 follow-up — active shell shortcuts (2026-10-23)
+
+`desktop/shell_shortcuts_test.dart` sends actual Flutter key-down/up/repeat events
+through `DitmeshApp` with the fake backend on macOS, Windows and Linux platform
+variants. It verifies the primary modifier, wrong-modifier rejection, one request
+per held key, existing search/filter focus, selection of Chat from another tab,
+Contacts route reuse/back behavior and untouched editor/IME/dialog state. The
+existing pure binding suite is supplementary. The exposed shell now installs
+K/N only; Shift+M remains unbound without a shared sidetone owner. Localized
+tooltips publish K/N. Native keyboard/trackpad, non-US layouts, iPad Full Keyboard
+Access and the native iPadOS 26 menu are not established by widget variants.
+
 ## Confirmed changes
 
 - Acquire a process lock for the entire desktop application-support root before preferences/backend startup; secondary processes request owner activation. Keep the lock inode and let OS process termination release it. Independently spawned processes verify contention, activation and crash release.
@@ -51,7 +63,7 @@ The independent review found and reproduced primary/current + backup/future over
 | D6 | needs device | Light/dark source and widget cases reviewed; measured contrast and OS color filters remain owed. |
 | D7 | verified | morse_io flash_overlay_test.dart: bounded lamp, reduced-motion steady indicator and input passthrough. |
 | I1 | needs device | Touch/focus widgets reviewed; measure every essential control on smallest supported device. |
-| I2 | needs device | Cmd/Ctrl conventions and Shift+M regression tested; native keyboard/trackpad and iPad menus owed. |
+| I2 | needs device | Active K/N shell behavior is verified by `desktop/shell_shortcuts_test.dart` key-event/route/IME tests on macOS/Windows/Linux variants. Shift+M stays unbound; native input and iPad menus remain owed. |
 | I3 | not applicable | Morse composer is read-only and sends keyed input; ordinary text fields do not use Enter-to-send. |
 | I4 | needs device | PopScope/source and prior Android back evidence reviewed; release predictive-back/iOS gestures owed. |
 | I5 | needs device | Semantics/keying tests pass; VoiceOver, TalkBack, Narrator and Orca end-to-end flows remain owed. |

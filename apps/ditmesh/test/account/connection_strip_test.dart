@@ -35,7 +35,7 @@ void main() {
 
       expect(find.byType(ChatPage), findsOneWidget);
 
-      final Finder contacts = find.byTooltip(en.chatContacts);
+      final Finder contacts = find.byKey(const ValueKey('chat-contacts-open'));
       expect(
         contacts.hitTestable(),
         findsOneWidget,

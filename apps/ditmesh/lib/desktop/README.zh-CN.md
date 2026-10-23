@@ -55,9 +55,14 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 
 `setCloseToTray(value)` 是设置开关（会持久化）；`showWindow()` 恢复被隐藏的窗口。
 
-`shortcuts.dart` 以纯 intent 的形式定义了 `desktopShortcutBindings()`（Cmd/Ctrl+K 搜索、+N 新消息、
-+Shift+M 侧音）。App 目前还没有安装它们；要启用，用 `Shortcuts(shortcuts: desktopShortcutBindings(),
-child: Actions(actions: {...}, child: ...))` 包住外壳。
+`AppShell` 已安装 `shortcuts.dart` 的搜索和新消息绑定。macOS 的 Cmd+K（Windows/Linux 的
+Ctrl+K）选中聊天页并聚焦现有会话搜索，不清空筛选词；Cmd/Ctrl+N 选中聊天页并打开现有联系人
+路由以选择收件人，按住按键不会堆叠联系人页。搜索图标和联系人按钮的本地化提示展示平台快捷键。
+命令只作用于露出的外壳，不截获已聚焦文本编辑器、IME 组字、对话框或覆盖路由；没有系统级键盘监听。
+
+`ToggleSidetoneIntent` 与 Cmd/Ctrl+Shift+M 仍只是定义：App 没有共享声音所有者，外壳未安装该绑定。
+Flutter 快捷键接线不会填充 iPadOS 26 原生菜单栏。原生菜单覆盖、实体键盘/触控板、非美式布局和
+全键盘控制仍需单独界定实现或补设备证据。
 
 ## 行为
 
