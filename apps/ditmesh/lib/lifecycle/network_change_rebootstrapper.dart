@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../diagnostics/application_diagnostics.dart';
+
 /// One report from the platform's default-network watcher.
 ///
 /// [identity] names the effective default path (Android: network handle,
@@ -90,8 +92,8 @@ class NetworkChangeReBootstrapper {
     if (_disposed || _sub != null) return;
     _sub = _snapshots.listen(
       _onSnapshot,
-      onError: (Object e, StackTrace st) => debugPrint(
-        '[NetworkChangeReBootstrapper] network watcher error: $e\n$st',
+      onError: (Object e, StackTrace st) => debugLog(
+        () => '[NetworkChangeReBootstrapper] network watcher error: $e\n$st',
       ),
     );
   }
@@ -144,7 +146,9 @@ class NetworkChangeReBootstrapper {
     try {
       await _kick(() => !_disposed);
     } catch (e, st) {
-      debugPrint('[NetworkChangeReBootstrapper] re-bootstrap failed: $e\n$st');
+      debugLog(
+        () => '[NetworkChangeReBootstrapper] re-bootstrap failed: $e\n$st',
+      );
     } finally {
       _inFlight = false;
     }

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../diagnostics/application_diagnostics.dart';
+
 /// Asks the OS for extra running time after the app leaves the foreground.
 ///
 /// iOS suspends an app a few seconds after `applicationDidEnterBackground`
@@ -54,7 +56,7 @@ final class MethodChannelBackgroundTaskApi implements BackgroundTaskApi {
     } on Object catch (error) {
       // MissingPluginException (tests, an older native build) or the OS
       // refusing: the app still works, it just gets the default grace time.
-      debugPrint('[BackgroundTaskApi] begin failed: $error');
+      debugLog(() => '[BackgroundTaskApi] begin failed: $error');
       return null;
     }
   }
@@ -64,7 +66,7 @@ final class MethodChannelBackgroundTaskApi implements BackgroundTaskApi {
     try {
       await _channel.invokeMethod<void>('end', token);
     } on Object catch (error) {
-      debugPrint('[BackgroundTaskApi] end failed: $error');
+      debugLog(() => '[BackgroundTaskApi] end failed: $error');
     }
   }
 }

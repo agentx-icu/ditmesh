@@ -42,8 +42,8 @@ class StartupSplash extends StatelessWidget {
 /// changed by a failed inspect/open, so retrying is always safe.
 ///
 /// [error] is whatever `inspect()` / `open()` threw: a `ChatException` is
-/// shown as its localized message; anything else as the generic message plus
-/// its raw string, which is the only clue a bug report will have.
+/// shown as its localized message; anything else uses the generic message.
+/// Raw platform exceptions can include private paths or application data.
 class StartupErrorPage extends StatelessWidget {
   const StartupErrorPage({
     super.key,
@@ -66,7 +66,7 @@ class StartupErrorPage extends StatelessWidget {
     final String? detail = switch (error) {
       null => null,
       ChatException() => describeChatError(s, error),
-      _ => '${s.errorUnknown}\n$error',
+      _ => s.errorUnknown,
     };
     return Scaffold(
       body: SafeArea(

@@ -66,6 +66,16 @@ _harness({
 Future<void> _drain() => Future<void>.delayed(Duration.zero);
 
 void main() {
+  test('an omitted desktop log sink stays silent', () {
+    final output = <String?>[];
+    final previous = debugPrint;
+    debugPrint = (message, {wrapWidth}) => output.add(message);
+    addTearDown(() => debugPrint = previous);
+    DesktopShellConfig(store: InMemoryKeyValueStore()).logger(
+      'PRIVATE_DESKTOP_MARKER',
+    );
+    expect(output, isEmpty);
+  });
   test('showing a minimized window restores it before focus', () async {
     final h = _harness();
     await h.controller.initialize();

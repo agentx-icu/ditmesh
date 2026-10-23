@@ -63,12 +63,13 @@ void main() {
     tester,
   ) async {
     final identity = seededIdentityService()
-      ..inspectError = StateError('disk unreadable');
+      ..inspectError = StateError('PRIVATE_INSPECT_MARKER /home/private/data');
     await pumpApp(tester, identity: identity);
     expect(find.byType(StartupErrorPage), findsOneWidget);
-    // Non-ChatException: generic message plus the raw detail for bug reports.
+    // Non-ChatException: generic text without filesystem or exception details.
     expect(find.textContaining(en.errorUnknown), findsOneWidget);
-    expect(find.textContaining('disk unreadable'), findsOneWidget);
+    expect(find.textContaining('PRIVATE_INSPECT_MARKER'), findsNothing);
+    expect(find.textContaining('/home/private'), findsNothing);
     expect(find.byType(AppShell), findsNothing);
 
     await tester.tap(find.text(en.actionRetry));
