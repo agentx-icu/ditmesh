@@ -59,7 +59,7 @@ final class NotificationRequest {
 ///
 /// Every method is best-effort: implementations swallow platform-channel
 /// failures (missing plugin in unit tests, denied permission, unsupported
-/// backend) and report them through `debugPrint` rather than throwing.
+/// backend) and report raw details only in debug builds rather than throwing.
 abstract interface class LocalNotificationsApi {
   /// Initialises the plugin. [onTap] receives the payload of a notification
   /// the user selected while the app was running. Returns false when the
