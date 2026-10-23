@@ -96,14 +96,14 @@ function Get-MsiProductState {
   try {
     $database = $installer.OpenDatabase($msi, 0)
     $view = $database.OpenView('SELECT `Value` FROM `Property` WHERE `Property`=''ProductCode''')
-    $view.Execute()
+    [void]$view.Execute()
     $record = $view.Fetch()
     if (-not $record) { throw 'MSI has no ProductCode' }
     $productCode = $record.GetType().InvokeMember('StringData', 'GetProperty', $null, $record, @(1))
     $state = $installer.GetType().InvokeMember('ProductState', 'GetProperty', $null, $installer, @($productCode))
-    return @{ product_code = $productCode; state = $state }
+    return [pscustomobject]@{ product_code = $productCode; state = $state }
   } finally {
-    if ($null -ne $view) { $view.Close() }
+    if ($null -ne $view) { [void]$view.Close() }
     foreach ($com in @($record, $view, $database, $installer)) {
       if ($null -ne $com) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($com) }
     }

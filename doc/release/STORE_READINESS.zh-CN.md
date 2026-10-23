@@ -85,7 +85,25 @@ Windows Flutter Release 还包含 CPU 专用的 **ELF** Dart AOT 快照 `data/ap
 | X5 | verified | 复用 Toxee 已建立的 MSI 安装生命周期方法，适配 DitMesh 自己的安装器、真实 backend、应用身份和存储。Linux/macOS/mobile 包流程不变，既有真机/签名缺项继续保留。 |
 | P4、P9 | to do | 下方材料表明确账号/证书/资料来源与阻塞决定；不编造隐私/出口答案，也不虚构 UGC/删除运营服务。 |
 
-macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **61** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置已安装 macOS 26.4 SDK 的 `SDKROOT` 后，全部 **70** 个 `tool/ci/*test.py` 测试通过。首次未满足前置条件的运行因子模块源码缺失、宿主默认 SDK 27/链接器不匹配而失败。新增八个 payload 测试覆盖资源变化、已装文件丢失或额外增加、目录伪装 executable、不安全/冲突 ZIP 路径和已装 symlink 越界、CRT/notice 缺失和 debug CRT 拒绝。四个 CMake fixture 真实执行 Release/Debug 安装规则、必需文件与 debug runtime 拒绝，仅替换发现过程，不证明实际 Microsoft DLL 或许可；`actionlint`、`git diff --check` 通过。PowerShell/MSI 的执行证据由 Windows job 提供，不从本地结果推断。
+
+## 干净 Ubuntu 已安装包增量验证 — 2026-10-23
+
+必需 Linux release job 现把准确最终 DEB 交给 `linux_installed_smoke.py`。全新的官方 Ubuntu 24.04 容器先只安装 DEB 及其声明依赖，核 ELF 未解析依赖与运行工具并记录，再安装 X11 测试工具，避免构建 runner 的 SDK/依赖掩盖包依赖缺失。容器不用 privileged 模式、不挂载宿主桌面/用户数据；以既有非特权 `nobody` 用户和私有 XDG 目录运行已装 launcher，将安装文件字节/模式及 desktop/icon/launcher 与最终 DEB 对照，等待该 PID 的可见窗口和已装 Flutter/Tox mapped modules，发送正常 `WM_DELETE_WINDOW` 关闭请求，再卸包并拒绝包文件、注册态或进程残留。失败清场不能算优雅退出。
+
+`linux-installer-evidence` 保留 DEB 哈希、拉取镜像 digest、OS/架构/包/依赖清单、已装文件哈希、实际 PID/maps/窗口和卸载结果，失败也保留日志。范围仅为 **Ubuntu 24.04 x86_64 DEB／X11／1280×800／scale 1／软件渲染**；不证明 RPM/Fedora、Wayland、硬件/音频/摄像头、真实 peer 会话、上一版升级或商店批准。W4/X6 在这些更大边界仍为 **to do**，新子检查的真实执行证据须看最终 PR head 的 Linux job；其他目标保留自己的门禁。
+
+## 剩余工程与决定
+
+负责人材料表不是全部 backlog。安装检查通过，不能被表述为所有可通过代码解决的 checklist 项已经完成。
+
+| 剩余工程 | 前提／阻塞 |
+|---|---|
+| X9 release 应用/原生 crash 捕获、逐构建符号归档及符号化、脱敏/轮转/留存 | 先选本地或远端收集、允许的数据/留存/支持流程及隐私披露，再集成 reporter；本任务不虚构遥测服务或账号。 |
+| P7 app-switcher／屏幕采集保护 | 产品负责人先确定每平台聊天/身份内容显示策略，之后仍需实现与已安装真机验证。 |
+| B4 保证移动后台送达 | 当前产品不作此承诺；新保证需要平台预算/传输架构和产品决定，不能从现有后台估算推导。 |
+| 正式 iOS/Mac App Store archive、Developer ID/公证、Windows 代码签名或 MSIX 渠道实现 | 选择真实渠道/身份并安全提供签名配置；Android 之外 `--mode distribution` 仍显式拒绝。剩余既含代码也含验证，不只是凭据。 |
+| F1/F2 帧时序/启动/体积预算，以及完整 X1/X4/X6 设备/升级矩阵 | 先定支持硬件和预算，再测已安装 release 与旧版升级路径；容器/窗口检查不能替代测量。 |
 
 ## 负责人材料交接表
 
@@ -99,6 +117,7 @@ macOS 本地验证：初始化锁定 Tim2Tox 子模块并仅对该命令设置�
 | macOS 站外 Developer ID | Developer ID Application/Installer 的公开证书主体、到期/指纹，以及安全签名/公证配置负责人，用于最终 bundle/PKG 签名与公证证据。 | Apple Developer → Certificates；macOS Keychain Access → My Certificates；持有人的 `notarytool` 配置。只交接公证 submission ID/状态及 stapling/Gatekeeper 报告，不交接私钥、密码或 profile 内容。 | 当前 ad-hoc 只证明完整性；正式签名、公证/stapling 和隔离下载后的干净 Mac 安装待做。 |
 | Google Play／Android | Play 开发者/app 记录、上传证书 SHA-256、独立 Play app-signing 交付证书/lineage、递增 versionCode、适用测试及 production-access 证据，确保上传和安装升级身份。 | [Play Console](https://play.google.com/console/) → 应用 → Setup / App integrity 核证书/签名；Test and release 核轨道/资格。持有人直接在仓库 Settings → Secrets and variables → Actions 配置四个 `ANDROID_KEYSTORE_*` / `ANDROID_KEY_*` secret，以及公开变量 `DITMESH_ANDROID_CERT_SHA256`。 | 缺已核上传 key/指纹或归属；交付身份、账号特定发布资格、生成 APK/16 KB 运行及升级证据仍需补齐。 |
 | Microsoft Store 托管 MSI/EXE（若选） | Partner Center 产品身份、可信代码签名证书的公开身份、固定版本 HTTPS 安装器 URL/哈希、静默参数与认证说明，建立发行者和托管包信任。 | [Partner Center](https://partner.microsoft.com/dashboard/) → Apps and games → 产品 / submission；现有证书提供方后台；发行者所选的内容不可变下载托管。私有签名访问仅配置到批准的安全环境。 | 安装器及全部内嵌 PE 仍需可信签名、固定 HTTPS 托管及上一版本升级证据。本任务不购买证书、不部署托管、不提审。 |
+| Windows Visual C++ runtime | 实际 MSVC/toolset 版本、适用 Visual Studio 许可/再分发证据及 app-local 维护负责人，建立 Microsoft 组件的权利和维护路径。 | Visual Studio Help → About → License Terms、[Visual Studio 许可目录](https://visualstudio.microsoft.com/license-terms/)和所用工具链的 redistributable list；与 `licenses/MSVC-runtime.txt`、CI 证书/哈希报告核对。 | Microsoft DLL 有效签名或 CI 成功不证明发行者拥有再分发权，也不接受协议；分发前由负责人归档依据。 |
 | Microsoft Store MSIX（若选） | 预留包 identity/publisher、能力清单、WACK/升级证据及签名包记录。 | Partner Center → 产品 → Product identity / packages。 | 尚未实现 MSIX 打包路径；Store 重签是不同路径，不能为满足托管 MSI 行而要求购买证书。 |
 | Linux 站外／可选商店 | 支持的发行版/架构矩阵、上一版包及维护者归属；若选择，补 Flathub app-ID 权利或 Snap publisher/name/confinement 批准。 | 旧版已签名发布档案；[Flathub 文档](https://docs.flathub.org/docs/for-app-authors/submission)及 [Snapcraft dashboard](https://dashboard.snapcraft.io/)。 | 干净安装/升级/桌面集成/portal 尚无证据。实际 Flathub manifest/提交按现行 AI 政策交由人处理；不假设已选择任何可选商店。 |
 | 中国大陆 Android（若选） | 明确具体商店、地区/包类型、已验证主体/app 身份，以及该渠道实际要求的资质/备案、隐私/SDK 审核证据。 | 发行者的 Huawei AppGallery Connect、小米或其他所选官方开发者后台，按当前渠道细则核实。 | 尚未选渠道/地区；后台专属规则及适用性仍由负责人确认，不从中文界面推导统一备案义务。 |

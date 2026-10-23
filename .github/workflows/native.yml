@@ -335,6 +335,17 @@ jobs:
       # symlinks), so only finished packages leave the machine.
       - name: Package (.deb, .rpm, .tar.gz)
         run: bash tool/ci/package_artifacts.sh --target linux
+      - name: Smoke installed Linux DEB in clean Ubuntu
+        timeout-minutes: 18
+        run: python3 tool/ci/linux_installed_smoke.py --app ditmesh --architecture x86_64 --package-dir dist/linux --evidence-dir build/evidence/linux-installed
+      - name: Upload Linux installer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer-evidence
+          path: build/evidence/linux-installed
+          if-no-files-found: warn
+          retention-days: 14
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
