@@ -21,6 +21,12 @@ import 'workbench_decode_panel.dart';
 import 'workbench_library_sheet.dart';
 import 'workbench_waveform.dart';
 
+/// Creates an owned player for a workbench opened on the root navigator.
+/// Without an injected factory the workbench uses the native player.
+abstract interface class WorkbenchPlayerFactory {
+  ClipPlayer create();
+}
+
 /// Recorded-audio copying workbench (functional spec §11): import a WAV
 /// recording, select and loop a part, decode it or copy it yourself, and
 /// keep selections as local audio materials. Imports need no microphone
@@ -70,7 +76,10 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
     with WidgetsBindingObserver {
   WorkbenchController? _c;
   TrainingController? _training;
-  late final ClipPlayer _player = widget.player ?? SoloudClipPlayer();
+  late final ClipPlayer _player =
+      widget.player ??
+      context.read<WorkbenchPlayerFactory?>()?.create() ??
+      SoloudClipPlayer();
   bool _unavailable = false;
   Object? _unavailableError;
 

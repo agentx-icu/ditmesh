@@ -4,6 +4,10 @@
 
 Scope: the release chain based on `7d45e048fd786b1779d98d6a78bec4b658a8ea60`, with this PR's preflight fixes. The [earlier 65-item audit](../testing/CROSS_PLATFORM_AUDIT.md) remains the record for unrelated UI/lifecycle work. No store submission, account ownership, certificate purchase, notarization upload or store approval was performed. A green PR validates the repository and its build artifacts; it does not make DitMesh store-ready.
 
+## Layout evidence boundary (X2/X5)
+
+The X2/X5 widget-host correction now treats non-layout errors, visible error placeholders and missing required destinations as failures. It explicitly verifies scanner, imported-WAV workbench and key-editor destinations in each existing layout profile. Final-head CI remains required; this does not qualify native camera/file/audio flows or store/device checks. See the [test-host evidence boundary](../testing/TEST_PYRAMID.md#layout-host-coverage-follow-up-2026-10-26).
+
 ## Channel matrix
 
 “Blocked” means a release owner must supply evidence or decide product scope. Future channels are not current shipping promises.
