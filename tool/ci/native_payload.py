@@ -16,6 +16,7 @@ import sys
 import zipfile
 
 from macos_runtime import MACHO_MAGICS
+from windows_manifest import check_executable
 
 CPUS = {'pe': {0x8664: 'x86_64', 0xaa64: 'arm64', 0x14c: 'x86'},
         'elf': {62: 'x86_64', 183: 'arm64', 40: 'arm', 3: 'x86'},
@@ -275,6 +276,7 @@ def main():
     parser.add_argument('--flutter-windows-aot', action='store_true')
     parser.add_argument('--arch', choices=('x86_64', 'arm64', 'arm', 'x86'))
     parser.add_argument('--require-windows-crt', action='store_true')
+    parser.add_argument('--require-windows-manifest', action='store_true')
     parser.add_argument('--expected-zip', type=Path, help='Compare installed Windows files against the final ZIP')
     args = parser.parse_args()
     if args.flutter_windows_aot and args.format != 'pe':
@@ -287,11 +289,20 @@ def main():
         if args.format != 'pe':
             parser.error('--require-windows-crt requires --format pe')
         check_windows_crt(args.path)
+    manifest = None
+    if args.require_windows_manifest:
+        if args.format != 'pe' or not args.entry:
+            parser.error('--require-windows-manifest requires --format pe and --entry')
+        manifest = check_executable(args.path / args.entry)
     if args.expected_zip:
         if args.format != 'pe':
             parser.error('--expected-zip requires --format pe')
         result = {'native_payload': result,
                   'installed_files': check_installed_payload(args.path, args.expected_zip)}
+    if manifest:
+        if isinstance(result, list):
+            result = {'native_payload': result}
+        result['windows_manifest'] = manifest
     print(json.dumps(result, indent=2))
 
 

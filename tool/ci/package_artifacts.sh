@@ -115,8 +115,10 @@ package_windows() {
   stage="$DIST_DIR/.stage/ditmesh"
   mkdir -p "$stage"
   cp -R "$runner/." "$stage/"
-  python3 "$SCRIPT_DIR/native_payload.py" "$stage" --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt
+  python3 "$SCRIPT_DIR/native_payload.py" "$stage" --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --require-windows-manifest
   (cd "$DIST_DIR/.stage" && 7z a -tzip -bd -bso0 "$(ci_windows_path "$DIST_DIR")/$BASE-windows-x64.zip" ditmesh)
+  python3 "$SCRIPT_DIR/windows_manifest.py" --zip "$DIST_DIR/$BASE-windows-x64.zip" \
+    --report "$REPO_ROOT/build/evidence/windows-path/zip-manifest.json"
 
   ci_require_cmd cpack
   installer="$REPO_ROOT/build/windows-installer"

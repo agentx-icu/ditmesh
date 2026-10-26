@@ -1,10 +1,16 @@
 """Architecture faults in engines/plugins must fail even when the FFI matches."""
 from pathlib import Path
+import contextlib
+import io
+import json
 import struct
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
+import native_payload
 from native_payload import check_android, check_tree, check_installed_payload, check_windows_crt
 
 
@@ -28,6 +34,33 @@ def pe(machine=0x8664):
 
 def macho(cpu=0x100000c):
     return struct.pack('<IIIIIIII', 0xfeedfacf, cpu, 0, 2, 0, 0, 0, 0)
+
+
+class WindowsManifestGateTests(unittest.TestCase):
+    def test_payload_gate_checks_actual_entry_and_retains_manifest_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'ditmesh.exe').write_bytes(pe())
+            args = ['native_payload', str(root), '--format', 'pe', '--arch', 'x86_64',
+                    '--entry', 'ditmesh.exe', '--require-windows-manifest']
+            report = {'exe_sha256': 'fixture', 'manifests': [{'long_path_aware': True}]}
+            with patch.object(sys, 'argv', args), patch.object(native_payload, 'check_executable', return_value=report) as checked, \
+                    contextlib.redirect_stdout(io.StringIO()) as stdout:
+                native_payload.main()
+            checked.assert_called_once_with(root / 'ditmesh.exe')
+            self.assertEqual(json.loads(stdout.getvalue())['windows_manifest'], report)
+
+    def test_invalid_embedded_manifest_stops_installed_payload_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'ditmesh.exe').write_bytes(pe())
+            args = ['native_payload', str(root), '--format', 'pe', '--arch', 'x86_64',
+                    '--entry', 'ditmesh.exe', '--require-windows-manifest', '--expected-zip', str(root / 'final.zip')]
+            with patch.object(sys, 'argv', args), patch.object(native_payload, 'check_executable', side_effect=ValueError('longPathAware')), \
+                    patch.object(native_payload, 'check_installed_payload') as installed:
+                with self.assertRaisesRegex(ValueError, 'longPathAware'):
+                    native_payload.main()
+                installed.assert_not_called()
 
 
 class WindowsCrtTests(unittest.TestCase):

@@ -89,6 +89,14 @@ The strict close check exposed a real `0xC000041D` failure, reproduced before th
 
 Local verification on macOS: all **111** `tool/ci/*test.py` tests pass after initializing the pinned Tim2Tox submodule and setting command-local `SDKROOT` to the installed macOS 26.4 SDK. The first run without those prerequisites failed on missing submodule files and the host's default SDK 27/linker mismatch. The eight new payload tests cover changed assets, missing or extra installed files, a directory masquerading as the executable, unsafe/colliding ZIP paths and escaping installed symlinks, missing CRT/notice and forbidden debug CRT. Four CMake fixtures exercise real Release/Debug install rules, required-file rejection and debug-runtime rejection; discovery alone is stubbed, so they do not prove a real Microsoft DLL or license. `actionlint` and `git diff --check` pass. PowerShell/MSI execution is intentionally verified by the Windows job, not inferred from these local results.
 
+## Windows long-path prerequisite follow-up — 2026-10-23
+
+The W3 audit found the app's `longPathAware` opt-in absent although native file transfer passes unprefixed Unicode paths to Tim2Tox's `_wfopen`, `_wstat64` and `_wunlink` wrappers. The runner now opts in, retaining PerMonitorV2 and Windows 10/11 compatibility. [Microsoft's long-path rules](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation) also require the host's existing `LongPathsEnabled=1` policy; this task never changes registry or machine policy.
+
+Required Windows CI reads **RT_MANIFEST #1 from the actual EXE** as a resource/data image, without executing its code or loading dependencies. It checks every embedded language, exact namespaces and unique settings, rejecting absent/false/duplicate/decoy long-path or DPI declarations. The same gate applies to the final runner, the EXE read directly from the final ZIP, and the MSI-installed EXE after installation and repair. Source XML alone is not evidence.
+
+A separate disposable-hosted-runner probe embeds the final EXE's extracted manifest and compiles the pinned `file_io_compat.cpp` with MSVC release CRT. It creates unprefixed paths longer than 260 UTF-16 units with Unicode and spaces, writes/reads/verifies bytes through the actual FFI wrapper functions, queries size, renames and deletes, then removes its directories. A second executable using the same code with only `longPathAware=false` must be rejected by the embedded-manifest gate and fail at the Win32 long-path boundary. Its negative result must show earlier short-directory creation success, a parent of at most 260 UTF-16 units confirmed as a real directory by `GetFileAttributesW`, and failure only beyond 260 units with Win32 error 3 or 206 and exit 1. Access-denied, missing-parent, short-path, unrelated-error and zero-exit results fail the gate. `windows-path-evidence` records final EXE/ZIP hashes, resource policy, native source hash, read-only host policy and positive/negative logs. This probe is not an installed-app file-transfer E2E test; ordinary-user redirected/network homes, shell/plugins, previous-version data, removable volumes and real installed FFI flows remain **needs device**. W3/X6 are verified only for the cases actually executed by the final PR head's Windows job.
+
 ## Clean Ubuntu installed-package follow-up — 2026-10-23
 
 The required Linux release job now passes its exact final DEB to `linux_installed_smoke.py`. A fresh official Ubuntu 24.04 container installs only the DEB and its declared dependencies first, checks unresolved ELF dependencies and required runtime tools, and records that state before installing X11 test harness packages. This avoids the build runner's SDK/dependencies concealing a missing package dependency. The container uses no privileged mode or host desktop/data mounts. It runs the installed launcher as the existing unprivileged `nobody` user with private XDG directories, verifies installed file bytes/modes and desktop/icon/launcher entries against the final DEB, waits for that PID's visible window and installed Flutter/Tox mapped modules, requests normal `WM_DELETE_WINDOW` shutdown, then removes the package and rejects remaining package files, registration or processes. Failure cleanup cannot count as graceful shutdown.
@@ -164,6 +172,7 @@ The owner material table is not the whole backlog. Passing these installation ch
 | X9 existing release logging, notification metadata and unknown startup-error display | **Code completed in [#38](https://github.com/agentx-icu/ditmesh/pull/38):** release-safe events/types and sinks, generic UI, framework/async hooks and marker regressions now cover the existing paths; see the privacy follow-up above. This does not establish native crash collection or persistent diagnostics. |
 | X9 build symbols | Source-built FFI and runner symbols have separate 14-day CI artifacts and final-payload identity gates (details below); this PR must pass its final-head platform/package checks before claiming that subset verified. Full crash symbolication still needs an actual device crash and exact vendor symbols. |
 | X9 complete native crash capture and any persistent/support diagnostics | Select reporter/data/retention/support policy and privacy disclosures where applicable; subsequent platform implementation and installed-release crash verification remain. These decisions do not block the code-only privacy or symbol work. No telemetry service/account is invented here. |
+| I2 existing Search/Contacts keyboard commands | **Code completed in [#36](https://github.com/agentx-icu/ditmesh/pull/36):** existing actions have real shell key-routing regressions; see the I2 follow-up below for device limits. A global sidetone command has no current sound owner and remains unavailable. |
 | P7 app-switcher/screen-capture protection | Product owner must define which chat/identity content may appear per platform, then implementation and installed-device verification remain. |
 | B4 guaranteed mobile background delivery | Current product does not promise it. A new guarantee needs a platform-budget/transport architecture and product decision; it cannot be inferred from the existing background estimate. |
 | Final signed iOS export/device qualification; optional Mac App Store, Developer ID/notarization, Windows code signing or MSIX channel implementation | iOS has a controlled archive/export entry but needs existing owner signing materials and real signed-device evidence; select other channels/identities and supply secure signing configuration; `--mode distribution` remains fail-closed outside Android. The remaining work includes code and verification, not only credentials. |
@@ -221,11 +230,32 @@ software behavior evidence, not physical keyboard or installed-release proof.
 | X5 | verified | One shared shell handler and the same key-event cases cover all three desktop modifier policies; no platform plugin or protocol changes. |
 | X6 | to do | Final-head CI release builds remain required; widget key events do not establish installed signed/store behavior. |
 
-Cmd/Ctrl+Shift+M stays unbound because no shared audio owner exists. Native
-`UIMainMenuSystem` coverage on iPadOS 26 is a separate product/engineering scope;
-Flutter `Shortcuts` does not claim to implement that menu or close I2's device
-matrix. No new account, certificate, native permission or store action is needed
+Cmd/Ctrl+Shift+M stays unbound because no shared audio owner exists. The following native-menu addition connects these two actions through UIKit;
+Flutter `Shortcuts` alone does not implement that menu or close I2's device matrix. No new account, certificate, native permission or store action is needed
 for this bounded code fix.
+
+## I2 native iPad menu bridge
+
+For the existing Search/Contacts commands, iPadOS 26+ now has actual UIKit menu
+code: localized `UICommand` entries in `AppDelegate.buildMenu`, single active
+scene validation via `SceneDelegate`, and a Flutter channel to the existing
+shell actions. Native commands are keyless, leaving Cmd+K/N to one Flutter
+handler. They remain visible/disabled outside ready identity/accepted terms,
+when a route covers the shell, during text/IME input, when inactive, after
+teardown or when scene ownership is ambiguous. Dart revalidates at dispatch;
+owner tickets reject requests queued for a prior session, and native reply revisions prevent late failures from overwriting newer Dart state;
+native code also rejects missing/hidden windows, native editors/presentations
+and inactive/disconnected scenes. iOS <26 and the single-scene policy remain
+compatible, without extra permissions or signing inputs.
+
+| ID | Status | Evidence / remaining gate |
+|---|---|---|
+| I2 | needs device | The previously missing native bridge is implemented. Eight bridge regressions plus the 20 keyboard cases pass; real Swift/FFI archive builds. Actual iPadOS 26+ menu rendering, touch/pointer/keyboard activation and disabled-state/scene behavior still require OS/device evidence. |
+| I3 | verified | Bridge invocation preserves editor/IME ownership and rejects stale/outgoing owners and ready-to-onboarding transitions in fake-backend channel tests; real IME/keyboard interoperability remains a device check. |
+| X5 | verified | Reuses the same existing shell actions and S labels; other platforms retain Flutter-only commands. A compiled Swift state regression covers current/late false/error replies and ownership; no duplicate native key registration, multi-scene support or shared sound behavior is added. |
+| X6 | to do | Local Xcode 26.4.1 / iPhoneOS 26.4 unsigned real-FFI archive proves Swift compilation and 20 arm64 Mach-O/15 privacy manifests plus matching Runner symbols. Final-head CI and installed/signed device qualification remain separate. |
+
+Implementation sources checked 2026-10-23: Apple's [UIKit menu guidance](https://developer.apple.com/videos/play/wwdc2025/243/) (programmatic menus, keyless commands and visible disabled items), local UIKit 26.4 headers, and Flutter's [UIScene/channel lifecycle guide](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate). The Flutter host keeps channel registration in `didInitializeImplicitFlutterEngine`; `FlutterSceneDelegate` remains the scene lifecycle superclass. This is the bounded two-command addition, not a claim that every app toolbar action has native menu coverage or that App Review passed.
 
 ## X9 follow-up: exact-build symbols
 
