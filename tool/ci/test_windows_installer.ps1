@@ -2,7 +2,8 @@
 param(
   [Parameter(Mandatory=$true)][string]$MsiPath,
   [Parameter(Mandatory=$true)][string]$PayloadZipPath,
-  [Parameter(Mandatory=$true)][string]$EvidenceDirectory
+  [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
+  [Parameter(Mandatory=$true)][string]$SymbolsDirectory
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -51,6 +52,9 @@ function Assert-InstalledPayload([string]$Stage) {
   & python $preflight $installRoot --format pe --arch x86_64 --entry ditmesh.exe --flutter-windows-aot --require-windows-crt --require-windows-manifest --expected-zip $zip |
     Out-File -FilePath (Join-Path $evidence "$Stage.json") -Encoding utf8
   if ($LASTEXITCODE -ne 0) { throw "Installed payload verification failed: $Stage" }
+  & python (Join-Path $PSScriptRoot 'release_symbols.py') installed --root $installRoot --symbols-dir $SymbolsDirectory |
+    Out-File -FilePath (Join-Path $evidence "$Stage-symbols.json") -Encoding utf8
+  if ($LASTEXITCODE -ne 0) { throw "Installed source symbol identity verification failed: $Stage" }
   $runtimeFiles = @(Get-ChildItem -LiteralPath $installRoot -Filter '*.dll' -File |
     Where-Object { $_.Name -match '^(msvcp140|vcruntime140|concrt140).*\.dll$' })
   foreach ($file in $runtimeFiles) {

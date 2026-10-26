@@ -133,7 +133,7 @@ The independent review found and reproduced primary/current + backup/future over
 | X6 | to do | macOS release UI build compiles native changes; real-backend packaging/install/upgrade matrix still owed. |
 | X7 | needs device | Interrupted OS UI, permission revocation and background process death still need a device campaign. |
 | X8 | needs device | Existing network/DHT tests and VALIDATION.md retained; carrier NAT64/VPN/captive portal/device handover owed. |
-| X9 | to do | Connection diagnostics exist; production application/native crash collection and readable archived-symbol process incomplete. |
+| X9 | to do | Source-built FFI/runner and same-build Dart symbols have separate CI archival and final native identity gates; see STORE_READINESS for exact coverage and final-head evidence. Real device crash symbolication, exact vendor symbols and production collection/retention policy remain outstanding; this row is not closed by symbol pairing alone. |
 
 ## Release and device work still required
 

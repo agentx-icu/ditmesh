@@ -242,7 +242,8 @@ def build(repo, output, options, team, certificate, unsigned):
     run(["dart", "pub", "get", "--enforce-lockfile"], cwd=repo)
     app_root = repo / "apps/ditmesh"
     run(["flutter", "build", "ios", "--release", "--no-codesign", "--config-only",
-         "--dart-define=DITMESH_FAKE_BACKEND=false"], cwd=app_root)
+         "--dart-define=DITMESH_FAKE_BACKEND=false",
+         "--split-debug-info=" + str(output / "dart-symbols")], cwd=app_root)
     run(archive, cwd=app_root)
     inspect_archive(repo, output)
     if unsigned:
