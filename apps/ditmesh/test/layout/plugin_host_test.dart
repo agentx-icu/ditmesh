@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/contacts/add_friend_sheet.dart';
 import 'package:ditmesh/ui/contacts/qr_scan_page.dart';
+import 'package:ditmesh/ui/listen/workbench/workbench_screen.dart';
 import 'package:ditmesh_chat_api/testing.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -14,8 +15,29 @@ import 'known_destinations.dart';
 import 'layout_profiles.dart';
 import 'plugin_host.dart';
 import 'seeded_app.dart';
+import '../learn/helpers/l10n.dart';
 
 void main() {
+  testWidgets(
+    'pending workbench setup can unmount before creating its player',
+    (tester) async {
+      final root = Completer<String>();
+      final host = LayoutPluginHost(tester);
+      await tester.pumpWidget(
+        host.wrap(
+          l10nApp(home: WorkbenchScreen(profileRoot: () => root.future)),
+        ),
+      );
+      expect(host.players, isEmpty);
+      await host.close();
+      expect(tester.takeException(), isNull);
+      expect(host.players, hasLength(1));
+      expect(host.players.single.disposed, isTrue);
+      root.complete('unused-profile-after-unmount');
+      await tester.pump();
+    },
+  );
+
   testWidgets('broken destination fails the same crawler health gate', (
     tester,
   ) async {

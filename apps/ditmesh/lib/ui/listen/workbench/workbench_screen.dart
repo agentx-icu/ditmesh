@@ -76,16 +76,20 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
     with WidgetsBindingObserver {
   WorkbenchController? _c;
   TrainingController? _training;
+  late final WorkbenchPlayerFactory? _playerFactory;
   late final ClipPlayer _player =
-      widget.player ??
-      context.read<WorkbenchPlayerFactory?>()?.create() ??
-      SoloudClipPlayer();
+      widget.player ?? _playerFactory?.create() ?? SoloudClipPlayer();
   bool _unavailable = false;
   Object? _unavailableError;
 
   @override
   void initState() {
     super.initState();
+    // Keep the player lazy, but never look up ancestors from dispose when a
+    // route closes while its asynchronous profile setup is still pending.
+    _playerFactory = widget.player == null
+        ? context.read<WorkbenchPlayerFactory?>()
+        : null;
     WidgetsBinding.instance.addObserver(this);
     unawaited(_setup());
   }

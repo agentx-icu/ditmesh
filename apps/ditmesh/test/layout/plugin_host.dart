@@ -1,6 +1,5 @@
 // Platform contracts for the widget host, not evidence of native device I/O.
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
