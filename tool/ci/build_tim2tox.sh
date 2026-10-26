@@ -184,6 +184,7 @@ WORK_ROOT="$NATIVE_ROOT/.work"
 DEPS_ROOT="$NATIVE_ROOT/.deps"
 DOWNLOAD_DIR="$NATIVE_ROOT/.downloads"
 OUTPUT_DIR="${DITMESH_NATIVE_ARTIFACTS_DIR:-$NATIVE_ROOT}/$TARGET"
+SYMBOLS_DIR="${DITMESH_NATIVE_SYMBOLS_DIR:-$REPO_ROOT/build/native-symbols}/$TARGET"
 
 [[ -d "$TIM2TOX_DIR" ]] || ci_die "tim2tox submodule not found: $TIM2TOX_DIR (run: git submodule update --init --recursive)"
 [[ -f "$TIM2TOX_DIR/ffi/CMakeLists.txt" ]] || ci_die "tim2tox submodule is not checked out: $TIM2TOX_DIR/ffi/CMakeLists.txt missing (run: git submodule update --init --recursive)"
@@ -559,8 +560,8 @@ build_linux() {
   configure_and_build "$build_dir" "$TARGET" \
     "${gen[@]}" \
     -DCMAKE_BUILD_TYPE="$NATIVE_BUILD_TYPE" \
-    -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-copy -Wno-error=format -include arpa/inet.h" \
-    -DCMAKE_C_FLAGS="-Wno-error=format" \
+    -DCMAKE_CXX_FLAGS="-g -Wno-error=deprecated-copy -Wno-error=format -include arpa/inet.h" \
+    -DCMAKE_C_FLAGS="-g -Wno-error=format" \
     "${dep_args[@]}"
 
   built_lib="$(find_built "$build_dir" libtim2tox_ffi.so)"
@@ -587,6 +588,8 @@ build_linux() {
     ci_log "[$TARGET] libsodium linked statically (no libsodium.so dependency)"
   fi
 
+  python3 "$SCRIPT_DIR/native_symbols.py" capture "$OUTPUT_DIR/libtim2tox_ffi.so" \
+    --platform linux --output "$SYMBOLS_DIR/tim2tox_ffi"
   verify_artifact "$OUTPUT_DIR/libtim2tox_ffi.so" nm "$TARGET"
   ci_log "[$TARGET] runtime deps: $(ldd "$OUTPUT_DIR/libtim2tox_ffi.so" | awk '{print $1}' | tr '\n' ' ')"
 }
@@ -650,8 +653,8 @@ build_macos() {
     -DCMAKE_OSX_SYSROOT="$macos_sysroot" \
     -DCMAKE_OSX_ARCHITECTURES="$arch" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOS_MIN" \
-    -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-copy -Wno-error=format" \
-    -DCMAKE_C_FLAGS="-Wno-error=format" \
+    -DCMAKE_CXX_FLAGS="-g -Wno-error=deprecated-copy -Wno-error=format" \
+    -DCMAKE_C_FLAGS="-g -Wno-error=format" \
     "${dep_args[@]}"
 
   built_lib="$(find_built "$build_dir" libtim2tox_ffi.dylib)"
@@ -696,6 +699,8 @@ build_macos() {
     done
   fi
 
+  python3 "$SCRIPT_DIR/native_symbols.py" capture "$out_lib" \
+    --platform macos --output "$SYMBOLS_DIR/tim2tox_ffi"
   verify_artifact "$out_lib" nm "$TARGET"
   ci_log "[$TARGET] $(lipo -info "$out_lib" 2>/dev/null || file "$out_lib")"
   stage_macos_into_app
@@ -772,16 +777,24 @@ build_windows() {
   # VCPKG_TARGET_TRIPLET must be EXPLICIT or the arm64 runners get x64 libs.
   prepare_cmake_build_dir "$build_dir"
   ci_log "[$TARGET] configuring tim2tox ($NATIVE_BUILD_TYPE, $vcpkg_triplet)"
-  VCPKG_ROOT="$vcpkg_root_win" cmake -S "$source_dir_win" -B "$build_dir_win" \
+  # Git Bash otherwise rewrites the leading /O2 and /INCREMENTAL switches as
+  # C:/Program Files/Git/... paths. Exclude only these flag-valued options;
+  # every actual source/toolchain path is still converted explicitly above.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_C_FLAGS_RELEASE=;-DCMAKE_CXX_FLAGS_RELEASE=;-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=${MSYS2_ARG_CONV_EXCL:+;$MSYS2_ARG_CONV_EXCL}" \
+    VCPKG_ROOT="$vcpkg_root_win" cmake -S "$source_dir_win" -B "$build_dir_win" \
     "${generator_args[@]}" \
     -DCMAKE_TOOLCHAIN_FILE="$toolchain_file" \
     -DVCPKG_TARGET_TRIPLET="$vcpkg_triplet" \
     -DCMAKE_BUILD_TYPE="$NATIVE_BUILD_TYPE" \
+    -DCMAKE_C_FLAGS_RELEASE="/O2 /Ob2 /DNDEBUG /Zi" \
+    -DCMAKE_CXX_FLAGS_RELEASE="/O2 /Ob2 /DNDEBUG /Zi" \
+    -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/INCREMENTAL:NO /DEBUG:FULL /OPT:REF /OPT:ICF" \
     "${configure_args[@]}" \
     >"$build_dir/cmake-configure.log" 2>&1 || {
       tail -40 "$build_dir/cmake-configure.log" >&2
       ci_die "[$TARGET] cmake configure failed (log: $build_dir/cmake-configure.log)"
     }
+  python3 "$SCRIPT_DIR/native_symbols.py" verify-msvc-flags "$build_dir/CMakeCache.txt"
   ci_log "[$TARGET] building tim2tox_ffi"
   cmake --build "$build_dir_win" --config "$NATIVE_BUILD_TYPE" --target tim2tox_ffi --parallel "$(ci_cpu_count)" \
     >"$build_dir/cmake-build.log" 2>&1 || {
@@ -792,10 +805,8 @@ build_windows() {
   built_lib="$(find_built "$build_dir" tim2tox_ffi.dll)"
   cp "$built_lib" "$OUTPUT_DIR/"
   ci_log "[$TARGET] captured $built_lib"
-  if [[ -f "${built_lib%.dll}.pdb" ]]; then
-    cp "${built_lib%.dll}.pdb" "$OUTPUT_DIR/"
-    ci_log "[$TARGET] captured symbols ${built_lib%.dll}.pdb"
-  fi
+  python3 "$SCRIPT_DIR/native_symbols.py" capture "$OUTPUT_DIR/tim2tox_ffi.dll" \
+    --platform windows --pdb "${built_lib%.dll}.pdb" --output "$SYMBOLS_DIR/tim2tox_ffi"
 
   # Runtime DLLs the FFI library imports: vcpkg libsodium (dynamic) and the
   # pthreads-win32 runtime c-toxcore links. A missing one = LoadLibrary error
@@ -992,14 +1003,16 @@ build_android_abi() {
     -DCMAKE_PREFIX_PATH="$prefix" \
     -DTIM2TOX_DEP_PREFIX="$prefix" \
     -DCMAKE_FIND_ROOT_PATH="$prefix;$sysroot" \
-    -DCMAKE_C_FLAGS="-Wno-error=format" \
-    -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-copy -Wno-error=format"
+    -DCMAKE_C_FLAGS="-g -Wno-error=format" \
+    -DCMAKE_CXX_FLAGS="-g -Wno-error=deprecated-copy -Wno-error=format"
 
   built_lib="$(find_built "$build_dir" libtim2tox_ffi.so)"
   cp "$built_lib" "$OUTPUT_DIR/jniLibs/$abi/libtim2tox_ffi.so"
-  # Strip debug info; the Android export map keeps only the C ABI in .dynsym,
-  # and assert_dart_entrypoints below proves DartInitSDK survived.
-  "$toolchain/bin/llvm-strip" --strip-unneeded "$OUTPUT_DIR/jniLibs/$abi/libtim2tox_ffi.so" || true
+  # Archive exact-build DWARF before stripping; debuglink/build ID must still
+  # match the shipped library. Strip failures remain failures.
+  python3 "$SCRIPT_DIR/native_symbols.py" capture "$OUTPUT_DIR/jniLibs/$abi/libtim2tox_ffi.so" \
+    --platform android --output "$SYMBOLS_DIR/$abi" \
+    --objcopy "$toolchain/bin/llvm-objcopy" --strip "$toolchain/bin/llvm-strip"
   # ANDROID_STL=c++_shared: the library NEEDs libc++_shared.so, which neither
   # Flutter (libflutter.so links libc++ statically) nor any plugin ships, so it
   # travels in the same jniLibs/<abi>/ (NDK "C++ library support"); without it
@@ -1096,8 +1109,8 @@ build_ios_slice() {
     -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
     -DCMAKE_PREFIX_PATH="$prefix" \
     -DTIM2TOX_DEP_PREFIX="$prefix" \
-    -DCMAKE_C_FLAGS="-target $triple -Wno-error=format" \
-    -DCMAKE_CXX_FLAGS="-target $triple -Wno-error=deprecated-copy -Wno-error=format" \
+    -DCMAKE_C_FLAGS="-g -target $triple -Wno-error=format" \
+    -DCMAKE_CXX_FLAGS="-g -target $triple -Wno-error=deprecated-copy -Wno-error=format" \
     -DCMAKE_EXE_LINKER_FLAGS="-target $triple" \
     -DCMAKE_SHARED_LINKER_FLAGS="-target $triple" || return 1
 
@@ -1170,6 +1183,8 @@ PLIST
   codesign --verify --strict "$fw_dir" || ci_die "[$TARGET] codesign --verify failed for framework"
   codesign --force --sign - "$universal" || ci_die "[$TARGET] codesign dylib failed"
 
+  python3 "$SCRIPT_DIR/native_symbols.py" capture "$fw_dir/tim2tox_ffi" \
+    --platform ios --output "$SYMBOLS_DIR/tim2tox_ffi"
   verify_artifact "$fw_dir/tim2tox_ffi" nm "$TARGET"
   ci_log "[$TARGET] $(lipo -info "$fw_dir/tim2tox_ffi")"
   ci_log "[$TARGET] $(vtool -show-build "$fw_dir/tim2tox_ffi" 2>/dev/null | grep -iE 'platform|minos' | tr '\n' ' ' || true)"
@@ -1217,6 +1232,7 @@ ci_require_cmd cmake
 
 mkdir -p "$WORK_ROOT" "$DEPS_ROOT" "$DOWNLOAD_DIR"
 ci_reset_dir "$OUTPUT_DIR"
+ci_reset_dir "$SYMBOLS_DIR"
 ci_log "target=$TARGET mode=$MODE native_build_type=$NATIVE_BUILD_TYPE toxav=OFF sqlite=$([[ $ENABLE_SQLITE -eq 1 ]] && echo ON || echo OFF) libsodium=$([[ $SYSTEM_LIBSODIUM -eq 1 ]] && echo system || echo "pinned-static-$LIBSODIUM_VERSION")"
 ci_log "output=$OUTPUT_DIR"
 

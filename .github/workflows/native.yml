@@ -144,12 +144,14 @@ jobs:
         id: cache_native
         uses: actions/cache@v4
         with:
-          path: build/native/${{ matrix.target }}
+          path: |
+            build/native/${{ matrix.target }}
+            build/native-symbols/${{ matrix.target }}
           # The Flutter/Dart pins are part of the key on EVERY row: the library
           # compiles dart_api_dl.c from the SDK headers, so a pin bump must not
           # restore a cache entry built against older headers (the Dart-only
           # arm64 rows read DART_VERSION, the others get Dart via FLUTTER_VERSION).
-          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/ci/install_android_ndk.sh', 'tool/build_ios_ffi.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/tim2tox-overlays/*.patch') }}
+          key: tim2tox-ffi-${{ matrix.target }}-notoxav-nosqlite-${{ steps.t2t_rev.outputs.sha }}-flutter${{ env.FLUTTER_VERSION }}-dart${{ env.DART_VERSION }}-${{ hashFiles('.github/workflows/native.yml', 'tool/ci/build_tim2tox.sh', 'tool/ci/common.sh', 'tool/ci/install_android_ndk.sh', 'tool/build_ios_ffi.sh', 'tool/ci/prepare_native_source.py', 'tool/ci/native_symbols.py', 'tool/ci/release_symbols.py', 'tool/ci/tim2tox-overlays/*.patch') }}
 
       - name: Cache libsodium prefix
         if: steps.cache_native.outputs.cache-hit != 'true' && !startsWith(matrix.target, 'windows')
@@ -246,6 +248,21 @@ jobs:
           bash tool/build_ios_ffi.sh --mode release
           cp -R build/native/ios-device build/native/ios/ios-device
           cp -R build/native/ios-simulator build/native/ios/ios-simulator
+          mkdir -p build/native-symbols/ios
+          cp -R build/native-symbols/ios-device build/native-symbols/ios/ios-device
+          cp -R build/native-symbols/ios-simulator build/native-symbols/ios/ios-simulator
+
+      - name: Verify owned native symbols including restored cache bytes
+        run: |
+          python3 tool/ci/native_symbols_test.py
+          python3 tool/ci/release_symbols.py native --target "${{ matrix.target }}"
+      - name: Upload owned native symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-symbols-${{ matrix.target }}
+          path: build/native-symbols/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 14
 
       # Gate the BYTES that will be uploaded (a cache hit never ran CMake).
       - name: Assert artifact carries no Tim2Tox test hooks
@@ -288,6 +305,11 @@ jobs:
         with:
           name: tim2tox-ffi-linux-x86_64
           path: build/native/linux-x86_64
+      - name: Download exact native symbols
+        uses: actions/download-artifact@v5
+        with:
+          name: native-symbols-linux-x86_64
+          path: build/native-symbols/linux-x86_64
       - name: Bootstrap dependencies
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
@@ -315,7 +337,9 @@ jobs:
         run: |
           flutter config --enable-linux-desktop
           cd apps/ditmesh
-          flutter build linux --release --dart-define=DITMESH_FAKE_BACKEND=false
+          flutter build linux --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/linux-x86_64"
+      - name: Preserve and pair owned app symbols
+        run: python3 tool/ci/release_symbols.py prepare --target linux
       - name: Verify the bundle ships libtim2tox_ffi.so
         run: |
           set -euo pipefail
@@ -335,6 +359,8 @@ jobs:
       # symlinks), so only finished packages leave the machine.
       - name: Package (.deb, .rpm, .tar.gz)
         run: bash tool/ci/package_artifacts.sh --target linux
+      - name: Pair symbols with actual final packages
+        run: python3 tool/ci/release_symbols.py packages --target linux
       - name: Smoke installed Linux DEB in clean Ubuntu
         timeout-minutes: 18
         run: python3 tool/ci/linux_installed_smoke.py --app ditmesh --architecture x86_64 --package-dir dist/linux --evidence-dir build/evidence/linux-installed
@@ -353,6 +379,17 @@ jobs:
           path: dist/linux/*
           if-no-files-found: error
           retention-days: 14
+      - name: Upload owned app symbols and final pairing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-symbols-linux-x86_64
+          path: |
+            build/release-symbols/linux-x86_64
+            build/dart-symbols/linux-x86_64*
+          if-no-files-found: error
+          retention-days: 14
+
 
   app-windows:
     name: flutter build windows (x64, release)
@@ -377,6 +414,11 @@ jobs:
         with:
           name: tim2tox-ffi-windows-x64
           path: build/native/windows-x64
+      - name: Download exact native symbols
+        uses: actions/download-artifact@v5
+        with:
+          name: native-symbols-windows-x64
+          path: build/native-symbols/windows-x64
       - name: Bootstrap dependencies
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
@@ -385,7 +427,9 @@ jobs:
         run: |
           flutter config --enable-windows-desktop
           cd apps/ditmesh
-          flutter build windows --release --dart-define=DITMESH_FAKE_BACKEND=false
+          flutter build windows --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/windows-x64"
+      - name: Preserve and pair owned app symbols
+        run: python3 tool/ci/release_symbols.py prepare --target windows
       - name: Verify the runner ships tim2tox_ffi.dll and its runtime DLLs
         run: |
           set -euo pipefail
@@ -445,6 +489,8 @@ jobs:
           $wix | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Package (.msi, .zip)
         run: bash tool/ci/package_artifacts.sh --target windows
+      - name: Pair symbols with actual final packages
+        run: python3 tool/ci/release_symbols.py packages --target windows
       - name: Crash event schema regression
         shell: pwsh
         run: pwsh -NoProfile -NonInteractive -File tool/ci/windows_crash_events_test.ps1
@@ -455,7 +501,7 @@ jobs:
           $msi = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.msi' -File)
           $zip = @(Get-ChildItem -LiteralPath dist/windows -Filter '*.zip' -File)
           if ($msi.Count -ne 1 -or $zip.Count -ne 1) { throw 'Expected exactly one final MSI and ZIP' }
-          ./tool/ci/test_windows_installer.ps1 -MsiPath $msi[0].FullName -PayloadZipPath $zip[0].FullName -EvidenceDirectory "$env:RUNNER_TEMP/ditmesh-msi-evidence"
+          ./tool/ci/test_windows_installer.ps1 -MsiPath $msi[0].FullName -PayloadZipPath $zip[0].FullName -EvidenceDirectory "$env:RUNNER_TEMP/ditmesh-msi-evidence" -SymbolsDirectory "$env:GITHUB_WORKSPACE/build/release-symbols/windows-x64"
       - name: Upload Windows installer evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -481,6 +527,17 @@ jobs:
           path: dist/windows/*
           if-no-files-found: error
           retention-days: 14
+      - name: Upload owned app symbols and final pairing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-symbols-windows-x64
+          path: |
+            build/release-symbols/windows-x64
+            build/dart-symbols/windows-x64*
+          if-no-files-found: error
+          retention-days: 14
+
 
   app-macos:
     name: flutter build macos (${{ matrix.arch }}, release)
@@ -511,6 +568,11 @@ jobs:
         with:
           name: tim2tox-ffi-macos-${{ matrix.arch }}
           path: build/native/macos-${{ matrix.arch }}
+      - name: Download exact native symbols
+        uses: actions/download-artifact@v5
+        with:
+          name: native-symbols-macos-${{ matrix.arch }}
+          path: build/native-symbols/macos-${{ matrix.arch }}
       - name: Bootstrap dependencies
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
@@ -543,7 +605,9 @@ jobs:
           bash tool/ci/clean_apple_plugin_cache.sh macos
           flutter config --enable-macos-desktop
           cd apps/ditmesh
-          flutter build macos --release --dart-define=DITMESH_FAKE_BACKEND=false
+          flutter build macos --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/macos-${{ matrix.arch }}"
+      - name: Preserve and pair owned app symbols
+        run: python3 tool/ci/release_symbols.py prepare --target macos --arch "${{ matrix.arch }}"
       - name: Verify the app bundle embeds libtim2tox_ffi.dylib
         run: |
           set -euo pipefail
@@ -568,6 +632,8 @@ jobs:
           retention-days: 14
       - name: Package (.pkg, .zip)
         run: bash tool/ci/package_artifacts.sh --target macos --arch "${{ matrix.arch }}"
+      - name: Pair symbols with actual final packages
+        run: python3 tool/ci/release_symbols.py packages --target macos --arch "${{ matrix.arch }}"
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
@@ -576,9 +642,22 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload owned app symbols and final pairing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-symbols-macos-${{ matrix.arch }}
+          path: |
+            build/release-symbols/macos-${{ matrix.arch }}
+            build/dart-symbols/macos-${{ matrix.arch }}*
+          if-no-files-found: error
+          retention-days: 14
+
   # ---------------------------------------------------------------------------
   # 3. Mobile app builds consuming the artifact (release, real backend)
   # ---------------------------------------------------------------------------
+
+
   app-android:
     name: flutter build apk + appbundle (release)
     needs: native
@@ -606,6 +685,11 @@ jobs:
         with:
           name: tim2tox-ffi-android
           path: build/native/android
+      - name: Download exact native symbols
+        uses: actions/download-artifact@v5
+        with:
+          name: native-symbols-android
+          path: build/native-symbols/android
       - name: Bootstrap dependencies
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
@@ -640,8 +724,10 @@ jobs:
         run: |
           bash tool/ci/require_android_signing.sh
           cd apps/ditmesh
-          flutter build apk --release --dart-define=DITMESH_FAKE_BACKEND=false
-          flutter build appbundle --release --dart-define=DITMESH_FAKE_BACKEND=false
+          flutter build apk --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/android-apk"
+          flutter build appbundle --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/android-aab"
+      - name: Preserve and pair owned app symbols
+        run: python3 tool/ci/release_symbols.py prepare --target android
       # Google Play requires 16 KB page support for every 64-bit library in an
       # app targeting Android 15+. build_tim2tox.sh gates libtim2tox_ffi.so and
       # libc++_shared.so at link time; this step checks the libraries Flutter
@@ -679,6 +765,8 @@ jobs:
           DITMESH_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           DITMESH_ANDROID_CERT_SHA256: ${{ vars.DITMESH_ANDROID_CERT_SHA256 }}
         run: bash tool/ci/package_artifacts.sh --target android
+      - name: Pair symbols with actual final packages
+        run: python3 tool/ci/release_symbols.py packages --target android
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
@@ -686,6 +774,17 @@ jobs:
           path: dist/android/*
           if-no-files-found: error
           retention-days: 14
+      - name: Upload owned app symbols and final pairing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-symbols-android
+          path: |
+            build/release-symbols/android
+            build/dart-symbols/android-*
+          if-no-files-found: error
+          retention-days: 14
+
 
   app-ios:
     name: flutter build ios (release, unsigned)
@@ -710,6 +809,11 @@ jobs:
         with:
           name: tim2tox-ffi-ios
           path: build/native/ios
+      - name: Download exact native symbols
+        uses: actions/download-artifact@v5
+        with:
+          name: native-symbols-ios
+          path: build/native-symbols/ios
       - name: Bootstrap dependencies
         run: dart run tool/bootstrap_deps.dart
       - name: Resolve workspace
@@ -729,9 +833,13 @@ jobs:
         run: |
           bash tool/ci/clean_apple_plugin_cache.sh ios
           cd apps/ditmesh
-          flutter build ios --release --no-codesign --dart-define=DITMESH_FAKE_BACKEND=false
+          flutter build ios --release --no-codesign --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/ios"
+      - name: Preserve and pair owned app symbols
+        run: python3 tool/ci/release_symbols.py prepare --target ios
       - name: Package (unsigned .ipa)
         run: bash tool/ci/package_artifacts.sh --target ios
+      - name: Pair symbols with actual final packages
+        run: python3 tool/ci/release_symbols.py packages --target ios
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
@@ -742,6 +850,8 @@ jobs:
 
       - name: Archive iOS candidate without signing or account access
         run: bash tool/build_ios_store.sh --unsigned-archive --output build/ios/store-readiness/ci
+      - name: Pair owned archive symbols with its actual app and FFI
+        run: python3 tool/ci/release_symbols.py archive --root build/ios/store-readiness/ci
       - name: Preserve iOS archive, symbols and preflight reports
         run: tar -C build/ios/store-readiness -czf build/ios/ditmesh-ios-archive.tar.gz ci
       - name: Upload iOS archive validation evidence
@@ -751,6 +861,19 @@ jobs:
           path: build/ios/ditmesh-ios-archive.tar.gz
           if-no-files-found: error
           retention-days: 14
+      - name: Upload owned app symbols and final pairing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-symbols-ios
+          path: |
+            build/release-symbols/ios
+            build/dart-symbols/ios*
+            build/release-symbols/ios-archive
+            build/ios/store-readiness/ci/dart-symbols
+          if-no-files-found: error
+          retention-days: 14
+
 
   # ---------------------------------------------------------------------------
   # 4. On a v* tag: attach every package (+ SHA256SUMS) to the GitHub release
