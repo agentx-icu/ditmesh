@@ -17,6 +17,8 @@ final class CrawlHealth {
     Future<void> Function() body, {
     void Function(FlutterErrorDetails)? onFlutterError,
   }) async {
+    final parentZone = Zone.current;
+    var accepting = true;
     final previous = FlutterError.onError;
     FlutterError.onError =
         onFlutterError ??
@@ -25,12 +27,23 @@ final class CrawlHealth {
     final done = Completer<void>();
     try {
       runZonedGuarded(
-        () =>
-            unawaited(body().then(done.complete, onError: done.completeError)),
-        record,
+        () => unawaited(
+          Future<void>.sync(
+            body,
+          ).then(done.complete, onError: done.completeError),
+        ),
+        (error, stack) {
+          if (accepting) {
+            record(error, stack);
+          } else {
+            // An old zone must not swallow an error after the health gate ran.
+            parentZone.handleUncaughtError(error, stack);
+          }
+        },
       );
       await done.future;
     } finally {
+      accepting = false;
       FlutterError.onError = previous;
     }
   }

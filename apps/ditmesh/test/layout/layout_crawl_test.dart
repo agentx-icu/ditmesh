@@ -135,7 +135,7 @@ class _Crawler {
     }
     // ignore: avoid_print
     print(
-      '[crawl ${root.name} ${profile.name}] ${visited.length} controls, $boots boot(s)'
+      '[crawl ${root.name} ${profile.name}] ${visited.length} attempted controls, $boots boot(s)'
       '; verified destinations: ${verifiedDestinations.join(', ')}'
       '${other.isEmpty ? '' : '; non-layout errors:\n${other.toSet().join('\n')}'}',
     );

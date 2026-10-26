@@ -110,6 +110,19 @@ final class KnownLayoutDestinations {
     currentPage(KeySetupPage);
     await tap(find.byKey(const Key('keys-new')));
     currentPage(KeyProfileEditorPage);
+    // Short windows have not built this lazy-list surface until it is scrolled
+    // into view. Opening the route alone does not exercise its widget/audio.
+    await tester.scrollUntilVisible(
+      find.byType(KeyTestArea),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(KeyProfileEditorPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await settle();
     expect(find.byType(KeyTestArea), findsOneWidget);
     expect(find.byKey(KeyTestArea.decodedKey), findsOneWidget);
   }

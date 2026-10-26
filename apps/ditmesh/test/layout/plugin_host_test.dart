@@ -18,6 +18,63 @@ import 'seeded_app.dart';
 import '../learn/helpers/l10n.dart';
 
 void main() {
+  test(
+    'a synchronous body throw must complete and restore the Flutter hook',
+    () async {
+      final original = FlutterError.onError;
+      final health = CrawlHealth(scene: () => 'sync throw probe');
+      try {
+        await expectLater(
+          health
+              .capture(() => throw StateError('sync body failure'))
+              .timeout(const Duration(milliseconds: 100)),
+          throwsA(isA<StateError>()),
+        );
+        expect(FlutterError.onError, same(original));
+      } finally {
+        // The red version's pending capture cannot run its own finally.
+        FlutterError.onError = original;
+      }
+    },
+  );
+
+  test(
+    'an error after the health gate must reach the parent error zone',
+    () async {
+      final trigger = Completer<void>();
+      final parentErrors = <Object>[];
+      final finished = Completer<void>();
+      unawaited(
+        runZonedGuarded(
+          () async {
+            final health = CrawlHealth(scene: () => 'late error probe');
+            await health.capture(() async {
+              unawaited(
+                trigger.future.then(
+                  (_) => throw StateError('late host failure'),
+                ),
+              );
+            });
+            health.requireHealthy();
+            trigger.complete();
+            await Future<void>.delayed(const Duration(milliseconds: 30));
+            expect(parentErrors, hasLength(1));
+            expect(parentErrors.single, isA<StateError>());
+            finished.complete();
+          },
+          (error, stack) {
+            if (error is TestFailure) {
+              finished.completeError(error, stack);
+            } else {
+              parentErrors.add(error);
+            }
+          },
+        ),
+      );
+      await finished.future;
+    },
+  );
+
   testWidgets(
     'pending workbench setup can unmount before creating its player',
     (tester) async {
