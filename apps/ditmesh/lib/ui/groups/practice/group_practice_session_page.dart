@@ -129,6 +129,7 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
   Future<void> _delete(GroupPracticeSession session) async {
     final s = context.s;
     final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -149,7 +150,22 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
       ),
     );
     if (ok != true) return;
-    if (await _update((b) => b.remove(session.id))) navigator.pop();
+    final saved = await _update((b) => b.remove(session.id));
+    // The confirmed write may finish after this page or its Navigator leaves.
+    // Close only the page that started the deletion, preserving any newer page.
+    if (!saved ||
+        !mounted ||
+        !navigator.mounted ||
+        route == null ||
+        !route.isActive ||
+        !identical(route.navigator, navigator)) {
+      return;
+    }
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
   }
 
   Future<void> _addRounds() async {
