@@ -49,6 +49,31 @@ void main() {
     expect(tile.onChanged, isNull);
     expect(find.text(en.learnHapticUnavailable), findsOneWidget);
   });
+  testWidgets(
+    'restored haptics can be turned off when hardware is unavailable',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final (t, playback) = await _pump(
+        tester,
+        settings: const TrainingSettings(hapticEnabled: true),
+        hasHaptics: false,
+      );
+      final toggle = _switchFor(en.learnHaptic);
+      expect(tester.widget<SwitchListTile>(toggle).onChanged, isNotNull);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(t.controller.settings.hapticEnabled, isFalse);
+      expect((await t.settingsStore.load())!.hapticEnabled, isFalse);
+      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+      expect(tester.widget<SwitchListTile>(toggle).onChanged, isNull);
+      await tester.tap(find.byTooltip(en.learnPlaySample));
+      await tester.pump();
+      expect(playback.created.single.hapticEnabled, isFalse);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
   testWidgets('shows the current values', (tester) async {
     await _pump(tester);
     expect(find.text(en.learnWpmValue('20')), findsOneWidget);
@@ -151,6 +176,10 @@ void main() {
     await tester.tap(_switchFor(en.learnHaptic));
     await tester.pumpAndSettle();
     expect(t.controller.settings.hapticEnabled, isTrue);
+    await tester.tap(_switchFor(en.learnHaptic));
+    await tester.pumpAndSettle();
+    expect(t.controller.settings.hapticEnabled, isFalse);
+    expect((await t.settingsStore.load())!.hapticEnabled, isFalse);
     debugDefaultTargetPlatformOverride = null;
   });
 

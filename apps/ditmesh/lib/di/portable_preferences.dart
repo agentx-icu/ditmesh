@@ -151,10 +151,10 @@ extension PortablePreferences on AppPreferences {
       }
     }
     if (doc['appearance'] case final Map a) {
-      final style = UiStyle.values.where((s) => s.name == a['style']);
+      final style = UiStyle.fromStoredName(a['style']);
       final mode = ThemeMode.values.where((m) => m.name == a['mode']);
       await settings.applyAppearance(
-        style: style.isEmpty ? settings.style : style.first,
+        style: style ?? settings.style,
         themeMode: mode.isEmpty ? settings.themeMode : mode.first,
       );
     }

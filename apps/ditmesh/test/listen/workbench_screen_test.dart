@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 import '../learn/helpers/l10n.dart';
 import '../learn/helpers/test_controller.dart';
 import 'workbench_support.dart';
+import 'workbench_wait.dart';
 
 void main() {
   late Directory root;
@@ -23,18 +24,6 @@ void main() {
     await Directory(dataDir).create();
   });
   tearDown(() => root.delete(recursive: true));
-
-  /// Lets real file I/O and decoding finish: every I/O step completes on
-  /// the real event loop and continues in the test's fake-async zone, so
-  /// alternate the two many times.
-  Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 250; i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 2)),
-      );
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-  }
 
   Future<(TestTraining, FakePicker, FakeClipPlayer)> pumpScreen(
     WidgetTester tester, {
@@ -58,7 +47,10 @@ void main() {
         ),
       ),
     );
-    await settle(tester);
+    await waitForWorkbench(
+      tester,
+      find.byKey(const ValueKey('workbench-import-empty')),
+    );
     return (t, picker, player);
   }
 
@@ -68,16 +60,19 @@ void main() {
     final (t, _, player) = await pumpScreen(tester);
     expect(find.text(en.workbenchBackupNote), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
-    await settle(tester);
+    await waitForWorkbench(
+      tester,
+      find.byKey(const ValueKey('workbench-decode')),
+    );
     expect(find.byKey(const ValueKey('workbench-info')), findsOneWidget);
     expect(find.byKey(const ValueKey('workbench-waveform')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('workbench-play')));
-    await settle(tester);
+    await waitForWorkbench(tester, find.text(en.workbenchStop));
     expect(player.plays, hasLength(1));
 
     await tester.tap(find.byKey(const ValueKey('workbench-decode')));
-    await settle(tester);
+    await waitForWorkbench(tester, find.text(en.workbenchDecoderHidden));
     // Copy-it-myself is the default: the decoder text stays hidden.
     expect(find.text('SOS TEST'), findsNothing);
     expect(find.text(en.workbenchDecoderHidden), findsOneWidget);
@@ -86,7 +81,11 @@ void main() {
       'SOS TEST',
     );
     await tester.tap(find.byKey(const ValueKey('workbench-submit')));
-    await settle(tester);
+    await waitForWorkbenchCondition(
+      tester,
+      () => t.controller.progress.history.isNotEmpty,
+      description: 'record the copy attempt',
+    );
     expect(find.text(en.learnAccuracyPercent(100)), findsOneWidget);
     expect(find.text(en.workbenchAgainstDecoder), findsOneWidget);
     final record = t.controller.progress.history.single;
@@ -105,7 +104,8 @@ void main() {
       bytes: cwWav('E', sampleRate: 22050),
     );
     await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
-    await settle(tester);
+    // Observe the transient error before the four-second SnackBar expires.
+    await waitForWorkbench(tester, find.text(en.workbenchErrorRate));
     expect(find.text(en.workbenchErrorRate), findsOneWidget);
     expect(
       find.byKey(const ValueKey('workbench-import-empty')),
@@ -118,28 +118,39 @@ void main() {
   ) async {
     final (t, _, _) = await pumpScreen(tester);
     // In-memory training docs: no real I/O, so no runAsync.
+    var seeded = false;
     unawaited(
-      t.controller.upsertAudioMaterial(
-        AudioMaterial(
-          id: 'rec_1',
-          title: 'Old net',
-          file: 'media/recordings/rec_1.wav',
-          originalName: 'net.wav',
-          start: Duration.zero,
-          end: const Duration(seconds: 2),
-          sampleRate: 8000,
-          channels: 1,
-          createdAt: DateTime.utc(2026, 10, 3),
-        ),
-      ),
+      t.controller
+          .upsertAudioMaterial(
+            AudioMaterial(
+              id: 'rec_1',
+              title: 'Old net',
+              file: 'media/recordings/rec_1.wav',
+              originalName: 'net.wav',
+              start: Duration.zero,
+              end: const Duration(seconds: 2),
+              sampleRate: 8000,
+              channels: 1,
+              createdAt: DateTime.utc(2026, 10, 3),
+            ),
+          )
+          .then((_) => seeded = true),
     );
-    await settle(tester);
+    await waitForWorkbenchCondition(
+      tester,
+      () => seeded,
+      description: 'save the library fixture',
+    );
     await tester.tap(find.byTooltip(en.workbenchLibrary));
-    await settle(tester);
+    await waitForWorkbench(tester, find.text('Old net'));
     expect(find.text('Old net'), findsOneWidget);
     expect(find.text(en.workbenchMissing), findsOneWidget);
     await tester.tap(find.byTooltip(en.workbenchRelink));
-    await settle(tester);
+    await waitForWorkbench(
+      tester,
+      find.text(en.workbenchMissing),
+      absent: true,
+    );
     expect(find.text(en.workbenchMissing), findsNothing);
     expect(
       await tester.runAsync(
@@ -154,10 +165,18 @@ void main() {
   ) async {
     final (t, _, _) = await pumpScreen(tester);
     await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
-    await settle(tester);
+    await waitForWorkbench(
+      tester,
+      find.byKey(const ValueKey('workbench-decode')),
+    );
     await tester.enterText(find.byKey(const ValueKey('workbench-end')), '1.5');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
+    await waitForWorkbench(
+      tester,
+      find.byKey(const ValueKey('workbench-save')),
+      enabled: true,
+    );
     await tester.tap(find.byKey(const ValueKey('workbench-save')));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -165,18 +184,16 @@ void main() {
       'First call',
     );
     await tester.tap(find.byKey(const ValueKey('workbench-save-confirm')));
-    await settle(tester);
-    late List<AudioMaterial> saved;
-    unawaited(t.controller.loadAudioMaterials().then((v) => saved = v));
-    await tester.pump();
-    expect(saved.single.title, 'First call');
+    await waitForWorkbench(tester, find.text(en.workbenchSaved));
+    final saved = await tester.runAsync(t.controller.loadAudioMaterials);
+    expect(saved!.single.title, 'First call');
     expect(saved.single.end.inMilliseconds, closeTo(1500, 1));
     expect(saved.single.file, startsWith('media/recordings/rec_'));
 
     await tester.tap(find.byTooltip(en.workbenchLibrary));
-    await settle(tester);
+    await waitForWorkbench(tester, find.text('First call'));
     await tester.tap(find.text('First call'));
-    await settle(tester);
+    await waitForWorkbench(tester, find.byType(BottomSheet), absent: true);
     expect(find.text('First call'), findsOneWidget);
   });
 
@@ -185,9 +202,12 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await pumpScreen(tester, size: const Size(320, 2600));
     await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
-    await settle(tester);
+    await waitForWorkbench(
+      tester,
+      find.byKey(const ValueKey('workbench-decode')),
+    );
     await tester.tap(find.byKey(const ValueKey('workbench-decode')));
-    await settle(tester);
+    await waitForWorkbench(tester, find.text(en.workbenchDecoderHidden));
     expect(tester.takeException(), isNull);
   });
 }

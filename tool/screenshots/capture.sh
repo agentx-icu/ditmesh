@@ -3,7 +3,7 @@
 #
 #   tool/screenshots/capture.sh [--platforms macos,ios,ipad,android,linux,windows]
 #                               [--locales en,zh] [--device <flutter device id>]
-#                               [--style classic|modern|radio|paper|cartoon|all]
+#                               [--style white|classic|radio|cartoon|all]
 #                               [--theme light|dark|system]
 #                               [--out <dir>] [--keep] [--help]
 #                               [--from <completed CI screenshot root>]
@@ -27,7 +27,7 @@
 #                Every platform captures the complete DitMesh chat app.
 #   --locales    canonical comma list: en,zh,zh_Hant,ja,ko,de,fr,es,pt,ru.
 #                Default en,zh; custom language sets require --out.
-#   --style      classic|modern|radio|paper|cartoon|all (default modern).
+#   --style      white|classic|radio|cartoon|all (default white).
 #                all creates one profile folder per style under --out.
 #   --theme      light|dark|system (default light).
 #                Custom style/theme requires --out outside the gallery.
@@ -51,7 +51,7 @@ APP_DIR="$REPO_ROOT/apps/ditmesh"
 ALL_LOCALES="en,zh"
 PLATFORMS="macos"
 LOCALES="$ALL_LOCALES"
-STYLE="${DITMESH_SHOT_STYLE-modern}"
+STYLE="${DITMESH_SHOT_STYLE-white}"
 THEME="${DITMESH_SHOT_THEME-light}"
 DEVICE=""
 OUT="$REPO_ROOT/doc/screenshots"
@@ -114,13 +114,13 @@ for l in "${SELECTED_LOCALES[@]}"; do
   [[ "$seen" != *",$l,"* ]] || { err "duplicate locale: '$l'"; exit 64; }
   seen+="$l,"
 done
-case "$STYLE" in classic|modern|radio|paper|cartoon|all) ;;
-  *) err "unknown style: '$STYLE' (classic|modern|radio|paper|cartoon|all)"; exit 64 ;; esac
+case "$STYLE" in white|classic|radio|cartoon|all) ;;
+  *) err "unknown style: '$STYLE' (white|classic|radio|cartoon|all)"; exit 64 ;; esac
 case "$THEME" in light|dark|system) ;;
   *) err "unknown theme: '$THEME' (light|dark|system)"; exit 64 ;; esac
 [[ -n "$DEVICE" && ${#SELECTED[@]} -gt 1 ]] && { err "--device applies to a single platform"; exit 64; }
 [[ -n "$FROM" && -n "$DEVICE" ]] && { err "--from cannot be combined with --device"; exit 64; }
-if [[ "$LOCALES" != "$ALL_LOCALES" || "$STYLE" != modern || "$THEME" != light ]]; then
+if [[ "$LOCALES" != "$ALL_LOCALES" || "$STYLE" != white || "$THEME" != light ]]; then
   [[ "$OUT_SET" == 1 ]] || { err "custom locale/style/theme requires explicit --out"; exit 64; }
   profile_out="$OUT"; profile_gallery="$REPO_ROOT/doc/screenshots"
   if command -v cygpath >/dev/null 2>&1; then
@@ -147,7 +147,7 @@ fi
 [[ -n "$OUT" ]] || { err "--out must not be empty"; exit 64; }
 if [[ "$STYLE" == all ]]; then
   matrix_staging="${DITMESH_SHOT_STAGING:-}"
-  for style in classic modern radio paper cartoon; do
+  for style in white classic radio cartoon; do
     args=(--platforms "$PLATFORMS" --locales "$LOCALES" --style "$style" --theme "$THEME" --out "$OUT/$style")
     [[ -z "$DEVICE" ]] || args+=(--device "$DEVICE")
     [[ -z "$FROM" ]] || args+=(--from "$FROM/$style")

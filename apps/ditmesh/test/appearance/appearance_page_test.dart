@@ -50,6 +50,44 @@ Future<void> _chooseStyle(WidgetTester tester, UiStyle style) async {
 }
 
 void main() {
+  testWidgets('Minimal White follows system brightness and a manual override', (
+    tester,
+  ) async {
+    final settings = AppSettings(backendLabel: 'test');
+    addTearDown(settings.dispose);
+    final platform = tester.platformDispatcher;
+    addTearDown(platform.clearPlatformBrightnessTestValue);
+    platform.platformBrightnessTestValue = Brightness.light;
+    await pumpAppearance(tester, settings);
+
+    Brightness liveBrightness() =>
+        Theme.of(tester.element(find.byType(AppearancePage))).brightness;
+    StylePreview preview() => tester.widget<StylePreview>(
+      find.byKey(const ValueKey('appearance-preview')),
+    );
+
+    expect(liveBrightness(), Brightness.light);
+    expect(preview().style, UiStyle.white);
+    expect(preview().brightness, Brightness.light);
+
+    platform.platformBrightnessTestValue = Brightness.dark;
+    await tester.pumpAndSettle();
+    expect(liveBrightness(), Brightness.dark);
+    expect(preview().brightness, Brightness.dark);
+
+    final light = find.byKey(const ValueKey('mode-light'));
+    await tester.ensureVisible(light);
+    await tester.tap(light);
+    await tester.pumpAndSettle();
+    expect(liveBrightness(), Brightness.dark);
+    expect(preview().brightness, Brightness.light);
+    await tester.tap(find.byKey(const ValueKey('appearance-apply')));
+    await tester.pumpAndSettle();
+    expect(liveBrightness(), Brightness.light);
+    expect(settings.themeMode, ThemeMode.light);
+    expect(settings.style, UiStyle.white);
+  });
+
   for (final size in [
     const Size(320, 640),
     const Size(390, 844),
@@ -68,7 +106,7 @@ void main() {
             find.byKey(const ValueKey('appearance-preview')),
           );
           final firstChoice = tester.getRect(
-            find.byKey(const ValueKey('style-classic')),
+            find.byKey(const ValueKey('style-white')),
           );
           final apply = tester.getRect(
             find.byKey(const ValueKey('appearance-apply')),
@@ -96,7 +134,7 @@ void main() {
     );
     expect(preview.style, UiStyle.radio);
     expect(preview.brightness, Brightness.dark);
-    expect(settings.style, UiStyle.modern);
+    expect(settings.style, UiStyle.white);
     expect(settings.themeMode, ThemeMode.system);
     expect(store.getString(AppSettings.storageKey), isNull);
     await tester.tap(find.byKey(const ValueKey('appearance-apply')));
@@ -123,18 +161,18 @@ void main() {
             find.byKey(const ValueKey('appearance-preview')),
           )
           .style,
-      UiStyle.modern,
+      UiStyle.white,
     );
     await _chooseStyle(tester, UiStyle.radio);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('appearance-apply')));
     await tester.pumpAndSettle();
-    expect(settings.style, UiStyle.modern);
+    expect(settings.style, UiStyle.white);
     expect(find.text('Could not save appearance. Try again.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('restore stages Modern Calm then persists it on Apply', (
+  testWidgets('restore stages Minimal White then persists it on Apply', (
     tester,
   ) async {
     final store = InMemoryKeyValueStore();
@@ -150,14 +188,14 @@ void main() {
     final preview = tester.widget<StylePreview>(
       find.byKey(const ValueKey('appearance-preview')),
     );
-    expect(preview.style, UiStyle.modern);
+    expect(preview.style, UiStyle.white);
     expect(settings.style, UiStyle.classic);
     expect(settings.themeMode, ThemeMode.dark);
     await tester.tap(find.byKey(const ValueKey('appearance-apply')));
     await tester.pumpAndSettle();
     final reopened = AppSettings(backendLabel: 'test', store: store);
     addTearDown(reopened.dispose);
-    expect(reopened.style, UiStyle.modern);
+    expect(reopened.style, UiStyle.white);
     expect(reopened.themeMode, ThemeMode.system);
   });
 
@@ -173,17 +211,17 @@ void main() {
       await _chooseStyle(tester, UiStyle.cartoon);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(settings.style, UiStyle.modern);
+      expect(settings.style, UiStyle.white);
       expect(find.text('CQ CQ unfinished draft'), findsOneWidget);
       await tester.tap(find.text('Open appearance'));
       await tester.pumpAndSettle();
-      await _chooseStyle(tester, UiStyle.paper);
+      await _chooseStyle(tester, UiStyle.classic);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('appearance-apply')));
       await tester.pumpAndSettle();
       await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(settings.style, UiStyle.paper);
+      expect(settings.style, UiStyle.classic);
       expect(find.text('CQ CQ unfinished draft'), findsOneWidget);
     },
   );
@@ -197,6 +235,17 @@ void main() {
       tester.platformDispatcher.textScaleFactorTestValue = 1.8;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await pumpAppearance(tester, settings, size: size);
+      final white = tester.getRect(find.byKey(const ValueKey('style-white')));
+      final brass = tester.getRect(find.byKey(const ValueKey('style-classic')));
+      final radio = tester.getRect(find.byKey(const ValueKey('style-radio')));
+      final cartoon = tester.getRect(
+        find.byKey(const ValueKey('style-cartoon')),
+      );
+      expect(white.top, brass.top);
+      expect(radio.top, cartoon.top);
+      expect(white.left, radio.left);
+      expect(brass.left, cartoon.left);
+      expect(radio.top, greaterThan(white.top));
       for (final style in UiStyle.values) {
         final card = find.byKey(ValueKey('style-${style.name}'));
         await tester.ensureVisible(card);

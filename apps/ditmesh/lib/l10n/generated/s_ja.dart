@@ -2120,16 +2120,13 @@ class SJa extends S {
   String get appearanceSaveFailed => '外観を保存できませんでした。再試行してください。';
 
   @override
-  String get appearanceClassic => 'クラシックな真鍮';
+  String get appearanceClassic => '真鍮ハンドブック';
 
   @override
-  String get appearanceModern => '落ち着いたモダン';
+  String get appearanceWhite => 'ミニマルホワイト';
 
   @override
   String get appearanceRadio => '夜の無線局';
-
-  @override
-  String get appearancePaper => '紙のハンドブック';
 
   @override
   String get appearanceCartoon => 'さわやかなカートゥーン';
@@ -3828,4 +3825,7 @@ class SJa extends S {
 
   @override
   String get chatLocationSendFailed => 'この位置情報を送信できませんでした。再試行してください。';
+
+  @override
+  String get learnSettingsSaveFailed => 'トレーニング設定を保存できませんでした。もう一度お試しください。';
 }

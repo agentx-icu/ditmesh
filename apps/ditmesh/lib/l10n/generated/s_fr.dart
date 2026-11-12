@@ -2127,16 +2127,13 @@ class SFr extends S {
   String get appearanceSaveFailed => 'Impossible d’enregistrer l’apparence. Réessayez.';
 
   @override
-  String get appearanceClassic => 'Laiton classique';
+  String get appearanceClassic => 'Manuel en laiton';
 
   @override
-  String get appearanceModern => 'Calme moderne';
+  String get appearanceWhite => 'Blanc minimaliste';
 
   @override
   String get appearanceRadio => 'Radio de nuit';
-
-  @override
-  String get appearancePaper => 'Manuel papier';
 
   @override
   String get appearanceCartoon => 'Dessin pétillant';
@@ -3847,4 +3844,7 @@ class SFr extends S {
 
   @override
   String get chatLocationSendFailed => 'Impossible d’envoyer cette position. Réessayez.';
+
+  @override
+  String get learnSettingsSaveFailed => 'Impossible d’enregistrer les paramètres d’entraînement. Réessayez.';
 }

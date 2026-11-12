@@ -52,17 +52,20 @@ final class ProfileKeyer {
     };
   }
 
-  /// [sink] with only its [sidetone] member gated by [enabled] (the whole
-  /// sink when it is the sidetone itself or no member is given).
+  /// Gates only the sound in a composite, preserving flash and haptics.
+  /// Without an explicit [sidetone], device tone members are recognised by
+  /// type. A bare sink keeps the audio-only fallback used by the key test.
   static MorseSink gateSidetone(
     MorseSink sink,
     MorseSink? sidetone,
     bool Function() enabled,
   ) {
-    if (sidetone != null && sink is CompositeSink) {
+    if (sink is CompositeSink) {
       return CompositeSink([
         for (final s in sink.sinks)
-          identical(s, sidetone) ? GatedSink(s, enabled) : s,
+          identical(s, sidetone) || (sidetone == null && s is SidetoneSink)
+              ? GatedSink(s, enabled)
+              : s,
       ]);
     }
     return GatedSink(sink, enabled);

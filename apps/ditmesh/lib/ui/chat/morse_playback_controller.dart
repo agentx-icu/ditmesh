@@ -45,10 +45,16 @@ class MorsePlaybackController extends ChangeNotifier {
     Clock? clock,
     AppForeground? foreground,
     @visibleForTesting SidetoneSink? sidetone,
+    @visibleForTesting MorseSink? haptic,
   }) : _sidetone = sidetone ?? (sink == null ? SidetoneSink() : null),
+       _haptic = haptic ?? (sink == null ? HapticSink() : null),
        _foreground = foreground ?? const BindingAppForeground(),
        clock = clock ?? SystemClock.shared {
-    this.sink = sink ?? CompositeSink(<MorseSink>[_sidetone!, HapticSink()]);
+    final sound = sink ?? _sidetone!;
+    final vibration = _haptic;
+    this.sink = vibration == null
+        ? sound
+        : CompositeSink([sound, GatedSink(vibration, () => hapticEnabled)]);
     keyingSink = _KeyingSink(this);
     _player = MorsePlayer(sink: this.sink, clock: this.clock);
     _subscription = _player.events.listen(_onEvent);
@@ -75,6 +81,34 @@ class MorsePlaybackController extends ChangeNotifier {
   /// Created here only when the caller did not inject a sink; lets
   /// [play] retune the tone to the listener's settings.
   final SidetoneSink? _sidetone;
+  final MorseSink? _haptic;
+  bool Function()? _hapticPreference;
+  int _hapticBinding = 0;
+
+  /// Conservative until the current identity's saved preference is loaded.
+  /// Read on every mark so a replaced/disposed profile cannot keep vibrating.
+  bool get hapticEnabled => !_disposed && (_hapticPreference?.call() ?? false);
+
+  /// Bind only vibration; sound and the playback timeline stay independent.
+  /// The returned release belongs to this binding, so an old covered route
+  /// cannot unbind a newer route using the same injected controller.
+  VoidCallback bindHaptics(bool Function() enabled) {
+    if (_disposed) return () {};
+    final binding = ++_hapticBinding;
+    _hapticPreference = enabled;
+    refreshHaptics();
+    return () {
+      if (_hapticBinding != binding) return;
+      _hapticBinding++;
+      _hapticPreference = null;
+      refreshHaptics();
+    };
+  }
+
+  /// A preference can change during a continuous pulse: stop it immediately.
+  void refreshHaptics() {
+    if (!hapticEnabled) _haptic?.off();
+  }
 
   /// Shared output device for playback and live keying.
   late final MorseSink sink;
@@ -346,6 +380,8 @@ class MorsePlaybackController extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _hapticPreference = null;
+    _hapticBinding++;
     _queue.clear();
     _cancelHold();
     _progressTimer?.cancel();

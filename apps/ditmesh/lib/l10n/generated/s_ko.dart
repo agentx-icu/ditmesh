@@ -2120,16 +2120,13 @@ class SKo extends S {
   String get appearanceSaveFailed => '화면 모양을 저장할 수 없습니다. 다시 시도하세요.';
 
   @override
-  String get appearanceClassic => '고전적인 황동';
+  String get appearanceClassic => '황동 핸드북';
 
   @override
-  String get appearanceModern => '차분한 현대';
+  String get appearanceWhite => '미니멀 화이트';
 
   @override
   String get appearanceRadio => '밤의 무선국';
-
-  @override
-  String get appearancePaper => '종이 수첩';
 
   @override
   String get appearanceCartoon => '산뜻한 만화';
@@ -3828,4 +3825,7 @@ class SKo extends S {
 
   @override
   String get chatLocationSendFailed => '이 위치를 보내지 못했습니다. 다시 시도하세요.';
+
+  @override
+  String get learnSettingsSaveFailed => '훈련 설정을 저장할 수 없습니다. 다시 시도해 주세요.';
 }

@@ -660,10 +660,9 @@
   "appearanceRestore": "기본값 복원",
   "appearanceApplied": "화면 모양을 저장했습니다",
   "appearanceSaveFailed": "화면 모양을 저장할 수 없습니다. 다시 시도하세요.",
-  "appearanceClassic": "고전적인 황동",
-  "appearanceModern": "차분한 현대",
+  "appearanceClassic": "황동 핸드북",
+  "appearanceWhite": "미니멀 화이트",
   "appearanceRadio": "밤의 무선국",
-  "appearancePaper": "종이 수첩",
   "appearanceCartoon": "산뜻한 만화",
   "appearanceLight": "밝게",
   "appearanceDark": "어둡게",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "좌표 복사",
   "chatOpenMapsFailed": "이 위치의 지도를 열지 못했습니다.",
   "chatLocationSent": "위치를 보냈습니다.",
-  "chatLocationSendFailed": "이 위치를 보내지 못했습니다. 다시 시도하세요."
+  "chatLocationSendFailed": "이 위치를 보내지 못했습니다. 다시 시도하세요.",
+  "learnSettingsSaveFailed": "훈련 설정을 저장할 수 없습니다. 다시 시도해 주세요."
 }

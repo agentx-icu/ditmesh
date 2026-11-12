@@ -13,6 +13,12 @@ double contrast(Color foreground, Color background) {
 }
 
 void main() {
+  test('the default light appearance has a white canvas', () {
+    final theme = DitmeshTheme.light();
+    expect(theme.scaffoldBackgroundColor, Colors.white);
+    expect(theme.colorScheme.surface, Colors.white);
+  });
+
   for (final style in UiStyle.values) {
     for (final dark in [false, true]) {
       test(
@@ -45,6 +51,14 @@ void main() {
           );
           expect(
             contrast(scheme.onSurface, tokens.sendSurface),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            contrast(scheme.onPrimaryContainer, scheme.primaryContainer),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            contrast(scheme.onSurface, scheme.surfaceContainerHigh),
             greaterThanOrEqualTo(4.5),
           );
           // Secondary labels sit on the canvas and pastel goal/action cards,

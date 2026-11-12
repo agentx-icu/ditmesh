@@ -23,10 +23,7 @@ class AppSettings extends ChangeNotifier {
     try {
       final decoded = jsonDecode(saved);
       if (decoded is! Map<String, dynamic>) return;
-      _style = UiStyle.values.firstWhere(
-        (value) => value.name == decoded['style'],
-        orElse: () => kDefaultUiStyle,
-      );
+      _style = UiStyle.fromStoredName(decoded['style']) ?? kDefaultUiStyle;
       _themeMode = ThemeMode.values.firstWhere(
         (value) => value.name == decoded['mode'],
         orElse: () => _themeMode,

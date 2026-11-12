@@ -22,7 +22,7 @@ Start with the [README](../README.md), [network guide](operations/NETWORK.md), [
 
 ## Before submitting a change
 
-Run strict analysis, package/application tests and source guards (`bash tool/test_pyramid.sh --level gates`, `--level unit` and `--level widget`, or the loop in the [README](../README.md#development-checks)). Keep Morse-only composing, direct/group delivery, encrypted backup restoration and queued sending covered when changing chat behavior. Network tests cover saved node selection, node probes, LAN hosting, reconnection and disposal. Appearance checks cover ten languages, five styles and phone/desktop layouts. User-facing documents are maintained as English + zh-CN pairs.
+Run strict analysis, package/application tests and source guards (`bash tool/test_pyramid.sh --level gates`, `--level unit` and `--level widget`, or the loop in the [README](../README.md#development-checks)). Keep Morse-only composing, direct/group delivery, encrypted backup restoration and queued sending covered when changing chat behavior. Network tests cover saved node selection, node probes, LAN hosting, reconnection and disposal. Appearance checks cover ten languages, four styles and phone/desktop layouts. User-facing documents are maintained as English + zh-CN pairs.
 
 ## CI workflows
 
@@ -31,7 +31,7 @@ Run strict analysis, package/application tests and source guards (`bash tool/tes
 | Analyze (`analyze.yml`) | Pushes to and pull requests targeting `main`/`master`; manual dispatch | Workflow/shell lint, strict analysis, complexity/import/UI-literal guards, release-version check, packaging and screenshot-import regressions, non-native tests |
 | Layout (`layout.yml`) | Every push to `master` and every pull request | The four-shard layout crawler |
 | Native (`native.yml`) | Pushes and pull requests that touch code, tools, workflows or the pin; every `v*` tag | Native libraries, application builds, real-peer tests, packages and the draft release |
-| E2E, Visual matrix (`e2e.yml`, `visual-matrix.yml`) | `ci:e2e` label or manual dispatch | Platform integration tests and screenshots; 38-profile visual matrix |
+| E2E, Visual matrix (`e2e.yml`, `visual-matrix.yml`) | `ci:e2e` label or manual dispatch | Platform integration tests and screenshots; 34-profile visual matrix |
 | Native experimental (`native-experimental.yml`) | `ci:arm` label or manual dispatch | Optional ARM host jobs |
 | Pages (`pages.yml`) | Pushes to `main`/`master` that touch `site/` or the workflow; manual dispatch | Public site deployment |
 

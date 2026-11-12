@@ -101,4 +101,17 @@ void main() {
     await prefs.applyPortable(Uint8List.fromList(utf8.encode('not json')));
     expect(prefs.exportPortable(), before);
   });
+
+  test('restoring old appearance settings saves their replacement', () async {
+    final store = InMemoryKeyValueStore();
+    final prefs = AppPreferences(store, backendLabel: 'x', identity: identity);
+    addTearDown(prefs.dispose);
+    await prefs.applyPortable(
+      _doc({'appearance': {'style': 'paper', 'mode': 'dark'}}),
+    );
+    final reopened = AppPreferences(store, backendLabel: 'x', identity: identity);
+    addTearDown(reopened.dispose);
+    expect(reopened.settings.style, UiStyle.classic);
+    expect(reopened.settings.themeMode, ThemeMode.dark);
+  });
 }

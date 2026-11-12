@@ -166,7 +166,7 @@
   },
   "learnLessonOf": "Lesson {lesson} of {total}",
   "@learnLessonOf": {
-    "description": "Learn home, Koch lesson card: which lesson the user is on out of the whole course (e.g. 'Lesson 4 of 42'); also used in the appearance style preview",
+    "description": "Learn home, Koch lesson card: which lesson the user is on out of the whole course (e.g. 'Lesson 4 of 42')",
     "placeholders": {
       "lesson": {
         "type": "int"
@@ -2910,21 +2910,17 @@
   "@appearanceSaveFailed": {
     "description": "Appearance page: snackbar when saving failed"
   },
-  "appearanceClassic": "Classic Brass",
+  "appearanceClassic": "Brass Handbook",
   "@appearanceClassic": {
-    "description": "Appearance style name (brass-instrument themed); translate as a name"
+    "description": "Appearance style name (warm brass and printed paper theme)"
   },
-  "appearanceModern": "Modern Calm",
-  "@appearanceModern": {
-    "description": "Appearance style name (calm modern theme); translate as a name"
+  "appearanceWhite": "Minimal White",
+  "@appearanceWhite": {
+    "description": "Appearance style name (minimal theme with a white base in light mode)"
   },
   "appearanceRadio": "Night Radio",
   "@appearanceRadio": {
     "description": "Appearance style name (dark radio-room theme); translate as a name"
-  },
-  "appearancePaper": "Paper Handbook",
-  "@appearancePaper": {
-    "description": "Appearance style name (printed handbook theme); translate as a name"
   },
   "appearanceCartoon": "Fresh Cartoon",
   "@appearanceCartoon": {
@@ -5301,5 +5297,9 @@
   "chatLocationSendFailed": "Could not send this location. Try again.",
   "@chatLocationSendFailed": {
     "description": "Chat single-location sharing: chatLocationSendFailed."
+  },
+  "learnSettingsSaveFailed": "Couldn't save training settings. Try again.",
+  "@learnSettingsSaveFailed": {
+    "description": "Training settings: snack bar when saving fails and the last saved values are restored."
   }
 }

@@ -660,10 +660,9 @@
   "appearanceRestore": "Rétablir les valeurs par défaut",
   "appearanceApplied": "Apparence enregistrée",
   "appearanceSaveFailed": "Impossible d’enregistrer l’apparence. Réessayez.",
-  "appearanceClassic": "Laiton classique",
-  "appearanceModern": "Calme moderne",
+  "appearanceClassic": "Manuel en laiton",
+  "appearanceWhite": "Blanc minimaliste",
   "appearanceRadio": "Radio de nuit",
-  "appearancePaper": "Manuel papier",
   "appearanceCartoon": "Dessin pétillant",
   "appearanceLight": "Clair",
   "appearanceDark": "Sombre",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "Copier les coordonnées",
   "chatOpenMapsFailed": "Impossible d’ouvrir une carte pour cette position.",
   "chatLocationSent": "Position envoyée.",
-  "chatLocationSendFailed": "Impossible d’envoyer cette position. Réessayez."
+  "chatLocationSendFailed": "Impossible d’envoyer cette position. Réessayez.",
+  "learnSettingsSaveFailed": "Impossible d’enregistrer les paramètres d’entraînement. Réessayez."
 }

@@ -2127,16 +2127,13 @@ class SEs extends S {
   String get appearanceSaveFailed => 'No se pudo guardar la apariencia. Inténtalo de nuevo.';
 
   @override
-  String get appearanceClassic => 'Latón clásico';
+  String get appearanceClassic => 'Manual de latón';
 
   @override
-  String get appearanceModern => 'Calma moderna';
+  String get appearanceWhite => 'Blanco minimalista';
 
   @override
   String get appearanceRadio => 'Radio nocturna';
-
-  @override
-  String get appearancePaper => 'Manual de papel';
 
   @override
   String get appearanceCartoon => 'Dibujos frescos';
@@ -3847,4 +3844,7 @@ class SEs extends S {
 
   @override
   String get chatLocationSendFailed => 'No se pudo enviar esta ubicación. Inténtalo de nuevo.';
+
+  @override
+  String get learnSettingsSaveFailed => 'No se pudo guardar la configuración del entrenamiento. Inténtalo de nuevo.';
 }
