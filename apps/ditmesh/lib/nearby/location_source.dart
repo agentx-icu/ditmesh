@@ -63,6 +63,7 @@ class GeolocatorLocationSource implements LocationSource {
 
   final Duration statusTimeout;
   final Duration permissionTimeout;
+  static final _appleReads = Expando<_PendingPosition>();
 
   @override
   Future<LocationPermissionState> permissionState() async {
@@ -135,9 +136,14 @@ class GeolocatorLocationSource implements LocationSource {
               accuracy: LocationAccuracy.medium,
               timeLimit: timeout,
             );
-      final p = await Geolocator.getCurrentPosition(
-        locationSettings: settings,
-      ).timeout(timeout);
+      final apple =
+          defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.iOS;
+      final p = apple
+          ? await _applePosition(timeout)
+          : await Geolocator.getCurrentPosition(
+              locationSettings: settings,
+            ).timeout(timeout);
       return LocationFix(
         latitude: p.latitude,
         longitude: p.longitude,
@@ -146,6 +152,33 @@ class GeolocatorLocationSource implements LocationSource {
       );
     } catch (_) {
       return null;
+    }
+  }
+
+  static Future<Position> _applePosition(Duration timeout) async {
+    // The pinned Apple plugin has one one-shot native callback. Nearby's
+    // periodic refresh and a chat/grid read must share it even when they use
+    // different source objects. Each caller keeps its own deadline; once all
+    // callers leave, a later read can retry a provider that never answered.
+    final platform = GeolocatorPlatform.instance;
+    final pending =
+        _appleReads[platform] ??
+        _PendingPosition(
+          Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+            ),
+          ),
+        );
+    _appleReads[platform] = pending;
+    pending.readers++;
+    try {
+      return await pending.future.timeout(timeout);
+    } finally {
+      pending.readers--;
+      if (pending.readers == 0 && identical(_appleReads[platform], pending)) {
+        _appleReads[platform] = null;
+      }
     }
   }
 
@@ -174,4 +207,10 @@ class GeolocatorLocationSource implements LocationSource {
         return LocationPermissionState.unavailable;
     }
   }
+}
+
+class _PendingPosition {
+  _PendingPosition(this.future);
+  final Future<Position> future;
+  int readers = 0;
 }

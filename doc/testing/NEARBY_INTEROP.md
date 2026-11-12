@@ -133,3 +133,11 @@ handoff file. Evidence:
 The complete app suite passed 1600 tests with 36 skipped; four private-snapshot
 and redaction tests also passed. App analysis and the import, UI-literal and
 complexity guards passed.
+
+Pre-PR review also covered the pinned plugin's single one-shot callback:
+concurrent Apple nearby/chat/grid reads now share the native request while
+retaining independent deadlines, and a later request can recover after all
+callers time out. macOS/iOS overlap and timeout regressions pass. Remote nearby
+names, intent wording and matched friend replies are cleaned only for display
+using the existing `PeerText` policy; signed records and nonce wording are
+unchanged. Unicode-control regressions exercise these confirmation paths.

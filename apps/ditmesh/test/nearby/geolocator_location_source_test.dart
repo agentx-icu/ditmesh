@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ditmesh/nearby/location_source.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -11,6 +12,9 @@ class _Platform extends GeolocatorPlatform with MockPlatformInterfaceMixin {
   Future<Position>? position;
   final checkedPermissions = <LocationPermission>[];
   var permissionChecks = 0;
+  var positionRequests = 0;
+  var overwritePositionCallback = false;
+  Completer<Position>? latestPosition;
   @override
   Future<bool> isLocationServiceEnabled() => enabled ?? Future.value(true);
   @override
@@ -25,9 +29,28 @@ class _Platform extends GeolocatorPlatform with MockPlatformInterfaceMixin {
   Future<LocationPermission> requestPermission() =>
       permission ?? Future.value(LocationPermission.whileInUse);
   @override
-  Future<Position> getCurrentPosition({LocationSettings? locationSettings}) =>
-      position ?? Completer<Position>().future;
+  Future<Position> getCurrentPosition({LocationSettings? locationSettings}) {
+    positionRequests++;
+    if (overwritePositionCallback) {
+      latestPosition = Completer<Position>();
+      return latestPosition!.future;
+    }
+    return position ?? Completer<Position>().future;
+  }
 }
+
+Position examplePosition() => Position(
+  latitude: 0,
+  longitude: -140,
+  timestamp: DateTime.now(),
+  accuracy: 5,
+  altitude: 0,
+  altitudeAccuracy: 0,
+  heading: 0,
+  headingAccuracy: 0,
+  speed: 0,
+  speedAccuracy: 0,
+);
 
 void main() {
   late _Platform platform;
@@ -36,6 +59,62 @@ void main() {
     platform = _Platform();
     GeolocatorPlatform.instance = platform;
     addTearDown(() => GeolocatorPlatform.instance = previous);
+  });
+
+  for (final target in [TargetPlatform.macOS, TargetPlatform.iOS]) {
+    test(
+      'nearby and UI reads share the single Apple callback on $target',
+      () async {
+        debugDefaultTargetPlatformOverride = target;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        platform.overwritePositionCallback = true;
+        final nearby = const GeolocatorLocationSource().currentFix(
+          timeout: const Duration(milliseconds: 200),
+        );
+        final ui = const GeolocatorLocationSource(
+          statusTimeout: Duration(seconds: 1),
+        ).currentFix(timeout: const Duration(milliseconds: 200));
+        platform.latestPosition!.complete(examplePosition());
+        final results = await Future.wait([nearby, ui]);
+        expect(results.every((fix) => fix?.isValid == true), isTrue);
+        expect(platform.positionRequests, 1);
+      },
+    );
+  }
+
+  test(
+    'an Apple caller timeout does not cancel another active reader',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      platform.overwritePositionCallback = true;
+      final short = const GeolocatorLocationSource().currentFix(
+        timeout: const Duration(milliseconds: 10),
+      );
+      final long = const GeolocatorLocationSource().currentFix(
+        timeout: const Duration(milliseconds: 200),
+      );
+      expect(await short, isNull);
+      platform.latestPosition!.complete(examplePosition());
+      expect((await long)?.isValid, isTrue);
+      expect(platform.positionRequests, 1);
+    },
+  );
+
+  test('a fresh Apple read can recover after every caller timed out', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    platform.overwritePositionCallback = true;
+    expect(
+      await const GeolocatorLocationSource().currentFix(
+        timeout: const Duration(milliseconds: 10),
+      ),
+      isNull,
+    );
+    final retry = const GeolocatorLocationSource().currentFix();
+    platform.latestPosition!.complete(examplePosition());
+    expect((await retry)?.isValid, isTrue);
+    expect(platform.positionRequests, 2);
   });
 
   test(

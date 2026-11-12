@@ -41,7 +41,7 @@ class _NearbyPeerCardState extends State<NearbyPeerCard> {
         : distance < 1000
         ? l10n.nearbyDistanceMeters(((distance / 100).ceil() * 100).toInt())
         : l10n.nearbyDistanceKm((distance / 1000).toStringAsFixed(1));
-    final name = peer.name.isEmpty ? l10n.nearbyUnnamed : peer.name;
+    final name = nearbyDisplayName(peer.name, l10n.nearbyUnnamed);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -93,7 +93,7 @@ class _NearbyPeerCardState extends State<NearbyPeerCard> {
               used <= IntentBody.maxMessageWireBytes &&
               IntentBody.validMessage(draft.trim());
           return AlertDialog(
-            title: Text(peer.name.isEmpty ? l10n.nearbyUnnamed : peer.name),
+            title: Text(nearbyDisplayName(peer.name, l10n.nearbyUnnamed)),
             content: TextField(
               maxLength: NearbyLimits.messageMaxCodePoints,
               maxLines: 3,
@@ -122,10 +122,7 @@ class _NearbyPeerCardState extends State<NearbyPeerCard> {
     );
     if (message == null || !context.mounted) return;
     // Consent: the intent discloses the user's own Tox ID to this one peer.
-    if (!await showNearbyConsent(
-      context,
-      peer.name.isEmpty ? l10n.nearbyUnnamed : peer.name,
-    )) {
+    if (!await showNearbyConsent(context, peer.name)) {
       return;
     }
     // The dialogs took time: the page may be gone or nearby stopped.
@@ -177,7 +174,8 @@ class _NearbyIncomingCardState extends State<NearbyIncomingCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.s;
-    final name = intent.fromName.isEmpty ? l10n.nearbyUnnamed : intent.fromName;
+    final name = nearbyDisplayName(intent.fromName, l10n.nearbyUnnamed);
+    final message = PeerText.clean(intent.message);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: Theme.of(context).colorScheme.secondaryContainer,
@@ -192,12 +190,9 @@ class _NearbyIncomingCardState extends State<NearbyIncomingCard> {
             ),
             const SizedBox(height: 4),
             Text(l10n.nearbyIncomingBody(name)),
-            if (intent.message.isNotEmpty) ...[
+            if (message.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(
-                '“${intent.message}”',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text('“$message”', style: Theme.of(context).textTheme.bodySmall),
             ],
             const SizedBox(height: 8),
             Wrap(
@@ -226,8 +221,7 @@ class _NearbyIncomingCardState extends State<NearbyIncomingCard> {
   /// nonce in its wording; the initiator confirms on its side.
   Future<void> _accept(BuildContext context) async {
     final l10n = context.s;
-    final name = intent.fromName.isEmpty ? l10n.nearbyUnnamed : intent.fromName;
-    if (!await showNearbyConsent(context, name)) return;
+    if (!await showNearbyConsent(context, intent.fromName)) return;
     if (!context.mounted ||
         !nearby.running ||
         !nearby.incomingIntents.contains(intent)) {

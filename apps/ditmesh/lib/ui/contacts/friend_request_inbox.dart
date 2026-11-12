@@ -52,20 +52,23 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
     final ThemeData theme = Theme.of(context);
     final S s = context.s;
     final nearby = context.watch<NearbyController?>();
+    String replyName(String raw) {
+      final name = PeerText.singleLine(raw);
+      return name.isEmpty ? s.nearbyUnnamed : name;
+    }
+
     String requestText(FriendRequest request) {
       final reply = nearby?.replyFor(request.publicKey);
       return reply == null
           ? request.message
-          : '${shortKey(request.publicKey, length: 16)}\n${s.nearbyReplyBody(reply.targetName.isEmpty ? s.nearbyUnnamed : reply.targetName)}';
+          : '${shortKey(request.publicKey, length: 16)}\n${s.nearbyReplyBody(replyName(reply.targetName))}';
     }
 
     String requestTitle(FriendRequest request) {
       final reply = nearby?.replyFor(request.publicKey);
       return reply == null
           ? shortKey(request.publicKey, length: 16)
-          : reply.targetName.isEmpty
-          ? s.nearbyUnnamed
-          : reply.targetName;
+          : replyName(reply.targetName);
     }
 
     return StreamBuilder<List<FriendRequest>>(

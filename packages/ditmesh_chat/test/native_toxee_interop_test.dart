@@ -202,7 +202,7 @@ class _DitmeshPeer {
         nativePackets++;
         // Metadata only: keep the native regression diagnosable without
         // logging a presence payload or location coordinates.
-        print(
+        stdout.writeln(
           '[VERIFY] alice: packet cell=${event.chatIdHex} '
           'peer=${event.peerPkHex} private=${event.isPrivate} '
           'bytes=${event.payload.length}',
@@ -226,7 +226,7 @@ class _DitmeshPeer {
     );
     nearby = discovery;
     discovery.addListener(() {
-      print(
+      stdout.writeln(
         '[VERIFY] alice: nearby cells=${discovery.joinedCells} '
         'routes=${discovery.peers.map((p) => p.cells.length).toList()} '
         'dropped=${discovery.droppedRecords}',

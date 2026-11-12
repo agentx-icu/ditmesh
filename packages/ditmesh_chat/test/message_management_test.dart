@@ -169,8 +169,12 @@ void main() {
       expect((await chat.loadHistory(cid)).single.status, MessageStatus.failed);
 
       ffi.failSends = false;
+      final sent = chat.messageEvents.firstWhere(
+        (message) =>
+            message.id == row.id && message.status == MessageStatus.sent,
+      );
       expect(await chat.retryMessage(cid, row.id), MessageActionResult.success);
-      await Future<void>.delayed(const Duration(milliseconds: 250));
+      await sent.timeout(const Duration(seconds: 5));
       final rows = await chat.loadHistory(cid);
       expect(rows, hasLength(1), reason: 'no second bubble');
       expect(rows.single.id, row.id);
