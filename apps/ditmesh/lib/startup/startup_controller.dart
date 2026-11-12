@@ -6,6 +6,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
 
 import '../training/guest_profile.dart';
+import 'startup_connection.dart';
 
 /// Where the app is in its identity lifecycle. The [StartupGate] renders one
 /// screen per phase; everything behind [ready] is the normal shell.
@@ -72,15 +73,23 @@ class StartupController extends ChangeNotifier {
   StartupController(
     this._identity, {
     GuestHooks? guest,
+    NetworkBootstrapService? networkBootstrap,
     DateTime Function()? now,
     this.chatEnabled = true,
   }) : _guest = guest,
        _now = now ?? DateTime.now {
+    _connection = StartupConnection(
+      identity: _identity,
+      networkBootstrap: networkBootstrap,
+      canConnect: () => chatEnabled && _phase == StartupPhase.ready,
+      onChanged: _notify,
+    );
     _identitySub = _identity.identityChanges.listen(_onIdentityChanged);
   }
 
   final IdentityService _identity;
   final GuestHooks? _guest;
+  late final StartupConnection _connection;
 
   /// False in the offline build (`AppFeatures.chat`): no identity is ever
   /// inspected or created; learning always runs on the local (guest)
@@ -112,7 +121,6 @@ class StartupController extends ChangeNotifier {
 
   StartupPhase _phase = StartupPhase.inspecting;
   Object? _error;
-  Object? _connectionError;
   bool _started = false;
   bool _disposed = false;
 
@@ -122,8 +130,8 @@ class StartupController extends ChangeNotifier {
   /// every other phase.
   Object? get error => _error;
 
-  /// Last `connect()` failure, if any. Cleared by a successful [reconnect].
-  Object? get connectionError => _connectionError;
+  /// Last connection or bootstrap failure. Cleared by a successful [reconnect].
+  Object? get connectionError => _connection.error;
 
   IdentityService get identity => _identity;
 
@@ -419,8 +427,9 @@ class StartupController extends ChangeNotifier {
     return report;
   }
 
-  /// Retries the background connection, e.g. from the connection chip.
-  Future<void> reconnect() => _connectInBackground();
+  /// Refreshes the running session's bootstrap, e.g. from the connection chip.
+  /// `connect()` alone is idempotent once the native Tox engine has started.
+  Future<void> reconnect() => _connection.connect(refreshBootstrap: true);
 
   /// Irreversibly deletes the identity; the gate falls back to onboarding via
   /// the identity stream.
@@ -439,20 +448,7 @@ class StartupController extends ChangeNotifier {
 
   void _becomeReady() {
     _set(StartupPhase.ready);
-    unawaited(_connectInBackground());
-  }
-
-  Future<void> _connectInBackground() async {
-    try {
-      await _identity.connect();
-      if (_connectionError != null) {
-        _connectionError = null;
-        _notify();
-      }
-    } on Object catch (e) {
-      _connectionError = e;
-      _notify();
-    }
+    unawaited(_connection.connect());
   }
 
   void _onIdentityChanged(Identity? identity) {
@@ -481,6 +477,7 @@ class StartupController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _connection.dispose();
     _identitySub.cancel().ignore();
     guestMode.dispose();
     super.dispose();

@@ -2141,16 +2141,13 @@ class SRu extends S {
   String get appearanceSaveFailed => 'Не удалось сохранить внешний вид. Попробуйте ещё раз.';
 
   @override
-  String get appearanceClassic => 'Классическая латунь';
+  String get appearanceClassic => 'Латунный справочник';
 
   @override
-  String get appearanceModern => 'Современное спокойствие';
+  String get appearanceWhite => 'Белый минимализм';
 
   @override
   String get appearanceRadio => 'Ночное радио';
-
-  @override
-  String get appearancePaper => 'Бумажный справочник';
 
   @override
   String get appearanceCartoon => 'Яркий мультфильм';
@@ -3885,4 +3882,7 @@ class SRu extends S {
 
   @override
   String get chatLocationSendFailed => 'Не удалось отправить эту геопозицию. Попробуйте ещё раз.';
+
+  @override
+  String get learnSettingsSaveFailed => 'Не удалось сохранить настройки тренировки. Повторите попытку.';
 }

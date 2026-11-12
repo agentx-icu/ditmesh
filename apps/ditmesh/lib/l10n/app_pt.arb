@@ -660,10 +660,9 @@
   "appearanceRestore": "Restaurar padrões",
   "appearanceApplied": "Aparência salva",
   "appearanceSaveFailed": "Não foi possível salvar a aparência. Tente novamente.",
-  "appearanceClassic": "Latão clássico",
-  "appearanceModern": "Calma moderna",
+  "appearanceClassic": "Manual de latão",
+  "appearanceWhite": "Branco minimalista",
   "appearanceRadio": "Rádio noturno",
-  "appearancePaper": "Manual de papel",
   "appearanceCartoon": "Desenho leve",
   "appearanceLight": "Claro",
   "appearanceDark": "Escuro",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "Copiar coordenadas",
   "chatOpenMapsFailed": "Não foi possível abrir um mapa desta localização.",
   "chatLocationSent": "Localização enviada.",
-  "chatLocationSendFailed": "Não foi possível enviar esta localização. Tente novamente."
+  "chatLocationSendFailed": "Não foi possível enviar esta localização. Tente novamente.",
+  "learnSettingsSaveFailed": "Não foi possível salvar as configurações de treino. Tente novamente."
 }

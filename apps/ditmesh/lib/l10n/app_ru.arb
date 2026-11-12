@@ -660,10 +660,9 @@
   "appearanceRestore": "Восстановить настройки по умолчанию",
   "appearanceApplied": "Внешний вид сохранён",
   "appearanceSaveFailed": "Не удалось сохранить внешний вид. Попробуйте ещё раз.",
-  "appearanceClassic": "Классическая латунь",
-  "appearanceModern": "Современное спокойствие",
+  "appearanceClassic": "Латунный справочник",
+  "appearanceWhite": "Белый минимализм",
   "appearanceRadio": "Ночное радио",
-  "appearancePaper": "Бумажный справочник",
   "appearanceCartoon": "Яркий мультфильм",
   "appearanceLight": "Светлый",
   "appearanceDark": "Тёмный",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "Копировать координаты",
   "chatOpenMapsFailed": "Не удалось открыть карту для этой геопозиции.",
   "chatLocationSent": "Геопозиция отправлена.",
-  "chatLocationSendFailed": "Не удалось отправить эту геопозицию. Попробуйте ещё раз."
+  "chatLocationSendFailed": "Не удалось отправить эту геопозицию. Попробуйте ещё раз.",
+  "learnSettingsSaveFailed": "Не удалось сохранить настройки тренировки. Повторите попытку."
 }

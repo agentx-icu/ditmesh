@@ -7,7 +7,24 @@ import 'package:ditmesh/i18n/key_value_store.dart';
 import 'package:ditmesh/ui/appearance/ui_style.dart';
 
 void main() {
-  test('new and corrupt preferences use Modern Calm and system mode', () {
+  test('retired styles open as their replacements with the saved mode', () {
+    for (final (savedStyle, expected) in [
+      ('paper', UiStyle.classic),
+      ('modern', UiStyle.radio),
+    ]) {
+      final settings = AppSettings(
+        backendLabel: 'test',
+        store: InMemoryKeyValueStore({
+          AppSettings.storageKey: '{"style":"$savedStyle","mode":"dark"}',
+        }),
+      );
+      addTearDown(settings.dispose);
+      expect(settings.style, expected);
+      expect(settings.themeMode, ThemeMode.dark);
+    }
+  });
+
+  test('new and corrupt preferences use Minimal White and system mode', () {
     for (final saved in [
       null,
       'broken',
@@ -21,13 +38,13 @@ void main() {
         ),
       );
       addTearDown(settings.dispose);
-      expect(settings.style, UiStyle.modern);
+      expect(settings.style, UiStyle.white);
       expect(settings.themeMode, ThemeMode.system);
     }
   });
 
   test(
-    'all five styles persist with independent brightness across restart',
+    'all four styles persist with independent brightness across restart',
     () async {
       final store = InMemoryKeyValueStore();
       final settings = AppSettings(backendLabel: 'test', store: store);
@@ -56,7 +73,7 @@ void main() {
       settings.applyAppearance(style: UiStyle.radio, themeMode: ThemeMode.dark),
       throwsA(isA<FileSystemException>()),
     );
-    expect(settings.style, UiStyle.modern);
+    expect(settings.style, UiStyle.white);
     expect(settings.themeMode, ThemeMode.system);
     expect(notifications, 0);
   });
@@ -108,7 +125,7 @@ void main() {
     final settings = AppSettings(backendLabel: 'test', store: store);
     addTearDown(settings.dispose);
     await settings.applyAppearance(
-      style: UiStyle.modern,
+      style: UiStyle.white,
       themeMode: ThemeMode.light,
     );
     final saved = store.getString(AppSettings.storageKey);
@@ -127,7 +144,7 @@ void main() {
     final reopenedStore = await JsonFileKeyValueStore.open(file);
     final reopened = AppSettings(backendLabel: 'test', store: reopenedStore);
     addTearDown(reopened.dispose);
-    expect(reopened.style, UiStyle.modern);
+    expect(reopened.style, UiStyle.white);
     expect(reopened.themeMode, ThemeMode.light);
     expect(reopenedStore.getString('i18n.locale'), 'zh');
     // Failed writes also leave the queue available for an explicit retry.

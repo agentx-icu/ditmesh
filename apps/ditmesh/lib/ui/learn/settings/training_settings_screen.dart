@@ -50,6 +50,8 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
   /// True while a sample bundle is being created.
   bool _creatingSample = false;
 
+  int _draftRevision = 0;
+
   TrainerSettings get _t => _draft.trainer;
 
   String _wpm(S s, double wpm) => s.learnWpmValue(wpm.toStringAsFixed(0));
@@ -57,6 +59,7 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
 
   /// Updates the draft; persists when [persist] (slider release, toggles).
   void _apply(TrainingSettings next, {bool persist = true}) {
+    final revision = ++_draftRevision;
     final outputsChanged =
         next.soundEnabled != _draft.soundEnabled ||
         next.flashEnabled != _draft.flashEnabled ||
@@ -69,7 +72,25 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
     }
     _sample?.sidetone?.frequencyHz = next.trainer.toneHz;
     if (persist) {
-      unawaited(widget.controller.updateSettings(next));
+      unawaited(_saveSettings(next, revision));
+    }
+  }
+
+  Future<void> _saveSettings(TrainingSettings next, int revision) async {
+    try {
+      await widget.controller.updateSettings(next);
+    } on Object {
+      if (!mounted) return;
+      // The controller rolls back failed writes. Restore this draft and its
+      // sample outputs too, unless the user has already made a newer edit.
+      if (revision == _draftRevision) {
+        _apply(widget.controller.settings, persist: false);
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.s.learnSettingsSaveFailed)),
+        );
     }
   }
 
@@ -281,7 +302,9 @@ class _TrainingSettingsScreenState extends State<TrainingSettingsScreen> {
                   : null,
               secondary: const Icon(Icons.vibration),
               value: _draft.hapticEnabled,
-              onChanged: snapshot.data == true
+              // A restored enabled preference must always be removable,
+              // even when this device cannot provide vibration.
+              onChanged: _draft.hapticEnabled || snapshot.data == true
                   ? (v) => _apply(_draft.copyWith(hapticEnabled: v))
                   : null,
             ),

@@ -109,7 +109,10 @@ class _AppScopeState extends State<AppScope> {
   );
   AppSettings get _settings => _preferences.settings;
   late final GuestStore _guest = widget.guestStore ?? GuestStore();
-  late final StartupController _startup = StartupController(_identity);
+  late final StartupController _startup = StartupController(
+    _identity,
+    networkBootstrap: _network,
+  );
   late final BackupFileGateway _backupFiles =
       widget.backupFiles ?? const PlatformBackupFileGateway();
   late final LocaleController _locale = LocaleController(_store);
@@ -127,7 +130,7 @@ class _AppScopeState extends State<AppScope> {
     backgroundTasks: widget.backgroundTasks,
     networkBootstrap: _network,
     networkSnapshots: widget.networkSnapshots,
-    // The startup controller owns connect(): its error is the chip's too.
+    // All recovery entry points share the startup controller and its error.
     reconnect: () async {
       await _startup.reconnect();
       return _startup.connectionError;

@@ -37,7 +37,7 @@ void main() {
     expect(() => parseShotLocale('unknown'), throwsArgumentError);
   });
 
-  test('all five styles parse and unknown or empty styles fail', () {
+  test('all four styles parse and unknown or empty styles fail', () {
     for (final style in UiStyle.values) {
       expect(parseShotStyle(style.name), style);
     }

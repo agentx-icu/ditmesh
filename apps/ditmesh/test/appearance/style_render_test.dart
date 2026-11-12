@@ -117,7 +117,7 @@ void main() {
           );
           await settle(tester);
           await capture(boundary, '${style.name}-$device');
-          if (style == UiStyle.modern) {
+          if (style == UiStyle.white) {
             AppearancePage.open(
               tester.element(
                 find.byType(NavigationBar).evaluate().isEmpty

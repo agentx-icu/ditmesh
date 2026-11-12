@@ -2120,16 +2120,13 @@ class SZh extends S {
   String get appearanceSaveFailed => '无法保存外观，请重试。';
 
   @override
-  String get appearanceClassic => '经典黄铜';
+  String get appearanceClassic => '黄铜手册';
 
   @override
-  String get appearanceModern => '清爽现代';
+  String get appearanceWhite => '纯白简约';
 
   @override
   String get appearanceRadio => '夜航电台';
-
-  @override
-  String get appearancePaper => '纸感手册';
 
   @override
   String get appearanceCartoon => '清新卡通';
@@ -3828,6 +3825,9 @@ class SZh extends S {
 
   @override
   String get chatLocationSendFailed => '无法发送此位置，请重试。';
+
+  @override
+  String get learnSettingsSaveFailed => '无法保存训练设置，请重试。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -5946,16 +5946,13 @@ class SZhHant extends SZh {
   String get appearanceSaveFailed => '無法儲存外觀，請重試。';
 
   @override
-  String get appearanceClassic => '經典黃銅';
+  String get appearanceClassic => '黃銅手冊';
 
   @override
-  String get appearanceModern => '清爽現代';
+  String get appearanceWhite => '純白簡約';
 
   @override
   String get appearanceRadio => '夜航電台';
-
-  @override
-  String get appearancePaper => '紙感手冊';
 
   @override
   String get appearanceCartoon => '清新卡通';
@@ -7654,4 +7651,7 @@ class SZhHant extends SZh {
 
   @override
   String get chatLocationSendFailed => '無法傳送此位置，請重試。';
+
+  @override
+  String get learnSettingsSaveFailed => '無法儲存訓練設定，請重試。';
 }

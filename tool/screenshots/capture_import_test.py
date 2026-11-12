@@ -65,7 +65,7 @@ class CaptureImportTest(unittest.TestCase):
 
     def test_each_style_and_brightness_can_publish_to_explicit_output(self):
         before = snapshot(self.source)
-        for style in ("classic", "modern", "radio", "paper", "cartoon"):
+        for style in ("white", "classic", "radio", "cartoon"):
             for theme in ("light", "dark", "system"):
                 with self.subTest(style=style, theme=theme):
                     output = self.root / f"{style}-{theme}"
@@ -75,7 +75,7 @@ class CaptureImportTest(unittest.TestCase):
 
     def test_all_styles_keep_separate_profile_folders(self):
         matrix = self.root / "matrix"
-        for style in ("classic", "modern", "radio", "paper", "cartoon"):
+        for style in ("white", "classic", "radio", "cartoon"):
             shutil.copytree(self.source, matrix / style)
         before = snapshot(matrix)
         self.run_import(source=matrix, extra=("--style", "all"))

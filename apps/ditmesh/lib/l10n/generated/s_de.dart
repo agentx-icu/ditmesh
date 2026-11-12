@@ -2127,16 +2127,13 @@ class SDe extends S {
   String get appearanceSaveFailed => 'Darstellung konnte nicht gespeichert werden. Versuche es erneut.';
 
   @override
-  String get appearanceClassic => 'Klassisches Messing';
+  String get appearanceClassic => 'Messing-Handbuch';
 
   @override
-  String get appearanceModern => 'Moderne Ruhe';
+  String get appearanceWhite => 'Minimalistisches Weiß';
 
   @override
   String get appearanceRadio => 'Nachtradio';
-
-  @override
-  String get appearancePaper => 'Papierhandbuch';
 
   @override
   String get appearanceCartoon => 'Lebendiger Comic';
@@ -3847,4 +3844,7 @@ class SDe extends S {
 
   @override
   String get chatLocationSendFailed => 'Dieser Standort konnte nicht gesendet werden. Versuche es erneut.';
+
+  @override
+  String get learnSettingsSaveFailed => 'Die Trainingseinstellungen konnten nicht gespeichert werden. Bitte erneut versuchen.';
 }

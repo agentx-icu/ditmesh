@@ -18,6 +18,7 @@ import 'conversation_actions.dart';
 import 'conversation_location_actions.dart';
 import 'conversation_attention.dart';
 import 'conversation_auto_play.dart';
+import 'conversation_haptic_binding.dart';
 import 'conversation_target.dart';
 import 'conversation_header.dart';
 import 'conversation_history.dart';
@@ -62,6 +63,7 @@ class _ConversationScreenState extends State<ConversationScreen>
   @override
   late final MorsePlaybackController _playback;
   bool _ownsPlayback = false;
+  late final ConversationHapticBinding _haptics;
   late final ConversationAutoPlay _autoPlay = ConversationAutoPlay(_playback);
   late final ConversationAttention _attention;
   bool _sessionStartedWhileLoading = false;
@@ -121,6 +123,7 @@ class _ConversationScreenState extends State<ConversationScreen>
       _playback = MorsePlaybackController();
       _ownsPlayback = true;
     }
+    _haptics = ConversationHapticBinding.attach(context, _playback);
     _attention = ConversationAttention(
       service: _service,
       conversationId: _id,
@@ -155,6 +158,7 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   @override
   void dispose() {
+    _haptics.dispose();
     _bookmarkStore?.removeListener(_onBookmarks);
     _autoPlay.dispose();
     _attention.dispose();

@@ -58,15 +58,14 @@ class _AppearancePageState extends State<AppearancePage> {
   }
 
   Widget _styles(double width) {
-    final columns = width >= 620 ? 3 : 2;
-    final cardWidth = (width - 12 * (columns - 1)) / columns;
+    final cardWidth = (width - 12) / 2;
     return Wrap(
       spacing: 12,
       runSpacing: 12,
       children: [
         for (final style in UiStyle.values)
           SizedBox(
-            width: columns == 2 && style == UiStyle.cartoon ? width : cardWidth,
+            width: cardWidth,
             child: Semantics(
               button: true,
               selected: style == _style,

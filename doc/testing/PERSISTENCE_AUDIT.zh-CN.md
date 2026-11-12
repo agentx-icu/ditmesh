@@ -20,7 +20,7 @@
 | 草稿、置顶/隐藏会话、待处理邀请 | 按账号隔离的 `shared_preferences` | 离线修改持久化；被替换的编辑器不能向新身份写回。 |
 | 抄收与群组练习状态、音频材料与书签 | `<identity>/training/` | 文件存储串行保存不可变快照。 |
 | 可选练习录音 | `<identity>/media/recordings/` | 仅在导出选择后包含被材料引用的录音；未提供文件传输界面。 |
-| 外观 | `<support>/settings.json` 中的 `appearance.preferences` | 风格和明暗一起保存成功后生效；失败保留原选择；新建或损坏记录使用 Modern Calm/跟随系统。 |
+| 外观 | `<support>/settings.json` 中的 `appearance.preferences` | 风格和明暗一起保存成功后生效；失败保留原选择；新建或损坏记录使用 纯白简约/跟随系统。 |
 | 语言、播放/输入/解码设置及通知偏好 | `<support>/settings.json` | 暴露 provider 前恢复；失败写入可重试。 |
 | 屏蔽通知的会话 | `settings.json` 中的 `notifications.muted.<完整公钥>` | 按身份隔离；仅在删除/替换成功后清除旧列表。 |
 | 首次聊天引导的关闭状态 | `settings.json` 中的 `chat.guide.<完整公钥>` | 按身份隔离，可从聊天重新打开；失败写入可重试，晚到加载不能覆盖新的本地选择。 |

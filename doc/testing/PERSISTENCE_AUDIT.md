@@ -20,7 +20,7 @@ This inventory documents chat storage, save barriers and backup restoration. Exe
 | Drafts, pinned/hidden conversations and queued invitations | Account-scoped `shared_preferences` | Offline edits persist; replaced editors cannot write into a new identity. |
 | Copy-practice and group-practice state, audio materials and bookmarks | `<identity>/training/` | File stores serialize immutable snapshots. |
 | Optional recorded practice audio | `<identity>/media/recordings/` | Export includes referenced recordings only when selected. No file-transfer UI is exposed. |
-| Appearance | `appearance.preferences` in `<support>/settings.json` | Style and brightness are saved together before publication. Failure retains the previous visible choice. New/corrupt records use Modern Calm/system mode. |
+| Appearance | `appearance.preferences` in `<support>/settings.json` | Style and brightness are saved together before publication. Failure retains the previous visible choice. New/corrupt records use Minimal White/system mode. |
 | Language, playback/input/decoder settings and notification choices | `<support>/settings.json` | Restored before providers become available; failed writes remain available for retry. |
 | Muted conversations | `notifications.muted.<full-public-key>` in `settings.json` | Identity-scoped; only committed identity deletion/replacement clears the old list. |
 | First-chat guide dismissal | `chat.guide.<full-public-key>` in `settings.json` | Identity-scoped, reopenable from Chat; failed writes remain retryable and late hydration cannot overwrite a newer local choice. |

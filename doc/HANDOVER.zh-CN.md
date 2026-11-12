@@ -22,7 +22,7 @@
 
 ## 提交改动之前
 
-运行严格分析、包与应用测试以及源码守卫（`bash tool/test_pyramid.sh --level gates`、`--level unit` 与 `--level widget`，或 [README](../README.zh-CN.md) 中的循环）。修改聊天行为时，保持纯莫尔斯输入、私聊/群组投递、加密备份恢复和排队发送都有测试覆盖。网络测试覆盖已保存节点的选择、节点探测、局域网托管、重连和释放。外观检查覆盖十种语言、五种风格以及手机/桌面布局。面向用户的文档按英文 + zh-CN 成对维护。
+运行严格分析、包与应用测试以及源码守卫（`bash tool/test_pyramid.sh --level gates`、`--level unit` 与 `--level widget`，或 [README](../README.zh-CN.md) 中的循环）。修改聊天行为时，保持纯莫尔斯输入、私聊/群组投递、加密备份恢复和排队发送都有测试覆盖。网络测试覆盖已保存节点的选择、节点探测、局域网托管、重连和释放。外观检查覆盖十种语言、四种风格以及手机/桌面布局。面向用户的文档按英文 + zh-CN 成对维护。
 
 ## CI 工作流
 
@@ -31,7 +31,7 @@
 | Analyze（`analyze.yml`） | 推送到 `main`/`master` 及以其为目标的 PR；手动触发 | 工作流/shell lint、严格分析、复杂度/导入/UI 字面量守卫、发布版本检查、打包与截图导入回归、非原生测试 |
 | Layout（`layout.yml`） | 每次推送到 `master` 和每个 PR | 分四片运行的布局爬虫 |
 | Native（`native.yml`） | 涉及代码、工具、工作流或固定版本的推送与 PR；所有 `v*` tag | 原生库、应用构建、真实节点测试、安装包与草稿 Release |
-| E2E、Visual matrix（`e2e.yml`、`visual-matrix.yml`） | `ci:e2e` 标签或手动触发 | 平台集成测试与截图；38 个配置的视觉矩阵 |
+| E2E、Visual matrix（`e2e.yml`、`visual-matrix.yml`） | `ci:e2e` 标签或手动触发 | 平台集成测试与截图；34 个配置的视觉矩阵 |
 | Native experimental（`native-experimental.yml`） | `ci:arm` 标签或手动触发 | 可选的 ARM 主机任务 |
 | Pages（`pages.yml`） | 涉及 `site/` 或该工作流的 `main`/`master` 推送；手动触发 | 公开站点部署 |
 

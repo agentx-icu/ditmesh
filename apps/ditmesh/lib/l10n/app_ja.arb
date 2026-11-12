@@ -660,10 +660,9 @@
   "appearanceRestore": "初期設定に戻す",
   "appearanceApplied": "外観を保存しました",
   "appearanceSaveFailed": "外観を保存できませんでした。再試行してください。",
-  "appearanceClassic": "クラシックな真鍮",
-  "appearanceModern": "落ち着いたモダン",
+  "appearanceClassic": "真鍮ハンドブック",
+  "appearanceWhite": "ミニマルホワイト",
   "appearanceRadio": "夜の無線局",
-  "appearancePaper": "紙のハンドブック",
   "appearanceCartoon": "さわやかなカートゥーン",
   "appearanceLight": "ライト",
   "appearanceDark": "ダーク",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "座標をコピー",
   "chatOpenMapsFailed": "この位置の地図を開けませんでした。",
   "chatLocationSent": "位置情報を送信しました。",
-  "chatLocationSendFailed": "この位置情報を送信できませんでした。再試行してください。"
+  "chatLocationSendFailed": "この位置情報を送信できませんでした。再試行してください。",
+  "learnSettingsSaveFailed": "トレーニング設定を保存できませんでした。もう一度お試しください。"
 }

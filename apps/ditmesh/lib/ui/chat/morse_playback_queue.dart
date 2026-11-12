@@ -162,7 +162,11 @@ extension _PlaybackQueue on MorsePlaybackController {
     }
     final double? toneHz = keyingToneHz;
     if (toneHz != null && _sidetone != null) _sidetone.frequencyHz = toneHz;
-    if (audible) sink.on();
+    if (audible) {
+      sink.on();
+    } else if (hapticEnabled) {
+      _haptic?.on();
+    }
   }
 
   void _keyingOff() {

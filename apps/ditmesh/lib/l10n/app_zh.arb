@@ -666,10 +666,9 @@
   "appearanceRestore": "恢复默认",
   "appearanceApplied": "外观已保存",
   "appearanceSaveFailed": "无法保存外观，请重试。",
-  "appearanceClassic": "经典黄铜",
-  "appearanceModern": "清爽现代",
+  "appearanceClassic": "黄铜手册",
+  "appearanceWhite": "纯白简约",
   "appearanceRadio": "夜航电台",
-  "appearancePaper": "纸感手册",
   "appearanceCartoon": "清新卡通",
   "appearanceLight": "浅色",
   "appearanceDark": "深色",
@@ -1180,5 +1179,6 @@
   "chatCopyCoordinates": "复制坐标",
   "chatOpenMapsFailed": "无法打开此位置的地图。",
   "chatLocationSent": "位置已发送。",
-  "chatLocationSendFailed": "无法发送此位置，请重试。"
+  "chatLocationSendFailed": "无法发送此位置，请重试。",
+  "learnSettingsSaveFailed": "无法保存训练设置，请重试。"
 }

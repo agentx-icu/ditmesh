@@ -39,7 +39,7 @@ void main() {
         identity: identity,
       );
       final saving = prefs.settings.applyAppearance(
-        style: UiStyle.paper,
+        style: UiStyle.classic,
         themeMode: ThemeMode.dark,
       );
       await store.started.future;
@@ -49,7 +49,7 @@ void main() {
       try {
         await pumpEventQueue();
         expect(flushed, isFalse);
-        expect(prefs.settings.style, UiStyle.modern);
+        expect(prefs.settings.style, UiStyle.white);
       } finally {
         store.release.complete();
         await saving;
@@ -61,7 +61,7 @@ void main() {
         backendLabel: 'test',
         identity: identity,
       );
-      expect(reopened.settings.style, UiStyle.paper);
+      expect(reopened.settings.style, UiStyle.classic);
       expect(reopened.settings.themeMode, ThemeMode.dark);
       expect(reopened.notifications.sound, isFalse);
       reopened.dispose();

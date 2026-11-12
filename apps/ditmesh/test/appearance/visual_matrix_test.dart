@@ -29,7 +29,7 @@ const _mono = String.fromEnvironment('DITMESH_MATRIX_MONO_FONT');
 const _serif = String.fromEnvironment('DITMESH_MATRIX_SERIF_FONT');
 
 void main() {
-  testWidgets('render ten languages and five styles on phone and desktop', (
+  testWidgets('render ten languages and four styles on phone and desktop', (
     tester,
   ) async {
     expect(_output, isNotEmpty);
@@ -58,7 +58,7 @@ void main() {
             for (final phone in [false, true])
               (
                 locale: locale,
-                style: UiStyle.modern,
+                style: UiStyle.white,
                 mode: ThemeMode.light,
                 phone: phone,
               ),
@@ -67,7 +67,7 @@ void main() {
               for (final phone in [false, true])
                 (locale: 'en', style: style, mode: mode, phone: phone),
         };
-    expect(profiles.length, 38);
+    expect(profiles.length, 34);
     final frames = <String>[];
     final shadows = debugDisableShadows;
     debugDisableShadows = false;
@@ -173,7 +173,7 @@ void main() {
     } finally {
       debugDisableShadows = shadows;
     }
-    expect(frames, hasLength(76));
+    expect(frames, hasLength(68));
     await tester.runAsync(
       () => File('$_output/manifest.json').writeAsString(
         const JsonEncoder.withIndent(

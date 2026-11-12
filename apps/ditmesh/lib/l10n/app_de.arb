@@ -660,10 +660,9 @@
   "appearanceRestore": "Standardwerte wiederherstellen",
   "appearanceApplied": "Darstellung gespeichert",
   "appearanceSaveFailed": "Darstellung konnte nicht gespeichert werden. Versuche es erneut.",
-  "appearanceClassic": "Klassisches Messing",
-  "appearanceModern": "Moderne Ruhe",
+  "appearanceClassic": "Messing-Handbuch",
+  "appearanceWhite": "Minimalistisches Weiß",
   "appearanceRadio": "Nachtradio",
-  "appearancePaper": "Papierhandbuch",
   "appearanceCartoon": "Lebendiger Comic",
   "appearanceLight": "Hell",
   "appearanceDark": "Dunkel",
@@ -1167,5 +1166,6 @@
   "chatCopyCoordinates": "Koordinaten kopieren",
   "chatOpenMapsFailed": "Für diesen Standort konnte keine Karte geöffnet werden.",
   "chatLocationSent": "Standort gesendet.",
-  "chatLocationSendFailed": "Dieser Standort konnte nicht gesendet werden. Versuche es erneut."
+  "chatLocationSendFailed": "Dieser Standort konnte nicht gesendet werden. Versuche es erneut.",
+  "learnSettingsSaveFailed": "Die Trainingseinstellungen konnten nicht gespeichert werden. Bitte erneut versuchen."
 }
