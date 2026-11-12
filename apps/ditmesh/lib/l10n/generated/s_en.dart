@@ -3657,4 +3657,194 @@ class SEn extends S {
 
   @override
   String get listenMissingCaptureTool => 'Install pulseaudio-utils to use the microphone on Linux.';
+
+  @override
+  String get locationServices => 'Location';
+
+  @override
+  String get nearbyVisible => 'Visible to people nearby';
+
+  @override
+  String get nearbyVisibleDesc => 'While this is on, people within about 5 km who use People nearby can see your name and approximate location.';
+
+  @override
+  String get peopleNearby => 'People nearby';
+
+  @override
+  String get locationPermissionDenied => 'Location permission is denied. Allow it in the system settings to use location features.';
+
+  @override
+  String get locationServiceDisabled => 'Location services are turned off on this device.';
+
+  @override
+  String get locationUnavailable => 'Your current location is not available right now.';
+
+  @override
+  String get nearbyLocating => 'Finding your location…';
+
+  @override
+  String get nearbyJoining => 'Looking for people nearby…';
+
+  @override
+  String get nearbyNobody => 'Nobody nearby yet. People appear here as they come online.';
+
+  @override
+  String get nearbyDhtNotReady => 'Not connected to the Tox network yet.';
+
+  @override
+  String get nearbyNoLocation => 'Your location is not available.';
+
+  @override
+  String get nearbyOff => 'Turn on Location and “Visible to people nearby” in Settings to see who is around.';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '$count people nearby';
+  }
+
+  @override
+  String get nearbySayHi => 'Say hi';
+
+  @override
+  String get nearbySendRequest => 'Send request';
+
+  @override
+  String get nearbyRequestMessageHint => 'Add a short message (optional)';
+
+  @override
+  String get nearbyRequestSent => 'Request sent.';
+
+  @override
+  String get nearbyRequestLimit => 'Too many requests. Try again later.';
+
+  @override
+  String get nearbyRequestTooLong => 'The message is too long.';
+
+  @override
+  String get nearbyPeerGone => 'That person is no longer nearby.';
+
+  @override
+  String get nearbyBlock => 'Block';
+
+  @override
+  String get nearbyBlocked => 'Blocked for this session.';
+
+  @override
+  String get nearbyConsentTitle => 'Share your Tox ID?';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return 'Your Tox ID will be sent to $name so they can send you a friend request. Nobody else receives it.';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => 'People nearby';
+
+  @override
+  String get nearbyPrivacyBody => 'While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.';
+
+  @override
+  String get nearbyPrivacyAccept => 'Turn on';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name answered the request you sent nearby. Add them as a friend?';
+  }
+
+  @override
+  String get nearbyUnnamed => 'Someone nearby';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return 'about $meters m';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return 'about $km km';
+  }
+
+  @override
+  String get nearbyIncomingTitle => 'Friend request from nearby';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name wants to add you. Accepting sends them a friend request.';
+  }
+
+  @override
+  String get nearbyIncomingAccept => 'Accept';
+
+  @override
+  String get nearbyIncomingDecline => 'Decline';
+
+  @override
+  String get nearbyPaused => 'Paused. Tap refresh to look again.';
+
+  @override
+  String get nearbyCellUnavailable => 'Your area is unavailable right now; retrying in the background.';
+
+  @override
+  String get locationServicesDesc => 'Allow current coordinates, the grid locator, optional People nearby and explicitly shared chat positions. Off by default; location is only read while DitMesh is open.';
+
+  @override
+  String get locationUseCurrent => 'Use current location';
+
+  @override
+  String get locationCurrent => 'Current location';
+
+  @override
+  String get locationSaveFailed => 'Could not save the location settings. Try again.';
+
+  @override
+  String get locationSystemSettings => 'Open system settings';
+
+  @override
+  String get locationDisabledHint => 'Turn on Location in settings to use your current position.';
+
+  @override
+  String get nearbyUnavailable => 'People nearby is unavailable until a Tox session is open.';
+
+  @override
+  String get chatLocationLabel => 'Location';
+
+  @override
+  String get chatSendLocation => 'Send current location';
+
+  @override
+  String get chatViewLocation => 'View shared location';
+
+  @override
+  String get chatLocationShareTitle => 'Share current location?';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return 'Send one position to $name? Coordinates will be stored in this chat’s history.';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return 'Shared $time · single position, not live';
+  }
+
+  @override
+  String get chatLocationInvalid => 'This location message is invalid.';
+
+  @override
+  String get chatLocationNotShared => 'This person has not shared a location in this chat.';
+
+  @override
+  String get chatOpenMaps => 'Open in Maps';
+
+  @override
+  String get chatCopyCoordinates => 'Copy coordinates';
+
+  @override
+  String get chatOpenMapsFailed => 'Could not open a map for this location.';
+
+  @override
+  String get chatLocationSent => 'Location sent.';
+
+  @override
+  String get chatLocationSendFailed => 'Could not send this location. Try again.';
 }

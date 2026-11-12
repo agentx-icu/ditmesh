@@ -88,13 +88,17 @@ class ConversationTile extends StatelessWidget {
         !hasDraft &&
         last != null &&
         !last.isMine &&
+        !last.isLocation &&
         MorsePlaybackSettings.of(context).listenOnly;
     final String previewText = hasDraft
         ? conversation.draft
         : hidden
         ? context.s.chatListenOnlyPreview
+        : last?.isLocation == true
+        ? context.s.chatLocationLabel
         : (last?.text ?? '');
-    final String pattern = previewText.isEmpty || hidden
+    final String pattern =
+        previewText.isEmpty || hidden || (!hasDraft && last?.isLocation == true)
         ? ''
         : MorseEncoder.toPattern(previewText);
     final bool unread = conversation.unreadCount > 0;

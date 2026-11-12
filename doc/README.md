@@ -6,6 +6,7 @@
 
 - [Application responsibilities](APP_SPLIT.md) — DitMesh chat versus the MorseCQ trainer
 - [Bootstrap nodes and LAN hosting](operations/NETWORK.md)
+- [Location and People nearby](reference/LOCATION_AND_NEARBY.md)
 - [Public site: privacy, terms, support](../site/README.md)
 
 ## Building, testing and releasing

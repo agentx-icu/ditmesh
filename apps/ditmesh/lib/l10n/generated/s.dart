@@ -6769,6 +6769,354 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Install pulseaudio-utils to use the microphone on Linux.'**
   String get listenMissingCaptureTool;
+
+  /// Location and nearby discovery: locationServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get locationServices;
+
+  /// Location and nearby discovery: nearbyVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to people nearby'**
+  String get nearbyVisible;
+
+  /// Location and nearby discovery: nearbyVisibleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'While this is on, people within about 5 km who use People nearby can see your name and approximate location.'**
+  String get nearbyVisibleDesc;
+
+  /// Location and nearby discovery: peopleNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby'**
+  String get peopleNearby;
+
+  /// Location and nearby discovery: locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is denied. Allow it in the system settings to use location features.'**
+  String get locationPermissionDenied;
+
+  /// Location and nearby discovery: locationServiceDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are turned off on this device.'**
+  String get locationServiceDisabled;
+
+  /// Location and nearby discovery: locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current location is not available right now.'**
+  String get locationUnavailable;
+
+  /// Location and nearby discovery: nearbyLocating.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get nearbyLocating;
+
+  /// Location and nearby discovery: nearbyJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for people nearby…'**
+  String get nearbyJoining;
+
+  /// Location and nearby discovery: nearbyNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody nearby yet. People appear here as they come online.'**
+  String get nearbyNobody;
+
+  /// Location and nearby discovery: nearbyDhtNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected to the Tox network yet.'**
+  String get nearbyDhtNotReady;
+
+  /// Location and nearby discovery: nearbyNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location is not available.'**
+  String get nearbyNoLocation;
+
+  /// Location and nearby discovery: nearbyOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Location and “Visible to people nearby” in Settings to see who is around.'**
+  String get nearbyOff;
+
+  /// Location and nearby discovery: nearbyPeopleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people nearby'**
+  String nearbyPeopleCount(int count);
+
+  /// Location and nearby discovery: nearbySayHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi'**
+  String get nearbySayHi;
+
+  /// Location and nearby discovery: nearbySendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get nearbySendRequest;
+
+  /// Location and nearby discovery: nearbyRequestMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short message (optional)'**
+  String get nearbyRequestMessageHint;
+
+  /// Location and nearby discovery: nearbyRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent.'**
+  String get nearbyRequestSent;
+
+  /// Location and nearby discovery: nearbyRequestLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again later.'**
+  String get nearbyRequestLimit;
+
+  /// Location and nearby discovery: nearbyRequestTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The message is too long.'**
+  String get nearbyRequestTooLong;
+
+  /// Location and nearby discovery: nearbyPeerGone.
+  ///
+  /// In en, this message translates to:
+  /// **'That person is no longer nearby.'**
+  String get nearbyPeerGone;
+
+  /// Location and nearby discovery: nearbyBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get nearbyBlock;
+
+  /// Location and nearby discovery: nearbyBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked for this session.'**
+  String get nearbyBlocked;
+
+  /// Location and nearby discovery: nearbyConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your Tox ID?'**
+  String get nearbyConsentTitle;
+
+  /// Location and nearby discovery: nearbyConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Tox ID will be sent to {name} so they can send you a friend request. Nobody else receives it.'**
+  String nearbyConsentBody(String name);
+
+  /// Location and nearby discovery: nearbyPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby'**
+  String get nearbyPrivacyTitle;
+
+  /// Location and nearby discovery: nearbyPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.'**
+  String get nearbyPrivacyBody;
+
+  /// Location and nearby discovery: nearbyPrivacyAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get nearbyPrivacyAccept;
+
+  /// Location and nearby discovery: nearbyReplyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} answered the request you sent nearby. Add them as a friend?'**
+  String nearbyReplyBody(String name);
+
+  /// Location and nearby discovery: nearbyUnnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone nearby'**
+  String get nearbyUnnamed;
+
+  /// Location and nearby discovery: nearbyDistanceMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'about {meters} m'**
+  String nearbyDistanceMeters(int meters);
+
+  /// Location and nearby discovery: nearbyDistanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'about {km} km'**
+  String nearbyDistanceKm(String km);
+
+  /// Location and nearby discovery: nearbyIncomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request from nearby'**
+  String get nearbyIncomingTitle;
+
+  /// Location and nearby discovery: nearbyIncomingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to add you. Accepting sends them a friend request.'**
+  String nearbyIncomingBody(String name);
+
+  /// Location and nearby discovery: nearbyIncomingAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get nearbyIncomingAccept;
+
+  /// Location and nearby discovery: nearbyIncomingDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get nearbyIncomingDecline;
+
+  /// Location and nearby discovery: nearbyPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused. Tap refresh to look again.'**
+  String get nearbyPaused;
+
+  /// Location and nearby discovery: nearbyCellUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your area is unavailable right now; retrying in the background.'**
+  String get nearbyCellUnavailable;
+
+  /// Location settings or current-position action: locationServicesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow current coordinates, the grid locator, optional People nearby and explicitly shared chat positions. Off by default; location is only read while DitMesh is open.'**
+  String get locationServicesDesc;
+
+  /// Location settings or current-position action: locationUseCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current location'**
+  String get locationUseCurrent;
+
+  /// Location settings or current-position action: locationCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current location'**
+  String get locationCurrent;
+
+  /// Location settings or current-position action: locationSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the location settings. Try again.'**
+  String get locationSaveFailed;
+
+  /// Location settings or current-position action: locationSystemSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open system settings'**
+  String get locationSystemSettings;
+
+  /// Location settings or current-position action: locationDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Location in settings to use your current position.'**
+  String get locationDisabledHint;
+
+  /// Location settings or current-position action: nearbyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'People nearby is unavailable until a Tox session is open.'**
+  String get nearbyUnavailable;
+
+  /// Chat single-location sharing: chatLocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get chatLocationLabel;
+
+  /// Chat single-location sharing: chatSendLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Send current location'**
+  String get chatSendLocation;
+
+  /// Chat single-location sharing: chatViewLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'View shared location'**
+  String get chatViewLocation;
+
+  /// Chat single-location sharing: chatLocationShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share current location?'**
+  String get chatLocationShareTitle;
+
+  /// Chat single-location sharing: chatLocationShareBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Send one position to {name}? Coordinates will be stored in this chat’s history.'**
+  String chatLocationShareBody(String name);
+
+  /// Chat single-location sharing: chatLocationSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {time} · single position, not live'**
+  String chatLocationSnapshot(String time);
+
+  /// Chat single-location sharing: chatLocationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This location message is invalid.'**
+  String get chatLocationInvalid;
+
+  /// Chat single-location sharing: chatLocationNotShared.
+  ///
+  /// In en, this message translates to:
+  /// **'This person has not shared a location in this chat.'**
+  String get chatLocationNotShared;
+
+  /// Chat single-location sharing: chatOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Maps'**
+  String get chatOpenMaps;
+
+  /// Chat single-location sharing: chatCopyCoordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy coordinates'**
+  String get chatCopyCoordinates;
+
+  /// Chat single-location sharing: chatOpenMapsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open a map for this location.'**
+  String get chatOpenMapsFailed;
+
+  /// Chat single-location sharing: chatLocationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sent.'**
+  String get chatLocationSent;
+
+  /// Chat single-location sharing: chatLocationSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send this location. Try again.'**
+  String get chatLocationSendFailed;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

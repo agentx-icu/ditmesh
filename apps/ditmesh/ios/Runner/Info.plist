@@ -101,5 +101,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DitMesh uses your location only while open, for current coordinates, the grid locator, optional People nearby and positions you choose to send in chat.</string>
 </dict>
 </plist>

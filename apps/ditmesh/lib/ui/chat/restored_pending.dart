@@ -202,7 +202,17 @@ class _RestoredPendingPageState extends State<RestoredPendingPage> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText(item.text),
+                    if (item.text.startsWith(ChatLocation.prefix)) ...[
+                      Text(s.chatLocationLabel),
+                      if (ChatLocation.tryDecode(item.text)
+                          case final location?)
+                        SelectableText(
+                          '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}',
+                        )
+                      else
+                        Text(s.chatLocationInvalid),
+                    ] else
+                      SelectableText(item.text),
                     Text(
                       s.pendingReviewQueuedAt(
                         formatSystemDateTime(context, item.queuedAt),

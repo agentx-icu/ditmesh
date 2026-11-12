@@ -4,6 +4,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../telegraph/telegraph_interpret_sheet.dart';
+import 'location_message_bubble.dart';
 import 'chat_layout.dart';
 import 'message_status_icon.dart';
 import 'morse_pattern_text.dart';
@@ -84,6 +85,16 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.isLocation) {
+      return LocationMessageBubble(
+        message: message,
+        showSender: showSender,
+        onRetry: onRetry,
+        onCancelSend: onCancelSend,
+        onBookmark: onBookmark,
+        bookmarked: bookmarked,
+      );
+    }
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
     final radius = StyleTokens.of(context)?.bubbleRadius ?? 16;
@@ -259,14 +270,7 @@ class MessageBubble extends StatelessWidget {
 }
 
 /// Distinct from the app bar's `String` menu.
-enum _LearnAction {
-  playback,
-  practice,
-  bookmark,
-  retry,
-  cancel,
-  telegraph,
-}
+enum _LearnAction { playback, practice, bookmark, retry, cancel, telegraph }
 
 class _HiddenText extends StatelessWidget {
   const _HiddenText({required this.onReveal});

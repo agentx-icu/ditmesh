@@ -3638,4 +3638,194 @@ class SKo extends S {
 
   @override
   String get listenMissingCaptureTool => 'Linux에서 마이크를 사용하려면 pulseaudio-utils를 설치하세요.';
+
+  @override
+  String get locationServices => '위치';
+
+  @override
+  String get nearbyVisible => '주변 사람에게 표시';
+
+  @override
+  String get nearbyVisibleDesc => '켜져 있는 동안 약 5km 이내에서 \"주변 사람\"을 사용하는 사람에게 내 이름과 대략적인 위치가 표시됩니다.';
+
+  @override
+  String get peopleNearby => '주변 사람';
+
+  @override
+  String get locationPermissionDenied => '위치 권한이 거부되었습니다. 위치 기능을 사용하려면 시스템 설정에서 허용하세요.';
+
+  @override
+  String get locationServiceDisabled => '이 기기의 위치 서비스가 꺼져 있습니다.';
+
+  @override
+  String get locationUnavailable => '지금은 현재 위치를 가져올 수 없습니다.';
+
+  @override
+  String get nearbyLocating => '위치를 찾는 중…';
+
+  @override
+  String get nearbyJoining => '주변 사람을 찾는 중…';
+
+  @override
+  String get nearbyNobody => '아직 주변에 아무도 없습니다. 온라인이 되면 여기에 표시됩니다.';
+
+  @override
+  String get nearbyDhtNotReady => '아직 Tox 네트워크에 연결되지 않았습니다.';
+
+  @override
+  String get nearbyNoLocation => '위치를 가져올 수 없습니다.';
+
+  @override
+  String get nearbyOff => '주변 사람을 보려면 설정에서 \"위치\"와 \"주변 사람에게 표시\"를 켜세요.';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '주변에 $count명';
+  }
+
+  @override
+  String get nearbySayHi => '인사하기';
+
+  @override
+  String get nearbySendRequest => '요청 보내기';
+
+  @override
+  String get nearbyRequestMessageHint => '짧은 메시지 추가 (선택)';
+
+  @override
+  String get nearbyRequestSent => '요청을 보냈습니다.';
+
+  @override
+  String get nearbyRequestLimit => '요청이 너무 많습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get nearbyRequestTooLong => '메시지가 너무 깁니다.';
+
+  @override
+  String get nearbyPeerGone => '그 사람은 더 이상 주변에 없습니다.';
+
+  @override
+  String get nearbyBlock => '차단';
+
+  @override
+  String get nearbyBlocked => '이 세션 동안 차단되었습니다.';
+
+  @override
+  String get nearbyConsentTitle => '내 Tox ID를 공유할까요?';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return '$name님이 친구 요청을 보낼 수 있도록 내 Tox ID를 보냅니다. 다른 사람은 받지 않습니다.';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => '주변 사람';
+
+  @override
+  String get nearbyPrivacyBody => '켜져 있는 동안 약 5km 이내에서 \"주변 사람\"을 사용하는 사람에게 내 이름과 대략적인 위치(약 100m)가 표시됩니다. 누군가에게 요청을 보내지 않는 한 Tox ID는 공유되지 않습니다. 이 기능은 DitMesh가 열려 있는 동안에만 동작합니다.';
+
+  @override
+  String get nearbyPrivacyAccept => '켜기';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name님이 주변에서 보낸 요청에 응답했습니다. 친구로 추가할까요?';
+  }
+
+  @override
+  String get nearbyUnnamed => '주변의 누군가';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return '약 $meters m';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return '약 $km km';
+  }
+
+  @override
+  String get nearbyIncomingTitle => '주변에서 온 친구 요청';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name님이 나를 추가하고 싶어 합니다. 수락하면 상대에게 친구 요청을 보냅니다.';
+  }
+
+  @override
+  String get nearbyIncomingAccept => '수락';
+
+  @override
+  String get nearbyIncomingDecline => '거절';
+
+  @override
+  String get nearbyPaused => '일시 중지됨. 새로고침을 눌러 다시 찾습니다.';
+
+  @override
+  String get nearbyCellUnavailable => '현재 지역을 사용할 수 없습니다. 백그라운드에서 다시 시도 중입니다.';
+
+  @override
+  String get locationServicesDesc => 'DitMesh는 앱이 열려 있을 때만 위치 정보를 가져와 현재 좌표, 그리드 위치, 선택적인 주변 사람 찾기, 사용자가 직접 보내는 채팅 위치 메시지에 사용합니다. 위치 기능은 기본적으로 꺼져 있습니다.';
+
+  @override
+  String get locationUseCurrent => '현재 위치 사용';
+
+  @override
+  String get locationCurrent => '현재 위치';
+
+  @override
+  String get locationSaveFailed => '위치 설정을 저장하지 못했습니다. 다시 시도하세요.';
+
+  @override
+  String get locationSystemSettings => '시스템 설정 열기';
+
+  @override
+  String get locationDisabledHint => '설정에서 위치를 켜면 현재 위치를 사용할 수 있습니다.';
+
+  @override
+  String get nearbyUnavailable => 'Tox 세션이 열리면 주변 사람을 사용할 수 있습니다.';
+
+  @override
+  String get chatLocationLabel => '위치';
+
+  @override
+  String get chatSendLocation => '현재 위치 보내기';
+
+  @override
+  String get chatViewLocation => '공유된 위치 보기';
+
+  @override
+  String get chatLocationShareTitle => '현재 위치를 공유할까요?';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return '$name에게 이 위치를 보낼까요? 좌표는 이 채팅 기록에 저장됩니다.';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return '$time에 공유 · 한 번만 공유한 위치이며 실시간으로 갱신되지 않음';
+  }
+
+  @override
+  String get chatLocationInvalid => '이 위치 메시지는 유효하지 않습니다.';
+
+  @override
+  String get chatLocationNotShared => '상대방이 이 채팅에서 아직 위치를 공유하지 않았습니다.';
+
+  @override
+  String get chatOpenMaps => '지도에서 열기';
+
+  @override
+  String get chatCopyCoordinates => '좌표 복사';
+
+  @override
+  String get chatOpenMapsFailed => '이 위치의 지도를 열지 못했습니다.';
+
+  @override
+  String get chatLocationSent => '위치를 보냈습니다.';
+
+  @override
+  String get chatLocationSendFailed => '이 위치를 보내지 못했습니다. 다시 시도하세요.';
 }

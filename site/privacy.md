@@ -3,7 +3,7 @@ layout: page
 title: Privacy policy
 permalink: /privacy/
 lang: en
-last_updated: 2026-10-08
+last_updated: 2026-11-12
 ---
 
 [简体中文]({{ '/zh-CN/privacy/' | relative_url }}) · Updated: {{ page.last_updated }}
@@ -26,9 +26,18 @@ Automatic bootstrap and explicit catalogue refresh request the public node list 
 
 Tox directly connects friends and does not conceal their IP addresses from each other. Bootstrap/DHT nodes see network connections, using temporary DHT keys; a public Tox ID does not by itself disclose your private identity key. See the [Tox project's privacy explanation](https://tox.chat/faq.html). Your displayed name/status and group messages are visible to their intended peers.
 
+## Location and People nearby
+
+Location and nearby visibility are separate, optional switches, off by default for each identity on this device. Current coordinates can fill the Maidenhead grid tool; unsent coordinates are kept in memory and are not included in exported backups. You can explicitly send a single location message to a contact or group, after previewing the coordinates. That message is retained in chat history on each recipient’s device and included when that history is backed up. Viewing received positions does not read your device location; a map provider receives the selected coordinates only when you choose to open its map. Location is read only while the app is in the foreground.
+
+When you also enable nearby visibility and open People nearby, DitMesh uses the same Tox rendezvous protocol as Toxee. Other participants within roughly 5 km can see your display name and approximate coordinates (rounded to about 100 m). These discovery groups are public to participants who derive the same area; they do not prove a person's identity or physical location. Nearby packets do not enter ordinary chats, message history or the group list. There is no location directory server. The network and operating system location provider have their own visibility into network connections and location requests.
+
+A fresh discovery signing/encryption identity is created for each nearby session. Your Tox ID is disclosed only when you explicitly send or answer a nearby request; requests are encrypted to the selected participant, and friendship still requires acceptance. Closing the nearby page stops discovery after five minutes; hiding or suspending the app, disabling location/visibility or closing the Tox session stops it immediately. Session records expire, but other participants can retain information they received. Discovery blocking applies only to the current temporary discovery identity/session; ordinary chat blocking is separate.
+
 ## Optional permissions
 
 - Local network (Apple platforms): connect to manually configured LAN nodes or host a desktop LAN node.
+- Location: current coordinates, the grid locator, explicit chat location sharing and optional People nearby; no background location permission.
 - Camera: scan a Tox ID QR code on the device.
 - Microphone: decode Morse audio locally; save a recording only when requested.
 - Notifications: local message alerts and routing; no push server.

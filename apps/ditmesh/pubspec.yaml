@@ -37,6 +37,12 @@ dependencies:
   # Review 5.1.1) and the guidelines page; no mail, no other scheme.
   url_launcher: ^6.3.2
   mobile_scanner: ^7.4.2
+  geolocator: ^14.0.2
+  # macOS regression in 2.4.2+: background permission reads can report denied
+  # after authorization. https://github.com/Baseflow/flutter-geolocator/issues/1819
+  geolocator_apple: 2.4.1
+  crypto: ^3.0.3
+  cryptography: ^2.7.0
   # Desktop shell (lib/desktop/): window persistence + system tray. All calls
   # are gated on defaultTargetPlatform; the plugins federate to no-ops on mobile.
   window_manager: ^0.5.2

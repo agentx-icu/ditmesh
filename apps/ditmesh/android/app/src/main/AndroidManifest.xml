@@ -1,4 +1,9 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- One-shot foreground fixes only; no background location service. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove"/>
     <!-- Notifications (lib/notifications/). flutter_local_notifications >= 16
          merges POST_NOTIFICATIONS and VIBRATE from its own manifest; they are
          repeated here so the Android 13+ runtime permission the app requests

@@ -17,7 +17,7 @@
 
 商店介绍说明 Morse 单聊和群聊、Tox 身份及点对点联网。根据应用和原生库的实际行为填写加密及隐私问卷。
 
-摄像头用于添加二维码联系人，麦克风用于本地电码解码，通知用于消息提醒。填写已发布的页面：隐私政策 <https://agentx-icu.github.io/ditmesh/privacy/>、条款 <https://agentx-icu.github.io/ditmesh/terms/> 和支持页面 <https://agentx-icu.github.io/ditmesh/support/>（源文件：[隐私政策](../../site/zh-CN/privacy.md)、[条款](../../site/zh-CN/terms.md)、[支持](../../site/zh-CN/support.md)；App 在 `account_routes.dart` 中链接的是同一组 URL）。
+定位用于前台坐标、Maidenhead 网格工具、主动发送的聊天位置及可选的附近的人，每个身份在此设备上默认关闭。附近发现通过公开 Tox 网格分享显示名及模糊坐标，分享 Tox ID 前需明确确认。开发者服务器不收集位置；提交商店隐私问卷时需核对定位数据披露及系统位置提供方行为。摄像头用于添加二维码联系人，麦克风用于本地电码解码，通知用于消息提醒。填写已发布的页面：隐私政策 <https://agentx-icu.github.io/ditmesh/privacy/>、条款 <https://agentx-icu.github.io/ditmesh/terms/> 和支持页面 <https://agentx-icu.github.io/ditmesh/support/>（源文件：[隐私政策](../../site/zh-CN/privacy.md)、[条款](../../site/zh-CN/terms.md)、[支持](../../site/zh-CN/support.md)；App 在 `account_routes.dart` 中链接的是同一组 URL）。
 
 内容管理说明涵盖联系人屏蔽及点对点内容处理方式。
 

@@ -8,10 +8,37 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 final S en = lookupS(const Locale('en'));
 
 void main() {
-  NotificationComposer composer(NotificationPrefs prefs) => NotificationComposer(
-    prefs: prefs,
-    platform: NotificationPlatform.android,
-    strings: () => en,
+  NotificationComposer composer(NotificationPrefs prefs) =>
+      NotificationComposer(
+        prefs: prefs,
+        platform: NotificationPlatform.android,
+        strings: () => en,
+      );
+
+  test(
+    'location notifications never expose coordinates or a Morse-encoded payload',
+    () {
+      final prefs = NotificationPrefs(showPattern: true);
+      addTearDown(prefs.dispose);
+      final row = ChatMessage(
+        id: 'location',
+        conversationId: 'c2c_peer',
+        senderId: 'peer',
+        text: const ChatLocation(
+          latitude: 39.9042,
+          longitude: 116.4074,
+        ).encode(),
+        timestamp: DateTime(2026),
+        status: MessageStatus.received,
+        isMine: false,
+      );
+      expect(composer(prefs).body(row, isGroup: false), en.chatLocationLabel);
+      prefs.showText = false;
+      expect(
+        composer(prefs).body(row, isGroup: false),
+        en.notificationNewMessage,
+      );
+    },
   );
 
   test('peer names and text lose bidi overrides and control characters', () {

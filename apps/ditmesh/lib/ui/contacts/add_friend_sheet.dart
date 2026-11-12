@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:provider/provider.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../../nearby/nearby_controller.dart';
+import '../nearby/nearby_page.dart';
 import '../chat/chat_layout.dart';
 import '../common/field_label.dart';
 import 'qr_scan_page.dart';
@@ -138,6 +141,16 @@ class _AddFriendFormState extends State<AddFriendForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(s.chatAddFriend, style: theme.textTheme.titleLarge),
+              if (context.watch<NearbyController?>() != null)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const Key('add_friend_nearby_button'),
+                    onPressed: _busy ? null : () => NearbyPage.open(context),
+                    icon: const Icon(Icons.radar),
+                    label: Text(s.peopleNearby),
+                  ),
+                ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _id,

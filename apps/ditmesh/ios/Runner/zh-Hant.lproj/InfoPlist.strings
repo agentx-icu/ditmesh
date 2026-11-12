@@ -11,3 +11,5 @@
 
 /* Connecting to local Tox peers and bootstrap nodes. */
 "NSLocalNetworkUsageDescription" = "DitMesh 使用區域網路連線至同一網路上的 Tox 使用者與引導節點。";
+
+"NSLocationWhenInUseUsageDescription" = "DitMesh 僅在應用程式開啟時讀取位置，用於目前座標、網格定位、選用的附近的人功能，以及你主動傳送的聊天位置訊息。";

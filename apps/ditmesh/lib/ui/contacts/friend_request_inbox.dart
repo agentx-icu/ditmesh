@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:provider/provider.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../../nearby/nearby_controller.dart';
 import '../chat/chat_layout.dart';
 import '../moderation/block_actions.dart';
 import 'tox_id.dart';
@@ -49,13 +51,35 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final S s = context.s;
+    final nearby = context.watch<NearbyController?>();
+    String replyName(String raw) {
+      final name = PeerText.singleLine(raw);
+      return name.isEmpty ? s.nearbyUnnamed : name;
+    }
+
+    String requestText(FriendRequest request) {
+      final reply = nearby?.replyFor(request.publicKey);
+      return reply == null
+          ? request.message
+          : '${shortKey(request.publicKey, length: 16)}\n${s.nearbyReplyBody(replyName(reply.targetName))}';
+    }
+
+    String requestTitle(FriendRequest request) {
+      final reply = nearby?.replyFor(request.publicKey);
+      return reply == null
+          ? shortKey(request.publicKey, length: 16)
+          : replyName(reply.targetName);
+    }
+
     return StreamBuilder<List<FriendRequest>>(
       stream: service.friendRequestChanges,
       initialData: service.friendRequests,
       builder: (context, snapshot) {
         final List<FriendRequest> requests =
             snapshot.data ?? const <FriendRequest>[];
-        if (requests.isEmpty && !widget.showWhenEmpty) return const SizedBox.shrink();
+        if (requests.isEmpty && !widget.showWhenEmpty) {
+          return const SizedBox.shrink();
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -77,10 +101,10 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
               ListTile(
                 key: ValueKey<String>('req_${r.publicKey}'),
                 leading: const CircleAvatar(child: Icon(Icons.person_add_alt)),
-                title: Text(shortKey(r.publicKey, length: 16)),
+                title: Text(requestTitle(r)),
                 subtitle: Text(
-                  r.message,
-                  maxLines: 2,
+                  requestText(r),
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
                 trailing: Row(

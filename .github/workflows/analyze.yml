@@ -118,6 +118,9 @@ jobs:
       - name: Screenshot import regression tests
         run: python3 tool/screenshots/capture_import_test.py
 
+      - name: Nearby verification runner regression tests
+        run: python3 -m unittest discover -s tool -p 'test_nearby_real_location.py'
+
       # Tests tagged `needs-native` require libtim2tox_ffi and run from the
       # native workflow instead.
       - name: Tests

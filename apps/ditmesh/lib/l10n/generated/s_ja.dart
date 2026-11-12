@@ -3638,4 +3638,194 @@ class SJa extends S {
 
   @override
   String get listenMissingCaptureTool => 'Linux でマイクを使用するには pulseaudio-utils をインストールしてください。';
+
+  @override
+  String get locationServices => '位置情報';
+
+  @override
+  String get nearbyVisible => '近くの人に表示する';
+
+  @override
+  String get nearbyVisibleDesc => 'オンの間、約 5 km 以内で「近くの人」を使っている人に、あなたの名前とおおよその位置が表示されます。';
+
+  @override
+  String get peopleNearby => '近くの人';
+
+  @override
+  String get locationPermissionDenied => '位置情報の権限が拒否されています。位置情報機能を使うにはシステム設定で許可してください。';
+
+  @override
+  String get locationServiceDisabled => 'この端末の位置情報サービスがオフになっています。';
+
+  @override
+  String get locationUnavailable => '現在地を取得できません。';
+
+  @override
+  String get nearbyLocating => '現在地を取得しています…';
+
+  @override
+  String get nearbyJoining => '近くの人を探しています…';
+
+  @override
+  String get nearbyNobody => 'まだ近くに誰もいません。オンラインになるとここに表示されます。';
+
+  @override
+  String get nearbyDhtNotReady => 'まだ Tox ネットワークに接続していません。';
+
+  @override
+  String get nearbyNoLocation => '位置情報を取得できません。';
+
+  @override
+  String get nearbyOff => '周りの人を見るには、設定で「位置情報」と「近くの人に表示する」をオンにしてください。';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '近くに $count 人';
+  }
+
+  @override
+  String get nearbySayHi => '挨拶する';
+
+  @override
+  String get nearbySendRequest => 'リクエストを送信';
+
+  @override
+  String get nearbyRequestMessageHint => 'ひとこと添える（任意）';
+
+  @override
+  String get nearbyRequestSent => 'リクエストを送信しました。';
+
+  @override
+  String get nearbyRequestLimit => 'リクエストが多すぎます。しばらくしてからお試しください。';
+
+  @override
+  String get nearbyRequestTooLong => 'メッセージが長すぎます。';
+
+  @override
+  String get nearbyPeerGone => 'その人はもう近くにいません。';
+
+  @override
+  String get nearbyBlock => 'ブロック';
+
+  @override
+  String get nearbyBlocked => 'このセッションの間ブロックしました。';
+
+  @override
+  String get nearbyConsentTitle => 'Tox ID を共有しますか？';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return 'あなたの Tox ID を $name に送信し、相手があなたに友達リクエストを送れるようにします。他の人には送信されません。';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => '近くの人';
+
+  @override
+  String get nearbyPrivacyBody => 'オンの間、約 5 km 以内で同じく「近くの人」を使っている人に、あなたの名前とおおよその位置（約 100 m）が表示されます。あなたが誰かにリクエストを送らない限り、Tox ID は共有されません。この機能は DitMesh を開いている間だけ動作します。';
+
+  @override
+  String get nearbyPrivacyAccept => 'オンにする';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name が、あなたが近くで送ったリクエストに応えました。友達に追加しますか？';
+  }
+
+  @override
+  String get nearbyUnnamed => '近くの誰か';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return '約 $meters m';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return '約 $km km';
+  }
+
+  @override
+  String get nearbyIncomingTitle => '近くからの友達リクエスト';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name があなたを追加したいようです。承諾すると相手に友達リクエストを送信します。';
+  }
+
+  @override
+  String get nearbyIncomingAccept => '承諾';
+
+  @override
+  String get nearbyIncomingDecline => '拒否';
+
+  @override
+  String get nearbyPaused => '一時停止中です。更新をタップして再検索します。';
+
+  @override
+  String get nearbyCellUnavailable => '現在のエリアは利用できません。バックグラウンドで再試行しています。';
+
+  @override
+  String get locationServicesDesc => 'DitMeshは、現在の座標、グリッドロケーター、任意の「近くの人」機能、自分で送信するチャットの位置情報メッセージのために、アプリを開いている間だけ位置情報を取得します。位置情報は初期設定ではオフです。';
+
+  @override
+  String get locationUseCurrent => '現在地を使う';
+
+  @override
+  String get locationCurrent => '現在地';
+
+  @override
+  String get locationSaveFailed => '位置情報の設定を保存できませんでした。再試行してください。';
+
+  @override
+  String get locationSystemSettings => 'システム設定を開く';
+
+  @override
+  String get locationDisabledHint => '設定で位置情報をオンにして現在地を使えます。';
+
+  @override
+  String get nearbyUnavailable => 'Toxセッションを開始すると近くの人を利用できます。';
+
+  @override
+  String get chatLocationLabel => '位置情報';
+
+  @override
+  String get chatSendLocation => '現在地を送信';
+
+  @override
+  String get chatViewLocation => '共有された位置を表示';
+
+  @override
+  String get chatLocationShareTitle => '現在地を共有しますか？';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return '$name にこの位置を送信しますか？座標はこのチャットの履歴に保存されます。';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return '共有日時：$time · この時点の位置（リアルタイム更新なし）';
+  }
+
+  @override
+  String get chatLocationInvalid => 'この位置情報メッセージは無効です。';
+
+  @override
+  String get chatLocationNotShared => '相手はこのチャットでまだ位置を共有していません。';
+
+  @override
+  String get chatOpenMaps => '地図で開く';
+
+  @override
+  String get chatCopyCoordinates => '座標をコピー';
+
+  @override
+  String get chatOpenMapsFailed => 'この位置の地図を開けませんでした。';
+
+  @override
+  String get chatLocationSent => '位置情報を送信しました。';
+
+  @override
+  String get chatLocationSendFailed => 'この位置情報を送信できませんでした。再試行してください。';
 }

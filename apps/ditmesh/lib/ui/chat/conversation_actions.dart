@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:provider/provider.dart';
+import '../../nearby/nearby_controller.dart';
 
 import '../../i18n/l10n_extension.dart';
 import 'chat_layout.dart';
@@ -53,6 +55,10 @@ class ConversationAppBar extends StatelessWidget
               barWidth: box.maxWidth,
               hasLeading: leading,
             ),
+            canShareLocation:
+                context.read<NearbyController?>()?.hasIdentity ?? false,
+            canViewSharedLocation:
+                target.kind == ConversationKind.c2c && !target.isSelf,
             onMenu: onMenu,
           ),
         ],
@@ -123,6 +129,8 @@ class ConversationActions extends StatelessWidget {
     required this.onMenu,
     this.inline = 2,
     this.canModerate = false,
+    this.canShareLocation = false,
+    this.canViewSharedLocation = false,
   });
 
   final MorsePlaybackSettings settings;
@@ -130,6 +138,8 @@ class ConversationActions extends StatelessWidget {
 
   /// A conversation with another person: offer Block.
   final bool canModerate;
+  final bool canShareLocation;
+  final bool canViewSharedLocation;
   final ValueChanged<String> onMenu;
   final int inline;
 
@@ -219,6 +229,26 @@ class ConversationActions extends StatelessWidget {
                 title: Text(s.chatSearchMessages),
               ),
             ),
+            if (canShareLocation)
+              PopupMenuItem(
+                value: 'shareLocation',
+                child: ListTile(
+                  key: const Key('chat-send-location'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.my_location),
+                  title: Text(s.chatSendLocation),
+                ),
+              ),
+            if (canViewSharedLocation)
+              PopupMenuItem(
+                value: 'viewLocation',
+                child: ListTile(
+                  key: const Key('chat-view-location'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.location_on_outlined),
+                  title: Text(s.chatViewLocation),
+                ),
+              ),
             if (isGroup)
               PopupMenuItem(value: 'members', child: Text(s.chatMembers)),
             if (isGroup)

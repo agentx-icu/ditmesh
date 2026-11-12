@@ -26,6 +26,7 @@ import '../keying/key_setup_page.dart';
 import '../moderation/blocked_people_page.dart';
 import '../moderation/site_links.dart';
 import '../network/bootstrap_page.dart';
+import '../nearby/location_settings_page.dart';
 import 'me_notes.dart';
 
 /// Profile, account, progress and settings.
@@ -147,6 +148,14 @@ class _MeBody extends StatelessWidget {
           onTap: () => BootstrapPage.open(context),
         ),
         _SectionHeader(s.accountSectionTraining),
+        ListTile(
+          key: const ValueKey('me-location'),
+          leading: const Icon(Icons.location_on_outlined),
+          title: Text(s.locationServices),
+          subtitle: Text(s.locationServicesDesc),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => LocationSettingsPage.open(context),
+        ),
         ListTile(
           leading: const Icon(Icons.tune),
           title: Text(s.accountTrainingDefaults),

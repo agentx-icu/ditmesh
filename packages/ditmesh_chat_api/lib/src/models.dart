@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'keyed_recording.dart';
+import 'chat_location.dart';
 
 /// Tox network connection state of the local identity.
 enum ConnectionStatus { offline, connecting, online }
@@ -143,7 +144,9 @@ final class Conversation {
 
 /// A chat message. On the wire this is plain text (readable by any Tim2Tox
 /// client such as toxee); Morse rendering is derived on the receiving side
-/// from [text] at the listener's own speed (plan §5.2, layer 1).
+/// from [text] at the listener's own speed (plan §5.2, layer 1). Reserved
+/// [ChatLocation] envelopes instead describe a single shared position and are
+/// rendered as location cards, without Morse playback.
 @immutable
 final class ChatMessage {
   const ChatMessage({
@@ -170,6 +173,11 @@ final class ChatMessage {
   final MessageStatus status;
   final bool isMine;
   final KeyedRecording? recording;
+
+  /// Reserved location envelopes always render as cards, including malformed
+  /// records. Their raw JSON must not enter Morse playback or previews.
+  bool get isLocation => text.startsWith(ChatLocation.prefix);
+  ChatLocation? get location => ChatLocation.tryDecode(text);
 
   /// Enriches an existing message row; never a new arrival, notification
   /// or automatic playback request. This annotation is local to the event.
