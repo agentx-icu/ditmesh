@@ -3,11 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart';
+import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../../keying/key_profile.dart';
 import '../../keying/profile_keyer.dart';
 import '../../training/training_settings.dart';
+
+/// Creates an owned echo sink for a key-test area opened on the root navigator.
+/// Without an injected factory the area uses the native sidetone.
+abstract interface class KeyTestAudioFactory {
+  MorseSink create();
+}
 
 /// Tries a key profile (F12): the on-screen key(s) with the draft's
 /// bindings, a live "key down" lamp, the app sidetone if the draft keeps
@@ -36,7 +43,10 @@ class KeyTestArea extends StatefulWidget {
 }
 
 class _KeyTestAreaState extends State<KeyTestArea> {
-  late final MorseSink _sink = widget.sink ?? SidetoneSink();
+  late final MorseSink _sink =
+      widget.sink ??
+      context.read<KeyTestAudioFactory?>()?.create() ??
+      SidetoneSink();
   late final Clock _clock = widget.clock ?? SystemClock.shared;
   // The lamp shows every key-down; only the sound follows the draft's
   // sidetone switch.

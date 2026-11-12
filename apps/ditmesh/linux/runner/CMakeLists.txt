@@ -15,6 +15,10 @@ add_executable(${BINARY_NAME}
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
+# Keep Release optimization/NDEBUG; save owned source symbols before CI strips
+# only the shipped copy and attaches its matching external GNU debuglink.
+target_compile_options(${BINARY_NAME} PRIVATE "$<$<CONFIG:Release>:-g>")
+target_link_options(${BINARY_NAME} PRIVATE "$<$<CONFIG:Release>:-Wl,--build-id>")
 
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")

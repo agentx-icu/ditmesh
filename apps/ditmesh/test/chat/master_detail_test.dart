@@ -73,7 +73,7 @@ void main() {
     // A friend has a row before any message, like the Tox backend lists it.
     expect(find.text('Ann'), findsOneWidget);
     expect(find.text('1'), findsOneWidget); // requests badge
-    await tester.tap(find.byTooltip(s.chatContacts));
+    await tester.tap(find.byKey(const ValueKey('chat-contacts-open')));
     await tester.pumpAndSettle();
     expect(find.text(s.chatFriendRequestsCount(1)), findsOneWidget);
     await tester.tap(find.text('Ann').last);

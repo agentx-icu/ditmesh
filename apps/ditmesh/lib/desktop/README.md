@@ -42,6 +42,9 @@ if (isDesktopTarget(defaultTargetPlatform)) {
 }
 ```
 
+An omitted `log` sink is silent; `main()` opts into raw shell diagnostics only
+in debug builds.
+
 `initDesktopShell` must run **after** `WidgetsFlutterBinding.ensureInitialized()`
 and **before** `runApp`: `window_manager` creates the window hidden, the shell
 restores the persisted bounds (clamped to the current displays) and only then
@@ -59,10 +62,28 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 `setCloseToTray(value)` is the settings toggle (persisted); `showWindow()`
 restores a hidden window.
 
-`shortcuts.dart` defines `desktopShortcutBindings()` (Cmd/Ctrl+K search, +N
-new message, +Shift+M sidetone) as pure intents. The app does not install them yet;
-to activate them, wrap the shell in `Shortcuts(shortcuts:
-desktopShortcutBindings(), child: Actions(actions: {...}, child: ...))`.
+`AppShell` installs the search and new-message bindings from `shortcuts.dart`.
+Cmd+K on macOS (Ctrl+K on Windows/Linux) selects Chat and focuses its existing
+conversation search without clearing the filter. Cmd/Ctrl+N selects Chat and
+opens the existing Contacts route to choose a recipient; repeats cannot stack
+contacts. The search icon and Contacts button show the platform shortcut in
+their localized tooltips. Commands are scoped to the exposed shell and do not
+intercept focused text editors, IME composition, dialogs or covering routes.
+There is no system-wide keyboard hook.
+
+`ToggleSidetoneIntent` and Cmd/Ctrl+Shift+M remain definitions only: the app has
+no shared sound owner, so the shell does not install that binding.
+
+On iPadOS 26+, `IosMenuHost` supplies existing localized labels to the UIKit
+Chat menu (Search conversations and Contacts). `AppDelegate.buildMenu` uses
+keyless `UICommand` entries; K/N remain owned solely by Flutter. The scene
+bridge requires one active scene and revalidates at invocation. Commands stay
+visible but disabled before identity/terms readiness, over another route, in
+editors/IME, when inactive or after shell teardown. iOS <26 retains its existing
+behavior and the scene manifest still disables multiple scenes. Actual menu
+presentation, touch/pointer activation, hardware keyboards, non-US layouts and
+Full Keyboard Access still need OS/device evidence; compiling a bridge is not
+that evidence. No global mute or additional app command was introduced.
 
 ## Behaviour
 

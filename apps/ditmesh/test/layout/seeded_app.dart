@@ -13,6 +13,7 @@ import 'package:ditmesh/ui/account/backup_file_gateway.dart';
 
 import '../../integration_test/support/seed_data.dart';
 import '../account/test_app.dart' show settle;
+import 'plugin_host.dart';
 
 /// Pumps [DitmeshApp] in [locale] over freshly seeded demo data and settles
 /// on the shell. [key] distinguishes reboots within one test.
@@ -20,6 +21,7 @@ Future<SeededBackend> pumpSeededApp(
   WidgetTester tester, {
   String locale = 'en',
   Key? key,
+  LayoutPluginHost? plugins,
 }) async {
   final dir = await tester.runAsync(
     () => Directory.systemTemp.createTemp('ditmesh_layout_'),
@@ -31,20 +33,19 @@ Future<SeededBackend> pumpSeededApp(
       dataDir: dir!.path,
     ),
   );
-  await tester.pumpWidget(
-    DitmeshApp(
-      key: key,
-      backend: FakeBackendFactory(
-        identityService: seed!.identity,
-        chatService: (_) => seed.chat,
-      ),
-      backupFiles: FakeBackupFileGateway(),
-      localeStore: InMemoryKeyValueStore({
-        AppSettings.termsKey: '$kTermsVersion',
-        LocaleController.storageKey: locale,
-      }),
+  final app = DitmeshApp(
+    key: key,
+    backend: FakeBackendFactory(
+      identityService: seed!.identity,
+      chatService: (_) => seed.chat,
     ),
+    backupFiles: FakeBackupFileGateway(),
+    localeStore: InMemoryKeyValueStore({
+      AppSettings.termsKey: '$kTermsVersion',
+      LocaleController.storageKey: locale,
+    }),
   );
+  await tester.pumpWidget(plugins?.wrap(app) ?? app);
   await settle(tester);
   return seed;
 }

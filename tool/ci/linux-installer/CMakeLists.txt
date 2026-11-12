@@ -44,9 +44,9 @@ set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS "${DITMESH_INSTALLER_SOURCE_DIR}/lib")
 # Plus what is only loaded at run time (dlopen), so shlibdeps cannot see it:
-# the tray indicator, secure storage and ALSA for the sidetone.
+# the Flutter engine GL/EGL/GLES loaders, tray indicator, secure storage and ALSA.
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libayatana-appindicator3-1, libsecret-1-0, libasound2t64 | libasound2, pulseaudio-utils, libglib2.0-bin")
+  "libegl1, libgl1, libgles2, libayatana-appindicator3-1, libsecret-1-0, libasound2t64 | libasound2, pulseaudio-utils, libglib2.0-bin")
 
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "${DITMESH_RPM_ARCH}")
 set(CPACK_RPM_PACKAGE_LICENSE "GPL-3.0-only")
@@ -55,7 +55,7 @@ set(CPACK_RPM_COMPRESSION_TYPE "xz")
 set(CPACK_RPM_PACKAGE_URL "https://github.com/agentx-icu/ditmesh")
 # record_linux starts these tools for PCM capture/device enumeration; gdbus
 # checks the actual tray host. ELF dependency discovery cannot see processes.
-set(CPACK_RPM_PACKAGE_REQUIRES "/usr/bin/parecord, /usr/bin/pactl, /usr/bin/gdbus")
+set(CPACK_RPM_PACKAGE_REQUIRES "libEGL.so.1()(64bit), libGL.so.1()(64bit), libGLESv2.so.2()(64bit), /usr/bin/parecord, /usr/bin/pactl, /usr/bin/gdbus")
 # rpmbuild derives Requires from the ELF files; the libraries bundled under
 # /opt/ditmesh are provided by the package itself (autoprov), so only system
 # libraries end up as real requirements. Directories rpm already owns must

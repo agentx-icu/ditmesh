@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:morse_core/morse_core.dart';
 import 'package:morse_dsp/morse_dsp.dart';
 
+import '../../diagnostics/application_diagnostics.dart';
 import 'listen_failure.dart';
 import 'listen_settings.dart';
 import 'pcm_source.dart';
@@ -184,7 +185,7 @@ final class ListenController extends ChangeNotifier {
     try {
       return await _source.hasInputDevice();
     } catch (error) {
-      debugPrint('[ListenController] hasInputDevice threw: $error');
+      debugLog(() => '[ListenController] hasInputDevice threw: $error');
       return null;
     }
   }
@@ -244,8 +245,8 @@ final class ListenController extends ChangeNotifier {
     _setStatus(ListenStatus.idle);
   }
 
-  /// Records a typed failure. The platform's [error] text is logged for
-  /// diagnostics and kept in [ListenFailure.detail]; it is never shown.
+  /// Records a typed failure. Only debug builds stringify the platform's
+  /// [error] for diagnostics and [ListenFailure.detail]; it is never shown.
   /// [release] stops the source, for failures after `start` was called.
   void _fail(
     ListenFailureKind kind,
@@ -254,11 +255,12 @@ final class ListenController extends ChangeNotifier {
     bool release = true,
   }) {
     if (_disposed) return;
-    final String? detail = error?.toString();
-    if (detail != null) {
-      debugPrint(
-        '[ListenController] ${kind.name}: $detail'
-        '${stack == null ? '' : '\n$stack'}',
+    final String? detail = kDebugMode ? error?.toString() : null;
+    if (kDebugMode && detail != null) {
+      debugLog(
+        () =>
+            '[ListenController] ${kind.name}: $detail'
+            '${stack == null ? '' : '\n$stack'}',
       );
     }
     _failure = ListenFailure(kind, detail: detail);

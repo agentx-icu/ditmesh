@@ -4,10 +4,8 @@ import 'package:flutter/widgets.dart';
 
 /// In-app (not system-wide) keyboard intents for the desktop shell.
 ///
-/// Pure definitions: pages bind them with `Actions` when they gain the
-/// corresponding feature. Default bindings come from
-/// [desktopShortcutBindings]; drop the map into a `Shortcuts` widget above
-/// the navigator.
+/// `AppShell` binds search and new-message commands in its active route.
+/// Sidetone stays unbound until a shared audio owner can implement it.
 
 /// Mute / unmute the Morse sidetone.
 class ToggleSidetoneIntent extends Intent {
@@ -35,8 +33,12 @@ Map<ShortcutActivator, Intent> desktopShortcutBindings({
   TargetPlatform? platform,
 }) {
   final command = usesCommandModifier(platform ?? defaultTargetPlatform);
-  SingleActivator primary(LogicalKeyboardKey key) =>
-      SingleActivator(key, meta: command, control: !command);
+  SingleActivator primary(LogicalKeyboardKey key) => SingleActivator(
+    key,
+    meta: command,
+    control: !command,
+    includeRepeats: false,
+  );
   return <ShortcutActivator, Intent>{
     primary(LogicalKeyboardKey.keyK): const FocusSearchIntent(),
     primary(LogicalKeyboardKey.keyN): const NewMessageIntent(),
@@ -48,6 +50,14 @@ Map<ShortcutActivator, Intent> desktopShortcutBindings({
     ): const ToggleSidetoneIntent(),
   };
 }
+
+/// The label shown beside an existing command's localized tooltip.
+String shortcutHint(Intent intent, {TargetPlatform? platform}) => shortcutLabel(
+  desktopShortcutBindings(platform: platform).entries
+          .singleWhere((entry) => entry.value.runtimeType == intent.runtimeType)
+          .key
+      as SingleActivator,
+);
 
 /// Human-readable label for menus and tooltips, e.g. "⌘K" or "Ctrl+K".
 String shortcutLabel(SingleActivator activator) {

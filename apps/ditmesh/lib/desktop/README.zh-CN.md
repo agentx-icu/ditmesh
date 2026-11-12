@@ -39,6 +39,8 @@ if (isDesktopTarget(defaultTargetPlatform)) {
 }
 ```
 
+未提供 `log` sink 时保持静默；`main()` 仅在 debug 构建启用原始 shell 诊断。
+
 `initDesktopShell` 必须在 `WidgetsFlutterBinding.ensureInitialized()` **之后**、`runApp` **之前**运行：
 `window_manager` 以隐藏状态创建窗口，shell 恢复持久化的边界（夹取到当前显示器范围内），
 然后才显示窗口，因此没有可见的跳动。
@@ -53,9 +55,19 @@ shell.setUnreadCount(total);                    // "(3) DitMesh" title, tray too
 
 `setCloseToTray(value)` 是设置开关（会持久化）；`showWindow()` 恢复被隐藏的窗口。
 
-`shortcuts.dart` 以纯 intent 的形式定义了 `desktopShortcutBindings()`（Cmd/Ctrl+K 搜索、+N 新消息、
-+Shift+M 侧音）。App 目前还没有安装它们；要启用，用 `Shortcuts(shortcuts: desktopShortcutBindings(),
-child: Actions(actions: {...}, child: ...))` 包住外壳。
+`AppShell` 已安装 `shortcuts.dart` 的搜索和新消息绑定。macOS 的 Cmd+K（Windows/Linux 的
+Ctrl+K）选中聊天页并聚焦现有会话搜索，不清空筛选词；Cmd/Ctrl+N 选中聊天页并打开现有联系人
+路由以选择收件人，按住按键不会堆叠联系人页。搜索图标和联系人按钮的本地化提示展示平台快捷键。
+命令只作用于露出的外壳，不截获已聚焦文本编辑器、IME 组字、对话框或覆盖路由；没有系统级键盘监听。
+
+`ToggleSidetoneIntent` 与 Cmd/Ctrl+Shift+M 仍只是定义：App 没有共享声音所有者，外壳未安装该绑定。
+
+iPadOS 26+ 由 `IosMenuHost` 将现有本地化文案传给 UIKit 的“聊天”菜单（搜索会话、联系人）。
+`AppDelegate.buildMenu` 使用不带按键的 `UICommand`，K/N 仍只由 Flutter 处理。场景桥要求唯一
+活跃场景，并在实际调用时重新检查。身份/条款未就绪、其他路由覆盖、编辑器/IME、应用非活跃或
+外壳销毁后，命令保留可见但禁用。iOS <26 保持原行为，scene manifest 仍禁止多场景。菜单实际
+显示、触摸/指针调用、实体键盘、非美式布局和全键盘控制仍需 OS/设备证据；桥接编译通过不等于
+这些验证通过。本次没有全局静音或新增应用命令。
 
 ## 行为
 

@@ -11,11 +11,12 @@ class ShellRouter {
   final StreamController<ConversationTarget> _conversations =
       StreamController<ConversationTarget>.broadcast();
   final StreamController<void> _contacts = StreamController<void>.broadcast();
+  final StreamController<void> _search = StreamController<void>.broadcast();
 
-  Stream<ConversationTarget> get conversationRequests =>
-      _conversations.stream;
+  Stream<ConversationTarget> get conversationRequests => _conversations.stream;
 
   Stream<void> get contactsRequests => _contacts.stream;
+  Stream<void> get searchRequests => _search.stream;
 
   void openConversation(ConversationTarget target) {
     if (!_conversations.isClosed) _conversations.add(target);
@@ -25,7 +26,15 @@ class ShellRouter {
     if (!_contacts.isClosed) _contacts.add(null);
   }
 
+  void focusSearch() {
+    if (!_search.isClosed) _search.add(null);
+  }
+
   Future<void> dispose() async {
-    await Future.wait([_conversations.close(), _contacts.close()]);
+    await Future.wait([
+      _conversations.close(),
+      _contacts.close(),
+      _search.close(),
+    ]);
   }
 }

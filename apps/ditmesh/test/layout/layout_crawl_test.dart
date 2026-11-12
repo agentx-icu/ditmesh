@@ -22,6 +22,7 @@
 //       [--dart-define=DITMESH_CRAWL_ONLY=phone-small,desktop-min] \
 //       [--dart-define=DITMESH_CRAWL_OUT=<dir>]   one problem file per test
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,10 @@ import 'package:ditmesh/ui/shell/app_shell.dart';
 
 import '../../integration_test/support/seed_data.dart' show SeededBackend;
 import '../learn/helpers/fake_playback.dart';
+import 'crawl_health.dart';
+import 'known_destinations.dart';
 import 'layout_profiles.dart';
+import 'plugin_host.dart';
 import 'seeded_app.dart';
 
 const bool _enabled = bool.fromEnvironment('DITMESH_LAYOUT_CRAWL');
@@ -109,39 +113,30 @@ class _Crawler {
   final CrawlRoot root;
   final List<String> problems = [];
   final Set<String> visited = {};
+  final List<String> verifiedDestinations = [];
   String scene = 'boot';
   int boots = 0;
 
-  final List<String> other = [];
+  late final health = CrawlHealth(scene: () => scene);
+  List<String> get other => health.other;
 
   Future<void> run() async {
     applyProfile(tester, profile);
+    plugins = LayoutPluginHost(tester);
     _silencePlugins();
-    final original = FlutterError.onError;
-    FlutterError.onError = (details) => _record(_describe(details));
-    // Stray asynchronous errors (a plugin the test host lacks) land in this
-    // zone instead of aborting the crawl; the body's own outcome goes
-    // through the completer.
-    final done = Completer<(Object, StackTrace)?>();
-    runZonedGuarded(
-      () => unawaited(
-        _walk().then(
-          (_) => done.complete(null),
-          onError: (Object e, StackTrace st) => done.complete((e, st)),
-        ),
-      ),
-      (e, _) => _record('[$scene] ${_firstLine('$e')}'),
+    await health.capture(
+      _walk,
+      onFlutterError: (details) =>
+          _record(_describe(details), details.stack ?? StackTrace.current),
     );
-    final error = await done.future;
-    FlutterError.onError = original;
-    if (error != null) Error.throwWithStackTrace(error.$1, error.$2);
     if (_trace) {
       // ignore: avoid_print
       print(visited.join('\n'));
     }
     // ignore: avoid_print
     print(
-      '[crawl ${root.name} ${profile.name}] ${visited.length} controls, $boots boot(s)'
+      '[crawl ${root.name} ${profile.name}] ${visited.length} attempted controls, $boots boot(s)'
+      '; verified destinations: ${verifiedDestinations.join(', ')}'
       '${other.isEmpty ? '' : '; non-layout errors:\n${other.toSet().join('\n')}'}',
     );
     final unique = problems.toSet().toList();
@@ -150,11 +145,21 @@ class _Crawler {
         ...unique.map((p) => 'LAYOUT $p'),
         ...other.toSet().map((p) => 'OTHER $p'),
       ];
-      await tester.runAsync(
-        () => File(
+      await tester.runAsync(() async {
+        await File(
           '$_out/${root.name}-${profile.name}.txt',
-        ).writeAsString(lines.isEmpty ? '' : '${lines.join('\n')}\n'),
-      );
+        ).writeAsString(lines.isEmpty ? '' : '${lines.join('\n')}\n');
+        if (root == CrawlRoot.shell) {
+          await File('$_out/destinations-${profile.name}.json').writeAsString(
+            jsonEncode({
+              'profile': profile.name,
+              'locale': profile.locale,
+              'verified_destinations': verifiedDestinations,
+              'scope': 'Widget host only; camera/file/audio are substitutes',
+            }),
+          );
+        }
+      });
     }
     if (unique.isNotEmpty) {
       fail(
@@ -163,10 +168,32 @@ class _Crawler {
         '${unique.join('\n')}',
       );
     }
+    health.requireHealthy();
   }
 
   Future<void> _walk() async {
     await _boot();
+    if (root == CrawlRoot.shell) {
+      final paths = KnownLayoutDestinations(tester, settle: _settle);
+      scene = 'required destination: scanner';
+      await paths.scanner();
+      expect(plugins.scanner.starts, greaterThan(0));
+      verifiedDestinations.add('current scanner route with camera view');
+      scene = 'required destination: recording import';
+      await paths.recording();
+      expect(plugins.picker.calls, greaterThan(0));
+      verifiedDestinations.add(
+        'current workbench with imported WAV and waveform',
+      );
+      scene = 'required destination: key editor';
+      await paths.keyEditor();
+      expect(plugins.sinks, isNotEmpty);
+      expect(plugins.sinks.last.prepareCalls, 1);
+      verifiedDestinations.add(
+        'current key editor with prepared key-test sink',
+      );
+      await paths.root();
+    }
     final int entries = root == CrawlRoot.shell
         ? kShellDestinations.length
         : _practiceEntries;
@@ -180,10 +207,14 @@ class _Crawler {
     await _settle();
   }
 
-  /// Layout failures fail the profile; anything else (a plugin the test
-  /// host lacks, a fake that does not implement a call) is reported only.
-  void _record(String problem) =>
-      (_layoutError.hasMatch(problem) ? problems : other).add(problem);
+  /// Preserve the layout classification, but every recorded error fails.
+  void _record(String problem, [StackTrace? stack]) {
+    if (_layoutError.hasMatch(problem)) {
+      problems.add(problem);
+    } else {
+      health.record(problem, stack ?? StackTrace.current);
+    }
+  }
 
   static final RegExp _layoutError = RegExp(
     r'overflowed|RenderBox was not laid out|BoxConstraints|unbounded|'
@@ -204,11 +235,8 @@ class _Crawler {
   }
 
   static const List<String> _pluginChannels = [
-    'com.llfbandit.record/messages',
     'plugins.flutter.io/url_launcher',
     'dev.fluttercommunity.plus/share',
-    'miguelruivo.flutter.plugins.filepicker',
-    'dev.steenbakker.mobile_scanner/scanner/method',
   ];
 
   /// The route the crawl returns to between entries; null for the shell
@@ -223,6 +251,7 @@ class _Crawler {
 
   /// The seeded data of the current boot.
   late SeededBackend _seed;
+  late LayoutPluginHost plugins;
 
   /// Copy practice of a received message, and group practice.
   static const int _practiceEntries = 2;
@@ -266,6 +295,7 @@ class _Crawler {
       tester,
       locale: profile.locale,
       key: ValueKey<int>(boots),
+      plugins: plugins,
     );
   }
 
@@ -273,21 +303,8 @@ class _Crawler {
   /// indicator waiting on a fake clock) counts as settled after a few
   /// seconds instead of failing the crawl: the frame is still checked.
   Future<void> _settle() async {
-    await tester.runAsync(() async {
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
-    });
-    try {
-      await tester.pumpAndSettle(
-        const Duration(milliseconds: 100),
-        EnginePhase.sendSemanticsUpdate,
-        const Duration(seconds: 5),
-      );
-    } on FlutterError catch (e) {
-      if (!e.message.startsWith('pumpAndSettle timed out')) rethrow;
-    }
+    await settleLayout(tester);
+    health.checkTree(tester);
   }
 
   NavigatorState get _rootNavigator =>
@@ -397,8 +414,9 @@ class _Crawler {
       _checkSafeArea();
       _checkStretch();
       _checkTruncated();
-    } on Object catch (e) {
-      _record('[$scene] tap failed: ${_firstLine('$e')}');
+    } on Object catch (e, stack) {
+      _record('[$scene] tap failed: ${_firstLine('$e')}', stack);
+      return false;
     }
     if (_rootGone &&
         find.byType(Navigator, skipOffstage: false).evaluate().isEmpty) {

@@ -39,6 +39,8 @@ final class FakeLocalNotificationsApi implements LocalNotificationsApi {
   /// Every [show] call, in order (including replacements of the same id).
   final List<NotificationRequest> shown = <NotificationRequest>[];
   final List<int> cancelled = <int>[];
+  Object? showError;
+  Object? cancelError;
   int cancelAllCalls = 0;
   int refreshStringsCalls = 0;
   int permissionRequests = 0;
@@ -108,12 +110,14 @@ final class FakeLocalNotificationsApi implements LocalNotificationsApi {
 
   @override
   Future<void> show(NotificationRequest request) async {
+    if (showError case final Object error) throw error;
     shown.add(request);
     _active[request.id] = request;
   }
 
   @override
   Future<void> cancel(int id) async {
+    if (cancelError case final Object error) throw error;
     cancelled.add(id);
     _active.remove(id);
   }

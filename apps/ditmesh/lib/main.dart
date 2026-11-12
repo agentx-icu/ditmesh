@@ -12,6 +12,7 @@ import 'desktop/desktop_instance.dart';
 import 'desktop/linux_tray_host.dart';
 import 'desktop/desktop_shell_controller.dart';
 import 'desktop/init_desktop_shell.dart';
+import 'diagnostics/application_diagnostics.dart';
 import 'di/app_features.dart';
 import 'di/app_scope.dart';
 import 'di/app_services.dart';
@@ -32,10 +33,12 @@ import 'ui/account/account_routes.dart';
 import 'ui/account/backup_file_gateway.dart';
 import 'ui/learn/settings/training_settings_entry.dart';
 import 'ui/shell/app_shell.dart';
+import 'ui/shell/ios_menu_host.dart';
 import 'ui/theme.dart';
 import 'training/guest_profile.dart';
 
 Future<void> main() async {
+  applicationDiagnostics.installErrorHandlers();
   WidgetsFlutterBinding.ensureInitialized();
 
   DesktopInstance? instance;
@@ -98,7 +101,7 @@ Future<KeyValueStore> _openSettingsStore() async {
       File(p.join(dir.path, 'settings.json')),
     );
   } on Object catch (error) {
-    debugPrint('settings store unavailable, using memory: $error');
+    debugLog(() => 'settings store unavailable, using memory: $error');
     return InMemoryKeyValueStore();
   }
 }
@@ -176,7 +179,7 @@ class DitmeshApp extends StatelessWidget {
             darkTheme: DitmeshTheme.dark(style: appearance.style),
             themeMode: appearance.themeMode,
             themeAnimationDuration: Duration.zero,
-            home: const StartupGate(child: AppShell()),
+            home: const IosMenuHost(child: StartupGate(child: AppShell())),
             routes: {
               kTrainingSettingsRoute: (_) => const TrainingSettingsEntry(),
             },

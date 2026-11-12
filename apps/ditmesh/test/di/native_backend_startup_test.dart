@@ -48,7 +48,9 @@ void main() {
     final native = FakeBackendFactory();
     Future<BackendFactory> prepare() async {
       attempts++;
-      if (attempts == 1) throw StateError('libtim2tox_ffi missing');
+      if (attempts == 1) {
+        throw StateError('PRIVATE_STARTUP_MARKER /home/private/libtim2tox_ffi');
+      }
       return native;
     }
 
@@ -62,7 +64,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(StartupErrorPage), findsOneWidget);
-    expect(find.textContaining('libtim2tox_ffi missing'), findsOneWidget);
+    expect(find.textContaining('PRIVATE_STARTUP_MARKER'), findsNothing);
+    expect(find.textContaining('/home/private'), findsNothing);
+    expect(find.text(lookupS(const Locale('en')).errorUnknown), findsOneWidget);
     expect(find.textContaining('ready '), findsNothing);
 
     final s = lookupS(const Locale('en'));

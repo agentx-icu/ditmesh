@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../../diagnostics/application_diagnostics.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import 'chat_layout.dart';
@@ -191,7 +192,7 @@ class _MessageInputState extends State<MessageInput>
         // (not connected, conversation gone), which the screen reports.
         final bool firstFailure = writer.error == null;
         writer.error = error;
-        debugPrint('[MessageInput] draft save failed: $error');
+        debugLog(() => '[MessageInput] draft save failed: $error');
         if (firstFailure &&
             error is! ChatException &&
             mounted &&
@@ -230,7 +231,7 @@ class _MessageInputState extends State<MessageInput>
         state == AppLifecycleState.detached) {
       unawaited(
         flush().catchError((Object error) {
-          debugPrint('[MessageInput] background flush failed: $error');
+          debugLog(() => '[MessageInput] background flush failed: $error');
         }),
       );
     }

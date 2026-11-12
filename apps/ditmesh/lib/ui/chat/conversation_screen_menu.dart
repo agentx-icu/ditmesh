@@ -114,7 +114,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     } on Object catch (e) {
       // Scrolling again retries; a failure streak of this window is
       // reported once.
-      debugPrint('[Conversation] loading later rows failed: $e');
+      debugLog(() => '[Conversation] loading later rows failed: $e');
       if (mounted &&
           generation == _generation &&
           _jumpedAway &&

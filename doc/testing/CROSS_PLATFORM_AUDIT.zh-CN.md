@@ -8,6 +8,31 @@
 
 商店后续审计（2026-10-23）：[当前渠道、P4/P8/P9/W4/X6 证据与负责人阻塞](../release/STORE_READINESS.zh-CN.md)。此记录不覆盖下方历史验证。
 
+## I2 后续：活跃外壳快捷键（2026-10-23）
+
+`desktop/shell_shortcuts_test.dart` 在使用假后端的完整 `DitmeshApp` 中发送真实 Flutter
+按下/抬起/重复事件，覆盖 macOS、Windows、Linux 平台变体：正确/错误修饰键、按住只请求一次、
+现有搜索与筛选词焦点、从其他页选中聊天、复用联系人路由/返回，以及文本编辑、IME、对话框保护。
+既有纯映射测试仅作补充。当前外壳只安装 K/N，Shift+M 因无共享侧音所有者继续未绑定；本地化
+提示展示 K/N。Widget 平台变体不等于实体键盘/触控板、非美式布局、iPad 全键盘控制和 iPadOS 26
+原生菜单栏验证。
+
+## I2 后续：iPad 原生菜单桥（2026-10-23）
+
+此前缺少的原生代码现已针对上述两个既有动作补齐：UIKit `buildMenu`/`UICommand`、唯一活跃场景
+校验、Flutter 方法通道及现有本地化搜索/联系人文案。实际调用前重新校验启动/身份/条款、当前路由、
+编辑器/IME、生命周期和所有者销毁；旧所有者不能覆盖当前动作。UIKit 不再注册重复按键，iOS <26
+不安装该菜单，既有单场景声明保持不变。
+
+`desktop/ios_menu_commands_test.dart` 在完整假后端 App 上穿过真实方法通道边界，覆盖有效/未知/
+畸形命令、路由覆盖、编辑器/IME、inactive/resumed、启动/退出 ready、销毁、owner 替换、旧会话排队请求和语言变更。
+桥接加既有按键套件共 28 项通过；编译执行的 Swift 状态回归验证当前/迟到 false/error 回复不会
+锁死可用状态或覆盖新状态，原生请求携带原始 owner 票据。本机 Xcode 26.4.1 / iPhoneOS 26.4
+已实际编译 Swift 及真实 FFI
+arm64 unsigned archive（20 个 Mach-O、15 个 privacy manifest、Runner/dSYM 匹配）。菜单的实际
+显示、触摸/指针/键盘调用、灰显和场景资格仍为 **needs device**；不能再把原生代码缺失藏在该状态下。
+没有正式签名导出或商店操作。
+
 ## 已确认并实施
 
 - 桌面启动先锁定整个应用支持目录，再打开设置、迁移和后端；第二进程请求激活原窗口，锁文件不删除，锁持有到进程结束。使用独立子进程验证争用、激活和崩溃释放。
@@ -51,7 +76,7 @@ Mac release UI 构建使用 `DITMESH_FAKE_BACKEND=true` 和 `DITMESH_ALLOW_MISSI
 | D6 | needs device | Light/dark source and widget cases reviewed; measured contrast and OS color filters remain owed. |
 | D7 | verified | morse_io flash_overlay_test.dart: bounded lamp, reduced-motion steady indicator and input passthrough. |
 | I1 | needs device | Touch/focus widgets reviewed; measure every essential control on smallest supported device. |
-| I2 | needs device | Cmd/Ctrl conventions and Shift+M regression tested; native keyboard/trackpad and iPad menus owed. |
+| I2 | needs device | `desktop/shell_shortcuts_test.dart` 已以 macOS/Windows/Linux 变体的键盘事件、路由和 IME 回归验证活跃 K/N；Shift+M 未绑定；iPad 搜索/联系人原生菜单已实现并过桥接/构建检查，实际 OS 显示与原生输入资格仍待设备验证。 |
 | I3 | not applicable | Morse composer is read-only and sends keyed input; ordinary text fields do not use Enter-to-send. |
 | I4 | needs device | PopScope/source and prior Android back evidence reviewed; release predictive-back/iOS gestures owed. |
 | I5 | needs device | Semantics/keying tests pass; VoiceOver, TalkBack, Narrator and Orca end-to-end flows remain owed. |
@@ -99,7 +124,7 @@ Mac release UI 构建使用 `DITMESH_FAKE_BACKEND=true` 和 `DITMESH_ALLOW_MISSI
 | X6 | to do | macOS release UI build compiles native changes; real-backend packaging/install/upgrade matrix still owed. |
 | X7 | needs device | Interrupted OS UI, permission revocation and background process death still need a device campaign. |
 | X8 | needs device | Existing network/DHT tests and VALIDATION.md retained; carrier NAT64/VPN/captive portal/device handover owed. |
-| X9 | to do | Connection diagnostics exist; production application/native crash collection and readable archived-symbol process incomplete. |
+| X9 | to do | 源码 FFI/runner 与同次构建 Dart 符号已有独立 CI 归档和最终 native 身份门禁；准确覆盖范围及最终 head 证据见 STORE_READINESS。真实设备故障符号化、匹配厂商符号和生产采集/留存政策仍未完成，不能仅凭符号配对关闭本项。 |
 
 ## 仍需完成
 

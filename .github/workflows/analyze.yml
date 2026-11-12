@@ -104,8 +104,16 @@ jobs:
           python3 tool/ci/android_release_signing_test.py
           python3 tool/ci/android_artifact_signing_test.py
           python3 tool/ci/native_payload_test.py
+          python3 tool/ci/native_symbols_test.py
+          python3 tool/ci/release_symbols_test.py
           python3 tool/ci/macos_signing_test.py
           python3 tool/ci/store_preflight_test.py
+          python3 tool/ci/windows_runtime_test.py
+          python3 tool/ci/apple_release_preflight_test.py
+          python3 tool/ci/ios_store_export_test.py
+          python3 tool/ci/desktop_jni_test.py
+          python3 tool/ci/gdb_close_trace_test.py
+          python3 tool/ci/linux_installed_smoke_test.py
 
       - name: Screenshot import regression tests
         run: python3 tool/screenshots/capture_import_test.py
@@ -123,3 +131,10 @@ jobs:
             (cd "$dir" && flutter test --exclude-tags=needs-native)
             echo "::endgroup::"
           done
+
+      - name: Diagnostics compiled product-policy regressions
+        run: >-
+          flutter test --no-pub
+          apps/ditmesh/test/diagnostics/diagnostics_product_policy_test.dart
+          --dart-define=dart.vm.product=true
+          --dart-define=DITMESH_TEST_PRODUCT_POLICY=true

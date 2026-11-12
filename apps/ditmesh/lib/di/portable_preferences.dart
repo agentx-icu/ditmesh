@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../diagnostics/application_diagnostics.dart';
 import '../i18n/locale_controller.dart';
 import '../ui/appearance/ui_style.dart';
 import '../ui/chat/input_mode.dart';
@@ -92,7 +93,7 @@ extension PortablePreferences on AppPreferences {
         await _apply(old as Map, locale);
         await flush();
       } on Object catch (e) {
-        debugPrint('[PortablePreferences] rollback failed: $e');
+        debugLog(() => '[PortablePreferences] rollback failed: $e');
       }
       rethrow;
     }

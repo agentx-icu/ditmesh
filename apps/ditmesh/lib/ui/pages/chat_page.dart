@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
+import '../../desktop/shortcuts.dart';
 import '../../i18n/l10n_extension.dart';
 import '../chat/chat_layout.dart';
 import '../chat/chat_scope.dart';
@@ -43,6 +44,8 @@ class _ChatPageState extends State<ChatPage> {
   ConversationTarget? _selected;
   StreamSubscription<ConversationTarget>? _shellConversations;
   StreamSubscription<void>? _shellContacts;
+  StreamSubscription<void>? _shellSearch;
+  final FocusNode _searchFocus = FocusNode(debugLabel: 'conversation-search');
 
   @override
   void initState() {
@@ -54,12 +57,27 @@ class _ChatPageState extends State<ChatPage> {
     _shellContacts = router?.contactsRequests.listen(
       (_) => _contactsFromShell(),
     );
+    _shellSearch = router?.searchRequests.listen((_) {
+      // The shell may have just switched from another tab. Wait for that
+      // frame before giving the now-visible search field focus.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            TickerMode.valuesOf(context).enabled &&
+            (ModalRoute.of(context)?.isCurrent ?? true)) {
+          _searchFocus.requestFocus();
+        }
+      });
+      // A request on the already-selected tab does not rebuild the shell.
+      WidgetsBinding.instance.ensureVisualUpdate();
+    });
   }
 
   @override
   void dispose() {
     unawaited(_shellConversations?.cancel());
     unawaited(_shellContacts?.cancel());
+    unawaited(_shellSearch?.cancel());
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -206,6 +224,7 @@ class _ChatPageState extends State<ChatPage> {
             Expanded(
               child: ConversationList(
                 service: service,
+                searchFocusNode: _searchFocus,
                 selectedId: _selected?.id,
                 emptyText: ChatPage.description(s),
                 onOpen: (c) =>
@@ -248,7 +267,10 @@ class _RequestsBadge extends StatelessWidget {
       builder: (context, snapshot) {
         final int count = snapshot.data?.length ?? 0;
         return IconButton(
-          tooltip: context.s.chatContacts,
+          key: const ValueKey('chat-contacts-open'),
+          tooltip:
+              '${context.s.chatContacts} '
+              '(${shortcutHint(const NewMessageIntent(), platform: Theme.of(context).platform)})',
           onPressed: onPressed,
           // Clamped: at 2x the count grew past the screen edge.
           icon: MediaQuery.withClampedTextScaling(

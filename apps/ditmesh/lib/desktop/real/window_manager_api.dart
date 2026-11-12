@@ -1,5 +1,5 @@
-import 'dart:ui';
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../window_api.dart';
@@ -68,7 +68,15 @@ class WindowManagerApi implements WindowApi {
   Future<void> focus() => windowManager.focus();
 
   @override
-  Future<void> destroy() => windowManager.destroy();
+  Future<void> destroy() {
+    if (defaultTargetPlatform == TargetPlatform.linux) {
+      // Preferences, session saves and cleanup have already completed.
+      // window_manager 0.5.x destroys GTK/GL before the engine is finished;
+      // Flutter's platform exit preserves GApplication's shutdown ordering.
+      return SystemNavigator.pop();
+    }
+    return windowManager.destroy();
+  }
 
   @override
   void setEventHandler(WindowEventHandler? handler) {

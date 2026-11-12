@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:morse_core/morse_core.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import '../../diagnostics/application_diagnostics.dart';
 import 'playback_timeline.dart';
 
 part 'morse_playback_queue.dart';
@@ -208,7 +209,7 @@ class MorsePlaybackController extends ChangeNotifier {
   Future<void> prepare() => _prepared ??= sink.prepare().catchError((Object e) {
     // No audio device (CI, headless): keep going silently; the pattern
     // highlight still shows playback progress.
-    debugPrint('ditmesh: sink.prepare failed: $e');
+    debugLog(() => 'ditmesh: sink.prepare failed: $e');
   });
 
   /// Plays [text] now (or once hand keying rests), replacing anything

@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../desktop/desktop_shell_controller.dart';
+import '../diagnostics/application_diagnostics.dart';
 import '../diagnostics/connection_diagnostics.dart';
 import '../i18n/locale_controller.dart';
 import '../i18n/strings_resolver.dart';
@@ -141,7 +142,7 @@ final class AppServices with WidgetsBindingObserver {
                 isCurrent: () => !_disposed,
               )
               .catchError((Object error) {
-                debugPrint('[NetworkBootstrap] resume: $error');
+                debugLog(() => '[NetworkBootstrap] resume: $error');
               }),
         );
       });
@@ -197,7 +198,7 @@ final class AppServices with WidgetsBindingObserver {
       ]);
       return AppExitResponse.exit;
     } on Object catch (error) {
-      debugPrint('[AppServices] could not save before quit: $error');
+      debugLog(() => '[AppServices] could not save before quit: $error');
       return AppExitResponse.cancel;
     }
   }

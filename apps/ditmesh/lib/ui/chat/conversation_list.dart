@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../../desktop/shortcuts.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/fitting_hint.dart';
@@ -23,6 +24,7 @@ class ConversationList extends StatefulWidget {
     this.selectedId,
     this.emptyText,
     this.swipeEnabled,
+    this.searchFocusNode,
   });
 
   final ChatService service;
@@ -33,6 +35,7 @@ class ConversationList extends StatefulWidget {
   /// [S.chatNoConversations] in the current locale.
   final String? emptyText;
   final bool? swipeEnabled;
+  final FocusNode? searchFocusNode;
 
   @override
   State<ConversationList> createState() => _ConversationListState();
@@ -111,13 +114,19 @@ class _ConversationListState extends State<ConversationList> {
           child: LayoutBuilder(
             builder: (context, box) => SearchBar(
               controller: _search,
+              focusNode: widget.searchFocusNode,
               hintText: fittingHint(
                 context,
                 s.chatSearchConversations,
                 // Padding, the search icon and room for the clear button.
                 width: box.maxWidth - 2 * kMinInteractiveDimension - 32,
               ),
-              leading: const Icon(Icons.search),
+              leading: Tooltip(
+                message:
+                    '${s.chatSearchConversations} '
+                    '(${shortcutHint(const FocusSearchIntent(), platform: Theme.of(context).platform)})',
+                child: const Icon(Icons.search),
+              ),
               trailing: [
                 if (_query.isNotEmpty)
                   IconButton(

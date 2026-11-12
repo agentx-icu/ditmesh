@@ -6,6 +6,7 @@ import Network
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private let networkPath = DitmeshNetworkPathChannel()
+  let menuCommands = DitmeshMenuChannel()
 
   override func application(
     _ application: UIApplication,
@@ -23,9 +24,39 @@ import Network
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     let messenger = engineBridge.applicationRegistrar.messenger()
     networkPath.register(binaryMessenger: messenger)
+    menuCommands.register(binaryMessenger: messenger)
     registerBackgroundTaskChannel(messenger)
     registerBackupExclusionChannel(messenger)
   }
+
+  override func buildMenu(with builder: UIMenuBuilder) {
+    super.buildMenu(with: builder)
+    guard #available(iOS 26.0, *), UIDevice.current.userInterfaceIdiom == .pad,
+      builder.system == UIMenuSystem.main,
+      let menu = menuCommands.menu(search: #selector(searchFromMenu(_:)),
+                                   contacts: #selector(contactsFromMenu(_:)))
+    else { return }
+    builder.remove(menu: DitmeshMenuChannel.identifier)
+    builder.insertSibling(menu, afterMenu: .edit)
+  }
+
+  override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+    if action == #selector(searchFromMenu(_:)) || action == #selector(contactsFromMenu(_:)) {
+      return menuCommands.canInvoke
+    }
+    return super.canPerformAction(action, withSender: sender)
+  }
+
+  override func validate(_ command: UICommand) {
+    super.validate(command)
+    if command.action == #selector(searchFromMenu(_:)) || command.action == #selector(contactsFromMenu(_:)) {
+      if menuCommands.canInvoke { command.attributes.remove(.disabled) }
+      else { command.attributes.insert(.disabled) }
+    }
+  }
+
+  @objc private func searchFromMenu(_ sender: UICommand) { menuCommands.invoke("search") }
+  @objc private func contactsFromMenu(_ sender: UICommand) { menuCommands.invoke("contacts") }
 
   // MARK: - Backup exclusion (packages/ditmesh_chat backup_exclusion.dart)
   //
@@ -117,6 +148,87 @@ import Network
   private func endBackgroundTask(_ token: Int) {
     guard let id = backgroundTasks.removeValue(forKey: token) else { return }
     UIApplication.shared.endBackgroundTask(id)
+  }
+}
+
+/// One engine and the existing single scene. UICommand is deliberately keyless
+/// so a keyboard press cannot dispatch through both UIKit and Flutter.
+final class DitmeshMenuChannel {
+  static let identifier = UIMenu.Identifier("icu.agentx.ditmesh.chat")
+  private var channel: FlutterMethodChannel?
+  private var labels: (title: String, search: String, contacts: String)?
+  private let state = DitmeshMenuState()
+  private weak var scene: UIWindowScene?
+
+  var canInvoke: Bool {
+    guard #available(iOS 26.0, *), UIDevice.current.userInterfaceIdiom == .pad,
+      state.enabled, let scene, scene.activationState == .foregroundActive,
+      let window = scene.windows.first(where: { $0.isKeyWindow }), !window.isHidden,
+      window.rootViewController?.presentedViewController == nil,
+      !hasTextInputResponder(window)
+    else { return false }
+    let active = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+      .filter { $0.activationState == .foregroundActive }
+    return active.count == 1 && active.first === scene
+  }
+
+  private func hasTextInputResponder(_ view: UIView) -> Bool {
+    if view.isFirstResponder && view is UITextInput { return true }
+    return view.subviews.contains(where: hasTextInputResponder)
+  }
+
+  func register(binaryMessenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "icu.agentx.ditmesh/menu_commands", binaryMessenger: binaryMessenger)
+    self.channel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "update" else { result(FlutterMethodNotImplemented); return }
+      guard let self, let data = call.arguments as? [String: Any],
+        let title = data["title"] as? String, !title.isEmpty,
+        let search = data["search"] as? String, !search.isEmpty,
+        let contacts = data["contacts"] as? String, !contacts.isEmpty,
+        let enabled = data["enabled"] as? Bool,
+        let owner = data["owner"] as? String, !enabled || !owner.isEmpty
+      else {
+        result(FlutterError(code: "INVALID_MENU", message: "Invalid menu state", details: nil))
+        return
+      }
+      self.labels = (title, search, contacts)
+      self.state.update(enabled: enabled, owner: owner)
+      self.refresh()
+      result(true)
+    }
+  }
+
+  func setScene(_ scene: UIScene, active: Bool) {
+    if active { self.scene = scene as? UIWindowScene }
+    else if self.scene === scene { self.scene = nil }
+    refresh()
+  }
+
+  private func refresh() {
+    guard #available(iOS 26.0, *), UIDevice.current.userInterfaceIdiom == .pad else { return }
+    // UIMenuSystem.main is UIMainMenuSystem.shared, retaining UIKit's menus.
+    UIMenuSystem.main.setNeedsRebuild()
+    UIMenuSystem.main.setNeedsRevalidate()
+  }
+
+  func menu(search: Selector, contacts: Selector) -> UIMenu? {
+    guard let labels else { return nil }
+    let attributes: UIMenuElement.Attributes = canInvoke ? [] : [.disabled]
+    return UIMenu(title: labels.title, identifier: Self.identifier, children: [
+      UICommand(title: labels.search, action: search, attributes: attributes),
+      UICommand(title: labels.contacts, action: contacts, attributes: attributes),
+    ])
+  }
+
+  func invoke(_ command: String) {
+    guard canInvoke, let invocation = state.begin(command) else { return }
+    channel?.invokeMethod("invoke", arguments: invocation.arguments) { [weak self] response in
+      // Dart revalidates route/focus/readiness at invocation, closing a stale
+      // menu-state race. A delayed response cannot overwrite a newer update.
+      guard let self else { return }
+      if self.state.needsRefresh(after: response, for: invocation) { self.refresh() }
+    }
   }
 }
 

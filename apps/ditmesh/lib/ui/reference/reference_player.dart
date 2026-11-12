@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:morse_io/morse_io.dart';
+
+import '../../diagnostics/application_diagnostics.dart';
 
 /// Builds the [MorsePlayer] a reference / translator screen plays through.
 ///
@@ -29,7 +30,7 @@ MorsePlayer createSidetoneMorsePlayer({
   final SidetoneSink sink = SidetoneSink(frequencyHz: frequencyHz);
   unawaited(
     sink.prepare().catchError((Object e) {
-      debugPrint('ditmesh reference: sidetone prepare failed: $e');
+      debugLog(() => 'ditmesh reference: sidetone prepare failed: $e');
     }),
   );
   return attachReferenceSink(MorsePlayer(sink: sink, clock: clock), sink);

@@ -59,7 +59,9 @@ final class PlatformAudioSessionApi implements AudioSessionApi {
     } on Object catch (e) {
       // A call in progress can refuse activation; the engine restarts the
       // device (and activates the session) on the next key-down anyway.
-      debugPrint('morse_io: audio session setup failed: $e');
+      if (kDebugMode) {
+        debugPrint('morse_io: audio session setup failed: $e');
+      }
     }
   }
 }
