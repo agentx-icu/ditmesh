@@ -222,7 +222,11 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
     return ListTile(
       key: ValueKey('pending-row-${m.id}'),
       title: Text(_title(m), maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(m.text, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        m.isLocation ? s.chatLocationLabel : m.text,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       leading: MessageStatusIcon(m.status, message: m),
       trailing: !widget.service.supportsSendControl
           ? null

@@ -40,6 +40,24 @@ Future<ChatHarness> _open(WidgetTester tester) => pumpChat(tester, (h) {
 
 void main() {
   group('auto-play', () {
+    testWidgets('location snapshots do not enter Morse auto-play', (
+      tester,
+    ) async {
+      final h = await _open(tester);
+      h.settings.autoPlay = true;
+      h.service.receiveMessage(
+        'c2c_$kPeerKey',
+        const ChatLocation(latitude: 39.9, longitude: 116.4).encode(),
+      );
+      h.service.receiveMessage('c2c_$kPeerKey', '__location__:{broken}');
+      await tester.pump();
+      expect(h.playback.playingId, isNull);
+      expect(h.playback.queuedIds, isEmpty);
+      final text = h.service.receiveMessage('c2c_$kPeerKey', 'CQ');
+      await tester.pump();
+      expect(h.playback.playingId, text.id);
+    });
+
     testWidgets('off by default: a received message stays silent', (
       tester,
     ) async {

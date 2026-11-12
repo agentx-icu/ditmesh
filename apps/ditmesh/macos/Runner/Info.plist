@@ -48,5 +48,9 @@
 	<string>DitMesh uses the camera only to scan a friend's Tox ID QR code.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>DitMesh uses the microphone only to decode Morse code you play or key nearby.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DitMesh uses your location only while open, for current coordinates, the grid locator, optional People nearby and positions you choose to send in chat.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>DitMesh uses your location only while open, for current coordinates, the grid locator, optional People nearby and positions you choose to send in chat.</string>
 </dict>
 </plist>

@@ -11,3 +11,5 @@
 
 /* Connecting to local Tox peers and bootstrap nodes. */
 "NSLocalNetworkUsageDescription" = "DitMesh использует локальную сеть для подключения к пользователям Tox и загрузочным узлам в вашей сети.";
+
+"NSLocationWhenInUseUsageDescription" = "DitMesh получает геопозицию только при открытом приложении: для текущих координат, локатора, необязательного поиска людей рядом и сообщений с геопозицией, которые вы сами отправляете в чат.";

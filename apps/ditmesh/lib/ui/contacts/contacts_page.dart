@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
+import 'package:provider/provider.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../../nearby/nearby_controller.dart';
+import '../nearby/nearby_page.dart';
 import '../account/avatar_initial.dart';
 import '../chat/chat_layout.dart';
 import '../chat/conversation_target.dart';
@@ -87,6 +90,13 @@ class ContactsPage extends StatelessWidget {
       appBar: AppBar(
         title: AppBarTitle(s.chatContacts),
         actions: [
+          if (context.watch<NearbyController?>() != null)
+            IconButton(
+              key: const Key('contacts-nearby'),
+              tooltip: s.peopleNearby,
+              icon: const Icon(Icons.radar),
+              onPressed: () => NearbyPage.open(context),
+            ),
           IconButton(
             tooltip: s.chatMyToxId,
             icon: const Icon(Icons.qr_code_2),

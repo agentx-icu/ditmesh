@@ -93,7 +93,7 @@ class ConversationAutoPlay with WidgetsBindingObserver {
   /// While `inactive` it queues like any other; the controller holds the
   /// start until `resumed`.
   void incoming(ChatMessage message) {
-    if (message.isUpdate) return;
+    if (message.isUpdate || message.isLocation) return;
     final MorsePlaybackSettings? settings = _settings;
     if (settings == null || !settings.autoPlay || !_visible) return;
     if (_background(WidgetsBinding.instance.lifecycleState)) return;

@@ -3657,4 +3657,194 @@ class SDe extends S {
 
   @override
   String get listenMissingCaptureTool => 'Installiere pulseaudio-utils, um das Mikrofon unter Linux zu verwenden.';
+
+  @override
+  String get locationServices => 'Standort';
+
+  @override
+  String get nearbyVisible => 'Für Personen in der Nähe sichtbar';
+
+  @override
+  String get nearbyVisibleDesc => 'Wenn diese Option aktiviert ist, können Personen im Umkreis von etwa 5 km, die „Personen in der Nähe“ nutzen, deinen Namen und ungefähren Standort sehen.';
+
+  @override
+  String get peopleNearby => 'Personen in der Nähe';
+
+  @override
+  String get locationPermissionDenied => 'Der Standortzugriff wurde verweigert. Erlaube ihn in den Systemeinstellungen, um Standortfunktionen zu nutzen.';
+
+  @override
+  String get locationServiceDisabled => 'Die Ortungsdienste sind auf diesem Gerät ausgeschaltet.';
+
+  @override
+  String get locationUnavailable => 'Dein aktueller Standort ist derzeit nicht verfügbar.';
+
+  @override
+  String get nearbyLocating => 'Standort wird ermittelt…';
+
+  @override
+  String get nearbyJoining => 'Personen in der Nähe werden gesucht…';
+
+  @override
+  String get nearbyNobody => 'Noch niemand in der Nähe. Personen erscheinen hier, sobald sie online sind.';
+
+  @override
+  String get nearbyDhtNotReady => 'Noch nicht mit dem Tox-Netzwerk verbunden.';
+
+  @override
+  String get nearbyNoLocation => 'Dein Standort ist nicht verfügbar.';
+
+  @override
+  String get nearbyOff => 'Aktiviere in den Einstellungen „Standort“ und „Für Personen in der Nähe sichtbar“, um zu sehen, wer in der Nähe ist.';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '$count Personen in der Nähe';
+  }
+
+  @override
+  String get nearbySayHi => 'Hallo sagen';
+
+  @override
+  String get nearbySendRequest => 'Anfrage senden';
+
+  @override
+  String get nearbyRequestMessageHint => 'Kurze Nachricht hinzufügen (optional)';
+
+  @override
+  String get nearbyRequestSent => 'Anfrage gesendet.';
+
+  @override
+  String get nearbyRequestLimit => 'Zu viele Anfragen. Versuche es später erneut.';
+
+  @override
+  String get nearbyRequestTooLong => 'Die Nachricht ist zu lang.';
+
+  @override
+  String get nearbyPeerGone => 'Diese Person ist nicht mehr in der Nähe.';
+
+  @override
+  String get nearbyBlock => 'Blockieren';
+
+  @override
+  String get nearbyBlocked => 'Für diese Sitzung blockiert.';
+
+  @override
+  String get nearbyConsentTitle => 'Deine Tox-ID teilen?';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return 'Deine Tox-ID wird an $name gesendet, damit diese Person dir eine Freundschaftsanfrage senden kann. Niemand sonst erhält sie.';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => 'Personen in der Nähe';
+
+  @override
+  String get nearbyPrivacyBody => 'Wenn diese Option aktiviert ist, können Personen im Umkreis von etwa 5 km, die ebenfalls „Personen in der Nähe“ nutzen, deinen Namen und ungefähren Standort (auf etwa 100 m genau) sehen. Deine Tox-ID wird nur geteilt, wenn du jemandem eine Anfrage sendest. Diese Funktion ist nur aktiv, solange DitMesh geöffnet ist.';
+
+  @override
+  String get nearbyPrivacyAccept => 'Aktivieren';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name hat auf deine Anfrage über „Personen in der Nähe“ geantwortet. Als Freund hinzufügen?';
+  }
+
+  @override
+  String get nearbyUnnamed => 'Jemand in der Nähe';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return 'etwa $meters m';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return 'etwa $km km';
+  }
+
+  @override
+  String get nearbyIncomingTitle => 'Freundschaftsanfrage aus der Nähe';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name möchte dich hinzufügen. Wenn du annimmst, wird eine Freundschaftsanfrage an diese Person gesendet.';
+  }
+
+  @override
+  String get nearbyIncomingAccept => 'Annehmen';
+
+  @override
+  String get nearbyIncomingDecline => 'Ablehnen';
+
+  @override
+  String get nearbyPaused => 'Pausiert. Tippe auf Aktualisieren, um erneut zu suchen.';
+
+  @override
+  String get nearbyCellUnavailable => 'Dein Gebiet ist derzeit nicht verfügbar. Es wird automatisch erneut versucht.';
+
+  @override
+  String get locationServicesDesc => 'DitMesh ruft deinen Standort nur bei geöffneter App ab: für aktuelle Koordinaten, den Locator, die optionale Suche nach Personen in der Nähe und Standortnachrichten, die du selbst im Chat sendest. Die Standortfunktion ist standardmäßig ausgeschaltet.';
+
+  @override
+  String get locationUseCurrent => 'Aktuellen Standort verwenden';
+
+  @override
+  String get locationCurrent => 'Aktueller Standort';
+
+  @override
+  String get locationSaveFailed => 'Die Standorteinstellungen konnten nicht gespeichert werden. Versuche es erneut.';
+
+  @override
+  String get locationSystemSettings => 'Systemeinstellungen öffnen';
+
+  @override
+  String get locationDisabledHint => 'Aktiviere „Standort“ in den Einstellungen, um deine aktuelle Position zu verwenden.';
+
+  @override
+  String get nearbyUnavailable => '„Personen in der Nähe“ ist erst verfügbar, wenn eine Tox-Sitzung geöffnet ist.';
+
+  @override
+  String get chatLocationLabel => 'Standort';
+
+  @override
+  String get chatSendLocation => 'Aktuellen Standort senden';
+
+  @override
+  String get chatViewLocation => 'Geteilten Standort ansehen';
+
+  @override
+  String get chatLocationShareTitle => 'Aktuellen Standort teilen?';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return 'Diesen Standort an $name senden? Die Koordinaten werden im Verlauf dieses Chats gespeichert.';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return 'Geteilt $time · einmaliger Standort, keine Live-Aktualisierung';
+  }
+
+  @override
+  String get chatLocationInvalid => 'Diese Standortnachricht ist ungültig.';
+
+  @override
+  String get chatLocationNotShared => 'Diese Person hat in diesem Chat noch keinen Standort geteilt.';
+
+  @override
+  String get chatOpenMaps => 'In Karten öffnen';
+
+  @override
+  String get chatCopyCoordinates => 'Koordinaten kopieren';
+
+  @override
+  String get chatOpenMapsFailed => 'Für diesen Standort konnte keine Karte geöffnet werden.';
+
+  @override
+  String get chatLocationSent => 'Standort gesendet.';
+
+  @override
+  String get chatLocationSendFailed => 'Dieser Standort konnte nicht gesendet werden. Versuche es erneut.';
 }

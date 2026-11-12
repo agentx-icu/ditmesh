@@ -356,7 +356,11 @@ class _ResultTile extends StatelessWidget {
                 ),
               ),
             )
-          : Text(message.text, maxLines: 2, overflow: TextOverflow.ellipsis),
+          : Text(
+              message.isLocation ? context.s.chatLocationLabel : message.text,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
       subtitle: Text('$who · ${formatMessageTime(context, message.timestamp)}'),
       trailing: hidden
           ? TextButton(onPressed: onReveal, child: Text(s.chatReveal))

@@ -12,6 +12,7 @@ import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart'
 import '../adapters/key_value_store.dart';
 import '../adapters/prefs_adapter.dart';
 import '../engine/chat_engine.dart';
+import '../engine/nearby_transport.dart';
 import '../logging/chat_logger.dart';
 import '../util/value_stream.dart';
 import 'conversation_meta_store.dart';
@@ -30,6 +31,7 @@ part 'chat_service_groups.dart';
 part 'chat_service_messages.dart';
 part 'chat_service_send.dart';
 part 'chat_service_session.dart';
+part 'chat_service_nearby.dart';
 
 /// [ChatService] over one live `FfiChatService` (Tim2Tox), following the
 /// [ChatEngine]'s session: bound while the identity is connected, detached
@@ -45,8 +47,12 @@ part 'chat_service_session.dart';
 /// who is offline on the Tox network is queued by Tim2Tox and surfaces as a
 /// `pending` row; it drains when the friend comes back.
 class Tim2ToxChatService
-    with _MessageManagement
-    implements ChatService, IdentityDataStore, OutboxInspector {
+    with _MessageManagement, _NearbyCapability
+    implements
+        ChatService,
+        IdentityDataStore,
+        OutboxInspector,
+        NearbyTransportProvider {
   Tim2ToxChatService({
     required ChatEngine engine,
     required IdentityService identity,
@@ -92,6 +98,7 @@ class Tim2ToxChatService
   @visibleForTesting
   static Future<void> Function(String phase)? debugScanYield;
 
+  @override
   final ChatEngine _engine;
   final IdentityService _identity;
   final PendingKeyValueStore _store;
@@ -103,6 +110,7 @@ class Tim2ToxChatService
   late final _ConversationsPart _conversationsPart;
   late final _BlockingPart _blockingPart;
 
+  @override
   FfiChatService? _service;
   StreamSubscription<FfiChatService?>? _sessionSub;
   StreamSubscription<Identity?>? _identitySub;
@@ -114,7 +122,9 @@ class Tim2ToxChatService
   /// session's unfinished tick: the new session's initial refresh runs at
   /// once, and the old tick's `finally` cannot clear the new session's slot.
   FfiChatService? _ticking;
+  @override
   bool _disposed = false;
+  @override
   bool _replacing = false;
   Identity? _replacementIdentity;
 

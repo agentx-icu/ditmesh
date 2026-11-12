@@ -14,6 +14,7 @@ import '../lifecycle/network_change_rebootstrapper.dart';
 import '../notifications/connection_banner_policy.dart';
 import '../notifications/notification_center.dart';
 import '../notifications/notification_prefs.dart';
+import '../nearby/nearby_controller.dart';
 import '../startup/startup_controller.dart';
 import '../training/guest_profile.dart';
 import '../training/training_controller_host.dart';
@@ -96,6 +97,11 @@ class _AppScopeState extends State<AppScope> {
   late final ChatService _chat = widget.factory.createChatService(_identity);
   late final KeyValueStore _store =
       widget.localeStore ?? InMemoryKeyValueStore();
+  late final NearbyController _nearby = NearbyController(
+    identity: _identity,
+    chat: _chat,
+    store: _store,
+  );
   late final AppPreferences _preferences = AppPreferences(
     _store,
     backendLabel: widget.factory.label,
@@ -140,6 +146,7 @@ class _AppScopeState extends State<AppScope> {
   /// quits, including settings for chat-assisted Morse practice.
   Future<void> _flushSettings() async {
     await Future.wait([
+      _nearby.flush(),
       _preferences.flush(),
       _locale.flush(),
       _keyProfiles.flush(),
@@ -156,6 +163,8 @@ class _AppScopeState extends State<AppScope> {
     // controller. Set before start(): the resolver is built from _locale, and
     // start() pushes the persisted language into the desktop shell.
     LocaleController.active = _locale;
+    // Construct before routes can request location; no OS reads on startup.
+    _nearby;
     _services.start();
   }
 
@@ -165,6 +174,7 @@ class _AppScopeState extends State<AppScope> {
   @override
   void dispose() {
     if (LocaleController.active == _locale) LocaleController.active = null;
+    _nearby.dispose();
     _training.dispose().ignore();
     _bookmarkBarrier.dispose();
     _services.dispose().ignore();
@@ -186,6 +196,7 @@ class _AppScopeState extends State<AppScope> {
         Provider<IdentityService>.value(value: _identity),
         Provider<NetworkBootstrapService?>.value(value: _network),
         Provider<ChatService>.value(value: _chat),
+        ChangeNotifierProvider<NearbyController>.value(value: _nearby),
         Provider<BackupFileGateway>.value(value: _backupFiles),
         Provider<AppPreferences>.value(value: _preferences),
         ChangeNotifierProvider<FirstChatProgress>.value(

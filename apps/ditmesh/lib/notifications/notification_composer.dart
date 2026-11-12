@@ -76,7 +76,9 @@ final class NotificationComposer {
           ? 'ditmesh.messages.$conversationId'
           : null,
       lines: grouped ? List<String>.unmodifiable(lines) : const <String>[],
-      summary: grouped ? _strings().notificationNewMessages(lines.length) : null,
+      summary: grouped
+          ? _strings().notificationNewMessages(lines.length)
+          : null,
       sound: _prefs.sound,
     );
   }
@@ -128,6 +130,13 @@ final class NotificationComposer {
   }
 
   List<String> _parts(ChatMessage message) {
+    if (message.isLocation) {
+      return [
+        _prefs.showText
+            ? _strings().chatLocationLabel
+            : _strings().notificationNewMessage,
+      ];
+    }
     final List<String> parts = <String>[];
     final String text = PeerText.clean(message.text).trim();
     if (_prefs.showText && text.isNotEmpty) parts.add(text);

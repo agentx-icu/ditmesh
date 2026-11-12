@@ -11,3 +11,5 @@
 
 /* Connecting to local Tox peers and bootstrap nodes. */
 "NSLocalNetworkUsageDescription" = "DitMesh usa la red local para conectarse con usuarios de Tox y nodos de arranque en tu red.";
+
+"NSLocationWhenInUseUsageDescription" = "DitMesh consulta tu ubicación solo con la app abierta para mostrar las coordenadas actuales, usar el localizador de cuadrícula, buscar personas cercanas si lo activas y enviar mensajes de ubicación en el chat cuando tú lo solicitas.";

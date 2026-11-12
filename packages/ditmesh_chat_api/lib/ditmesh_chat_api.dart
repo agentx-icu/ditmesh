@@ -20,3 +20,7 @@ export 'src/outbox.dart';
 export 'src/peer_text.dart';
 export 'src/tox_address.dart';
 export 'src/network_bootstrap.dart';
+
+export 'src/nearby_transport.dart';
+
+export 'src/chat_location.dart';

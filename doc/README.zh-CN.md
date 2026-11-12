@@ -6,6 +6,7 @@
 
 - [应用职责](APP_SPLIT.zh-CN.md)——DitMesh 聊天与 MorseCQ 训练器的分工
 - [Bootstrap 节点与局域网托管](operations/NETWORK.zh-CN.md)
+- [定位与附近的人](reference/LOCATION_AND_NEARBY.zh-CN.md)
 - [公开站点：隐私、条款、支持](../site/README.zh-CN.md)
 
 ## 构建、测试与发布

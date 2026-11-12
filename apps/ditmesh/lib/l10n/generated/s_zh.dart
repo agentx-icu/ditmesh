@@ -3638,6 +3638,196 @@ class SZh extends S {
 
   @override
   String get listenMissingCaptureTool => '请安装 pulseaudio-utils 以在 Linux 上使用麦克风。';
+
+  @override
+  String get locationServices => '位置';
+
+  @override
+  String get nearbyVisible => '对附近的人可见';
+
+  @override
+  String get nearbyVisibleDesc => '开启后，约 5 公里内同样使用“附近的人”的用户可以看到你的昵称和大致位置。';
+
+  @override
+  String get peopleNearby => '附近的人';
+
+  @override
+  String get locationPermissionDenied => '位置权限已被拒绝。请在系统设置中允许后再使用位置功能。';
+
+  @override
+  String get locationServiceDisabled => '本设备的定位服务已关闭。';
+
+  @override
+  String get locationUnavailable => '暂时无法获取你的当前位置。';
+
+  @override
+  String get nearbyLocating => '正在定位…';
+
+  @override
+  String get nearbyJoining => '正在寻找附近的人…';
+
+  @override
+  String get nearbyNobody => '附近还没有人。有人上线后会显示在这里。';
+
+  @override
+  String get nearbyDhtNotReady => '尚未连接到 Tox 网络。';
+
+  @override
+  String get nearbyNoLocation => '无法获取你的位置。';
+
+  @override
+  String get nearbyOff => '请在设置中开启“位置”和“对附近的人可见”以查看周围的人。';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '附近有 $count 人';
+  }
+
+  @override
+  String get nearbySayHi => '打招呼';
+
+  @override
+  String get nearbySendRequest => '发送请求';
+
+  @override
+  String get nearbyRequestMessageHint => '附上一句话（可选）';
+
+  @override
+  String get nearbyRequestSent => '请求已发送。';
+
+  @override
+  String get nearbyRequestLimit => '请求过于频繁，请稍后再试。';
+
+  @override
+  String get nearbyRequestTooLong => '消息太长了。';
+
+  @override
+  String get nearbyPeerGone => '对方已不在附近。';
+
+  @override
+  String get nearbyBlock => '屏蔽';
+
+  @override
+  String get nearbyBlocked => '本次会话内已屏蔽。';
+
+  @override
+  String get nearbyConsentTitle => '分享你的 Tox ID？';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return '你的 Tox ID 将发送给 $name，以便对方向你发送好友请求。其他人不会收到。';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => '附近的人';
+
+  @override
+  String get nearbyPrivacyBody => '开启后，约 5 公里内同样使用“附近的人”的用户可以看到你的昵称和大致位置（约 100 米精度）。除非你主动向某人发送请求，否则不会分享你的 Tox ID。该功能仅在 DitMesh 打开时工作。';
+
+  @override
+  String get nearbyPrivacyAccept => '开启';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name 回应了你在附近发出的请求。要添加为好友吗？';
+  }
+
+  @override
+  String get nearbyUnnamed => '附近的某人';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return '约 $meters 米';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return '约 $km 公里';
+  }
+
+  @override
+  String get nearbyIncomingTitle => '来自附近的好友请求';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name 想添加你为好友。接受后将向对方发送好友请求。';
+  }
+
+  @override
+  String get nearbyIncomingAccept => '接受';
+
+  @override
+  String get nearbyIncomingDecline => '拒绝';
+
+  @override
+  String get nearbyPaused => '已暂停，点击刷新重新查找。';
+
+  @override
+  String get nearbyCellUnavailable => '当前区域暂不可用，正在后台重试。';
+
+  @override
+  String get locationServicesDesc => 'DitMesh 仅在应用打开时读取位置，用于当前坐标、网格定位、可选的附近的人功能和你主动发送的聊天位置消息。定位默认关闭。';
+
+  @override
+  String get locationUseCurrent => '使用当前位置';
+
+  @override
+  String get locationCurrent => '当前位置';
+
+  @override
+  String get locationSaveFailed => '无法保存定位设置，请重试。';
+
+  @override
+  String get locationSystemSettings => '打开系统设置';
+
+  @override
+  String get locationDisabledHint => '请在设置中开启定位以使用当前位置。';
+
+  @override
+  String get nearbyUnavailable => 'Tox 会话建立后即可使用附近的人。';
+
+  @override
+  String get chatLocationLabel => '位置';
+
+  @override
+  String get chatSendLocation => '发送当前位置';
+
+  @override
+  String get chatViewLocation => '查看分享的位置';
+
+  @override
+  String get chatLocationShareTitle => '分享当前位置？';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return '将这个位置发送给 $name？坐标会保存在此聊天记录中。';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return '$time 分享 · 单次位置，不会实时更新';
+  }
+
+  @override
+  String get chatLocationInvalid => '这条位置消息无效。';
+
+  @override
+  String get chatLocationNotShared => '对方尚未在此聊天中分享位置。';
+
+  @override
+  String get chatOpenMaps => '在地图中打开';
+
+  @override
+  String get chatCopyCoordinates => '复制坐标';
+
+  @override
+  String get chatOpenMapsFailed => '无法打开此位置的地图。';
+
+  @override
+  String get chatLocationSent => '位置已发送。';
+
+  @override
+  String get chatLocationSendFailed => '无法发送此位置，请重试。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7274,4 +7464,194 @@ class SZhHant extends SZh {
 
   @override
   String get listenMissingCaptureTool => '請安裝 pulseaudio-utils 以在 Linux 上使用麥克風。';
+
+  @override
+  String get locationServices => '位置';
+
+  @override
+  String get nearbyVisible => '對附近的人可見';
+
+  @override
+  String get nearbyVisibleDesc => '開啟後，約 5 公里內同樣使用「附近的人」的使用者可以看到你的暱稱和大致位置。';
+
+  @override
+  String get peopleNearby => '附近的人';
+
+  @override
+  String get locationPermissionDenied => '位置權限已被拒絕。請在系統設定中允許後再使用位置功能。';
+
+  @override
+  String get locationServiceDisabled => '本裝置的定位服務已關閉。';
+
+  @override
+  String get locationUnavailable => '暫時無法取得你的目前位置。';
+
+  @override
+  String get nearbyLocating => '正在定位…';
+
+  @override
+  String get nearbyJoining => '正在尋找附近的人…';
+
+  @override
+  String get nearbyNobody => '附近還沒有人。有人上線後會顯示在這裡。';
+
+  @override
+  String get nearbyDhtNotReady => '尚未連線到 Tox 網路。';
+
+  @override
+  String get nearbyNoLocation => '無法取得你的位置。';
+
+  @override
+  String get nearbyOff => '請在設定中開啟「位置」和「對附近的人可見」以查看周圍的人。';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return '附近有 $count 人';
+  }
+
+  @override
+  String get nearbySayHi => '打招呼';
+
+  @override
+  String get nearbySendRequest => '傳送請求';
+
+  @override
+  String get nearbyRequestMessageHint => '附上一句話（選填）';
+
+  @override
+  String get nearbyRequestSent => '請求已傳送。';
+
+  @override
+  String get nearbyRequestLimit => '請求過於頻繁，請稍後再試。';
+
+  @override
+  String get nearbyRequestTooLong => '訊息太長了。';
+
+  @override
+  String get nearbyPeerGone => '對方已不在附近。';
+
+  @override
+  String get nearbyBlock => '封鎖';
+
+  @override
+  String get nearbyBlocked => '本次工作階段內已封鎖。';
+
+  @override
+  String get nearbyConsentTitle => '分享你的 Tox ID？';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return '你的 Tox ID 將傳送給 $name，以便對方向你傳送好友請求。其他人不會收到。';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => '附近的人';
+
+  @override
+  String get nearbyPrivacyBody => '開啟後，約 5 公里內同樣使用「附近的人」的使用者可以看到你的暱稱和大致位置（約 100 公尺精度）。除非你主動向某人傳送請求，否則不會分享你的 Tox ID。此功能僅在 DitMesh 開啟時運作。';
+
+  @override
+  String get nearbyPrivacyAccept => '開啟';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name 回應了你在附近發出的請求。要加為好友嗎？';
+  }
+
+  @override
+  String get nearbyUnnamed => '附近的某人';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return '約 $meters 公尺';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return '約 $km 公里';
+  }
+
+  @override
+  String get nearbyIncomingTitle => '來自附近的好友請求';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name 想加你為好友。接受後將向對方傳送好友請求。';
+  }
+
+  @override
+  String get nearbyIncomingAccept => '接受';
+
+  @override
+  String get nearbyIncomingDecline => '拒絕';
+
+  @override
+  String get nearbyPaused => '已暫停，點擊重新整理重新尋找。';
+
+  @override
+  String get nearbyCellUnavailable => '目前區域暫時無法使用，正在背景重試。';
+
+  @override
+  String get locationServicesDesc => 'DitMesh 僅在應用程式開啟時讀取位置，用於目前座標、網格定位、選用的附近的人功能，以及你主動傳送的聊天位置訊息。定位預設關閉。';
+
+  @override
+  String get locationUseCurrent => '使用目前位置';
+
+  @override
+  String get locationCurrent => '目前位置';
+
+  @override
+  String get locationSaveFailed => '無法儲存定位設定，請重試。';
+
+  @override
+  String get locationSystemSettings => '開啟系統設定';
+
+  @override
+  String get locationDisabledHint => '請在設定中開啟定位以使用目前位置。';
+
+  @override
+  String get nearbyUnavailable => 'Tox 工作階段建立後即可使用附近的人。';
+
+  @override
+  String get chatLocationLabel => '位置';
+
+  @override
+  String get chatSendLocation => '傳送目前位置';
+
+  @override
+  String get chatViewLocation => '查看分享的位置';
+
+  @override
+  String get chatLocationShareTitle => '分享目前位置？';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return '要將這個位置傳送給 $name 嗎？座標會儲存在此聊天記錄中。';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return '$time 分享 · 單次位置，不會即時更新';
+  }
+
+  @override
+  String get chatLocationInvalid => '這則位置訊息無效。';
+
+  @override
+  String get chatLocationNotShared => '對方尚未在此聊天中分享位置。';
+
+  @override
+  String get chatOpenMaps => '在地圖中開啟';
+
+  @override
+  String get chatCopyCoordinates => '複製座標';
+
+  @override
+  String get chatOpenMapsFailed => '無法開啟此位置的地圖。';
+
+  @override
+  String get chatLocationSent => '位置已傳送。';
+
+  @override
+  String get chatLocationSendFailed => '無法傳送此位置，請重試。';
 }

@@ -3695,4 +3695,194 @@ class SRu extends S {
 
   @override
   String get listenMissingCaptureTool => 'Установите pulseaudio-utils для использования микрофона в Linux.';
+
+  @override
+  String get locationServices => 'Геопозиция';
+
+  @override
+  String get nearbyVisible => 'Видимость для людей рядом';
+
+  @override
+  String get nearbyVisibleDesc => 'Когда эта функция включена, люди в радиусе примерно 5 км, использующие «Люди рядом», могут видеть ваше имя и приблизительное местоположение.';
+
+  @override
+  String get peopleNearby => 'Люди рядом';
+
+  @override
+  String get locationPermissionDenied => 'Доступ к геопозиции запрещён. Разрешите его в настройках системы, чтобы использовать функции геолокации.';
+
+  @override
+  String get locationServiceDisabled => 'Службы геолокации на этом устройстве отключены.';
+
+  @override
+  String get locationUnavailable => 'Сейчас не удалось определить ваше местоположение.';
+
+  @override
+  String get nearbyLocating => 'Определение местоположения…';
+
+  @override
+  String get nearbyJoining => 'Поиск людей рядом…';
+
+  @override
+  String get nearbyNobody => 'Пока рядом никого нет. Люди появятся здесь, когда подключатся к сети.';
+
+  @override
+  String get nearbyDhtNotReady => 'Подключение к сети Tox ещё не установлено.';
+
+  @override
+  String get nearbyNoLocation => 'Ваше местоположение недоступно.';
+
+  @override
+  String get nearbyOff => 'Включите «Геопозиция» и «Видимость для людей рядом» в настройках, чтобы увидеть, кто поблизости.';
+
+  @override
+  String nearbyPeopleCount(int count) {
+    return 'Людей рядом: $count';
+  }
+
+  @override
+  String get nearbySayHi => 'Поздороваться';
+
+  @override
+  String get nearbySendRequest => 'Отправить запрос';
+
+  @override
+  String get nearbyRequestMessageHint => 'Добавьте короткое сообщение (необязательно)';
+
+  @override
+  String get nearbyRequestSent => 'Запрос отправлен.';
+
+  @override
+  String get nearbyRequestLimit => 'Слишком много запросов. Повторите позже.';
+
+  @override
+  String get nearbyRequestTooLong => 'Сообщение слишком длинное.';
+
+  @override
+  String get nearbyPeerGone => 'Этого человека больше нет поблизости.';
+
+  @override
+  String get nearbyBlock => 'Заблокировать';
+
+  @override
+  String get nearbyBlocked => 'Заблокировано на время этого сеанса.';
+
+  @override
+  String get nearbyConsentTitle => 'Поделиться вашим Tox ID?';
+
+  @override
+  String nearbyConsentBody(String name) {
+    return 'Ваш Tox ID будет отправлен пользователю $name, чтобы он мог отправить вам запрос в друзья. Больше никто его не получит.';
+  }
+
+  @override
+  String get nearbyPrivacyTitle => 'Люди рядом';
+
+  @override
+  String get nearbyPrivacyBody => 'Когда эта функция включена, люди в радиусе примерно 5 км, которые также используют «Люди рядом», могут видеть ваше имя и приблизительное местоположение (с точностью около 100 м). Ваш Tox ID передаётся только тогда, когда вы отправляете кому-либо запрос. Функция «Люди рядом» работает только при открытом DitMesh.';
+
+  @override
+  String get nearbyPrivacyAccept => 'Включить';
+
+  @override
+  String nearbyReplyBody(String name) {
+    return '$name ответил(а) на ваш запрос через «Люди рядом». Добавить в друзья?';
+  }
+
+  @override
+  String get nearbyUnnamed => 'Кто-то рядом';
+
+  @override
+  String nearbyDistanceMeters(int meters) {
+    return 'около $meters м';
+  }
+
+  @override
+  String nearbyDistanceKm(String km) {
+    return 'около $km км';
+  }
+
+  @override
+  String get nearbyIncomingTitle => 'Запрос в друзья от человека рядом';
+
+  @override
+  String nearbyIncomingBody(String name) {
+    return '$name хочет добавить вас в друзья. Если вы согласитесь, этому человеку будет отправлен запрос в друзья.';
+  }
+
+  @override
+  String get nearbyIncomingAccept => 'Принять';
+
+  @override
+  String get nearbyIncomingDecline => 'Отклонить';
+
+  @override
+  String get nearbyPaused => 'Приостановлено. Нажмите «Обновить», чтобы повторить поиск.';
+
+  @override
+  String get nearbyCellUnavailable => 'Ваша область сейчас недоступна; повторная попытка будет выполнена автоматически.';
+
+  @override
+  String get locationServicesDesc => 'DitMesh получает геопозицию только при открытом приложении: для текущих координат, локатора, необязательного поиска людей рядом и сообщений с геопозицией, которые вы сами отправляете в чат. Определение геопозиции по умолчанию отключено.';
+
+  @override
+  String get locationUseCurrent => 'Использовать текущую геопозицию';
+
+  @override
+  String get locationCurrent => 'Текущая геопозиция';
+
+  @override
+  String get locationSaveFailed => 'Не удалось сохранить настройки геопозиции. Повторите попытку.';
+
+  @override
+  String get locationSystemSettings => 'Открыть настройки системы';
+
+  @override
+  String get locationDisabledHint => 'Включите «Геопозиция» в настройках, чтобы использовать ваше текущее местоположение.';
+
+  @override
+  String get nearbyUnavailable => 'Функция «Люди рядом» станет доступна после открытия сеанса Tox.';
+
+  @override
+  String get chatLocationLabel => 'Геопозиция';
+
+  @override
+  String get chatSendLocation => 'Отправить текущую геопозицию';
+
+  @override
+  String get chatViewLocation => 'Показать переданную геопозицию';
+
+  @override
+  String get chatLocationShareTitle => 'Поделиться текущей геопозицией?';
+
+  @override
+  String chatLocationShareBody(String name) {
+    return 'Отправить эту геопозицию пользователю $name? Координаты сохранятся в истории этого чата.';
+  }
+
+  @override
+  String chatLocationSnapshot(String time) {
+    return 'Передано $time · разовая геопозиция, без обновления в реальном времени';
+  }
+
+  @override
+  String get chatLocationInvalid => 'Это сообщение с геопозицией недействительно.';
+
+  @override
+  String get chatLocationNotShared => 'Этот человек ещё не передавал геопозицию в этом чате.';
+
+  @override
+  String get chatOpenMaps => 'Открыть в картах';
+
+  @override
+  String get chatCopyCoordinates => 'Копировать координаты';
+
+  @override
+  String get chatOpenMapsFailed => 'Не удалось открыть карту для этой геопозиции.';
+
+  @override
+  String get chatLocationSent => 'Геопозиция отправлена.';
+
+  @override
+  String get chatLocationSendFailed => 'Не удалось отправить эту геопозицию. Попробуйте ещё раз.';
 }

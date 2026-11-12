@@ -5012,10 +5012,294 @@
   "learnFlashNotice": "Uses a small flashing indicator. Avoid if photosensitive; Reduce Motion keeps it steady.",
   "learnHapticUnavailable": "Vibration is unavailable on this device.",
   "listenMissingCaptureTool": "Install pulseaudio-utils to use the microphone on Linux.",
-  "@errorUnsupportedDataVersion": {"description": "Startup recovery for identity data written by a newer application; originals remain untouched."},
-  "@desktopCloseToTray": {"description": "Desktop setting controlling close versus quit."},
-  "@desktopCloseToTrayDescription": {"description": "Explains the desktop close setting and the requirement for a usable tray host."},
-  "@learnFlashNotice": {"description": "Explains the bounded light indicator and reduced-motion behavior."},
-  "@learnHapticUnavailable": {"description": "Displayed when the device has no usable vibration hardware."},
-  "@listenMissingCaptureTool": {"description": "Recovery instruction when the Linux recorder command cannot be started."}
+  "@errorUnsupportedDataVersion": {
+    "description": "Startup recovery for identity data written by a newer application; originals remain untouched."
+  },
+  "@desktopCloseToTray": {
+    "description": "Desktop setting controlling close versus quit."
+  },
+  "@desktopCloseToTrayDescription": {
+    "description": "Explains the desktop close setting and the requirement for a usable tray host."
+  },
+  "@learnFlashNotice": {
+    "description": "Explains the bounded light indicator and reduced-motion behavior."
+  },
+  "@learnHapticUnavailable": {
+    "description": "Displayed when the device has no usable vibration hardware."
+  },
+  "@listenMissingCaptureTool": {
+    "description": "Recovery instruction when the Linux recorder command cannot be started."
+  },
+  "locationServices": "Location",
+  "@locationServices": {
+    "description": "Location and nearby discovery: locationServices."
+  },
+  "nearbyVisible": "Visible to people nearby",
+  "@nearbyVisible": {
+    "description": "Location and nearby discovery: nearbyVisible."
+  },
+  "nearbyVisibleDesc": "While this is on, people within about 5 km who use People nearby can see your name and approximate location.",
+  "@nearbyVisibleDesc": {
+    "description": "Location and nearby discovery: nearbyVisibleDesc."
+  },
+  "peopleNearby": "People nearby",
+  "@peopleNearby": {
+    "description": "Location and nearby discovery: peopleNearby."
+  },
+  "locationPermissionDenied": "Location permission is denied. Allow it in the system settings to use location features.",
+  "@locationPermissionDenied": {
+    "description": "Location and nearby discovery: locationPermissionDenied."
+  },
+  "locationServiceDisabled": "Location services are turned off on this device.",
+  "@locationServiceDisabled": {
+    "description": "Location and nearby discovery: locationServiceDisabled."
+  },
+  "locationUnavailable": "Your current location is not available right now.",
+  "@locationUnavailable": {
+    "description": "Location and nearby discovery: locationUnavailable."
+  },
+  "nearbyLocating": "Finding your location…",
+  "@nearbyLocating": {
+    "description": "Location and nearby discovery: nearbyLocating."
+  },
+  "nearbyJoining": "Looking for people nearby…",
+  "@nearbyJoining": {
+    "description": "Location and nearby discovery: nearbyJoining."
+  },
+  "nearbyNobody": "Nobody nearby yet. People appear here as they come online.",
+  "@nearbyNobody": {
+    "description": "Location and nearby discovery: nearbyNobody."
+  },
+  "nearbyDhtNotReady": "Not connected to the Tox network yet.",
+  "@nearbyDhtNotReady": {
+    "description": "Location and nearby discovery: nearbyDhtNotReady."
+  },
+  "nearbyNoLocation": "Your location is not available.",
+  "@nearbyNoLocation": {
+    "description": "Location and nearby discovery: nearbyNoLocation."
+  },
+  "nearbyOff": "Turn on Location and “Visible to people nearby” in Settings to see who is around.",
+  "@nearbyOff": {
+    "description": "Location and nearby discovery: nearbyOff."
+  },
+  "nearbyPeopleCount": "{count} people nearby",
+  "@nearbyPeopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyPeopleCount."
+  },
+  "nearbySayHi": "Say hi",
+  "@nearbySayHi": {
+    "description": "Location and nearby discovery: nearbySayHi."
+  },
+  "nearbySendRequest": "Send request",
+  "@nearbySendRequest": {
+    "description": "Location and nearby discovery: nearbySendRequest."
+  },
+  "nearbyRequestMessageHint": "Add a short message (optional)",
+  "@nearbyRequestMessageHint": {
+    "description": "Location and nearby discovery: nearbyRequestMessageHint."
+  },
+  "nearbyRequestSent": "Request sent.",
+  "@nearbyRequestSent": {
+    "description": "Location and nearby discovery: nearbyRequestSent."
+  },
+  "nearbyRequestLimit": "Too many requests. Try again later.",
+  "@nearbyRequestLimit": {
+    "description": "Location and nearby discovery: nearbyRequestLimit."
+  },
+  "nearbyRequestTooLong": "The message is too long.",
+  "@nearbyRequestTooLong": {
+    "description": "Location and nearby discovery: nearbyRequestTooLong."
+  },
+  "nearbyPeerGone": "That person is no longer nearby.",
+  "@nearbyPeerGone": {
+    "description": "Location and nearby discovery: nearbyPeerGone."
+  },
+  "nearbyBlock": "Block",
+  "@nearbyBlock": {
+    "description": "Location and nearby discovery: nearbyBlock."
+  },
+  "nearbyBlocked": "Blocked for this session.",
+  "@nearbyBlocked": {
+    "description": "Location and nearby discovery: nearbyBlocked."
+  },
+  "nearbyConsentTitle": "Share your Tox ID?",
+  "@nearbyConsentTitle": {
+    "description": "Location and nearby discovery: nearbyConsentTitle."
+  },
+  "nearbyConsentBody": "Your Tox ID will be sent to {name} so they can send you a friend request. Nobody else receives it.",
+  "@nearbyConsentBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyConsentBody."
+  },
+  "nearbyPrivacyTitle": "People nearby",
+  "@nearbyPrivacyTitle": {
+    "description": "Location and nearby discovery: nearbyPrivacyTitle."
+  },
+  "nearbyPrivacyBody": "While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.",
+  "@nearbyPrivacyBody": {
+    "description": "Location and nearby discovery: nearbyPrivacyBody."
+  },
+  "nearbyPrivacyAccept": "Turn on",
+  "@nearbyPrivacyAccept": {
+    "description": "Location and nearby discovery: nearbyPrivacyAccept."
+  },
+  "nearbyReplyBody": "{name} answered the request you sent nearby. Add them as a friend?",
+  "@nearbyReplyBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyReplyBody."
+  },
+  "nearbyUnnamed": "Someone nearby",
+  "@nearbyUnnamed": {
+    "description": "Location and nearby discovery: nearbyUnnamed."
+  },
+  "nearbyDistanceMeters": "about {meters} m",
+  "@nearbyDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyDistanceMeters."
+  },
+  "nearbyDistanceKm": "about {km} km",
+  "@nearbyDistanceKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyDistanceKm."
+  },
+  "nearbyIncomingTitle": "Friend request from nearby",
+  "@nearbyIncomingTitle": {
+    "description": "Location and nearby discovery: nearbyIncomingTitle."
+  },
+  "nearbyIncomingBody": "{name} wants to add you. Accepting sends them a friend request.",
+  "@nearbyIncomingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Location and nearby discovery: nearbyIncomingBody."
+  },
+  "nearbyIncomingAccept": "Accept",
+  "@nearbyIncomingAccept": {
+    "description": "Location and nearby discovery: nearbyIncomingAccept."
+  },
+  "nearbyIncomingDecline": "Decline",
+  "@nearbyIncomingDecline": {
+    "description": "Location and nearby discovery: nearbyIncomingDecline."
+  },
+  "nearbyPaused": "Paused. Tap refresh to look again.",
+  "@nearbyPaused": {
+    "description": "Location and nearby discovery: nearbyPaused."
+  },
+  "nearbyCellUnavailable": "Your area is unavailable right now; retrying in the background.",
+  "@nearbyCellUnavailable": {
+    "description": "Location and nearby discovery: nearbyCellUnavailable."
+  },
+  "locationServicesDesc": "Allow current coordinates, the grid locator, optional People nearby and explicitly shared chat positions. Off by default; location is only read while DitMesh is open.",
+  "@locationServicesDesc": {
+    "description": "Location settings or current-position action: locationServicesDesc."
+  },
+  "locationUseCurrent": "Use current location",
+  "@locationUseCurrent": {
+    "description": "Location settings or current-position action: locationUseCurrent."
+  },
+  "locationCurrent": "Current location",
+  "@locationCurrent": {
+    "description": "Location settings or current-position action: locationCurrent."
+  },
+  "locationSaveFailed": "Could not save the location settings. Try again.",
+  "@locationSaveFailed": {
+    "description": "Location settings or current-position action: locationSaveFailed."
+  },
+  "locationSystemSettings": "Open system settings",
+  "@locationSystemSettings": {
+    "description": "Location settings or current-position action: locationSystemSettings."
+  },
+  "locationDisabledHint": "Turn on Location in settings to use your current position.",
+  "@locationDisabledHint": {
+    "description": "Location settings or current-position action: locationDisabledHint."
+  },
+  "nearbyUnavailable": "People nearby is unavailable until a Tox session is open.",
+  "@nearbyUnavailable": {
+    "description": "Location settings or current-position action: nearbyUnavailable."
+  },
+  "chatLocationLabel": "Location",
+  "@chatLocationLabel": {
+    "description": "Chat single-location sharing: chatLocationLabel."
+  },
+  "chatSendLocation": "Send current location",
+  "@chatSendLocation": {
+    "description": "Chat single-location sharing: chatSendLocation."
+  },
+  "chatViewLocation": "View shared location",
+  "@chatViewLocation": {
+    "description": "Chat single-location sharing: chatViewLocation."
+  },
+  "chatLocationShareTitle": "Share current location?",
+  "@chatLocationShareTitle": {
+    "description": "Chat single-location sharing: chatLocationShareTitle."
+  },
+  "chatLocationShareBody": "Send one position to {name}? Coordinates will be stored in this chat’s history.",
+  "@chatLocationShareBody": {
+    "description": "Chat single-location sharing: chatLocationShareBody.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatLocationSnapshot": "Shared {time} · single position, not live",
+  "@chatLocationSnapshot": {
+    "description": "Chat single-location sharing: chatLocationSnapshot.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "chatLocationInvalid": "This location message is invalid.",
+  "@chatLocationInvalid": {
+    "description": "Chat single-location sharing: chatLocationInvalid."
+  },
+  "chatLocationNotShared": "This person has not shared a location in this chat.",
+  "@chatLocationNotShared": {
+    "description": "Chat single-location sharing: chatLocationNotShared."
+  },
+  "chatOpenMaps": "Open in Maps",
+  "@chatOpenMaps": {
+    "description": "Chat single-location sharing: chatOpenMaps."
+  },
+  "chatCopyCoordinates": "Copy coordinates",
+  "@chatCopyCoordinates": {
+    "description": "Chat single-location sharing: chatCopyCoordinates."
+  },
+  "chatOpenMapsFailed": "Could not open a map for this location.",
+  "@chatOpenMapsFailed": {
+    "description": "Chat single-location sharing: chatOpenMapsFailed."
+  },
+  "chatLocationSent": "Location sent.",
+  "@chatLocationSent": {
+    "description": "Chat single-location sharing: chatLocationSent."
+  },
+  "chatLocationSendFailed": "Could not send this location. Try again.",
+  "@chatLocationSendFailed": {
+    "description": "Chat single-location sharing: chatLocationSendFailed."
+  }
 }

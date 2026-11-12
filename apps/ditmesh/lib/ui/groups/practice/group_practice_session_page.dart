@@ -166,7 +166,10 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
     final instructor = session.role == GroupPracticeRole.instructor;
     final taken = session.rounds.map((r) => r.messageId).toSet();
     final candidates = history.reversed
-        .where((m) => m.isMine == instructor && !taken.contains(m.id))
+        .where(
+          (m) =>
+              !m.isLocation && m.isMine == instructor && !taken.contains(m.id),
+        )
         .toList();
     final picked = await showModalBottomSheet<ChatMessage>(
       context: context,
@@ -231,11 +234,8 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
     }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ChatCopyScreen(
-          controller: c,
-          playback: factory,
-          session: copy,
-        ),
+        builder: (_) =>
+            ChatCopyScreen(controller: c, playback: factory, session: copy),
       ),
     );
     final attempt = GroupPracticeStore.attemptOf(
@@ -313,7 +313,8 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
                 ),
               ],
               const SizedBox(height: 8),
-              for (final (i, r) in session.rounds.indexed) _round(i, r, instructor),
+              for (final (i, r) in session.rounds.indexed)
+                _round(i, r, instructor),
               const Divider(height: 32),
               Card(
                 key: const Key('gp-summary'),
@@ -322,13 +323,19 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(s.groupPracticeSummary, style: Theme.of(context).textTheme.titleSmall),
+                      Text(
+                        s.groupPracticeSummary,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
                       Text(s.groupPracticeRoundsDone(sum.done, sum.rounds)),
                       if (missing > 0)
                         Text(s.groupPracticeUnavailableCount(missing)),
                       if (sum.attempts > 0) ...[
-                        Text(s.groupPracticeAccuracy((sum.accuracy * 100).round())),
-                        if (sum.assisted > 0) Text(s.groupPracticeAssisted(sum.assisted)),
+                        Text(
+                          s.groupPracticeAccuracy((sum.accuracy * 100).round()),
+                        ),
+                        if (sum.assisted > 0)
+                          Text(s.groupPracticeAssisted(sum.assisted)),
                         const SizedBox(height: 8),
                         Text(
                           s.groupPracticeShareHint(
@@ -419,7 +426,8 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
             IconButton(
               tooltip: s.groupPracticeRemoveRound,
               icon: const Icon(Icons.close),
-              onPressed: () => _update((b) => b.removeRound(widget.sessionId, r.id)),
+              onPressed: () =>
+                  _update((b) => b.removeRound(widget.sessionId, r.id)),
             ),
           ],
         ),

@@ -218,9 +218,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final int request = ++_searchRequest;
     try {
       final rows = await _service.loadAround(_id, hit.id);
-      if (!mounted ||
-          generation != _generation ||
-          request != _searchRequest) {
+      if (!mounted || generation != _generation || request != _searchRequest) {
         return;
       }
       if (rows.isEmpty) {
@@ -431,6 +429,32 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
 
   Future<void> _onMenu(String action) async {
     switch (action) {
+      case 'shareLocation':
+        final conversation = widget.target.id;
+        final generation = _generation;
+        await ConversationLocationActions.share(
+          context,
+          service: _service,
+          target: widget.target,
+          isCurrent: () =>
+              mounted &&
+              generation == _generation &&
+              widget.target.id == conversation &&
+              !_clearing,
+        );
+      case 'viewLocation':
+        final conversation = widget.target.id;
+        final generation = _generation;
+        await ConversationLocationActions.view(
+          context,
+          service: _service,
+          target: widget.target,
+          isCurrent: () =>
+              mounted &&
+              generation == _generation &&
+              widget.target.id == conversation &&
+              !_clearing,
+        );
       case 'members':
         final Group? group = _group();
         if (group != null) {

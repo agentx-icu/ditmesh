@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:radio_tools/radio_tools.dart';
+import '../../nearby/location_source.dart';
+import '../nearby/location_settings_page.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../common/field_label.dart';
@@ -37,6 +39,18 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
 
   void _changed(String _) => setState(() {});
 
+  void _useLocation(LocationFix fix) {
+    if (!mounted) return;
+    setState(() {
+      _lat.text = fix.latitude.toStringAsFixed(6);
+      _lon.text = fix.longitude.toStringAsFixed(6);
+      _mine.text = Maidenhead.fromPoint(
+        GeoPoint(fix.latitude, fix.longitude),
+        length: 8,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -45,7 +59,15 @@ class _GridLocatorToolState extends State<GridLocatorTool> {
       children: <Widget>[
         ToolSection(
           title: s.toolsGridFromCoordinates,
-          children: <Widget>[..._coordinateFields(s), ..._locatorResult(s)],
+          children: <Widget>[
+            CurrentLocationButton(
+              buttonKey: const Key('grid-use-current-location'),
+              onFix: _useLocation,
+            ),
+            const SizedBox(height: 12),
+            ..._coordinateFields(s),
+            ..._locatorResult(s),
+          ],
         ),
         ToolSection(
           title: s.toolsGridDistanceSection,
