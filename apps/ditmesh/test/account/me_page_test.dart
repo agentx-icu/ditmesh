@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
+import 'package:ditmesh/ui/account/account_routes.dart';
 import 'package:ditmesh/ui/account/backup_file_gateway.dart';
 import 'package:ditmesh/ui/account/change_password_page.dart';
 import 'package:ditmesh/ui/account/delete_identity_dialog.dart';
@@ -12,6 +13,7 @@ import 'package:ditmesh/ui/pages/me_page.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
 
+import '../moderation/fake_url_launcher.dart';
 import 'test_app.dart';
 
 /// The harness renders in English (no override, default test locale).
@@ -40,6 +42,53 @@ void main() {
   setUp(() {
     identity = seededIdentityService();
     files = FakeBackupFileGateway();
+  });
+
+  testWidgets('Me opens technical support locally and copies the source URL', (
+    tester,
+  ) async {
+    final launcher = FakeUrlLauncher.install();
+    final clipboard = ClipboardSpy(tester);
+    await pumpApp(tester, identity: identity, backupFiles: files);
+    await _openMe(tester);
+
+    await tapVisible(tester, find.byKey(const ValueKey('about-support')));
+    expect(find.text(en.aboutSupport), findsOneWidget);
+    expect(find.textContaining('Connection problems'), findsOneWidget);
+    expect(find.byIcon(Icons.open_in_new), findsNothing);
+    await tester.pageBack();
+    await settle(tester);
+
+    await tapVisible(tester, find.text(kAboutSourceUrl));
+    expect(clipboard.copied, [kAboutSourceUrl]);
+    expect(launcher.launched, isEmpty);
+  });
+
+  testWidgets('Me opens local data and permission details', (tester) async {
+    final launcher = FakeUrlLauncher.install();
+    await pumpApp(tester, identity: identity, backupFiles: files);
+    await _openMe(tester);
+
+    for (final (key, title, body) in [
+      (
+        'account-personal-info',
+        en.accountPersonalInfoList,
+        en.personalInfoListText,
+      ),
+      (
+        'account-third-party',
+        en.accountThirdPartyShareList,
+        en.thirdPartyShareText,
+      ),
+      ('account-permissions', en.accountPermissionList, en.permissionListText),
+    ]) {
+      await tapVisible(tester, find.byKey(ValueKey(key)));
+      expect(find.text(title), findsOneWidget);
+      expect(find.text(body), findsOneWidget);
+      await tester.pageBack();
+      await settle(tester);
+    }
+    expect(launcher.launched, isEmpty);
   });
 
   testWidgets('identity card shows name, status and copies the Tox ID', (

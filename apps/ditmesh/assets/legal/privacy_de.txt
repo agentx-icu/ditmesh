@@ -1,0 +1,46 @@
+Zuletzt aktualisiert: 2026-11-13
+
+DitMesh ist eine Peer-to-Peer-App für Morse-Chats auf Android, iOS, macOS, Linux und Windows. Es gibt keinen Nachrichtenserver des Entwicklers, keine zentrale Registrierung und keine Werbung. Hilfe erhältst du über öffentliche GitHub-Issues. Veröffentliche dort keine privaten Nachrichten, Identitätsdaten oder Sicherungen.
+
+Die Produktionsversion für Android fragt vor dem Start des Tox-Backends nach deiner Zustimmung zur Datenschutzerklärung. Die App speichert die Version, der du zugestimmt hast, auf dem Gerät und bittet bei einer neuen Version erneut um Zustimmung.
+
+Lokale Daten
+
+Die App speichert deine Tox-Identität, Kontakte, Gruppen, den Nachrichtenverlauf, Entwürfe, Lesezeichen, Übungsdaten, Einstellungen, Tastenbelegungen und gespeicherte Aufnahmen im privaten App-Speicher. Das Identitätsprofil lässt sich mit einem Passwort schützen. Nachrichtenverläufe und Übungsdateien sind auf dem Datenträger unverschlüsselt. Schütze daher den Zugriff auf dein Gerät und deine Sicherungen. Verschlüsselte Exporte werden nur auf deine Anforderung gespeichert oder geteilt.
+
+Die Bootstrap-Einstellungen gelten für diese gesamte Installation. Für das Hosten eines LAN-Knotens auf dem Desktop wird ein separates lokales Knotenprofil verwendet. Diese Netzwerkeinstellungen bleiben erhalten, wenn du eine Chat-Identität wechselst oder löschst.
+
+Unter „Ich → Identität löschen“ kannst du die lokalen Kontodaten dieser Identität entfernen. Bereits gesendete Nachrichten bleiben auf den Geräten der Empfänger. Für Sicherungen des Betriebssystems und zuvor exportierte Kopien gelten eigene Aufbewahrungsregeln. DitMesh und MorseCQ speichern ihre App-Daten getrennt.
+
+Netzwerkdaten
+
+Nachrichten und Profildaten werden mit Tox verschlüsselt an Kontakte oder Gruppen gesendet. Das Netzwerk nutzt öffentliche Bootstrap-Knoten, um Gegenstellen zu finden. Es gibt keinen Server des Entwicklers, der unzugestellte Nachrichten speichert. Nachrichten an nicht erreichbare Empfänger bleiben auf dem Gerät des Absenders, bis beide Gegenstellen erreichbar sind.
+
+Beim automatischen Bootstrap und beim manuellen Aktualisieren des Knotenkatalogs ruft die App die öffentliche Knotenliste unter https://nodes.tox.chat/json ab. Der Server erhält dabei die IP-Adresse der Verbindung. Knotentests senden DHT-Anfragen an die ausgewählte Adresse. Beim Hosten eines LAN-Knotens auf dem Desktop öffnet die App einen UDP-Socket und zeigt lokale Netzwerkadressen sowie einen öffentlichen DHT-Schlüssel an, die du weitergeben kannst. Geheime Daten deiner Chat-Identität sind in diesen Knoteninformationen nicht enthalten.
+
+Tox verbindet Freunde direkt und verbirgt ihre IP-Adressen nicht voreinander. Bootstrap- und DHT-Knoten sehen die Netzwerkverbindungen, für die vorübergehende DHT-Schlüssel verwendet werden. Die öffentliche Tox-ID allein gibt deinen privaten Identitätsschlüssel nicht preis. Dein Anzeigename, dein Status und deine Gruppennachrichten sind für die jeweils vorgesehenen Empfänger sichtbar.
+
+Unter Android scannt Google ML Kit QR-Codes auf dem Gerät. Google erhält Diagnose- und Nutzungsdaten, etwa die App-Version, Geräteinformationen und Leistungsdaten des Scanners. Kamerabilder und die dekodierten QR-Inhalte werden lokal verarbeitet und nicht an Google gesendet.
+
+Standort und Personen in der Nähe
+
+Standort und Sichtbarkeit für Personen in der Nähe sind getrennte, optionale Einstellungen. Beide sind auf diesem Gerät standardmäßig für jede Identität deaktiviert. Die aktuellen Koordinaten lassen sich in das Maidenhead-Locator-Werkzeug übernehmen. Nicht gesendete Koordinaten bleiben im Arbeitsspeicher und sind in exportierten Sicherungen nicht enthalten. Nach einer Vorschau der Koordinaten kannst du gezielt eine einzelne Standortnachricht an einen Kontakt oder eine Gruppe senden. Diese Nachricht bleibt im Chatverlauf auf dem Gerät jedes Empfängers erhalten und wird bei einer Sicherung des Verlaufs mitgesichert. Beim Anzeigen empfangener Positionen wird der Standort deines Geräts nicht abgefragt. Ein Kartenanbieter erhält die ausgewählten Koordinaten nur, wenn du seine Karte öffnest. Die App fragt den Standort nur ab, wenn sie im Vordergrund ist.
+
+Wenn du auch die Sichtbarkeit aktivierst und „Personen in der Nähe“ öffnest, verwendet DitMesh dasselbe Tox-Rendezvous-Protokoll wie Toxee. DitMesh teilt deinen Anzeigenamen und deine ungefähren Koordinaten, auf rund 100 m gerundet, in öffentlichen Tox-Gruppen für deine Region. Wer einer dieser Gruppen beitritt, kann diese Daten empfangen. Für den Beitritt ist kein Nachweis der Identität oder des tatsächlichen Standorts erforderlich. Datenpakete der Umgebungssuche gelangen nicht in gewöhnliche Chats, den Nachrichtenverlauf oder die Gruppenliste. Es gibt keinen Server mit einem Standortverzeichnis. Das Netzwerk und der Standortanbieter des Betriebssystems haben jeweils eigenen Einblick in Netzwerkverbindungen und Standortanfragen.
+
+Für jede Sitzung der Umgebungssuche wird eine neue Identität zum Signieren und Verschlüsseln erstellt. Deine Tox-ID wird nur offengelegt, wenn du ausdrücklich eine Anfrage in der Umgebungssuche sendest oder beantwortest. Anfragen sind für den ausgewählten Teilnehmer verschlüsselt. Auch danach muss die Freundschaftsanfrage angenommen werden. Wenn du die Seite „Personen in der Nähe“ schließt, endet die Suche nach fünf Minuten. Wenn du die App ausblendest oder sie angehalten wird, du den Standortzugriff oder die Sichtbarkeit deaktivierst oder die Tox-Sitzung beendest, endet sie sofort. Sitzungsdaten verfallen, aber andere Teilnehmer können bereits empfangene Informationen behalten. Eine Sperre in der Umgebungssuche gilt nur für die aktuelle temporäre Suchidentität und Sitzung. Sperren in gewöhnlichen Chats werden unabhängig davon verwaltet.
+
+Optionale Berechtigungen
+
+• Lokales Netzwerk (Apple-Plattformen): Verbindungen zu manuell konfigurierten LAN-Knoten herstellen oder auf dem Desktop einen LAN-Knoten hosten.
+• Standort: aktuelle Koordinaten, Locator-Werkzeug, ausdrücklich gewählte Standortfreigaben im Chat und optional „Personen in der Nähe“. Es ist kein Standortzugriff im Hintergrund vorgesehen.
+• Kamera: einen Tox-ID-QR-Code auf dem Gerät scannen.
+• Mikrofon: Morse-Audio lokal dekodieren und eine Aufnahme nur auf Anforderung speichern.
+• Benachrichtigungen: lokal auf Nachrichten hinweisen und zur jeweiligen Nachricht navigieren. Es gibt keinen Push-Server.
+• Dateiauswahl und Teilen: Sicherungen und Materialien gezielt importieren oder exportieren. Wenn du einen Cloud-Dateianbieter auswählst oder einen Link im Browser öffnest, nutzt du die Netzwerkdienste des jeweiligen Anbieters.
+
+Sperren und Änderungen
+
+Eine Sperre blendet die Nachrichten, Anfragen und Einladungen der gesperrten Person auf deinem Gerät aus. Es gibt keine zentrale Stelle, die auf anderen Geräten gespeicherte Nachrichten löschen kann. Änderungen an der Datenverarbeitung werden hier mit einem neuen Datum dokumentiert.
+
+Hinweise zur Fehlerbehebung findest du unter „Ich → Datenschutz und Berechtigungen → Technischer Support“.

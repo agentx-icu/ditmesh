@@ -8,6 +8,7 @@ import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Set;
 import java.util.jar.JarFile;
+import javax.naming.ldap.LdapName;
 
 /** Verify the random-access AAB format, regardless of ZIP manifest ordering.
  * JarFile verifies signatures while reading to EOF; it does not establish
@@ -16,7 +17,10 @@ import java.util.jar.JarFile;
  */
 public class VerifyAndroidBundle {
   public static void main(String[] args) throws Exception {
-    if (args.length != 1) throw new IllegalArgumentException("Expected final AAB path");
+    boolean rejectDebug = args.length == 2 && args[1].equals("--reject-debug");
+    if (args.length != 1 && !rejectDebug) {
+      throw new IllegalArgumentException("Expected final AAB path and optional --reject-debug");
+    }
     Set<String> fingerprints = new HashSet<>();
     int signedEntries = 0;
     try (JarFile jar = new JarFile(Path.of(args[0]).toFile(), true)) {
@@ -41,7 +45,15 @@ public class VerifyAndroidBundle {
         }
         X509Certificate certificate = (X509Certificate) signers[0].getSignerCertPath().getCertificates().get(0);
         certificate.checkValidity();
-        fingerprints.add(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(certificate.getEncoded())));
+        String fingerprint = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(certificate.getEncoded()));
+        if (fingerprints.add(fingerprint) && rejectDebug) {
+          for (var rdn : new LdapName(certificate.getSubjectX500Principal().getName()).getRdns()) {
+            var commonName = rdn.toAttributes().get("CN");
+            if (commonName != null && "Android Debug".equalsIgnoreCase(commonName.get().toString())) {
+              throw new SecurityException("Android Debug certificate cannot sign a store AAB");
+            }
+          }
+        }
         signedEntries++;
       }
     }

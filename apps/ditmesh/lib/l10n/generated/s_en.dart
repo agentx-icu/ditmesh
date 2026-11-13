@@ -3276,7 +3276,7 @@ class SEn extends S {
   String get aboutTermsOfUse => 'Terms of use';
 
   @override
-  String get aboutSupport => 'Support and contact';
+  String get aboutSupport => 'Technical support';
 
   @override
   String get aboutLinkFailed => 'The link could not be opened, so it was copied.';
@@ -3662,7 +3662,7 @@ class SEn extends S {
   String get nearbyVisible => 'Visible to people nearby';
 
   @override
-  String get nearbyVisibleDesc => 'While this is on, people within about 5 km who use People nearby can see your name and approximate location.';
+  String get nearbyVisibleDesc => 'Participants in the same public Tox groups can see your display name and approximate location.';
 
   @override
   String get peopleNearby => 'People nearby';
@@ -3738,7 +3738,7 @@ class SEn extends S {
   String get nearbyPrivacyTitle => 'People nearby';
 
   @override
-  String get nearbyPrivacyBody => 'While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.';
+  String get nearbyPrivacyBody => 'DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground.';
 
   @override
   String get nearbyPrivacyAccept => 'Turn on';
@@ -3847,4 +3847,58 @@ class SEn extends S {
 
   @override
   String get learnSettingsSaveFailed => 'Couldn\'t save training settings. Try again.';
+
+  @override
+  String get accountSectionPrivacy => 'Privacy and permissions';
+
+  @override
+  String get accountPersonalInfoList => 'Personal information collected';
+
+  @override
+  String get accountThirdPartyShareList => 'Third-party sharing';
+
+  @override
+  String get accountPermissionList => 'Permissions';
+
+  @override
+  String get privacyConsentTitle => 'Welcome to DitMesh';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh uses the Tox peer-to-peer network for chats. Before continuing, read the privacy policy and terms of use to understand how your data and permissions are handled.';
+
+  @override
+  String get privacyConsentAccept => 'Agree and continue';
+
+  @override
+  String get privacyConsentDecline => 'Disagree and exit';
+
+  @override
+  String get privacyConsentSaving => 'Saving…';
+
+  @override
+  String get privacyConsentSaveFailed => 'Could not save your choice. Please try again.';
+
+  @override
+  String get listenMicPurposeTitle => 'Microphone access';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh uses the microphone only to decode Morse code from audio on the Listen screen. Audio is processed on your device and is not uploaded.';
+
+  @override
+  String get listenMicPurposeContinue => 'Continue';
+
+  @override
+  String get personalInfoListText => 'DitMesh keeps your Tox identity, contacts, groups, messages, drafts, bookmarks, learning data and preferences in app storage. The developer does not receive this data. If you choose to send a location, the selected recipients receive it and keep it in chat history. Optional nearby discovery shares an approximate location while active.';
+
+  @override
+  String get thirdPartyShareText => 'Messages and profiles go directly to the intended peers over Tox. Peers can see your IP address, and public bootstrap nodes can see connections. The automatic node list uses nodes.tox.chat. If you open a location in a map app or choose a cloud file provider, that service handles the information you choose to share.\n\nOn Android, Google ML Kit scans QR codes on the device. Google receives diagnostic and usage metrics, such as the app version, device information and scanner performance. Camera images and decoded QR contents are processed locally and are not sent to Google.';
+
+  @override
+  String get permissionListText => 'Microphone: decode Morse audio on this device.\nCamera: scan Tox ID QR codes.\nLocation: fill the grid locator, send a location or use optional nearby discovery, only in the foreground.\nNotifications: local message alerts.\nLocal network on Apple devices: connect to local nodes.\nFile selection and sharing: import or export chosen files.';
+
+  @override
+  String get technicalSupportText => 'Connection problems\nCheck your network, then open network settings to check the bootstrap nodes. Both peers need a reachable Tox connection for a message to be delivered.\n\nMicrophone\nIf Listen cannot start, check that DitMesh has microphone access in your system settings and that the microphone is available. Move the sound source closer if decoding is unreliable.\n\nReporting a problem\nRecord your device, operating system, app version and the steps to reproduce the issue. Keep private messages, identity files, passphrases and backups out of public reports.';
+
+  @override
+  String get legalDocumentUnavailable => 'Could not load this document.';
 }

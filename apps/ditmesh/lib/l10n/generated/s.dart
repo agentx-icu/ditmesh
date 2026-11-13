@@ -6047,7 +6047,7 @@ abstract class S {
   /// About: support and contact link
   ///
   /// In en, this message translates to:
-  /// **'Support and contact'**
+  /// **'Technical support'**
   String get aboutSupport;
 
   /// About: a link could not be opened and was copied
@@ -6779,7 +6779,7 @@ abstract class S {
   /// Location and nearby discovery: nearbyVisibleDesc.
   ///
   /// In en, this message translates to:
-  /// **'While this is on, people within about 5 km who use People nearby can see your name and approximate location.'**
+  /// **'Participants in the same public Tox groups can see your display name and approximate location.'**
   String get nearbyVisibleDesc;
 
   /// Location and nearby discovery: peopleNearby.
@@ -6923,7 +6923,7 @@ abstract class S {
   /// Location and nearby discovery: nearbyPrivacyBody.
   ///
   /// In en, this message translates to:
-  /// **'While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.'**
+  /// **'DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground.'**
   String get nearbyPrivacyBody;
 
   /// Location and nearby discovery: nearbyPrivacyAccept.
@@ -7117,6 +7117,114 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Couldn\'t save training settings. Try again.'**
   String get learnSettingsSaveFailed;
+
+  /// Me page header for the in-app privacy, terms, data-list and permission pages
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy and permissions'**
+  String get accountSectionPrivacy;
+
+  /// Me page tile and page title for the collected-personal-information list
+  ///
+  /// In en, this message translates to:
+  /// **'Personal information collected'**
+  String get accountPersonalInfoList;
+
+  /// Me page tile and page title for the third-party-sharing list
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party sharing'**
+  String get accountThirdPartyShareList;
+
+  /// Me page tile and page title for the permission list
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get accountPermissionList;
+
+  /// First-run privacy gate heading
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to DitMesh'**
+  String get privacyConsentTitle;
+
+  /// First-run privacy gate summary above the agree and disagree buttons
+  ///
+  /// In en, this message translates to:
+  /// **'DitMesh uses the Tox peer-to-peer network for chats. Before continuing, read the privacy policy and terms of use to understand how your data and permissions are handled.'**
+  String get privacyConsentSummary;
+
+  /// First-run privacy gate button that accepts the policy and opens the app
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and continue'**
+  String get privacyConsentAccept;
+
+  /// First-run privacy gate button that declines the policy and exits the app
+  ///
+  /// In en, this message translates to:
+  /// **'Disagree and exit'**
+  String get privacyConsentDecline;
+
+  /// First-run privacy gate button label while saving the choice
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get privacyConsentSaving;
+
+  /// First-run privacy gate message when saving the choice fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your choice. Please try again.'**
+  String get privacyConsentSaveFailed;
+
+  /// Listen screen dialog title explaining microphone use before the permission prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access'**
+  String get listenMicPurposeTitle;
+
+  /// Listen screen dialog body explaining microphone use before the permission prompt
+  ///
+  /// In en, this message translates to:
+  /// **'DitMesh uses the microphone only to decode Morse code from audio on the Listen screen. Audio is processed on your device and is not uploaded.'**
+  String get listenMicPurposeBody;
+
+  /// Listen screen dialog button that proceeds to the microphone permission prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get listenMicPurposeContinue;
+
+  /// In-app personal information inventory
+  ///
+  /// In en, this message translates to:
+  /// **'DitMesh keeps your Tox identity, contacts, groups, messages, drafts, bookmarks, learning data and preferences in app storage. The developer does not receive this data. If you choose to send a location, the selected recipients receive it and keep it in chat history. Optional nearby discovery shares an approximate location while active.'**
+  String get personalInfoListText;
+
+  /// In-app third-party sharing summary
+  ///
+  /// In en, this message translates to:
+  /// **'Messages and profiles go directly to the intended peers over Tox. Peers can see your IP address, and public bootstrap nodes can see connections. The automatic node list uses nodes.tox.chat. If you open a location in a map app or choose a cloud file provider, that service handles the information you choose to share.\n\nOn Android, Google ML Kit scans QR codes on the device. Google receives diagnostic and usage metrics, such as the app version, device information and scanner performance. Camera images and decoded QR contents are processed locally and are not sent to Google.'**
+  String get thirdPartyShareText;
+
+  /// In-app list of platform permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone: decode Morse audio on this device.\nCamera: scan Tox ID QR codes.\nLocation: fill the grid locator, send a location or use optional nearby discovery, only in the foreground.\nNotifications: local message alerts.\nLocal network on Apple devices: connect to local nodes.\nFile selection and sharing: import or export chosen files.'**
+  String get permissionListText;
+
+  /// In-app technical support instructions
+  ///
+  /// In en, this message translates to:
+  /// **'Connection problems\nCheck your network, then open network settings to check the bootstrap nodes. Both peers need a reachable Tox connection for a message to be delivered.\n\nMicrophone\nIf Listen cannot start, check that DitMesh has microphone access in your system settings and that the microphone is available. Move the sound source closer if decoding is unreliable.\n\nReporting a problem\nRecord your device, operating system, app version and the steps to reproduce the issue. Keep private messages, identity files, passphrases and backups out of public reports.'**
+  String get technicalSupportText;
+
+  /// Error loading a bundled legal document
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this document.'**
+  String get legalDocumentUnavailable;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

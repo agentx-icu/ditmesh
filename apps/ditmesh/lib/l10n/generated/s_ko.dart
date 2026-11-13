@@ -3257,7 +3257,7 @@ class SKo extends S {
   String get aboutTermsOfUse => '이용약관';
 
   @override
-  String get aboutSupport => '지원 및 문의';
+  String get aboutSupport => '기술 지원';
 
   @override
   String get aboutLinkFailed => '링크를 열 수 없어 복사했습니다.';
@@ -3643,7 +3643,7 @@ class SKo extends S {
   String get nearbyVisible => '주변 사람에게 표시';
 
   @override
-  String get nearbyVisibleDesc => '켜져 있는 동안 약 5km 이내에서 \"주변 사람\"을 사용하는 사람에게 내 이름과 대략적인 위치가 표시됩니다.';
+  String get nearbyVisibleDesc => '같은 공개 Tox 그룹의 참가자는 내 표시 이름과 대략적인 위치를 볼 수 있습니다.';
 
   @override
   String get peopleNearby => '주변 사람';
@@ -3719,7 +3719,7 @@ class SKo extends S {
   String get nearbyPrivacyTitle => '주변 사람';
 
   @override
-  String get nearbyPrivacyBody => '켜져 있는 동안 약 5km 이내에서 \"주변 사람\"을 사용하는 사람에게 내 이름과 대략적인 위치(약 100m)가 표시됩니다. 누군가에게 요청을 보내지 않는 한 Tox ID는 공유되지 않습니다. 이 기능은 DitMesh가 열려 있는 동안에만 동작합니다.';
+  String get nearbyPrivacyBody => 'DitMesh는 내 표시 이름과 대략적인 위치(약 100 m 단위)를 해당 지역의 공개 Tox 그룹에 공유합니다. 이 그룹에 참여하면 실제 위치와 관계없이 누구나 이 정보를 받을 수 있습니다. Tox ID는 주변 사람 요청을 직접 보내거나 답할 때만 공유됩니다. 이 기능은 앱이 포그라운드에 있을 때만 작동합니다.';
 
   @override
   String get nearbyPrivacyAccept => '켜기';
@@ -3828,4 +3828,58 @@ class SKo extends S {
 
   @override
   String get learnSettingsSaveFailed => '훈련 설정을 저장할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get accountSectionPrivacy => '개인정보 및 권한';
+
+  @override
+  String get accountPersonalInfoList => '수집하는 개인정보';
+
+  @override
+  String get accountThirdPartyShareList => '제3자 제공';
+
+  @override
+  String get accountPermissionList => '권한';
+
+  @override
+  String get privacyConsentTitle => 'DitMesh에 오신 것을 환영합니다';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh는 채팅에 Tox 피어 투 피어 네트워크를 사용합니다. 계속하기 전에 개인정보 처리방침과 이용 약관을 읽고 데이터와 권한이 어떻게 처리되는지 확인하세요.';
+
+  @override
+  String get privacyConsentAccept => '동의하고 계속';
+
+  @override
+  String get privacyConsentDecline => '동의하지 않고 종료';
+
+  @override
+  String get privacyConsentSaving => '저장 중…';
+
+  @override
+  String get privacyConsentSaveFailed => '선택을 저장하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get listenMicPurposeTitle => '마이크 접근';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh는 ‘듣기’ 화면에서 모스 부호를 해독하는 데만 마이크를 사용합니다. 오디오는 기기에서 처리되며 업로드되지 않습니다.';
+
+  @override
+  String get listenMicPurposeContinue => '계속';
+
+  @override
+  String get personalInfoListText => 'DitMesh는 Tox 신원, 연락처, 그룹, 메시지, 초안, 북마크, 학습 데이터 및 설정을 앱 저장 공간에 보관합니다. 개발자는 이 데이터를 받지 않습니다. 위치를 보내면 선택한 상대방의 채팅 기록에 저장됩니다. 선택 사항인 주변 검색은 작동하는 동안 대략적인 위치를 공유합니다.';
+
+  @override
+  String get thirdPartyShareText => '메시지와 프로필은 Tox를 통해 대상 상대에게 직접 전송됩니다. 상대방은 IP 주소를 볼 수 있고 공개 부트스트랩 노드는 연결을 확인할 수 있습니다. 자동 노드 목록은 nodes.tox.chat을 사용합니다. 지도 앱에서 위치를 열거나 클라우드 파일 제공업체를 선택하면 해당 서비스가 공유하기로 한 정보를 처리합니다.\n\nAndroid에서는 Google ML Kit로 기기에서 QR 코드를 스캔합니다. Google은 앱 버전, 기기 정보, 스캔 성능 등의 진단 및 사용 지표를 받습니다. 카메라 이미지와 해독한 QR 코드 내용은 기기에서 처리되며 Google로 전송되지 않습니다.';
+
+  @override
+  String get permissionListText => '마이크: 기기에서 모스 부호 오디오를 해독합니다.\n카메라: Tox ID QR 코드를 스캔합니다.\n위치: 앱을 사용 중일 때 그리드 로케이터 입력, 위치 전송 또는 선택적인 주변 검색에 사용합니다.\n알림: 기기에서 메시지 알림을 표시합니다.\nApple 기기의 로컬 네트워크: 로컬 노드에 연결합니다.\n파일 선택 및 공유: 선택한 파일을 가져오거나 내보냅니다.';
+
+  @override
+  String get technicalSupportText => '연결 문제\n네트워크를 확인한 후 네트워크 설정에서 부트스트랩 노드를 확인하세요. 메시지가 전달되려면 양쪽 모두 통신 가능한 Tox 연결이 필요합니다.\n\n마이크\n듣기를 시작할 수 없다면 시스템 설정에서 DitMesh에 마이크 권한이 있는지, 마이크를 사용할 수 있는지 확인하세요. 해독이 잘 되지 않으면 소리가 나는 곳을 마이크 가까이 옮겨 보세요.\n\n문제 보고\n기기, 운영체제, 앱 버전과 재현 단계를 적으세요. 공개 보고서에 개인 메시지, 신원 파일, 암호 문구 또는 백업을 첨부하지 마세요.';
+
+  @override
+  String get legalDocumentUnavailable => '이 문서를 불러올 수 없습니다.';
 }

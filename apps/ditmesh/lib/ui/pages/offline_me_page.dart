@@ -12,7 +12,7 @@ import '../appearance/appearance_page.dart';
 import '../chat/chat_layout.dart';
 import '../common/app_bar_title.dart';
 import '../keying/key_setup_page.dart';
-import '../moderation/site_links.dart';
+import '../legal/legal_pages.dart';
 
 /// Me in the offline build (`AppFeatures.chat` off): settings for the local
 /// learning profile. No identity, account, connection or chat entries exist.
@@ -86,8 +86,9 @@ class OfflineMePage extends StatelessWidget {
             subtitle: Text(s.offlineClearDataBody),
             onTap: () => unawaited(_clear(context)),
           ),
+          header(s.accountSectionPrivacy),
+          const LegalLinksSection(),
           header(s.accountSectionAbout),
-          const SiteLinksSection(),
           ListTile(
             leading: const Icon(Icons.gavel_outlined),
             title: Text(s.accountAboutLicence),

@@ -18,8 +18,9 @@ auto-play.
 To discover people, also enable **Visible to people nearby**, accept the
 privacy notice, then open **People nearby** from Contacts, Add friend or
 Location settings. It shares a display name and coordinates rounded to about
-100 m with participants within roughly 5 km. A location-enabled device can
-use the grid tool without joining discovery. No location directory server is
+100 m in public Tox groups for the area. Anyone who joins one of those groups
+can receive this data regardless of their actual location. A location-enabled
+device can use the grid tool without joining discovery. No location directory server is
 used. Nearby uses Toxee's `toxee/nearby/v1` protocol and can discover compatible
 clients. Discovery cells are transport only; they do not become chat groups
 or appear in message history.

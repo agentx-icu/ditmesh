@@ -4,7 +4,6 @@ import 'package:ditmesh/di/app_settings.dart';
 import 'package:ditmesh/di/fake_backend_factory.dart';
 import 'package:ditmesh/i18n/key_value_store.dart';
 import 'package:ditmesh/main.dart';
-import 'package:ditmesh/ui/account/account_routes.dart';
 import 'package:ditmesh/ui/account/backup_file_gateway.dart';
 import 'package:ditmesh/ui/moderation/terms_gate_page.dart';
 import 'package:ditmesh/ui/shell/app_shell.dart';
@@ -78,12 +77,24 @@ void main() {
     expect(find.text(s.termsGateSaveFailed), findsOneWidget);
   });
 
-  testWidgets('the full terms open in the browser', (tester) async {
+  testWidgets('the full terms and privacy policy open inside the app', (
+    tester,
+  ) async {
     final launcher = FakeUrlLauncher.install();
     await _pump(tester, InMemoryKeyValueStore());
-    await tester.tap(find.byKey(const ValueKey('terms-read-full')));
-    await settle(tester);
-    expect(launcher.launched, [kTermsUrl]);
+    for (final (key, title, paragraph) in [
+      ('terms-read-full', s.aboutTermsOfUse, 'Zero tolerance'),
+      ('terms-privacy', s.aboutPrivacyPolicy, 'Location and People nearby'),
+    ]) {
+      await tapVisible(tester, find.byKey(ValueKey(key)));
+      expect(find.text(title), findsOneWidget);
+      expect(find.textContaining(paragraph), findsOneWidget);
+      expect(find.byIcon(Icons.open_in_new), findsNothing);
+      await tester.pageBack();
+      await settle(tester);
+      expect(find.byType(TermsGatePage), findsOneWidget);
+    }
+    expect(launcher.launched, isEmpty);
   });
 
   testWidgets('fresh chat identity setup has no guest-learning bypass', (

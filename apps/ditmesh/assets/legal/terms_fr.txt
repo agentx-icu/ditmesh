@@ -1,0 +1,38 @@
+Dernière mise à jour : 2026-10-08 · Version 2
+
+Ces conditions d’utilisation et règles de la communauté s’appliquent aux conversations et aux groupes DitMesh sur toutes les plateformes prises en charge. L’application vous demande de les accepter avant de commencer à discuter, puis après toute modification substantielle.
+
+Tolérance zéro pour les contenus répréhensibles et les comportements abusifs
+
+DitMesh ne tolère aucun contenu répréhensible ni comportement abusif. Vous ne devez pas utiliser DitMesh pour envoyer, partager ou encourager :
+
+• le harcèlement, les brimades, les menaces ou l’intimidation ;
+• les discours haineux ou les contenus qui s’en prennent à des personnes en raison de leur identité ;
+• les contenus sexuels impliquant des mineurs ou tout contenu sexuel non sollicité ;
+• l’extrémisme violent ou les contenus qui encouragent la violence ou l’automutilation ;
+• les messages indésirables, les escroqueries, l’hameçonnage ou les logiciels malveillants ;
+• tout contenu illégal dans votre lieu de résidence ou celui du destinataire, ou portant atteinte aux droits d’autrui.
+
+Blocage
+
+Seules les personnes que vous acceptez peuvent vous envoyer des messages. Pour rejoindre un groupe, il faut une invitation ou son identifiant. Vous pouvez bloquer une personne depuis une conversation, la liste des membres d’un groupe, une demande d’ami ou une invitation à un groupe. Le blocage retire cette personne de votre liste d’amis et masque sur votre appareil ses messages, demandes et invitations. Tox attribue à chaque membre une clé distincte dans chaque groupe. Bloquer une personne depuis la liste des membres d’un groupe la masque dans ce groupe. Vous pouvez gérer les blocages dans « Moi → Personnes bloquées ».
+
+DitMesh fonctionne de pair à pair. En l’absence de serveur central, personne, y compris le développeur, ne peut lire les conversations, effacer les messages sur l’appareil d’autrui ou suspendre des comptes. L’application vous permet de bloquer des personnes pour vous protéger. En cas de contenu illégal, contactez les autorités de votre lieu de résidence.
+
+Vos responsabilités
+
+• Vous êtes responsable des contenus que vous envoyez et de la protection de votre identité, de votre mot de passe et de vos sauvegardes. Nous ne pouvons pas récupérer une identité perdue.
+• Pour utiliser les fonctions de messagerie, vous devez avoir au moins 13 ans ou avoir atteint l’âge minimum fixé par votre pays.
+• Les contenus sur le radioamateurisme, tels que les indicatifs et les codes Q, sont les bienvenus. Respectez les usages de la bande concernée.
+
+Licence et garantie
+
+DitMesh est un logiciel libre distribué sous la licence publique générale GNU version 3.0. L’adresse du code source se trouve dans « Moi → À propos ». Dans la mesure permise par la loi, l’application est fournie en l’état, sans garantie d’aucune sorte. Si vous l’obtenez sur l’App Store, le contrat de licence utilisateur final standard d’Apple s’applique également. La GPL régit vos droits sur le logiciel lui-même.
+
+Modifications
+
+Nous pouvons mettre ces conditions à jour. Le numéro de version indiqué ci-dessus change à chaque modification substantielle. L’application vous demande d’accepter la nouvelle version avant de reprendre vos conversations.
+
+Contact
+
+Consultez « Moi → Confidentialité et autorisations → Assistance technique ».

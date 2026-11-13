@@ -3257,7 +3257,7 @@ class SJa extends S {
   String get aboutTermsOfUse => '利用規約';
 
   @override
-  String get aboutSupport => 'サポート・お問い合わせ';
+  String get aboutSupport => '技術サポート';
 
   @override
   String get aboutLinkFailed => 'リンクを開けなかったため、コピーしました。';
@@ -3643,7 +3643,7 @@ class SJa extends S {
   String get nearbyVisible => '近くの人に表示する';
 
   @override
-  String get nearbyVisibleDesc => 'オンの間、約 5 km 以内で「近くの人」を使っている人に、あなたの名前とおおよその位置が表示されます。';
+  String get nearbyVisibleDesc => '同じ公開 Tox グループに参加した人は、あなたの表示名とおおよその位置を確認できます。';
 
   @override
   String get peopleNearby => '近くの人';
@@ -3719,7 +3719,7 @@ class SJa extends S {
   String get nearbyPrivacyTitle => '近くの人';
 
   @override
-  String get nearbyPrivacyBody => 'オンの間、約 5 km 以内で同じく「近くの人」を使っている人に、あなたの名前とおおよその位置（約 100 m）が表示されます。あなたが誰かにリクエストを送らない限り、Tox ID は共有されません。この機能は DitMesh を開いている間だけ動作します。';
+  String get nearbyPrivacyBody => 'DitMesh はあなたの表示名とおおよその位置（約 100 m 単位）を、そのエリアの公開 Tox グループで共有します。グループに参加した人は、実際の所在地にかかわらず、この情報を受け取れます。Tox ID は、自分で「近くの人」のリクエストを送信するか、応答したときだけ共有されます。この機能はアプリがフォアグラウンドにある間だけ動作します。';
 
   @override
   String get nearbyPrivacyAccept => 'オンにする';
@@ -3828,4 +3828,58 @@ class SJa extends S {
 
   @override
   String get learnSettingsSaveFailed => 'トレーニング設定を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get accountSectionPrivacy => 'プライバシーと権限';
+
+  @override
+  String get accountPersonalInfoList => '収集する個人情報';
+
+  @override
+  String get accountThirdPartyShareList => '第三者との共有';
+
+  @override
+  String get accountPermissionList => '権限';
+
+  @override
+  String get privacyConsentTitle => 'DitMesh へようこそ';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh のチャットは Tox のピアツーピアネットワークを利用します。続ける前に、プライバシーポリシーと利用規約を読み、データと権限の扱いをご確認ください。';
+
+  @override
+  String get privacyConsentAccept => '同意して続ける';
+
+  @override
+  String get privacyConsentDecline => '同意せずに終了';
+
+  @override
+  String get privacyConsentSaving => '保存中…';
+
+  @override
+  String get privacyConsentSaveFailed => '選択を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get listenMicPurposeTitle => 'マイクへのアクセス';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh は「受信する」画面でモールス信号を解読するためにのみマイクを使用します。音声は端末内で処理され、アップロードされません。';
+
+  @override
+  String get listenMicPurposeContinue => '続ける';
+
+  @override
+  String get personalInfoListText => 'DitMesh は Tox の身元情報、連絡先、グループ、メッセージ、下書き、ブックマーク、学習データ、設定をアプリ内に保存します。開発者にこれらのデータは送られません。位置を送信すると、選択した相手のチャット履歴に保存されます。任意の近くのユーザー検索では、動作中におおよその位置を共有します。';
+
+  @override
+  String get thirdPartyShareText => 'メッセージやプロフィールは Tox で指定した相手に直接送信されます。相手には IP アドレスが見え、公開ブートストラップノードには接続が見えます。ノードの自動リストには nodes.tox.chat を使用します。地図アプリやクラウドファイルサービスを選んだ場合は、そのサービスが共有した情報を処理します。\n\nAndroid では Google ML Kit が端末上で QR コードを読み取ります。アプリのバージョン、端末情報、読み取り性能などの診断・利用状況の指標は Google に送信されます。カメラの画像と読み取った QR コードの内容は端末内で処理され、Google には送信されません。';
+
+  @override
+  String get permissionListText => 'マイク：端末でモールス信号を解読します。\nカメラ：Tox ID の QR コードを読み取ります。\n位置情報：フォアグラウンドでグリッドロケーターに入力したり、位置を送信したり、任意の近くのユーザー検索を利用したりします。\n通知：端末でメッセージの受信を知らせます。\nApple 端末のローカルネットワーク：ローカルノードに接続します。\nファイル選択と共有：選んだファイルを読み込み、または書き出します。';
+
+  @override
+  String get technicalSupportText => '接続の問題\nネットワークを確認し、ネットワーク設定でブートストラップノードを確認してください。メッセージの配信には、送信側と受信側の双方が Tox で通信できる必要があります。\n\nマイク\n「受信する」を開始できない場合は、システム設定で DitMesh にマイクの使用が許可されていることと、マイクが使えることを確認してください。うまく解読できないときは、音源をマイクに近づけてください。\n\n問題を報告する\n端末、OS、アプリのバージョン、再現手順を控えてください。公開の報告に私的なメッセージ、身元情報ファイル、パスフレーズ、バックアップを載せないでください。';
+
+  @override
+  String get legalDocumentUnavailable => 'この文書を読み込めませんでした。';
 }

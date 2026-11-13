@@ -9,7 +9,7 @@ import '../../i18n/language_settings_tile.dart';
 import '../../startup/startup_controller.dart';
 import '../appearance/appearance_page.dart';
 import '../common/app_bar_title.dart';
-import '../moderation/site_links.dart';
+import '../legal/legal_pages.dart';
 import '../pages/offline_me_page.dart';
 import '../responsive.dart';
 
@@ -153,7 +153,16 @@ class IdentityRequiredGate extends StatelessWidget {
                 title: Text(s.appearanceTitle),
                 onTap: () => AppearancePage.open(context),
               ),
-              const SiteLinksSection(),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(top: 24, start: 16),
+                child: Text(
+                  s.accountSectionPrivacy,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              const LegalLinksSection(),
               ListTile(
                 key: const ValueKey('guest-clear'),
                 leading: const Icon(Icons.delete_outline),

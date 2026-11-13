@@ -5,10 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../../di/app_settings.dart';
 import '../../i18n/l10n_extension.dart';
-import '../account/account_routes.dart';
 import '../chat/chat_layout.dart';
 import '../common/app_bar_title.dart';
-import 'site_links.dart';
+import '../legal/legal_pages.dart';
 
 /// Community guidelines the user accepts before using an identity (App
 /// Review 1.2: zero tolerance for objectionable content and abusive users).
@@ -67,9 +66,12 @@ class _TermsGatePageState extends State<TermsGatePage> {
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     key: const ValueKey('terms-read-full'),
-                    onPressed: () =>
-                        unawaited(openSiteLink(context, kTermsUrl)),
-                    icon: const Icon(Icons.open_in_new, size: 18),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TermsOfUsePage(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.description_outlined, size: 18),
                     label: Text(s.termsGateReadFull),
                   ),
                 ),
@@ -77,9 +79,12 @@ class _TermsGatePageState extends State<TermsGatePage> {
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     key: const ValueKey('terms-privacy'),
-                    onPressed: () =>
-                        unawaited(openSiteLink(context, kPrivacyPolicyUrl)),
-                    icon: const Icon(Icons.open_in_new, size: 18),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const PrivacyPolicyPage(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.privacy_tip_outlined, size: 18),
                     label: Text(s.aboutPrivacyPolicy),
                   ),
                 ),

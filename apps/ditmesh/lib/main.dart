@@ -27,6 +27,8 @@ import 'lifecycle/background_task_api.dart';
 import 'lifecycle/network_change_rebootstrapper.dart';
 import 'notifications/app_badge_plus_api.dart';
 import 'notifications/flutter_local_notifications_api.dart';
+import 'startup/android_privacy_startup.dart';
+import 'startup/initial_root_route.dart';
 import 'startup/startup_gate.dart';
 import 'startup/native_backend_startup.dart';
 import 'ui/account/account_routes.dart';
@@ -40,6 +42,16 @@ import 'training/guest_profile.dart';
 Future<void> main() async {
   applicationDiagnostics.installErrorHandlers();
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (requiresPrivacyConsent()) {
+    runApp(
+      AndroidPrivacyStartup(
+        openStore: _openPersistentSettingsStore,
+        ready: _nativeStartup,
+      ),
+    );
+    return;
+  }
 
   DesktopInstance? instance;
   if (isDesktopTarget(defaultTargetPlatform)) {
@@ -72,23 +84,31 @@ Future<void> main() async {
     instance?.onActivate = desktopShell.showWindow;
   }
 
-  runApp(
-    NativeBackendStartup(
-      prepare: () => resolveBackendFactory(AppFeatures.fromEnvironment),
-      store: settingsStore,
-      ready: (backend) => DitmeshApp(
-        backend: backend,
-        localeStore: settingsStore,
-        desktopShell: desktopShell,
-        notifications: NotificationApis(
-          notifications: FlutterLocalNotificationsApi(),
-          badge: AppBadgePlusApi(),
-        ),
-        backgroundTasks: BackgroundTaskApi.forPlatform(),
-        networkSnapshots: NetworkChangeReBootstrapper.platformSnapshots(),
-      ),
+  runApp(_nativeStartup(settingsStore, desktopShell: desktopShell));
+}
+
+Widget _nativeStartup(
+  KeyValueStore settingsStore, {
+  DesktopShellController? desktopShell,
+}) => NativeBackendStartup(
+  prepare: () => resolveBackendFactory(AppFeatures.fromEnvironment),
+  store: settingsStore,
+  ready: (backend) => DitmeshApp(
+    backend: backend,
+    localeStore: settingsStore,
+    desktopShell: desktopShell,
+    notifications: NotificationApis(
+      notifications: FlutterLocalNotificationsApi(),
+      badge: AppBadgePlusApi(),
     ),
-  );
+    backgroundTasks: BackgroundTaskApi.forPlatform(),
+    networkSnapshots: NetworkChangeReBootstrapper.platformSnapshots(),
+  ),
+);
+
+Future<KeyValueStore> _openPersistentSettingsStore() async {
+  final dir = await getApplicationSupportDirectory();
+  return JsonFileKeyValueStore.open(File(p.join(dir.path, 'settings.json')));
 }
 
 /// `<application support>/settings.json`; falls back to memory if the
@@ -96,10 +116,7 @@ Future<void> main() async {
 /// survive a restart).
 Future<KeyValueStore> _openSettingsStore() async {
   try {
-    final dir = await getApplicationSupportDirectory();
-    return await JsonFileKeyValueStore.open(
-      File(p.join(dir.path, 'settings.json')),
-    );
+    return await _openPersistentSettingsStore();
   } on Object catch (error) {
     debugLog(() => 'settings store unavailable, using memory: $error');
     return InMemoryKeyValueStore();
@@ -163,6 +180,8 @@ class DitmeshApp extends StatelessWidget {
         builder: (context) {
           final appearance = context.watch<AppSettings>();
           final locale = context.watch<LocaleController>().locale;
+          Widget buildHome(BuildContext context) =>
+              const IosMenuHost(child: StartupGate(child: AppShell()));
           return MaterialApp(
             // onGenerateTitle supersedes `title`; the window/task title is
             // the (untranslated) product name from the ARB.
@@ -179,8 +198,9 @@ class DitmeshApp extends StatelessWidget {
             darkTheme: DitmeshTheme.dark(style: appearance.style),
             themeMode: appearance.themeMode,
             themeAnimationDuration: Duration.zero,
-            home: const IosMenuHost(child: StartupGate(child: AppShell())),
+            onGenerateInitialRoutes: (_) => initialRootRoute(buildHome),
             routes: {
+              Navigator.defaultRouteName: buildHome,
               kTrainingSettingsRoute: (_) => const TrainingSettingsEntry(),
             },
           );

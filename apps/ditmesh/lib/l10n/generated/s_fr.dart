@@ -3276,7 +3276,7 @@ class SFr extends S {
   String get aboutTermsOfUse => 'Conditions d’utilisation';
 
   @override
-  String get aboutSupport => 'Assistance et contact';
+  String get aboutSupport => 'Assistance technique';
 
   @override
   String get aboutLinkFailed => 'Le lien n’a pas pu s’ouvrir ; il a été copié.';
@@ -3662,7 +3662,7 @@ class SFr extends S {
   String get nearbyVisible => 'Visible par les personnes à proximité';
 
   @override
-  String get nearbyVisibleDesc => 'Lorsque cette option est activée, les personnes dans un rayon d’environ 5 km qui utilisent Personnes à proximité peuvent voir votre nom et votre position approximative.';
+  String get nearbyVisibleDesc => 'Les participants aux mêmes groupes Tox publics peuvent voir votre nom d’affichage et votre position approximative.';
 
   @override
   String get peopleNearby => 'Personnes à proximité';
@@ -3738,7 +3738,7 @@ class SFr extends S {
   String get nearbyPrivacyTitle => 'Personnes à proximité';
 
   @override
-  String get nearbyPrivacyBody => 'Lorsque cette option est activée, les personnes dans un rayon d’environ 5 km qui utilisent aussi Personnes à proximité peuvent voir votre nom et votre position approximative (à environ 100 m près). Votre identifiant Tox n’est partagé que si vous envoyez une demande à quelqu’un. Cette fonction est active uniquement lorsque DitMesh est ouvert.';
+  String get nearbyPrivacyBody => 'DitMesh partage votre nom d’affichage et votre position approximative (à environ 100 m près) dans des groupes Tox publics associés à votre zone. Toute personne qui rejoint l’un de ces groupes peut recevoir ces informations, où qu’elle se trouve. Votre identifiant Tox n’est partagé que si vous envoyez une demande de proximité ou y répondez explicitement. La recherche fonctionne uniquement au premier plan.';
 
   @override
   String get nearbyPrivacyAccept => 'Activer';
@@ -3847,4 +3847,58 @@ class SFr extends S {
 
   @override
   String get learnSettingsSaveFailed => 'Impossible d’enregistrer les paramètres d’entraînement. Réessayez.';
+
+  @override
+  String get accountSectionPrivacy => 'Confidentialité et autorisations';
+
+  @override
+  String get accountPersonalInfoList => 'Données personnelles collectées';
+
+  @override
+  String get accountThirdPartyShareList => 'Partage avec des tiers';
+
+  @override
+  String get accountPermissionList => 'Autorisations';
+
+  @override
+  String get privacyConsentTitle => 'Bienvenue dans DitMesh';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh utilise le réseau pair à pair Tox pour les conversations. Avant de continuer, lisez la politique de confidentialité et les conditions d’utilisation pour comprendre comment vos données et autorisations sont gérées.';
+
+  @override
+  String get privacyConsentAccept => 'Accepter et continuer';
+
+  @override
+  String get privacyConsentDecline => 'Refuser et quitter';
+
+  @override
+  String get privacyConsentSaving => 'Enregistrement…';
+
+  @override
+  String get privacyConsentSaveFailed => 'Impossible d’enregistrer votre choix. Réessayez.';
+
+  @override
+  String get listenMicPurposeTitle => 'Accès au microphone';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh utilise le microphone uniquement pour décoder le morse sur l’écran « Écoute ». Le son est traité sur votre appareil et n’est pas envoyé ailleurs.';
+
+  @override
+  String get listenMicPurposeContinue => 'Continuer';
+
+  @override
+  String get personalInfoListText => 'DitMesh enregistre votre identité Tox, vos contacts, groupes, messages, brouillons, favoris, données d’apprentissage et préférences dans le stockage de l’application. Le développeur ne reçoit pas ces données. Si vous envoyez une position, les destinataires choisis la reçoivent et la conservent dans l’historique. La recherche facultative de personnes à proximité partage une position approximative lorsqu’elle est active.';
+
+  @override
+  String get thirdPartyShareText => 'Les messages et les profils passent directement par Tox vers leurs destinataires. Les pairs peuvent voir votre adresse IP et les nœuds publics d’amorçage peuvent voir les connexions. La liste automatique des nœuds utilise nodes.tox.chat. Si vous ouvrez une position dans une application cartographique ou choisissez un service de fichiers en ligne, ce service traite les informations que vous choisissez de partager.\n\nSur Android, Google ML Kit scanne les codes QR sur l’appareil. Google reçoit des données de diagnostic et d’utilisation, comme la version de l’application, des informations sur l’appareil et les performances du scanner. Les images de la caméra et le contenu décodé des codes QR sont traités localement et ne sont pas envoyés à Google.';
+
+  @override
+  String get permissionListText => 'Microphone : décoder le Morse sur cet appareil.\nAppareil photo : lire les codes QR d’identifiant Tox.\nPosition : remplir le locator, envoyer une position ou utiliser la recherche facultative à proximité, uniquement au premier plan.\nNotifications : alertes locales de messages.\nRéseau local sur les appareils Apple : se connecter aux nœuds locaux.\nSélection et partage de fichiers : importer ou exporter les fichiers choisis.';
+
+  @override
+  String get technicalSupportText => 'Problèmes de connexion\nVérifiez votre réseau puis les nœuds d’amorçage dans les paramètres réseau. Les deux pairs doivent disposer d’une connexion Tox joignable pour qu’un message soit livré.\n\nMicrophone\nSi l’écoute ne démarre pas, vérifiez dans les réglages système que DitMesh a accès au microphone et que celui-ci est disponible. Rapprochez la source sonore si le décodage est irrégulier.\n\nSignaler un problème\nNotez l’appareil, le système d’exploitation, la version de l’application et les étapes pour reproduire le problème. Évitez de publier des messages privés, des fichiers d’identité, des phrases secrètes ou des sauvegardes.';
+
+  @override
+  String get legalDocumentUnavailable => 'Impossible de charger ce document.';
 }
