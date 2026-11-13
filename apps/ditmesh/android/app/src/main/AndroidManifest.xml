@@ -89,8 +89,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- url_launcher (lib/ui/moderation/site_links.dart): the privacy
-             policy / terms / support pages in the browser. -->
+        <!-- Browser access for the Tox bootstrap catalogue and map actions. -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>

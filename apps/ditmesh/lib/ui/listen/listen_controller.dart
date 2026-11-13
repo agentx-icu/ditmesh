@@ -115,15 +115,29 @@ final class ListenController extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Capture
 
-  Future<void> start() async {
+  /// [explainPermission] runs before requesting a missing microphone grant.
+  /// A cancelled or stale attempt never proceeds to the system prompt.
+  Future<void> start({Future<bool> Function()? explainPermission}) async {
     if (_disposed || isBusy || isListening) return;
     final int attempt = _lastStartAttempt = ++_attempt;
     _stoppedInBackground = false;
     _failure = null;
     _setStatus(ListenStatus.starting);
-    final bool granted;
+    bool granted = false;
     try {
-      granted = await _source.hasPermission();
+      if (explainPermission != null) {
+        granted = await _source.hasPermission(request: false);
+        if (_isStale(attempt)) return;
+        if (!granted) {
+          final proceed = await explainPermission();
+          if (_isStale(attempt)) return;
+          if (!proceed) {
+            _setStatus(ListenStatus.idle);
+            return;
+          }
+        }
+      }
+      if (!granted) granted = await _source.hasPermission();
     } catch (error, stack) {
       if (_isStale(attempt)) return;
       // Nothing was started, so there is nothing to stop.

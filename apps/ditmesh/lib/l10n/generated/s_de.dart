@@ -3276,7 +3276,7 @@ class SDe extends S {
   String get aboutTermsOfUse => 'Nutzungsbedingungen';
 
   @override
-  String get aboutSupport => 'Hilfe und Kontakt';
+  String get aboutSupport => 'Technischer Support';
 
   @override
   String get aboutLinkFailed => 'Der Link ließ sich nicht öffnen und wurde kopiert.';
@@ -3662,7 +3662,7 @@ class SDe extends S {
   String get nearbyVisible => 'Für Personen in der Nähe sichtbar';
 
   @override
-  String get nearbyVisibleDesc => 'Wenn diese Option aktiviert ist, können Personen im Umkreis von etwa 5 km, die „Personen in der Nähe“ nutzen, deinen Namen und ungefähren Standort sehen.';
+  String get nearbyVisibleDesc => 'Teilnehmer in denselben öffentlichen Tox-Gruppen können deinen Anzeigenamen und ungefähren Standort sehen.';
 
   @override
   String get peopleNearby => 'Personen in der Nähe';
@@ -3738,7 +3738,7 @@ class SDe extends S {
   String get nearbyPrivacyTitle => 'Personen in der Nähe';
 
   @override
-  String get nearbyPrivacyBody => 'Wenn diese Option aktiviert ist, können Personen im Umkreis von etwa 5 km, die ebenfalls „Personen in der Nähe“ nutzen, deinen Namen und ungefähren Standort (auf etwa 100 m genau) sehen. Deine Tox-ID wird nur geteilt, wenn du jemandem eine Anfrage sendest. Diese Funktion ist nur aktiv, solange DitMesh geöffnet ist.';
+  String get nearbyPrivacyBody => 'DitMesh teilt deinen Anzeigenamen und ungefähren Standort (auf etwa 100 m genau) in öffentlichen Tox-Gruppen für deine Region. Wer einer dieser Gruppen beitritt, kann diese Daten unabhängig vom tatsächlichen Standort empfangen. Deine Tox-ID wird nur geteilt, wenn du ausdrücklich eine Anfrage in der Umgebungssuche sendest oder beantwortest. Die Umgebungssuche funktioniert nur im Vordergrund.';
 
   @override
   String get nearbyPrivacyAccept => 'Aktivieren';
@@ -3847,4 +3847,58 @@ class SDe extends S {
 
   @override
   String get learnSettingsSaveFailed => 'Die Trainingseinstellungen konnten nicht gespeichert werden. Bitte erneut versuchen.';
+
+  @override
+  String get accountSectionPrivacy => 'Datenschutz und Berechtigungen';
+
+  @override
+  String get accountPersonalInfoList => 'Erhobene personenbezogene Daten';
+
+  @override
+  String get accountThirdPartyShareList => 'Weitergabe an Dritte';
+
+  @override
+  String get accountPermissionList => 'Berechtigungen';
+
+  @override
+  String get privacyConsentTitle => 'Willkommen bei DitMesh';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh nutzt das Tox-Peer-to-Peer-Netz für Chats. Lies vor dem Fortfahren die Datenschutzerklärung und die Nutzungsbedingungen, um zu erfahren, wie die App mit Daten und Berechtigungen umgeht.';
+
+  @override
+  String get privacyConsentAccept => 'Zustimmen und fortfahren';
+
+  @override
+  String get privacyConsentDecline => 'Ablehnen und beenden';
+
+  @override
+  String get privacyConsentSaving => 'Wird gespeichert …';
+
+  @override
+  String get privacyConsentSaveFailed => 'Deine Auswahl konnte nicht gespeichert werden. Bitte versuche es erneut.';
+
+  @override
+  String get listenMicPurposeTitle => 'Mikrofonzugriff';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh verwendet das Mikrofon nur zum Dekodieren von Morsezeichen auf der Seite „Mithören“. Die App verarbeitet die Audiodaten auf deinem Gerät und lädt sie nicht hoch.';
+
+  @override
+  String get listenMicPurposeContinue => 'Weiter';
+
+  @override
+  String get personalInfoListText => 'DitMesh speichert deine Tox-Identität, Kontakte, Gruppen, Nachrichten, Entwürfe, Lesezeichen, Lerndaten und Einstellungen im App-Speicher. Der Entwickler erhält diese Daten nicht. Wenn du einen Standort sendest, erhalten ihn die ausgewählten Empfänger und behalten ihn im Chatverlauf. Die optionale Suche in der Nähe teilt einen ungefähren Standort, solange sie aktiv ist.';
+
+  @override
+  String get thirdPartyShareText => 'Nachrichten und Profile gehen über Tox direkt an die vorgesehenen Teilnehmer. Teilnehmer können deine IP-Adresse und öffentliche Bootstrap-Knoten die Verbindungen sehen. Die automatische Knotenliste nutzt nodes.tox.chat. Öffnest du einen Standort in einer Karten-App oder wählst einen Cloud-Dateianbieter, verarbeitet dieser Dienst die von dir freigegebenen Informationen.\n\nUnter Android scannt Google ML Kit QR-Codes auf dem Gerät. Google erhält Diagnose- und Nutzungsdaten, etwa die App-Version, Geräteinformationen und Leistungsdaten des Scanners. Kamerabilder und die dekodierten QR-Inhalte werden lokal verarbeitet und nicht an Google gesendet.';
+
+  @override
+  String get permissionListText => 'Mikrofon: Morse-Audio auf dem Gerät dekodieren.\nKamera: QR-Codes mit Tox-IDs scannen.\nStandort: Locator ausfüllen, einen Standort senden oder die optionale Suche in der Nähe verwenden, nur im Vordergrund.\nBenachrichtigungen: lokale Nachrichtenhinweise.\nLokales Netzwerk auf Apple-Geräten: mit lokalen Knoten verbinden.\nDateiauswahl und Teilen: ausgewählte Dateien importieren oder exportieren.';
+
+  @override
+  String get technicalSupportText => 'Verbindungsprobleme\nPrüfe dein Netzwerk und dann die Bootstrap-Knoten in den Netzwerkeinstellungen. Damit eine Nachricht zugestellt wird, benötigen beide Teilnehmer eine erreichbare Tox-Verbindung.\n\nMikrofon\nWenn sich das Mithören nicht starten lässt, prüfe in den Systemeinstellungen, ob DitMesh auf das Mikrofon zugreifen darf und das Mikrofon verfügbar ist. Wenn die Dekodierung unzuverlässig ist, bringe die Tonquelle näher heran.\n\nEin Problem melden\nNotiere Gerät, Betriebssystem, App-Version und die Schritte zum Reproduzieren. Veröffentliche keine privaten Nachrichten, Identitätsdateien, Passphrasen oder Sicherungen.';
+
+  @override
+  String get legalDocumentUnavailable => 'Dieses Dokument konnte nicht geladen werden.';
 }

@@ -4490,7 +4490,7 @@
   "@aboutTermsOfUse": {
     "description": "About: terms of use link"
   },
-  "aboutSupport": "Support and contact",
+  "aboutSupport": "Technical support",
   "@aboutSupport": {
     "description": "About: support and contact link"
   },
@@ -5034,7 +5034,7 @@
   "@nearbyVisible": {
     "description": "Location and nearby discovery: nearbyVisible."
   },
-  "nearbyVisibleDesc": "While this is on, people within about 5 km who use People nearby can see your name and approximate location.",
+  "nearbyVisibleDesc": "Participants in the same public Tox groups can see your display name and approximate location.",
   "@nearbyVisibleDesc": {
     "description": "Location and nearby discovery: nearbyVisibleDesc."
   },
@@ -5140,7 +5140,7 @@
   "@nearbyPrivacyTitle": {
     "description": "Location and nearby discovery: nearbyPrivacyTitle."
   },
-  "nearbyPrivacyBody": "While this is on, people within about 5 km who also use People nearby can see your name and approximate location (about 100 m). Your Tox ID is never shared unless you send someone a request. Nearby only works while DitMesh is open.",
+  "nearbyPrivacyBody": "DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground.",
   "@nearbyPrivacyBody": {
     "description": "Location and nearby discovery: nearbyPrivacyBody."
   },
@@ -5301,5 +5301,77 @@
   "learnSettingsSaveFailed": "Couldn't save training settings. Try again.",
   "@learnSettingsSaveFailed": {
     "description": "Training settings: snack bar when saving fails and the last saved values are restored."
+  },
+  "accountSectionPrivacy": "Privacy and permissions",
+  "@accountSectionPrivacy": {
+    "description": "Me page header for the in-app privacy, terms, data-list and permission pages"
+  },
+  "accountPersonalInfoList": "Personal information collected",
+  "@accountPersonalInfoList": {
+    "description": "Me page tile and page title for the collected-personal-information list"
+  },
+  "accountThirdPartyShareList": "Third-party sharing",
+  "@accountThirdPartyShareList": {
+    "description": "Me page tile and page title for the third-party-sharing list"
+  },
+  "accountPermissionList": "Permissions",
+  "@accountPermissionList": {
+    "description": "Me page tile and page title for the permission list"
+  },
+  "privacyConsentTitle": "Welcome to DitMesh",
+  "@privacyConsentTitle": {
+    "description": "First-run privacy gate heading"
+  },
+  "privacyConsentSummary": "DitMesh uses the Tox peer-to-peer network for chats. Before continuing, read the privacy policy and terms of use to understand how your data and permissions are handled.",
+  "@privacyConsentSummary": {
+    "description": "First-run privacy gate summary above the agree and disagree buttons"
+  },
+  "privacyConsentAccept": "Agree and continue",
+  "@privacyConsentAccept": {
+    "description": "First-run privacy gate button that accepts the policy and opens the app"
+  },
+  "privacyConsentDecline": "Disagree and exit",
+  "@privacyConsentDecline": {
+    "description": "First-run privacy gate button that declines the policy and exits the app"
+  },
+  "privacyConsentSaving": "Saving…",
+  "@privacyConsentSaving": {
+    "description": "First-run privacy gate button label while saving the choice"
+  },
+  "privacyConsentSaveFailed": "Could not save your choice. Please try again.",
+  "@privacyConsentSaveFailed": {
+    "description": "First-run privacy gate message when saving the choice fails"
+  },
+  "listenMicPurposeTitle": "Microphone access",
+  "@listenMicPurposeTitle": {
+    "description": "Listen screen dialog title explaining microphone use before the permission prompt"
+  },
+  "listenMicPurposeBody": "DitMesh uses the microphone only to decode Morse code from audio on the Listen screen. Audio is processed on your device and is not uploaded.",
+  "@listenMicPurposeBody": {
+    "description": "Listen screen dialog body explaining microphone use before the permission prompt"
+  },
+  "listenMicPurposeContinue": "Continue",
+  "@listenMicPurposeContinue": {
+    "description": "Listen screen dialog button that proceeds to the microphone permission prompt"
+  },
+  "personalInfoListText": "DitMesh keeps your Tox identity, contacts, groups, messages, drafts, bookmarks, learning data and preferences in app storage. The developer does not receive this data. If you choose to send a location, the selected recipients receive it and keep it in chat history. Optional nearby discovery shares an approximate location while active.",
+  "@personalInfoListText": {
+    "description": "In-app personal information inventory"
+  },
+  "thirdPartyShareText": "Messages and profiles go directly to the intended peers over Tox. Peers can see your IP address, and public bootstrap nodes can see connections. The automatic node list uses nodes.tox.chat. If you open a location in a map app or choose a cloud file provider, that service handles the information you choose to share.\n\nOn Android, Google ML Kit scans QR codes on the device. Google receives diagnostic and usage metrics, such as the app version, device information and scanner performance. Camera images and decoded QR contents are processed locally and are not sent to Google.",
+  "@thirdPartyShareText": {
+    "description": "In-app third-party sharing summary"
+  },
+  "permissionListText": "Microphone: decode Morse audio on this device.\nCamera: scan Tox ID QR codes.\nLocation: fill the grid locator, send a location or use optional nearby discovery, only in the foreground.\nNotifications: local message alerts.\nLocal network on Apple devices: connect to local nodes.\nFile selection and sharing: import or export chosen files.",
+  "@permissionListText": {
+    "description": "In-app list of platform permissions"
+  },
+  "technicalSupportText": "Connection problems\nCheck your network, then open network settings to check the bootstrap nodes. Both peers need a reachable Tox connection for a message to be delivered.\n\nMicrophone\nIf Listen cannot start, check that DitMesh has microphone access in your system settings and that the microphone is available. Move the sound source closer if decoding is unreliable.\n\nReporting a problem\nRecord your device, operating system, app version and the steps to reproduce the issue. Keep private messages, identity files, passphrases and backups out of public reports.",
+  "@technicalSupportText": {
+    "description": "In-app technical support instructions"
+  },
+  "legalDocumentUnavailable": "Could not load this document.",
+  "@legalDocumentUnavailable": {
+    "description": "Error loading a bundled legal document"
   }
 }

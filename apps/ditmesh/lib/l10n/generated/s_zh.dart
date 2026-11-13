@@ -3257,7 +3257,7 @@ class SZh extends S {
   String get aboutTermsOfUse => '使用条款';
 
   @override
-  String get aboutSupport => '技术支持与联系';
+  String get aboutSupport => '技术支持';
 
   @override
   String get aboutLinkFailed => '无法打开链接，已复制链接。';
@@ -3643,7 +3643,7 @@ class SZh extends S {
   String get nearbyVisible => '对附近的人可见';
 
   @override
-  String get nearbyVisibleDesc => '开启后，约 5 公里内同样使用“附近的人”的用户可以看到你的昵称和大致位置。';
+  String get nearbyVisibleDesc => '加入同一公开 Tox 群组的参与者可以看到你的显示名和大致位置。';
 
   @override
   String get peopleNearby => '附近的人';
@@ -3719,7 +3719,7 @@ class SZh extends S {
   String get nearbyPrivacyTitle => '附近的人';
 
   @override
-  String get nearbyPrivacyBody => '开启后，约 5 公里内同样使用“附近的人”的用户可以看到你的昵称和大致位置（约 100 米精度）。除非你主动向某人发送请求，否则不会分享你的 Tox ID。该功能仅在 DitMesh 打开时工作。';
+  String get nearbyPrivacyBody => 'DitMesh 会在你所在区域的公开 Tox 群组中分享你的显示名和大致位置（约 100 米精度）。任何加入这些群组的人都可以收到这些信息，无需验证实际位置。只有你主动发送或回应附近请求时才会分享 Tox ID。此功能仅在应用处于前台时运行。';
 
   @override
   String get nearbyPrivacyAccept => '开启';
@@ -3828,6 +3828,60 @@ class SZh extends S {
 
   @override
   String get learnSettingsSaveFailed => '无法保存训练设置，请重试。';
+
+  @override
+  String get accountSectionPrivacy => '隐私与权限';
+
+  @override
+  String get accountPersonalInfoList => '个人信息收集清单';
+
+  @override
+  String get accountThirdPartyShareList => '第三方共享清单';
+
+  @override
+  String get accountPermissionList => '权限说明';
+
+  @override
+  String get privacyConsentTitle => '欢迎使用 DitMesh';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh 使用 Tox 点对点网络进行聊天。继续前，请阅读隐私政策和使用条款，了解应用如何处理数据和权限。';
+
+  @override
+  String get privacyConsentAccept => '同意并继续';
+
+  @override
+  String get privacyConsentDecline => '不同意并退出';
+
+  @override
+  String get privacyConsentSaving => '正在保存…';
+
+  @override
+  String get privacyConsentSaveFailed => '无法保存你的选择，请重试。';
+
+  @override
+  String get listenMicPurposeTitle => '麦克风权限';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh 仅使用麦克风在“收听”页解码摩斯电码。音频在本设备上处理，不会上传。';
+
+  @override
+  String get listenMicPurposeContinue => '继续';
+
+  @override
+  String get personalInfoListText => 'DitMesh 在应用存储中保存 Tox 身份、联系人、群组、消息、草稿、书签、学习数据和偏好。开发者不会接收这些数据。主动发送位置时，所选接收者会收到位置并将其保存在聊天历史中。可选的附近发现会在运行期间分享近似位置。';
+
+  @override
+  String get thirdPartyShareText => '消息和资料通过 Tox 直接发送给目标联系人或群组。对等节点可以看到你的 IP 地址，公开引导节点可以看到连接。自动节点列表使用 nodes.tox.chat。主动在地图中打开位置或选择云文件提供方时，相应服务会处理你选择分享的信息。\n\nAndroid 版使用 Google ML Kit 在设备上扫描二维码。Google 会收到应用版本、设备信息和扫描性能等诊断及使用指标。摄像头图像和解码后的二维码内容均在本机处理，不会发送给 Google。';
+
+  @override
+  String get permissionListText => '麦克风：在本机解码摩斯音频。\n摄像头：扫描 Tox ID 二维码。\n定位：仅在前台用于网格定位、主动发送位置或可选的附近发现。\n通知：提供本地消息提醒。\nApple 设备的局域网权限：连接局域网节点。\n文件选择和分享：导入或导出所选文件。';
+
+  @override
+  String get technicalSupportText => '连接问题\n请先检查网络，再到网络设置检查引导节点。消息送达时，通信双方都需要可用的 Tox 连接。\n\n麦克风\n如果无法开始收听，请在系统设置中检查 DitMesh 的麦克风权限，并确认麦克风可用。如果解码不稳定，请将声源靠近麦克风。\n\n报告问题\n请记下设备型号、操作系统、应用版本和复现步骤。请勿在公开报告中附上私密消息、身份文件、口令或备份。';
+
+  @override
+  String get legalDocumentUnavailable => '无法加载此文档。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7083,7 +7137,7 @@ class SZhHant extends SZh {
   String get aboutTermsOfUse => '使用條款';
 
   @override
-  String get aboutSupport => '技術支援與聯絡';
+  String get aboutSupport => '技術支援';
 
   @override
   String get aboutLinkFailed => '無法開啟連結，已複製連結。';
@@ -7469,7 +7523,7 @@ class SZhHant extends SZh {
   String get nearbyVisible => '對附近的人可見';
 
   @override
-  String get nearbyVisibleDesc => '開啟後，約 5 公里內同樣使用「附近的人」的使用者可以看到你的暱稱和大致位置。';
+  String get nearbyVisibleDesc => '加入同一公開 Tox 群組的參與者可以看到你的顯示名稱和大致位置。';
 
   @override
   String get peopleNearby => '附近的人';
@@ -7545,7 +7599,7 @@ class SZhHant extends SZh {
   String get nearbyPrivacyTitle => '附近的人';
 
   @override
-  String get nearbyPrivacyBody => '開啟後，約 5 公里內同樣使用「附近的人」的使用者可以看到你的暱稱和大致位置（約 100 公尺精度）。除非你主動向某人傳送請求，否則不會分享你的 Tox ID。此功能僅在 DitMesh 開啟時運作。';
+  String get nearbyPrivacyBody => 'DitMesh 會在你所在區域的公開 Tox 群組中分享你的顯示名稱和大致位置（約 100 公尺精度）。任何加入這些群組的人都可以收到這些資訊，無須驗證實際位置。只有你主動傳送或回應附近請求時才會分享 Tox ID。這項功能僅在應用程式處於前景時運作。';
 
   @override
   String get nearbyPrivacyAccept => '開啟';
@@ -7654,4 +7708,58 @@ class SZhHant extends SZh {
 
   @override
   String get learnSettingsSaveFailed => '無法儲存訓練設定，請重試。';
+
+  @override
+  String get accountSectionPrivacy => '隱私與權限';
+
+  @override
+  String get accountPersonalInfoList => '個人資訊收集清單';
+
+  @override
+  String get accountThirdPartyShareList => '第三方共享清單';
+
+  @override
+  String get accountPermissionList => '權限說明';
+
+  @override
+  String get privacyConsentTitle => '歡迎使用 DitMesh';
+
+  @override
+  String get privacyConsentSummary => 'DitMesh 使用 Tox 點對點網路進行聊天。繼續前，請閱讀隱私政策與使用條款，了解應用程式如何處理資料和權限。';
+
+  @override
+  String get privacyConsentAccept => '同意並繼續';
+
+  @override
+  String get privacyConsentDecline => '不同意並退出';
+
+  @override
+  String get privacyConsentSaving => '正在儲存…';
+
+  @override
+  String get privacyConsentSaveFailed => '無法儲存你的選擇，請重試。';
+
+  @override
+  String get listenMicPurposeTitle => '麥克風權限';
+
+  @override
+  String get listenMicPurposeBody => 'DitMesh 僅使用麥克風在「收聽」頁解碼摩斯電碼。音訊在本裝置上處理，不會上傳。';
+
+  @override
+  String get listenMicPurposeContinue => '繼續';
+
+  @override
+  String get personalInfoListText => 'DitMesh 在應用程式儲存空間保存 Tox 身分、聯絡人、群組、訊息、草稿、書籤、學習資料和偏好設定。開發者不會接收這些資料。主動傳送位置時，所選接收者會收到位置並保存在聊天記錄中。選用的附近探索會在運作期間分享約略位置。';
+
+  @override
+  String get thirdPartyShareText => '訊息和個人資料透過 Tox 直接傳給指定的聯絡人或群組。對等節點可看到你的 IP 位址，公開引導節點可看到連線。自動節點清單使用 nodes.tox.chat。在地圖中開啟位置或選擇雲端檔案服務時，該服務會處理你選擇分享的資訊。\n\nAndroid 版使用 Google ML Kit 在裝置上掃描 QR 碼。Google 會收到應用程式版本、裝置資訊和掃描效能等診斷及使用指標。相機影像和解碼後的 QR 碼內容均在裝置上處理，不會傳送給 Google。';
+
+  @override
+  String get permissionListText => '麥克風：在本機解碼摩斯音訊。\n相機：掃描 Tox ID QR 碼。\n定位：僅在前景用於網格定位、主動傳送位置或選用的附近探索。\n通知：提供本機訊息提醒。\nApple 裝置的區域網路權限：連線至區域網路節點。\n檔案選擇與分享：匯入或匯出所選檔案。';
+
+  @override
+  String get technicalSupportText => '連線問題\n請先檢查網路，再到網路設定檢查引導節點。訊息送達時，通訊雙方都需要可用的 Tox 連線。\n\n麥克風\n如果無法開始收聽，請在系統設定中檢查 DitMesh 的麥克風權限，並確認麥克風可用。如果解碼不穩定，請將聲源靠近麥克風。\n\n回報問題\n請記下裝置型號、作業系統、應用程式版本和重現步驟。請勿在公開回報中附上私人訊息、身分檔案、通行密語或備份。';
+
+  @override
+  String get legalDocumentUnavailable => '無法載入此文件。';
 }

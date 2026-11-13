@@ -23,8 +23,8 @@ import '../appearance/style_labels.dart';
 import '../common/app_bar_title.dart';
 import '../diagnostics/connection_diagnostics_page.dart';
 import '../keying/key_setup_page.dart';
+import '../legal/legal_pages.dart';
 import '../moderation/blocked_people_page.dart';
-import '../moderation/site_links.dart';
 import '../network/bootstrap_page.dart';
 import '../nearby/location_settings_page.dart';
 import 'me_notes.dart';
@@ -190,9 +190,10 @@ class _MeBody extends StatelessWidget {
         NotificationSettingsSection(
           header: _SectionHeader(s.accountSectionNotifications),
         ),
+        _SectionHeader(s.accountSectionPrivacy),
+        const LegalLinksSection(),
         _SectionHeader(s.accountSectionAbout),
         const MeNotes(),
-        const SiteLinksSection(),
         ListTile(
           leading: const Icon(Icons.gavel_outlined),
           title: Text(s.accountAboutLicence),

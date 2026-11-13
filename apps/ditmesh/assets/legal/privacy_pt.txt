@@ -1,0 +1,46 @@
+Última atualização: 2026-11-13
+
+DitMesh é um aplicativo de conversas em código Morse entre pares para Android, iOS, macOS, Linux e Windows. O desenvolvedor não mantém servidor de mensagens. O aplicativo não exige cadastro centralizado e não inclui publicidade. O suporte é prestado pela seção pública de issues do GitHub. Não publique ali mensagens privadas, dados da sua identidade ou backups.
+
+As versões de produção para Android solicitam seu consentimento com a política de privacidade antes de iniciar o Tox. O aplicativo salva no dispositivo a versão da política que você aceitou e pede novo consentimento quando essa versão muda.
+
+Dados locais
+
+O aplicativo guarda sua identidade Tox, contatos, grupos, histórico de mensagens, rascunhos, favoritos, dados de prática, preferências, configurações de teclas e gravações salvas no armazenamento privado do aplicativo. É possível proteger o perfil da identidade com uma senha. O histórico de mensagens e os arquivos de prática não são criptografados em repouso. Por isso, é importante proteger o acesso ao dispositivo e aos backups. As exportações criptografadas só são salvas ou compartilhadas quando você solicita.
+
+As configurações dos nós de inicialização são compartilhadas por toda esta instalação. A hospedagem de um nó na rede local pelo computador usa um perfil de nó separado. Essas configurações de rede são mantidas ao trocar ou excluir uma identidade de conversa.
+
+Eu → Excluir identidade remove os dados locais da conta associada a essa identidade. As mensagens já enviadas permanecem nos dispositivos dos destinatários. Os backups do sistema operacional e as cópias que você já exportou seguem suas próprias regras de retenção. DitMesh e MorseCQ mantêm seus dados de aplicativo separados.
+
+Dados de rede
+
+As mensagens e informações do perfil são enviadas aos contatos ou grupos com a criptografia do Tox. A rede usa nós públicos de inicialização para encontrar pares. O desenvolvedor não mantém servidor para armazenar mensagens pendentes. As mensagens enviadas enquanto um dos pares está offline ficam no dispositivo do remetente até que ambos estejam acessíveis.
+
+A inicialização automática e a atualização manual do catálogo solicitam a lista pública de nós em https://nodes.tox.chat/json. Esse servidor recebe o endereço IP da conexão. Os testes de nós enviam solicitações DHT ao endereço selecionado. A hospedagem de um nó na rede local pelo computador abre um socket UDP e exibe os endereços da rede local e uma chave pública DHT para você compartilhar. Os dados exibidos sobre o nó não incluem os segredos da identidade de conversa.
+
+O Tox conecta amigos diretamente e não oculta os endereços IP uns dos outros. Os nós de inicialização e da DHT veem as conexões de rede, que usam chaves DHT temporárias. Por si só, um ID Tox público não revela a chave privada da sua identidade. Seu nome de exibição, seu status e as mensagens de grupo são visíveis aos respectivos destinatários.
+
+No Android, o Google ML Kit lê códigos QR no dispositivo. O Google recebe métricas de diagnóstico e uso, como a versão do app, informações do dispositivo e o desempenho do leitor. As imagens da câmera e o conteúdo decodificado dos códigos QR são processados no dispositivo e não são enviados ao Google.
+
+Localização e Pessoas próximas
+
+A localização e a visibilidade para pessoas próximas são opções independentes e facultativas, desativadas por padrão para cada identidade neste dispositivo. Você pode preencher o localizador Maidenhead com as coordenadas atuais. As coordenadas não enviadas ficam na memória e não entram nos backups exportados. Após conferir as coordenadas, você pode enviar uma mensagem avulsa de localização a um contato ou grupo. A mensagem é mantida no histórico de conversa do dispositivo de cada destinatário e incluída nos backups desse histórico. Visualizar posições recebidas não consulta a localização do seu dispositivo. O provedor de mapas recebe as coordenadas selecionadas somente quando você decide abrir o mapa. O aplicativo só consulta a localização enquanto está em primeiro plano.
+
+Ao também ativar a visibilidade e abrir Pessoas próximas, o DitMesh usa o mesmo protocolo de descoberta Tox Rendezvous que o Toxee. O DitMesh compartilha seu nome de exibição e suas coordenadas aproximadas, arredondadas para cerca de 100 m, em grupos públicos do Tox da sua região. Qualquer pessoa que entre em um desses grupos pode receber esses dados. Para entrar, não é necessário comprovar identidade nem localização física. Os pacotes de descoberta não entram nas conversas comuns, no histórico de mensagens nem na lista de grupos. Não há servidor de catálogo de localizações. A rede e o provedor de localização do sistema operacional têm sua própria visibilidade das conexões de rede e das solicitações de localização.
+
+Uma nova identidade de assinatura e criptografia é criada para cada sessão de descoberta de pessoas próximas. Seu ID Tox só é revelado quando você decide enviar ou responder a uma solicitação de proximidade. As solicitações são criptografadas para o participante escolhido, e a amizade ainda precisa ser aceita. Fechar a página de pessoas próximas encerra a descoberta após cinco minutos. Ocultar ou suspender o aplicativo, desativar a localização ou a visibilidade, ou encerrar a sessão Tox interrompe a descoberta imediatamente. Os registros da sessão expiram, mas outros participantes podem guardar as informações que receberam. O bloqueio na descoberta vale somente para a identidade temporária e a sessão atuais. O bloqueio nas conversas comuns é independente.
+
+Permissões opcionais
+
+• Rede local (plataformas Apple): conectar a nós da rede local configurados manualmente ou hospedar um nó da rede local em um computador.
+• Localização: obter as coordenadas atuais, usar o localizador por grade, compartilhar a localização em conversas por sua iniciativa e usar o recurso opcional Pessoas próximas. O aplicativo não pede permissão de localização em segundo plano.
+• Câmera: ler no dispositivo o código QR de um ID Tox.
+• Microfone: decodificar áudio Morse localmente e salvar uma gravação somente quando você solicitar.
+• Notificações: exibir avisos locais de mensagens e encaminhar você à tela correspondente. Não há servidor de notificações push.
+• Seleção e compartilhamento de arquivos: importar ou exportar backups e materiais por sua iniciativa. O provedor de arquivos na nuvem ou o site que você abre no navegador usa os serviços de rede do respectivo provedor.
+
+Bloqueio e alterações
+
+O bloqueio oculta no seu dispositivo as mensagens, solicitações e convites daquele participante. Não há um operador central que possa apagar mensagens armazenadas no dispositivo de outro participante. Mudanças no tratamento dos dados serão registradas aqui com uma nova data.
+
+Para resolver problemas, consulte Eu → Privacidade e permissões → Suporte técnico.

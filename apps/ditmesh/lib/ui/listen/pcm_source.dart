@@ -7,8 +7,9 @@ import 'dart:typed_data';
 /// ([RecordPcmSource]) can be swapped without touching the UI.
 abstract interface class PcmSource {
   /// Whether capture is allowed. Implementations may prompt the user (this
-  /// is what the `record` plugin does on Android and iOS).
-  Future<bool> hasPermission();
+  /// is what the `record` plugin does on Android and iOS); pass `request:
+  /// false` to only read the current grant without prompting.
+  Future<bool> hasPermission({bool request = true});
 
   /// Starts capture and returns the byte stream. Chunks are interleaved
   /// 16-bit little-endian frames with [channels] channels at [sampleRate].

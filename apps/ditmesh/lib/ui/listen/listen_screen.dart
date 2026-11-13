@@ -57,6 +57,8 @@ class _ListenScreenState extends State<ListenScreen>
   int _shownTextLength = 0;
   ListenPreferences? _preferences;
   bool _keepingAwake = false;
+  bool _micPurposeExplained = false;
+  DialogRoute<bool>? _micPurposeDialog;
 
   @override
   void initState() {
@@ -102,6 +104,10 @@ class _ListenScreenState extends State<ListenScreen>
 
   void _onControllerChanged() {
     if (!mounted) return;
+    final dialog = _micPurposeDialog;
+    if (!_controller.isBusy && dialog != null && dialog.isActive) {
+      dialog.navigator?.removeRoute(dialog);
+    }
     _preferences?.update(_controller.settings);
     final bool awake = _controller.isListening;
     if (awake != _keepingAwake) {
@@ -126,8 +132,55 @@ class _ListenScreenState extends State<ListenScreen>
     if (_controller.isListening) {
       await _controller.stop();
     } else {
-      await _controller.start();
+      await _start();
     }
+  }
+
+  Future<void> _start() =>
+      _controller.start(explainPermission: _explainMicrophonePurpose);
+
+  Future<bool> _explainMicrophonePurpose() async {
+    if (_micPurposeExplained) return true;
+    final S s = context.s;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final dialog = DialogRoute<bool>(
+      context: context,
+      themes: InheritedTheme.capture(from: context, to: navigator.context),
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        title: Text(s.listenMicPurposeTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(s.listenMicPurposeBody),
+            const SizedBox(height: 24),
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              spacing: 8,
+              overflowAlignment: OverflowBarAlignment.end,
+              overflowSpacing: 8,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(ctx.s.actionCancel),
+                ),
+                FilledButton(
+                  key: const ValueKey('listen-mic-purpose-continue'),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(ctx.s.listenMicPurposeContinue),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    _micPurposeDialog = dialog;
+    final proceed = await navigator.push(dialog);
+    if (identical(_micPurposeDialog, dialog)) _micPurposeDialog = null;
+    if (proceed == true) _micPurposeExplained = true;
+    return proceed == true;
   }
 
   Future<void> _copy() async {
@@ -199,7 +252,7 @@ class _ListenScreenState extends State<ListenScreen>
               children: <Widget>[
                 ListenStatusBanner(
                   controller: _controller,
-                  onRetry: () => unawaited(_controller.start()),
+                  onRetry: () => unawaited(_start()),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),

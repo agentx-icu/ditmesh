@@ -1,0 +1,46 @@
+Dernière mise à jour : 2026-11-13
+
+DitMesh est une application de messagerie Morse de pair à pair pour Android, iOS, macOS, Linux et Windows. Le développeur ne gère aucun serveur de messagerie. L’application ne comporte ni inscription centralisée, ni publicité. L’assistance se fait sur l’espace public de signalement des problèmes de GitHub. N’y publiez ni messages privés, ni données d’identité, ni sauvegardes.
+
+La version de production pour Android vous demande d’accepter la politique de confidentialité avant de démarrer le moteur Tox. L’application conserve sur votre appareil la version que vous avez acceptée et vous redemande votre accord si cette version change.
+
+Données locales
+
+L’application conserve votre identité Tox, vos contacts, vos groupes, votre historique de messages, vos brouillons, vos favoris, vos données d’entraînement, vos préférences, vos raccourcis clavier et vos enregistrements sauvegardés dans son espace de stockage privé. Le profil d’identité peut être protégé par un mot de passe. L’historique de messages et les fichiers d’entraînement sont stockés sans chiffrement. Protégez donc l’accès à votre appareil et à vos sauvegardes. Les exports chiffrés sont enregistrés ou partagés uniquement à votre demande.
+
+Les paramètres des nœuds d’amorçage sont communs à toute l’installation. L’hébergement d’un nœud sur le réseau local depuis un ordinateur utilise un profil de nœud local distinct. Ces paramètres réseau sont conservés lorsque vous changez ou supprimez une identité de messagerie.
+
+« Moi → Supprimer l’identité » efface les données locales du compte associé à cette identité. Les messages déjà envoyés restent sur les appareils des destinataires. Les sauvegardes du système d’exploitation et les copies que vous avez déjà exportées suivent leurs propres règles de conservation. DitMesh et MorseCQ conservent leurs données d’application séparément.
+
+Données réseau
+
+Les messages et les informations de profil sont transmis aux contacts ou aux groupes au moyen du chiffrement Tox. Le réseau utilise des nœuds d’amorçage publics pour trouver les autres pairs. Le développeur ne dispose d’aucun serveur pour stocker les messages en attente de livraison. Ces messages restent sur l’appareil de l’expéditeur jusqu’à ce que les deux pairs soient joignables.
+
+L’amorçage automatique et l’actualisation manuelle du catalogue consultent la liste publique des nœuds à l’adresse https://nodes.tox.chat/json. Le serveur reçoit l’adresse IP de la connexion. Les tests de nœuds envoient des requêtes DHT à l’adresse sélectionnée. Lorsque vous hébergez un nœud sur le réseau local depuis un ordinateur, l’application ouvre un socket UDP et affiche les adresses du réseau local ainsi qu’une clé DHT publique que vous pouvez partager. Les secrets de l’identité de messagerie ne figurent pas dans ces informations sur le nœud.
+
+Tox établit une connexion directe entre amis et ne leur cache pas leurs adresses IP respectives. Les nœuds d’amorçage et les nœuds DHT voient les connexions réseau, qui utilisent des clés DHT temporaires. Un identifiant Tox public ne suffit pas à révéler votre clé d’identité privée. Votre nom d’affichage, votre statut et vos messages de groupe sont visibles par les pairs auxquels ils sont destinés.
+
+Sur Android, Google ML Kit scanne les codes QR sur l’appareil. Google reçoit des données de diagnostic et d’utilisation, comme la version de l’application, des informations sur l’appareil et les performances du scanner. Les images de la caméra et le contenu décodé des codes QR sont traités localement et ne sont pas envoyés à Google.
+
+Localisation et Personnes à proximité
+
+La localisation et la visibilité auprès des personnes à proximité sont deux options indépendantes. Elles sont désactivées par défaut pour chaque identité sur cet appareil. Les coordonnées actuelles peuvent être saisies automatiquement dans le localisateur Maidenhead. Les coordonnées que vous n’envoyez pas restent en mémoire et ne sont pas incluses dans les sauvegardes exportées. Après avoir vérifié les coordonnées dans l’aperçu, vous pouvez choisir d’envoyer un message de localisation ponctuel à un contact ou à un groupe. Ce message reste dans l’historique sur l’appareil de chaque destinataire et figure dans les sauvegardes de cet historique. Consulter une position reçue ne déclenche aucune lecture de la position de votre appareil. Un fournisseur de cartes reçoit les coordonnées sélectionnées uniquement si vous choisissez d’ouvrir sa carte. La localisation est consultée uniquement lorsque l’application est au premier plan.
+
+Si vous activez aussi la visibilité et ouvrez « Personnes à proximité », DitMesh utilise le même protocole de rendez-vous Tox que Toxee. DitMesh partage votre nom d’affichage et vos coordonnées approximatives, arrondies à environ 100 m, dans des groupes Tox publics associés à votre zone. Toute personne qui rejoint l’un de ces groupes peut recevoir ces informations. Aucune preuve d’identité ou de présence physique n’est requise pour rejoindre un groupe. Les paquets de découverte ne sont pas enregistrés dans les conversations ordinaires, l’historique de messages ou la liste des groupes. Il n’existe aucun serveur d’annuaire des positions. Le réseau et le fournisseur de localisation du système d’exploitation peuvent voir de leur côté les connexions réseau et les demandes de localisation.
+
+Chaque session de découverte crée une nouvelle identité de signature et de chiffrement. Votre identifiant Tox est communiqué uniquement si vous choisissez d’envoyer une demande de proximité ou d’y répondre. Les demandes sont chiffrées pour le participant sélectionné. L’ajout à la liste d’amis reste soumis à acceptation. La découverte s’arrête cinq minutes après la fermeture de la page « Personnes à proximité ». Elle s’arrête immédiatement si l’application est masquée ou suspendue, si la localisation ou la visibilité est désactivée, ou si la session Tox prend fin. Les données de session expirent, mais d’autres participants peuvent conserver les informations qu’ils ont reçues. Le blocage pendant la découverte s’applique uniquement à l’identité de découverte temporaire et à la session en cours. Le blocage dans les conversations ordinaires est géré séparément.
+
+Autorisations facultatives
+
+• Réseau local (plateformes Apple) : se connecter aux nœuds du réseau local configurés manuellement ou héberger un nœud local depuis un ordinateur.
+• Localisation : coordonnées actuelles, localisateur, partage volontaire d’une position dans une conversation et option « Personnes à proximité ». Aucune autorisation de localisation en arrière-plan n’est demandée.
+• Appareil photo : scanner sur l’appareil un code QR contenant un identifiant Tox.
+• Microphone : décoder localement le son Morse et sauvegarder un enregistrement uniquement sur demande.
+• Notifications : recevoir des alertes locales et accéder aux messages concernés. Aucun serveur de notifications push.
+• Sélection et partage de fichiers : importer ou exporter volontairement des sauvegardes et du matériel d’entraînement. Le choix d’un fournisseur de fichiers en ligne ou l’ouverture d’un lien dans le navigateur utilise les services réseau du fournisseur concerné.
+
+Blocage et modifications
+
+Le blocage masque les messages, demandes et invitations de la personne bloquée sur votre appareil. Aucun opérateur central ne peut supprimer les messages stockés par un autre pair. Toute modification du traitement des données sera indiquée ici avec une nouvelle date.
+
+Pour résoudre un problème, consultez « Moi → Confidentialité et autorisations → Assistance technique ».

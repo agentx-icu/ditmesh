@@ -2,10 +2,10 @@
 
 # DitMesh public site
 
-Source of <https://agentx-icu.github.io/ditmesh/>: the privacy policy, terms of
-use and support page the app links to (Me → About) and App Store Connect
-requires. Jekyll builds this directory; `.github/workflows/pages.yml` deploys
-it on every push to `master` that touches `site/`.
+Source of <https://agentx-icu.github.io/ditmesh/> and the public privacy, terms
+and support URLs used in store listings. Jekyll builds this directory.
+`.github/workflows/pages.yml` deploys it on every push to `master` that
+touches `site/`.
 
 | Page | English | 简体中文 |
 |---|---|---|
@@ -16,10 +16,12 @@ it on every push to `master` that touches `site/`.
 
 Rules:
 
-- The URLs are referenced from `apps/ditmesh/lib/ui/account/account_routes.dart`
-  and `doc/release/APP_STORE.md`; change all three together.
-- Edit the English and the Chinese page together and bump `last_updated`.
+- Keep the public URLs in sync with `doc/release/APP_STORE.md`.
+- Edit the English and Chinese pages together and update `last_updated`.
+  Sync the in-app copies in `apps/ditmesh/assets/legal/` for all ten supported
+  locales. Each locale has a `privacy_<locale>.txt` and a `terms_<locale>.txt`.
 - A material change to the terms also bumps `kTermsVersion` in the app, so
   everyone agrees to the new version before chatting again.
-- The support contact is GitHub issues (`support_url` in `_config.yml`); the
-  site and the app publish no e-mail address.
+- The public support page points to GitHub issues (`support_url` in
+  `_config.yml`). Me → Privacy and permissions → Technical support provides
+  troubleshooting and reporting guidance inside the app.

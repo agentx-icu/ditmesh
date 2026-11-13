@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,8 +122,14 @@ void main() {
     await _pump(tester, source);
     await tester.tap(find.text(en.listenStart));
     await tester.pumpAndSettle();
+    // The purpose is explained before the permission prompt.
+    expect(find.text(en.listenMicPurposeTitle), findsOneWidget);
+    expect(source.permissionRequests, [false]);
+    await tester.tap(find.text(en.listenMicPurposeContinue));
+    await tester.pumpAndSettle();
     expect(find.text(en.listenPermissionDenied), findsOneWidget);
     expect(source.startCalls, 0);
+    expect(source.permissionRequests, [false, true]);
     expect(find.text(en.listenStart), findsOneWidget);
 
     source.permissionGranted = true;
@@ -129,6 +137,105 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(en.listenPermissionDenied), findsNothing);
     expect(source.isStreaming, isTrue);
+  });
+
+  testWidgets('cancelling the microphone purpose dialog keeps the mic off', (
+    tester,
+  ) async {
+    final source = FakePcmSource(permissionGranted: false);
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    await tester.pumpAndSettle();
+    expect(find.text(en.listenMicPurposeTitle), findsOneWidget);
+
+    await tester.tap(find.text(en.actionCancel));
+    await tester.pumpAndSettle();
+    expect(find.text(en.listenMicPurposeTitle), findsNothing);
+    expect(source.isStreaming, isFalse);
+    expect(source.startCalls, 0);
+    expect(source.permissionRequests, [false]);
+    expect(find.text(en.listenStart), findsOneWidget);
+  });
+
+  testWidgets('repeated starts share one microphone purpose prompt', (
+    tester,
+  ) async {
+    final probe = Completer<void>();
+    final source = FakePcmSource(permissionGranted: false)
+      ..permissionGate = probe;
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    await tester.tap(find.text(en.listenStart));
+    probe.complete();
+    await tester.pumpAndSettle();
+
+    expect(source.permissionRequests, [false]);
+    expect(
+      find.text(en.listenMicPurposeTitle, skipOffstage: false),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('backgrounding cancels a pending microphone permission check', (
+    tester,
+  ) async {
+    final probe = Completer<void>();
+    final source = FakePcmSource()..permissionGate = probe;
+    final binding = tester.binding;
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    probe.complete();
+    await tester.pumpAndSettle();
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    expect(source.permissionRequests, [false]);
+    expect(source.startCalls, 0);
+    expect(find.text(en.listenStoppedInBackground), findsOneWidget);
+  });
+
+  testWidgets('backgrounding dismisses the microphone purpose dialog', (
+    tester,
+  ) async {
+    final source = FakePcmSource(permissionGranted: false);
+    final binding = tester.binding;
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    await tester.pumpAndSettle();
+    expect(find.text(en.listenMicPurposeTitle), findsOneWidget);
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pumpAndSettle();
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+
+    expect(find.text(en.listenMicPurposeTitle), findsNothing);
+    expect(source.permissionRequests, [false]);
+    expect(source.startCalls, 0);
+  });
+
+  testWidgets('retry after a failed probe explains the permission first', (
+    tester,
+  ) async {
+    final source = FakePcmSource(permissionGranted: false)
+      ..permissionProbeError = StateError(_rawDetail);
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    await tester.pumpAndSettle();
+
+    expect(find.text(en.listenStartFailed), findsOneWidget);
+    expect(source.permissionRequests, [false]);
+    source.permissionProbeError = null;
+    await tester.tap(find.text(en.listenPermissionRetry));
+    await tester.pumpAndSettle();
+    expect(find.text(en.listenMicPurposeTitle), findsOneWidget);
+    expect(source.permissionRequests, [false, false]);
   });
 
   for (final (Locale locale, S s) in <(Locale, S)>[

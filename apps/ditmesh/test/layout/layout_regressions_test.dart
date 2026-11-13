@@ -148,6 +148,12 @@ void main() {
         );
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
+        final proceed = find.byKey(
+          const ValueKey('listen-mic-purpose-continue'),
+        );
+        await tester.ensureVisible(proceed);
+        await tester.tap(proceed);
+        await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.byType(MaterialBanner), findsOneWidget);
         // The decoded text keeps a usable height; the page scrolls instead.

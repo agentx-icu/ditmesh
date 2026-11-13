@@ -21,6 +21,9 @@ final class FakePcmSource implements PcmSource {
   /// When set, [hasPermission] throws it (the permission query failed).
   Object? permissionError;
 
+  Object? permissionProbeError;
+  final permissionRequests = <bool>[];
+
   /// When set, [start] throws it.
   Object? startError;
 
@@ -44,9 +47,10 @@ final class FakePcmSource implements PcmSource {
   bool get isStreaming => _controller != null;
 
   @override
-  Future<bool> hasPermission() async {
+  Future<bool> hasPermission({bool request = true}) async {
+    permissionRequests.add(request);
     await _pass(permissionGate, () => permissionGate = null);
-    final error = permissionError;
+    final error = (!request ? permissionProbeError : null) ?? permissionError;
     if (error != null) throw error;
     return permissionGranted;
   }

@@ -54,7 +54,8 @@ final class RecordPcmSource implements PcmSource {
   }
 
   @override
-  Future<bool> hasPermission() => _recorder.hasPermission();
+  Future<bool> hasPermission({bool request = true}) =>
+      _recorder.hasPermission(request: request);
 
   @override
   Future<Stream<Uint8List>> start({
