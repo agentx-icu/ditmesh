@@ -698,6 +698,25 @@ jobs:
       # Gradle build packages exactly those ABIs and byte-checks them.
       - name: Stage libtim2tox_ffi.so into the app
         run: bash tool/ci/build_tim2tox.sh --target android --stage-only
+      - name: Reject a configured debug certificate for store APKs and AABs
+        working-directory: apps/ditmesh
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/store-debug.p12" \
+            -alias fixture -keyalg RSA -keysize 2048 -validity 30 \
+            -dname 'CN=Android Debug,O=Android,C=US' -storepass fixture-password -noprompt
+          for artifact in apk appbundle; do
+            log="$RUNNER_TEMP/store-debug-$artifact.log"
+            if DITMESH_ANDROID_KEYSTORE="$RUNNER_TEMP/store-debug.p12" \
+              DITMESH_ANDROID_KEYSTORE_PASSWORD=fixture-password DITMESH_ANDROID_KEY_ALIAS=fixture \
+              DITMESH_ANDROID_KEY_PASSWORD=fixture-password \
+              flutter build "$artifact" --release -PstoreRelease --target-platform=android-arm64 \
+              > "$log" 2>&1; then
+              echo "The store $artifact build accepted an Android Debug certificate." >&2
+              exit 1
+            fi
+            cat "$log"
+            grep -Fq 'Android Debug certificate cannot sign a store' "$log"
+          done
       # Optional: with all four secrets the release is signed with the project
       # key (app/build.gradle.kts reads the DITMESH_ANDROID_* env verbatim);
       # Branch validation may use the debug key; tagged builds reject it below.
@@ -717,6 +736,7 @@ jobs:
           fi
       - name: Build APK and App Bundle (release, real Tox backend)
         env:
+          DITMESH_DISTRIBUTION: ${{ github.ref_type == 'tag' && '1' || '0' }}
           DITMESH_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           DITMESH_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           DITMESH_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

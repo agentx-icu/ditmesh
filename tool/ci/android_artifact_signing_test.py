@@ -27,19 +27,38 @@ class JarIntegrityTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
-    def signed(self):
+    def signed(self, key=None):
         path = self.root / 'app.aab'
         with zipfile.ZipFile(path, 'w') as stream:
             stream.writestr('BundleConfig.pb', b'fixture bundle config')
             stream.writestr('base/manifest/AndroidManifest.xml', b'fixture payload')
             stream.writestr('base/res/drawable/common_google_signin_btn_disabled.xml', b'signed resource')
-        subprocess.run(['jarsigner', '-keystore', str(self.key), '-storepass',
+        subprocess.run(['jarsigner', '-keystore', str(key or self.key), '-storepass',
                         'fixture-password', str(path), 'fixture'], capture_output=True, check=True)
         return path
 
     def test_valid_self_signed_android_key_is_accepted(self):
         report = check_aab(self.signed())
         self.assertIn('SHA256:', report)
+
+    def test_store_bundle_verifier_rejects_debug_and_accepts_release(self):
+        verifier = Path(__file__).with_name('VerifyAndroidBundle.java')
+        path = self.signed()
+        release = subprocess.run(['java', str(verifier), str(path), '--reject-debug'],
+                                 capture_output=True, text=True, check=False)
+        self.assertEqual(release.returncode, 0, release.stderr)
+
+        debug_key = self.root / 'debug.p12'
+        subprocess.run(['keytool', '-genkeypair', '-alias', 'fixture', '-keystore', str(debug_key),
+                        '-storepass', 'fixture-password', '-keyalg', 'RSA', '-keysize', '2048',
+                        '-validity', '30', '-dname', 'CN=Android Debug,O=Android,C=US', '-noprompt'],
+                       capture_output=True, check=True)
+        path = self.signed(debug_key)
+        self.assertIn('SHA256:', check_aab(path))
+        debug = subprocess.run(['java', str(verifier), str(path), '--reject-debug'],
+                               capture_output=True, text=True, check=False)
+        self.assertNotEqual(debug.returncode, 0)
+        self.assertIn('Android Debug certificate cannot sign a store AAB', debug.stderr)
 
     def test_unsigned_extra_entry_is_rejected(self):
         path = self.signed()

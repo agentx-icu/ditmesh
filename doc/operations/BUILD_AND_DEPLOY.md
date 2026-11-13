@@ -40,6 +40,14 @@ flutter build ios --release --no-codesign
 
 Consult `--help` for the script's target spelling/options before a new host build. Desktop runner integration finds libraries in `build/native/`; Android stages jniLibs and iOS stages an XCFramework. Stage the required native libraries before building the application.
 
+After staging the native libraries, use `flutter build apk --release -PstoreRelease`
+or `flutter build appbundle --release -PstoreRelease` for store builds. Provide
+all four `DITMESH_ANDROID_*` keystore settings or configure
+`apps/ditmesh/android/key.properties`. Gradle verifies the signed AAB and every
+APK, including ABI splits, and rejects Android Debug certificates. Tagged
+builds enable these checks through `DITMESH_DISTRIBUTION=1` and verify the final
+APK and AAB against the owner's upload certificate.
+
 Android SDK levels are pinned in `apps/ditmesh/android/app/build.gradle.kts` (`compileSdk` 36, `minSdk` 24, `targetSdk` 36) rather than inherited from the Flutter Gradle plugin, so a Flutter upgrade cannot move them silently; `ndkVersion` follows Flutter but must stay at r28 or newer. CI pins the same NDK (`ANDROID_NDK_VERSION` in `.github/workflows/native.yml`, 28.2.13676358 for Flutter 3.41.9) instead of the runner image's latest; `tool/ci/install_android_ndk.sh` installs it and fails if it differs from the Flutter SDK's `ndkVersion`, so bump both together. The Android native build links every library with 16 KB page-size flags and refuses to stage a `libtim2tox_ffi.so` or `libc++_shared.so` whose `PT_LOAD` segments are not 16 KB aligned (Google Play requirement for apps targeting Android 15+). CI repeats the check on the release APK, including the Flutter and plugin libraries, and verifies the APK's zip alignment with `zipalign -c -P 16`.
 
 After the application build, run from the root:

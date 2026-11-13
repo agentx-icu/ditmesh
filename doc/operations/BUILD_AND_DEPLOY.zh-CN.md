@@ -39,6 +39,8 @@ flutter build ios --release --no-codesign
 
 新主机构建前先查脚本 `--help` 的目标名与选项。桌面在 `build/native/` 查找库，Android 放入 jniLibs，iOS 放入 XCFramework。应用构建前需放置对应的原生库。
 
+暂存原生库后，用 `flutter build apk --release -PstoreRelease` 或 `flutter build appbundle --release -PstoreRelease` 构建商店产物。请提供完整的四项 `DITMESH_ANDROID_*` 密钥库配置，或设置 `apps/ditmesh/android/key.properties`。Gradle 会验证签名后的 AAB 和每个 APK（含 ABI 拆分包），并拒绝 Android Debug 证书。标签构建通过 `DITMESH_DISTRIBUTION=1` 启用这些检查，并按负责人提供的上传证书校验最终 APK 和 AAB。
+
 Android SDK 级别在 `apps/ditmesh/android/app/build.gradle.kts` 中显式钉住（`compileSdk` 36、`minSdk` 24、`targetSdk` 36），不再从 Flutter Gradle 插件继承，Flutter 升级不会悄悄改动它们；`ndkVersion` 跟随 Flutter，但不得低于 r28。CI 钉住同一个 NDK（`.github/workflows/native.yml` 中的 `ANDROID_NDK_VERSION`，Flutter 3.41.9 对应 28.2.13676358），不使用 runner 镜像的最新版；`tool/ci/install_android_ndk.sh` 负责安装，并在它与 Flutter SDK 的 `ndkVersion` 不一致时失败，因此两者须一起升级。Android 原生构建对每个库都加 16 KB 页对齐链接标志，`libtim2tox_ffi.so` 或 `libc++_shared.so` 的 `PT_LOAD` 段若未按 16 KB 对齐则拒绝放入 jniLibs（Google Play 对面向 Android 15+ 应用的要求）。CI 会对发布 APK 再查一遍，包括 Flutter 与插件的库，并用 `zipalign -c -P 16` 校验 APK 的 zip 对齐。
 
 应用构建后回到根目录运行：
