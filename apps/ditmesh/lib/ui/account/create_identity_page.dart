@@ -7,6 +7,7 @@ import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
 import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
+import 'account_routes.dart';
 import 'account_widgets.dart';
 import 'delete_identity_dialog.dart';
 
@@ -44,6 +45,7 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
   bool get _wantsPassword => _password.text.isNotEmpty;
 
   Future<void> _submit() async {
+    if (_busy) return;
     final s = context.s;
     final name = _name.text.trim();
     setState(() {
@@ -57,14 +59,14 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
 
     setState(() => _busy = true);
     final controller = context.read<StartupController>();
-    final navigator = Navigator.of(context);
+    final route = ModalRoute.of<void>(context);
     try {
       await controller.createIdentity(
         displayName: name,
         password: _wantsPassword ? _password.text : null,
       );
-      // The gate (route 0) now renders the backup wizard.
-      navigator.popUntil((route) => route.isFirst);
+      // The startup gate now renders the backup wizard.
+      closeAccountRoute(route);
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {

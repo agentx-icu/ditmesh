@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -16,12 +17,14 @@ void main() {
   late String dataDir;
   late FakeClipPlayer player;
   late WorkbenchController c;
+  late bool disposed;
 
   setUp(() async {
     root = await Directory.systemTemp.createTemp('wb_');
     dataDir = p.join(root.path, 'training');
     await Directory(dataDir).create();
     player = FakeClipPlayer();
+    disposed = false;
     // Media live in the profile root, beside its backed-up training tree.
     c = WorkbenchController(
       library: RecordingLibrary(root.path),
@@ -30,8 +33,31 @@ void main() {
   });
 
   tearDown(() async {
-    c.dispose();
+    if (!disposed) c.dispose();
     await root.delete(recursive: true);
+  });
+
+  test('closing the workbench discards an import still reading', () async {
+    final reading = Completer<void>();
+    final finish = Completer<void>();
+    final importing = c.importRecording(
+      PickedRecording(
+        name: 'late.wav',
+        read: () async* {
+          reading.complete();
+          await finish.future;
+          yield cwWav('CQ');
+        },
+      ),
+    );
+    await reading.future;
+    c.dispose();
+    disposed = true;
+    finish.complete();
+
+    expect(await importing, isFalse);
+    expect(c.reader, isNull);
+    expect(await c.library.exists(RecordingLibrary.workingFile), isFalse);
   });
 
   Future<void> waveform() async {
@@ -99,6 +125,58 @@ void main() {
     expect(c.name, 'a.wav');
   });
 
+  test(
+    'an unsuccessful file replacement preserves the previous selection',
+    () async {
+      const saved = 'media/recordings/saved.wav';
+      final previous = await c.library.importTo(
+        PickedRecording(name: 'saved.wav', bytes: cwWav('SOS')),
+        relativePath: saved,
+      );
+      await closeReader(previous);
+      expect(await c.openSaved(saved, 'saved.wav'), isTrue);
+      c.setSelection(1, 20);
+      final working = c.library.fileFor(RecordingLibrary.workingFile);
+      await Directory(working.path).create();
+
+      expect(
+        await c.importRecording(
+          PickedRecording(name: 'new.wav', bytes: cwWav('CQ')),
+        ),
+        isFalse,
+      );
+      expect(c.info, isNotNull);
+      expect(c.name, 'saved.wav');
+      expect((c.start, c.end), (1, 20));
+    },
+  );
+
+  test(
+    'a recording that fails to open after replacement is rolled back',
+    () async {
+      final library = c.library;
+      final original = cwWav('SOS');
+      final working = library.fileFor(RecordingLibrary.workingFile);
+      await working.parent.create(recursive: true);
+      await working.writeAsBytes(original);
+
+      await expectLater(
+        library.importTo(
+          PickedRecording(name: 'new.wav', bytes: cwWav('CQ')),
+          beforeReplace: () async {
+            final staging = await working.parent
+                .list()
+                .where((entry) => entry is Directory)
+                .single;
+            await File(p.join(staging.path, 'recording.wav')).writeAsBytes([]);
+          },
+        ),
+        throwsA(isA<WavFormatException>()),
+      );
+      expect(await working.readAsBytes(), original);
+    },
+  );
+
   test('decodes a selection; changing it invalidates the result', () async {
     await c.importRecording(
       PickedRecording(name: 'a.wav', bytes: cwWav('SOS TEST')),
@@ -134,6 +212,22 @@ void main() {
     expect(info.channels, 1);
     expect(info.frameCount, c.end - c.start);
     await c.togglePlay();
+    expect(player.isPlaying, isFalse);
+  });
+
+  test('changing the selection stops a clip still being prepared', () async {
+    await c.importRecording(
+      PickedRecording(name: 'a.wav', bytes: cwWav('SOS TEST')),
+    );
+    final ready = Completer<void>();
+    player.holdPlay = ready;
+    final playing = c.togglePlay();
+    await player.playRequested.future;
+    c.setSelection(0, c.end ~/ 2);
+    ready.complete();
+
+    await playing;
+    expect(player.plays, isEmpty);
     expect(player.isPlaying, isFalse);
   });
 

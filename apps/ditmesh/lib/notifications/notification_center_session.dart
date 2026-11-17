@@ -160,10 +160,9 @@ extension _NotificationSession on NotificationCenter {
   /// no dialog.
   Future<bool> _checkPermission() async {
     try {
-      final bool granted = await _notifications.isPermissionGranted();
-      if (granted) _permissionGranted = true;
-      return granted;
+      return _permissionGranted = await _notifications.isPermissionGranted();
     } catch (error, stack) {
+      _permissionGranted = false;
       NotificationCenter._report('isPermissionGranted', error, stack);
       return false;
     }
@@ -171,9 +170,8 @@ extension _NotificationSession on NotificationCenter {
 
   Future<bool> _requestPermission() async {
     try {
-      final bool granted = await _notifications.requestPermission();
-      if (granted) _permissionGranted = true;
-      return granted;
+      if (_permissionGranted && await _checkPermission()) return true;
+      return _permissionGranted = await _notifications.requestPermission();
     } catch (error, stack) {
       NotificationCenter._report('requestPermission', error, stack);
       return false;

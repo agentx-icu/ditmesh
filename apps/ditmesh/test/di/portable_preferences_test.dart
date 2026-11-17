@@ -102,6 +102,42 @@ void main() {
     expect(prefs.exportPortable(), before);
   });
 
+  test('an unknown version leaves portable preferences untouched', () async {
+    final prefs = AppPreferences(
+      InMemoryKeyValueStore(),
+      backendLabel: 'x',
+      identity: identity,
+    );
+    addTearDown(prefs.dispose);
+    final before = prefs.exportPortable();
+    await prefs.applyPortable(
+      _doc({'version': 2, 'chat.playback': {'toneHz': 900}}),
+    );
+    expect(prefs.exportPortable(), before);
+  });
+
+  test('reference Farnsworth only clears on explicit null', () async {
+    final prefs = AppPreferences(
+      InMemoryKeyValueStore(),
+      backendLabel: 'x',
+      identity: identity,
+    );
+    addTearDown(prefs.dispose);
+    prefs.reference.farnsworthWpm = 8;
+    await prefs.applyPortable(
+      _doc({'reference.playback': {'toneHz': 900}}),
+    );
+    expect(prefs.reference.farnsworthWpm, 8);
+    await prefs.applyPortable(
+      _doc({'reference.playback': {'farnsworthWpm': 'invalid'}}),
+    );
+    expect(prefs.reference.farnsworthWpm, 8);
+    await prefs.applyPortable(
+      _doc({'reference.playback': {'farnsworthWpm': null}}),
+    );
+    expect(prefs.reference.farnsworthWpm, isNull);
+  });
+
   test('restoring old appearance settings saves their replacement', () async {
     final store = InMemoryKeyValueStore();
     final prefs = AppPreferences(store, backendLabel: 'x', identity: identity);

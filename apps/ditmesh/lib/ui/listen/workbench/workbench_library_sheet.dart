@@ -126,6 +126,9 @@ class _LibrarySheet extends StatefulWidget {
 
 class _LibrarySheetState extends State<_LibrarySheet> {
   List<(AudioMaterial, bool)>? _items;
+  bool _loadFailed = false;
+  bool _opening = false;
+  String? _error;
 
   @override
   void initState() {
@@ -134,53 +137,83 @@ class _LibrarySheetState extends State<_LibrarySheet> {
   }
 
   Future<void> _reload() async {
-    final all = await widget.training.loadAudioMaterials();
-    final items = <(AudioMaterial, bool)>[
-      for (final m in all) (m, await widget.controller.library.exists(m.file)),
-    ];
-    if (mounted) setState(() => _items = items);
+    try {
+      final all = await widget.training.loadAudioMaterials();
+      final items = <(AudioMaterial, bool)>[
+        for (final m in all)
+          (m, await widget.controller.library.exists(m.file)),
+      ];
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _loadFailed = false;
+        });
+      }
+    } on Object {
+      if (mounted) setState(() => _loadFailed = true);
+    }
   }
 
   Future<void> _open(AudioMaterial m) async {
-    final ok = await widget.controller.openSaved(
-      m.file,
-      m.title,
-      selection: (m.start, m.end),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    if (_opening) return;
+    _opening = true;
+    final route = ModalRoute.of<void>(context);
+    final bool ok;
+    try {
+      ok = await widget.controller.openSaved(
+        m.file,
+        m.title,
+        selection: (m.start, m.end),
+      );
+    } finally {
+      _opening = false;
+    }
+    if (!mounted || route?.isActive != true) return;
+    final navigator = route!.navigator!;
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
     if (!ok) widget.onFailure();
   }
 
   Future<void> _relink(AudioMaterial m) async {
-    final picked =
-        await (widget.picker ??
-                PlatformRecordingPicker(dialogTitle: context.s.workbenchRelink))
-            .pick();
-    if (picked == null) return;
+    final s = context.s;
+    setState(() => _error = null);
     try {
+      final picked =
+          await (widget.picker ??
+                  PlatformRecordingPicker(dialogTitle: s.workbenchRelink))
+              .pick();
+      if (picked == null || !mounted) return;
       final reader = await widget.controller.library.importTo(
         picked,
         relativePath: m.file,
       );
       await closeReader(reader);
     } on Object {
-      widget.onFailure();
+      if (mounted) setState(() => _error = s.workbenchErrorIo);
       return;
     }
     await _reload();
   }
 
   Future<void> _delete(AudioMaterial m) async {
-    final stillUsed = await widget.training.deleteAudioMaterial(m.id);
-    // The recording that is open stays on disk: saving another selection
-    // of it must not point at a deleted file. It is pruned the next time
-    // the workbench opens if nothing refers to it any more.
-    final open = m.file == widget.controller.file;
-    if (!stillUsed && !open && m.file != RecordingLibrary.workingFile) {
-      await widget.controller.library.delete(m.file);
+    final s = context.s;
+    setState(() => _error = null);
+    try {
+      final stillUsed = await widget.training.deleteAudioMaterial(m.id);
+      // Keep the open recording for other selections. The next workbench
+      // prunes it if nothing refers to it.
+      final open = m.file == widget.controller.file;
+      if (!stillUsed && !open && m.file != RecordingLibrary.workingFile) {
+        await widget.controller.library.delete(m.file);
+      }
+    } on Object {
+      if (mounted) setState(() => _error = s.workbenchErrorIo);
     }
-    await _reload();
+    if (mounted) await _reload();
   }
 
   @override
@@ -199,7 +232,14 @@ class _LibrarySheetState extends State<_LibrarySheet> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            if (items == null)
+            if ((_loadFailed ? s.workbenchErrorIo : _error) case final error?)
+              Text(
+                error,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (_loadFailed)
+              TextButton(onPressed: _reload, child: Text(s.actionRetry))
+            else if (items == null)
               const Center(child: CircularProgressIndicator())
             else if (items.isEmpty)
               Text(s.workbenchLibraryEmpty)

@@ -342,6 +342,57 @@ void main() {
     await again.dispose();
   });
 
+  test('an inbound message survives a failed conversation reveal', () async {
+    const id = 'c2c_$kPeerKey';
+    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+    await bind();
+    await chat.deleteConversation(id);
+    final events = <ChatMessage>[];
+    final sub = chat.messageEvents.listen(events.add);
+    addTearDown(sub.cancel);
+    final failedWrite = Completer<void>();
+    store
+      ..holdOnlyKeyContaining = 'ditmesh_hidden_conversations'
+      ..holdSetStringList = failedWrite;
+
+    engineService.ingestC2cText(peer: kPeerKey, text: 'CQ', isSelf: false);
+    await store.heldStringList.future;
+    engine.bind(null);
+    await pumpEventQueue();
+    store.holdSetStringList = null;
+    failedWrite.completeError(StateError('preferences write failed'));
+    await pumpEventQueue();
+    engine.bind(engineService);
+
+    final visible = await chat.conversationChanges
+        .firstWhere((rows) => rows.any((row) => row.id == id))
+        .timeout(const Duration(seconds: 2));
+    expect(visible.singleWhere((row) => row.id == id).lastMessage?.text, 'CQ');
+    expect(events.single.text, 'CQ');
+    expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
+  });
+
+  test('a message received during deletion keeps the conversation visible', () async {
+    const id = 'c2c_$kPeerKey';
+    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+    await bind();
+    final metadata = Completer<void>();
+    store
+      ..holdOnlyKeyContaining = 'ditmesh_pinned_conversations'
+      ..holdSetStringList = metadata;
+    final deleting = chat.deleteConversation(id);
+    await store.heldStringList.future;
+    final received = chat.messageEvents.first;
+    engineService.ingestC2cText(peer: kPeerKey, text: 'New CQ', isSelf: false);
+    expect((await received).text, 'New CQ');
+    store.holdSetStringList = null;
+    metadata.complete();
+    await deleting;
+
+    expect(_peers(chat).single.lastMessage?.text, 'New CQ');
+    expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
+  });
+
   test(
     'groups map from Tim2Tox known groups + local name/kind records',
     () async {

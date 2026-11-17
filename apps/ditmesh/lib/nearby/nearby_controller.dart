@@ -288,6 +288,7 @@ class NearbyController extends ChangeNotifier
     final generation = _generation;
     bool current() => _allowed && locationEnabled && generation == _generation;
     _locating = true;
+    _fix = null;
     _issue = null;
     _notify();
     try {
@@ -295,7 +296,6 @@ class NearbyController extends ChangeNotifier
       if (!current()) return null;
       _permissionIssue(state);
       if (state != LocationPermissionState.granted) {
-        _fix = null;
         await _nearby?.stop();
         return null;
       }

@@ -7,6 +7,7 @@ extension _SessionBinding on Tim2ToxChatService {
   void _bindSession(FfiChatService? svc) {
     _unbindSession();
     _service = svc;
+    if (svc != null) _conversationsPart.bindRevealAccount(_accountPrefix);
     // Before the session is published or any listener is installed.
     _blockingPart.bind(svc);
     _session.add(svc != null);
@@ -45,6 +46,7 @@ extension _SessionBinding on Tim2ToxChatService {
       unawaited(s.cancel());
     }
     _serviceSubs.clear();
+    if (_replacing || _disposed) _conversationsPart.bindRevealAccount(null);
     _service = null;
   }
 
@@ -67,6 +69,7 @@ extension _SessionBinding on Tim2ToxChatService {
       await _groupsPart.refreshInvites(svc);
       if (!_isCurrent(svc)) return;
       _conversationsPart.rebuild(svc);
+      unawaited(_conversationsPart.retryReveals(svc));
       // Last: a slow outbox write must not hold up the lists above.
       await _friendsPart.retryWithdrawals(svc);
     } catch (e, st) {
@@ -92,9 +95,7 @@ extension _SessionBinding on Tim2ToxChatService {
     // Blocked peers: Tim2Tox already drops their C2C rows; group rows it
     // stores, so they are hidden here (and in every history read).
     if (!_blockingPart.shows(m)) return;
-    if (_meta.hidden.contains(conversationId)) {
-      unawaited(_meta.unhide(conversationId));
-    }
+    _conversationsPart.revealOnMessage(svc, conversationId);
     _messageEvents.add(_mapper.map(m, conversationId: conversationId));
     _conversationsPart.rebuild(svc);
   }

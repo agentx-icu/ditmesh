@@ -20,8 +20,8 @@ enum PowerUnit {
   /// The typed [value] as a level in dBm, or null when it is not a power.
   double? toDbm(double value) => switch (this) {
     PowerUnit.watts => value > 0 ? Decibels.wattsToDbm(value) : null,
-    PowerUnit.milliwatts =>
-      value > 0 ? Decibels.wattsToDbm(value / 1000) : null,
+    // dBm is a power ratio relative to 1 mW.
+    PowerUnit.milliwatts => value > 0 ? Decibels.powerRatioToDb(value) : null,
     PowerUnit.dbm => value,
     PowerUnit.dbw => value + 30,
   };

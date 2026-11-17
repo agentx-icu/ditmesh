@@ -50,6 +50,15 @@ void main() {
     });
 
     test(
+      'left-aligned PCM with fewer valid bits keeps its amplitude',
+      () async {
+        final bytes = wavBytes(Int16List.fromList([0x4000]), extensible: true);
+        ByteData.sublistView(bytes).setUint16(38, 12, Endian.little);
+        expect(await (await _open(bytes)).readMono(0, 1), [0.5]);
+      },
+    );
+
+    test(
       'unknown chunks and odd padding are skipped; fmt after data',
       () async {
         final r = await _open(
@@ -90,6 +99,22 @@ void main() {
   });
 
   group('rejection', () {
+    test('rejects a different extensible subformat with the PCM prefix', () {
+      final bytes = wavBytes(ramp, extensible: true)..[59] = 0xff;
+      return expectLater(_open(bytes), _rejects(WavError.unsupportedFormat));
+    });
+
+    test('rejects a damaged extensible header', () async {
+      for (final size in [21, 23]) {
+        final bytes = wavBytes(ramp, extensible: true);
+        ByteData.sublistView(bytes).setUint16(36, size, Endian.little);
+        await expectLater(_open(bytes), _rejects(WavError.truncated));
+      }
+      final bytes = wavBytes(ramp, extensible: true);
+      ByteData.sublistView(bytes).setUint16(38, 17, Endian.little);
+      await expectLater(_open(bytes), _rejects(WavError.unsupportedBitDepth));
+    });
+
     test('not RIFF / not WAVE / damaged', () async {
       expect(_open(Uint8List(4)), _rejects(WavError.notRiff));
       final bytes = wavBytes(ramp);

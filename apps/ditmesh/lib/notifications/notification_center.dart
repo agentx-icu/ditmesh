@@ -252,8 +252,8 @@ class NotificationCenter {
   }
 
   /// Requests the OS permission if this platform has one. Safe to call
-  /// repeatedly and before [start]; a grant is remembered, a denial is not
-  /// (the OS returns a remembered denial instantly without re-prompting).
+  /// repeatedly and before [start]. A previous grant is checked again since
+  /// it may have been revoked in the OS settings.
   ///
   /// This may show a system dialog: call it from a user action (a settings
   /// tile) or in the foreground. Posting never prompts.
@@ -261,7 +261,6 @@ class NotificationCenter {
     if (!_platform.needsRuntimePermission) {
       return Future<bool>.value(_platform.supportsOsNotifications);
     }
-    if (_permissionGranted) return Future<bool>.value(true);
     _permissionAsked = true;
     return _permissionRequest ??= _requestPermission();
   }
@@ -417,6 +416,9 @@ class NotificationCenter {
 
   void _onForegroundChanged() {
     if (!_isForeground.value) return;
+    // Settings may have changed while we were away. The next post checks
+    // the OS without opening a permission prompt.
+    _permissionGranted = false;
     final String? id = _activeConversation;
     if (id != null) unawaited(_clearConversation(id));
     _askPermissionIfForeground();

@@ -142,6 +142,17 @@ void main() {
     expect(controller.fix, isNull);
   });
 
+  test('failed locate does not retain the previous current position', () async {
+    await controller.setLocationEnabled(true);
+    expect(await controller.locate(), isNotNull);
+    expect(controller.fix, isNotNull);
+
+    location.pending = Completer<LocationFix?>()..complete(null);
+    expect(await controller.locate(), isNull);
+    expect(controller.issue, LocationIssue.unavailable);
+    expect(controller.fix, isNull);
+  });
+
   test('background stops discovery and ignores an in-flight fix', () async {
     await controller.setLocationEnabled(true);
     controller.pageOpened();

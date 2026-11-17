@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
+import 'account_routes.dart';
 import 'account_widgets.dart';
 
 /// Set, change or remove the profile password. When the identity already has
@@ -36,6 +37,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Future<void> _apply({required bool remove}) async {
+    if (_busy) return;
     final s = context.s;
     setState(() {
       _currentError = null;
@@ -50,21 +52,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     setState(() => _busy = true);
     final service = context.read<IdentityService>();
-    final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.maybeOf(context);
+    final route = ModalRoute.of<void>(context);
     try {
       await service.changePassword(
         oldPassword: widget.hasPassword ? _current.text : null,
         newPassword: remove ? null : _next.text,
       );
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            remove ? s.accountPasswordRemoved : s.accountPasswordUpdated,
+      if (mounted && route?.isActive == true) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              remove ? s.accountPasswordRemoved : s.accountPasswordUpdated,
+            ),
           ),
-        ),
-      );
-      navigator.pop();
+        );
+      }
+      closeAccountRoute(route);
     } on ChatException catch (e) {
       if (!mounted) return;
       setState(() {

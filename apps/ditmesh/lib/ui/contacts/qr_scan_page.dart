@@ -27,7 +27,7 @@ class _QrScanPageState extends State<QrScanPage> {
   bool _sawForeignCode = false;
 
   void _onDetect(BarcodeCapture capture) {
-    if (_done) return;
+    if (_done || !mounted || ModalRoute.isCurrentOf(context) != true) return;
     for (final Barcode code in capture.barcodes) {
       if (code.format != BarcodeFormat.qrCode) continue;
       final String id = normalizeToxId(code.rawValue ?? '');

@@ -18,6 +18,7 @@ class _CommitThenBlock implements ChatService {
   final Completer<void> release = Completer<void>();
   final List<String> writes = [];
   int sends = 0;
+  Object? sendFailure;
 
   @override
   int get maxMessageBytes => delegate.maxMessageBytes;
@@ -29,6 +30,10 @@ class _CommitThenBlock implements ChatService {
     KeyedRecording? recording,
   }) async {
     sends++;
+    if (sendFailure case final error?) {
+      await release.future;
+      throw error;
+    }
     final ChatMessage row = await delegate.sendText(
       id,
       text,
@@ -190,6 +195,64 @@ void main() {
     expect(field(t), '');
     expect(stored(h), '');
   });
+
+  testWidgets('replacing the composer cannot submit the same draft twice', (
+    t,
+  ) async {
+    final (h, service) = await setup(t);
+    await keyIn(t, 'CQ');
+    await t.pump(const Duration(milliseconds: 450));
+    await t.tap(find.byTooltip(s.chatSend));
+    await t.pump();
+    expect(service.sends, 1);
+
+    await t.pumpWidget(
+      h.wrap(
+        Scaffold(
+          body: composer(h, service, key: const ValueKey('replacement')),
+        ),
+      ),
+    );
+    await t.pump();
+    expect(field(t), 'CQ');
+    await t.tap(find.byTooltip(s.chatSend));
+    await t.pump();
+    final sends = service.sends;
+    service.release.complete();
+    await t.pump();
+
+    expect(sends, 1);
+    expect(field(t), isEmpty);
+  });
+
+  testWidgets(
+    'a failed send keeps the unsaved draft after closing and opening',
+    (t) async {
+      final (h, service) = await setup(t);
+      service.sendFailure = StateError('send refused');
+      await keyIn(t, 'UNSAVED CQ');
+      await t.tap(find.byTooltip(s.chatSend));
+      await t.pump();
+      expect(stored(h), isEmpty);
+      await t.pumpWidget(h.wrap(const SizedBox()));
+      await t.pumpWidget(
+        h.wrap(
+          Scaffold(body: composer(h, service, key: const ValueKey('reopened'))),
+        ),
+      );
+      final draftWhileSending = field(t);
+      service.release.complete();
+      await t.pumpAndSettle();
+
+      expect(draftWhileSending, 'UNSAVED CQ');
+      expect(field(t), 'UNSAVED CQ');
+      expect(stored(h), 'UNSAVED CQ');
+      final send = find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == s.chatSend,
+      );
+      expect(t.widget<IconButton>(send).onPressed, isNotNull);
+    },
+  );
 
   testWidgets('a send completing after the identity was replaced neither '
       'publishes nor touches the drafts', (t) async {

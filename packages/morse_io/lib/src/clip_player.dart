@@ -34,12 +34,15 @@ final class SoloudClipPlayer implements ClipPlayer {
   SoloudClipPlayer({FlutterSoloudApi? lease})
     : _lease = lease ?? FlutterSoloudApi();
 
+  static int _nextSourceId = 0;
+
   final FlutterSoloudApi _lease;
   final StreamController<bool> _playing = StreamController<bool>.broadcast();
+  Future<void> _operations = Future<void>.value();
+  Future<void>? _disposal;
   AudioSource? _source;
   SoundHandle? _handle;
   Timer? _end;
-  bool _disposed = false;
   int _generation = 0;
 
   @override
@@ -54,30 +57,59 @@ final class SoloudClipPlayer implements ClipPlayer {
     required Duration length,
     bool loop = false,
   }) async {
-    if (_disposed) throw StateError('clip player disposed');
-    await stop();
-    final generation = _generation;
-    await _lease.init();
-    final engine = SoLoud.instance;
-    final source = await engine.loadMem('workbench_clip.wav', wav);
-    if (_disposed || generation != _generation) {
-      await engine.disposeSource(source);
-      return;
-    }
-    _source = source;
-    _handle = engine.play(source, looping: loop);
-    _playing.add(true);
-    if (!loop) {
-      _end = Timer(length + const Duration(milliseconds: 50), () {
-        if (generation == _generation) unawaited(stop());
-      });
-    }
+    if (_disposal != null) throw StateError('clip player disposed');
+    final generation = ++_generation;
+    return _enqueue(() async {
+      if (generation != _generation) return;
+      await _stopCurrent();
+      if (generation != _generation) return;
+      try {
+        await _lease.init();
+        if (generation != _generation) return;
+        final engine = _lease.engine;
+        // SoLoud identifies loaded audio by name on its shared engine.
+        final source = await engine.loadMem(
+          'workbench_clip_${_nextSourceId++}.wav',
+          wav,
+        );
+        if (generation != _generation) {
+          await engine.disposeSource(source);
+          return;
+        }
+        _source = source;
+        _handle = engine.play(source, looping: loop);
+      } on Object {
+        await _stopCurrent();
+        if (generation == _generation) rethrow;
+        return;
+      }
+      _playing.add(true);
+      if (!loop) {
+        _end = Timer(length + const Duration(milliseconds: 50), () {
+          if (generation == _generation) unawaited(stop());
+        });
+      }
+    });
   }
 
   @override
-  Future<void> stop() async {
-    // A play still loading its clip must not start after this stop.
+  Future<void> stop() {
     _generation++;
+    return _enqueue(_stopCurrent);
+  }
+
+  // Invalidation happens when requested. Resource operations settle in
+  // order, including discarding a cancelled load before releasing its lease.
+  Future<void> _enqueue(Future<void> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
+  }
+
+  Future<void> _stopCurrent() async {
     _end?.cancel();
     _end = null;
     final handle = _handle;
@@ -85,25 +117,33 @@ final class SoloudClipPlayer implements ClipPlayer {
     _handle = null;
     _source = null;
     if (handle == null && source == null) return;
-    final engine = SoLoud.instance;
     try {
-      if (handle != null && engine.getIsValidVoiceHandle(handle)) {
-        await engine.stop(handle);
+      final engine = _lease.engine;
+      try {
+        if (handle != null && engine.getIsValidVoiceHandle(handle)) {
+          await engine.stop(handle);
+        }
+      } finally {
+        if (source != null) await engine.disposeSource(source);
       }
-      if (source != null) await engine.disposeSource(source);
     } on Object catch (_) {
-      // The engine went away (lease released elsewhere): nothing to stop.
+      // An invalid or already retired voice cannot keep playing.
     }
-    if (!_playing.isClosed) _playing.add(false);
+    if (handle != null) _playing.add(false);
   }
 
   @override
-  Future<void> dispose() async {
-    if (_disposed) return;
-    await stop();
-    _disposed = true;
+  Future<void> dispose() {
+    final disposal = _disposal;
+    if (disposal != null) return disposal;
     _generation++;
-    await _lease.deinit();
-    await _playing.close();
+    return _disposal = _enqueue(() async {
+      await _stopCurrent();
+      try {
+        await _lease.deinit();
+      } finally {
+        await _playing.close();
+      }
+    });
   }
 }

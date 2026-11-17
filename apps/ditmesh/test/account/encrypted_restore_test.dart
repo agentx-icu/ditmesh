@@ -34,7 +34,12 @@ void main() {
     files = FakeBackupFileGateway();
   });
 
-  Future<Uint8List> backupOf({String? password, int pending = 0, bool withPending = false}) async {
+  Future<Uint8List> backupOf({
+    String? password,
+    int pending = 0,
+    bool withPending = false,
+    int? preferencesVersion,
+  }) async {
     final source = FakeIdentityService.withProfile(
       identity: testIdentity(hasPassword: password != null),
       password: password,
@@ -56,7 +61,12 @@ void main() {
           if (withPending) BackupCategory.pendingMessages,
         },
         preferences: Uint8List.fromList(
-          utf8.encode('{"chat.playback":{"wpm":23}}'),
+          utf8.encode(
+            jsonEncode({
+              'version': ?preferencesVersion,
+              'chat.playback': {'wpm': 23},
+            }),
+          ),
         ),
       ),
     );
@@ -125,6 +135,21 @@ void main() {
     await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
     expect(find.byType(RestoreReportPage), findsOneWidget);
     expect(identity.current?.hasPassword, isTrue);
+  });
+
+  testWidgets('an unsupported preferences version is reported as unapplied', (
+    tester,
+  ) async {
+    files.pickResult = await backupOf(preferencesVersion: 2);
+    await openRestore(tester);
+    await tester.enterText(_field('restore-x-passphrase'), 'correct horse');
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-open')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-button')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
+
+    expect(identity.current?.toxId, testIdentity().toxId);
+    expect(find.byType(RestoreReportPage), findsOneWidget);
+    expect(find.text(en.restoreXReportPrefsFailed), findsOneWidget);
   });
 
   test('restored unsent messages are listed and dismissed, never sent', () {

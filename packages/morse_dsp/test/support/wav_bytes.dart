@@ -33,8 +33,8 @@ Uint8List wavBytes(
     fu16(22);
     fu16(bits);
     fu32(channels == 1 ? 4 : 3);
-    fu16(format);
-    fmt.add(List<int>.filled(14, 0));
+    fu32(format);
+    fmt.add([0, 0, 0x10, 0, 0x80, 0, 0, 0xaa, 0, 0x38, 0x9b, 0x71]);
   }
   final Uint8List fmtBody = fmt.toBytes();
   final Uint8List data = samples.buffer.asUint8List(
