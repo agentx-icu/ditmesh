@@ -80,6 +80,9 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
   late final ClipPlayer _player =
       widget.player ?? _playerFactory?.create() ?? SoloudClipPlayer();
   bool _unavailable = false;
+  bool _picking = false;
+  bool _saving = false;
+  bool get _mediaBusy => _picking || _saving || (_c?.busy ?? false);
   Object? _unavailableError;
 
   @override
@@ -101,13 +104,15 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
         _unavailableError = null;
       });
     }
+    final WorkbenchController controller;
     try {
       final dir =
           await (widget.profileRoot ?? () => _profileDirectory(context))();
       if (!mounted) return;
-      final controller = WorkbenchController(
+      controller = WorkbenchController(
         library: RecordingLibrary(dir),
         player: _player,
+        onIoError: _showIoFailure,
       )..addListener(_changed);
       // A retry replaces the controller of the failed attempt (the player
       // is the screen's and stays).
@@ -142,17 +147,21 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
       }
       return;
     }
-    if (mounted) setState(() => _training = training);
+    bool isStale() => !mounted || !identical(_c, controller);
     try {
-      // Nothing is importing or saving yet: drop recordings left behind by
-      // entries deleted while their recording was open.
+      // Keep saved-material actions disabled until pruning finishes.
       final referenced = {
         for (final m in await training.loadAudioMaterials()) m.file,
       };
-      await _c?.library.pruneUnreferenced(referenced);
+      if (isStale()) return;
+      await controller.library.pruneUnreferenced(
+        referenced,
+        isCancelled: isStale,
+      );
     } on Object {
       // Housekeeping only.
     }
+    if (!isStale()) setState(() => _training = training);
   }
 
   Future<TrainingController> _hostController() {
@@ -184,34 +193,54 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
 
   Future<void> _import() async {
     final c = _c;
-    if (c == null) return;
+    if (c == null || _mediaBusy || _unavailable) return;
     final picker =
         widget.picker ??
         PlatformRecordingPicker(dialogTitle: context.s.workbenchImport);
-    final picked = await picker.pick();
+    setState(() => _picking = true);
+    final PickedRecording? picked;
+    try {
+      picked = await picker.pick();
+    } on Object {
+      _showIoFailure();
+      return;
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
     if (picked == null || !mounted) return;
     final ok = await c.importRecording(picked);
     if (!ok && mounted) _showFailure(c);
   }
 
   void _showFailure(WorkbenchController c) {
+    if (mounted) _showError(failureText(context.s, c));
+  }
+
+  void _showIoFailure() {
+    if (mounted) _showError(context.s.workbenchErrorIo);
+  }
+
+  void _showError(String message) {
     ScaffoldMessenger.maybeOf(
       context,
-    )?.showSnackBar(SnackBar(content: Text(failureText(context.s, c))));
+    )?.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _save() async {
     final c = _c;
     final training = _training;
     final info = c?.info;
-    if (c == null || training == null || info == null) return;
+    if (c == null || training == null || info == null || _mediaBusy) return;
     final s = context.s;
-    final entry = await showSaveSelectionDialog(context, c.name ?? '');
-    if (entry == null || !mounted) return;
-    final id = training.newAudioMaterialId();
-    var ok = true;
+    final name = c.name ?? '';
+    final start = info.durationOf(c.start);
+    final end = info.durationOf(c.end);
+    var file = c.file;
+    setState(() => _saving = true);
     try {
-      var file = c.file;
+      final entry = await showSaveSelectionDialog(context, name);
+      if (entry == null || !mounted) return;
+      final id = training.newAudioMaterialId();
       if (file == RecordingLibrary.workingFile) {
         file = 'media/recordings/$id.wav';
         await c.library.keepWorkingAs(file);
@@ -222,27 +251,26 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
           title: entry.$1,
           note: entry.$2,
           file: file,
-          originalName: c.name ?? '',
-          start: c.positionOf(c.start),
-          end: c.positionOf(c.end),
+          originalName: name,
+          start: start,
+          end: end,
           sampleRate: info.sampleRate,
           channels: info.channels,
           createdAt: training.now(),
         ),
       );
+      if (mounted) _showError(s.workbenchSaved);
     } on Object {
-      ok = false;
+      if (mounted) _showError(s.workbenchSaveFailed);
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    if (!mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(ok ? s.workbenchSaved : s.workbenchSaveFailed)),
-    );
   }
 
   Future<void> _library() async {
     final c = _c;
     final training = _training;
-    if (c == null || training == null) return;
+    if (c == null || training == null || _mediaBusy) return;
     await showWorkbenchLibrary(
       context,
       controller: c,
@@ -262,13 +290,15 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
         actions: <Widget>[
           IconButton(
             tooltip: s.workbenchLibrary,
-            onPressed: _training == null ? null : _library,
+            onPressed: _training == null || c == null || _mediaBusy
+                ? null
+                : _library,
             icon: const Icon(Icons.library_music_outlined),
           ),
           IconButton(
             key: const ValueKey('workbench-import'),
             tooltip: s.workbenchImport,
-            onPressed: c == null || c.busy ? null : _import,
+            onPressed: c == null || _mediaBusy || _unavailable ? null : _import,
             icon: const Icon(Icons.file_open_outlined),
           ),
         ],
@@ -343,7 +373,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
         else
           FilledButton.icon(
             key: const ValueKey('workbench-import-empty'),
-            onPressed: _import,
+            onPressed: _mediaBusy ? null : _import,
             icon: const Icon(Icons.file_open_outlined),
             label: Text(s.workbenchImport),
             style: FilledButton.styleFrom(
@@ -395,7 +425,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
             ),
             OutlinedButton.icon(
               key: const ValueKey('workbench-save'),
-              onPressed: _training == null ? null : _save,
+              onPressed: _training == null || _mediaBusy ? null : _save,
               icon: const Icon(Icons.bookmark_add_outlined),
               label: Text(s.workbenchSave),
             ),

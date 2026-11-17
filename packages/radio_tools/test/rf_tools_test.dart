@@ -13,6 +13,10 @@ void main() {
       expect(() => Decibels.dbmToWatts(double.nan), throwsArgumentError);
     });
 
+    test('large finite powers convert to a finite level in dBm', () {
+      expect(Decibels.wattsToDbm(1e308), closeTo(3110, 1e-9));
+    });
+
     test('ratios', () {
       expect(Decibels.powerRatioToDb(2), closeTo(3.0103, 1e-4));
       expect(Decibels.dbToPowerRatio(10), closeTo(10, 1e-9));
@@ -88,6 +92,17 @@ void main() {
         () => Swr.fromImpedance(resistance: 50, reference: 0),
         throwsArgumentError,
       );
+    });
+
+    test('impedance reflection is independent of the common scale', () {
+      for (final scale in [1e-200, 1e200]) {
+        final swr = Swr.fromImpedance(
+          resistance: 50 * scale,
+          reactance: 50 * scale,
+          reference: 50 * scale,
+        );
+        expect(swr.ratio, closeTo(2.618, 1e-3));
+      }
     });
 
     test('from a ratio round-trips', () {

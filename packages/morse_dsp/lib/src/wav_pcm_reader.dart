@@ -100,6 +100,25 @@ final class WavPcmReader {
   static const int maxBytes = 50 * 1024 * 1024;
   static const Duration maxDuration = Duration(minutes: 20);
   static const Set<int> supportedRates = <int>{8000, 16000, 44100, 48000};
+  // {00000001-0000-0010-8000-00aa00389b71}, as encoded in RIFF.
+  static const _pcmSubFormat = <int>[
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x10,
+    0x00,
+    0x80,
+    0x00,
+    0x00,
+    0xaa,
+    0x00,
+    0x38,
+    0x9b,
+    0x71,
+  ];
 
   final ByteSource source;
   final WavInfo info;
@@ -147,20 +166,19 @@ final class WavPcmReader {
           throw const WavFormatException(WavError.truncated, 'fmt chunk');
         }
         final ByteData fmt = ByteData.sublistView(
-          await source.read(body, size),
+          await source.read(body, math.min(size, 40)),
         );
-        int format = fmt.getUint16(0, Endian.little);
+        if (fmt.lengthInBytes < 16) {
+          throw const WavFormatException(WavError.truncated, 'fmt chunk');
+        }
+        final int format = fmt.getUint16(0, Endian.little);
         channels = fmt.getUint16(2, Endian.little);
         rate = fmt.getUint32(4, Endian.little);
         final int blockAlign = fmt.getUint16(12, Endian.little);
         bits = fmt.getUint16(14, Endian.little);
         if (format == 0xFFFE) {
-          if (size < 40) {
-            throw const WavFormatException(WavError.truncated, 'extensible');
-          }
-          format = fmt.getUint16(24, Endian.little);
-        }
-        if (format != 1) {
+          _checkExtensiblePcm(fmt, size, bits);
+        } else if (format != 1) {
           throw WavFormatException(
             WavError.unsupportedFormat,
             'format $format',
@@ -218,6 +236,30 @@ final class WavPcmReader {
       throw const WavFormatException(WavError.tooLong, 'over 20 minutes');
     }
     return info;
+  }
+
+  static void _checkExtensiblePcm(ByteData fmt, int size, int bits) {
+    const truncated = WavFormatException(WavError.truncated, 'extensible');
+    if (fmt.lengthInBytes < 40) throw truncated;
+    final extensionBytes = fmt.getUint16(16, Endian.little);
+    if (extensionBytes < 22 || extensionBytes > size - 18) throw truncated;
+    for (var i = 0; i < _pcmSubFormat.length; i++) {
+      if (fmt.getUint8(24 + i) != _pcmSubFormat[i]) {
+        throw const WavFormatException(
+          WavError.unsupportedFormat,
+          'extensible subformat is not PCM',
+        );
+      }
+    }
+    final validBits = fmt.getUint16(18, Endian.little);
+    // Valid bits are left-aligned, so samples with fewer than 16 valid bits
+    // use the same PCM scaling as the full 16-bit container.
+    if (validBits == 0 || validBits > bits) {
+      throw WavFormatException(
+        WavError.unsupportedBitDepth,
+        '$validBits valid bits in a $bits-bit container',
+      );
+    }
   }
 
   /// Mono samples (-1..1, channels averaged) of frames

@@ -11,6 +11,7 @@ import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
 import '../../startup/startup_controller.dart';
 import '../common/app_bar_title.dart';
+import 'account_routes.dart';
 import 'account_widgets.dart';
 import 'backup_file_gateway.dart';
 import 'encrypted_backup_page.dart';
@@ -39,6 +40,9 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
   String? _fileError;
   String? _passwordError;
   bool _busy = false;
+  bool _picking = false;
+
+  bool get _operationPending => _busy || _picking;
 
   late final IdentityService _identityService;
 
@@ -61,8 +65,10 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
   }
 
   Future<void> _pick() async {
+    if (_operationPending) return;
     final s = context.s;
     final gateway = context.read<BackupFileGateway>();
+    setState(() => _picking = true);
     try {
       final bytes = await gateway.pickBackup();
       if (!mounted || bytes == null) return;
@@ -85,6 +91,8 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => _fileError = describeChatError(s, e));
+    } finally {
+      if (mounted) setState(() => _picking = false);
     }
   }
 
@@ -95,6 +103,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
 
   /// Opens the encrypted backup with the passphrase; changes nothing.
   Future<void> _openEncrypted() async {
+    if (_operationPending) return;
     final s = context.s;
     final bytes = _bytes!;
     final service = switch (context.read<IdentityService>()) {
@@ -157,25 +166,32 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
     return ok ?? false;
   }
 
-  Future<void> _restoreEncrypted() async {
+  Future<void> _restoreEncrypted(Uint8List bytes, BackupPreview preview) async {
     final s = context.s;
-    final preview = _preview;
-    if (preview == null) return _openEncrypted();
-    if (!await _confirmReplace() || !mounted) return;
+    final passphrase = _passphrase.text;
+    final identityPassword = preview.profileNeedsPassword
+        ? _password.text
+        : null;
+    final route = ModalRoute.of<void>(context);
+    setState(() => _busy = true);
+    final confirmed = await _confirmReplace();
+    if (!mounted) return;
+    if (!confirmed) {
+      setState(() => _busy = false);
+      return;
+    }
     setState(() {
-      _busy = true;
       _fileError = null;
       _passwordError = null;
     });
     final controller = context.read<StartupController>();
     final prefs = context.read<AppPreferences>();
     final locale = context.read<LocaleController>();
-    final navigator = Navigator.of(context);
     try {
       final report = await controller.restoreEncryptedBackup(
-        _bytes!,
-        _passphrase.text,
-        identityPassword: preview.profileNeedsPassword ? _password.text : null,
+        bytes,
+        passphrase,
+        identityPassword: identityPassword,
       );
       // Let the identity change reach the preference owners first, so the
       // restored mutes land under the restored identity.
@@ -184,19 +200,20 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
       final doc = report.preferences;
       if (doc != null) {
         try {
-          await prefs.applyPortable(doc, locale: locale);
+          prefsFailed = !await prefs.applyPortable(doc, locale: locale);
         } on Object {
           prefsFailed = true;
         }
       }
-      await navigator.pushAndRemoveUntil(
+      if (route == null || !route.isCurrent) {
+        closeAccountRoute(route);
+        return;
+      }
+      await route.navigator!.pushReplacement<void, void>(
         MaterialPageRoute<void>(
-          builder: (_) => RestoreReportPage(
-            report: report,
-            preferencesFailed: prefsFailed,
-          ),
+          builder: (_) =>
+              RestoreReportPage(report: report, preferencesFailed: prefsFailed),
         ),
-        (route) => route.isFirst,
       );
     } on ChatException catch (e) {
       if (!mounted) return;
@@ -218,26 +235,32 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
   }
 
   Future<void> _restore() async {
+    if (_operationPending) return;
     final s = context.s;
     final bytes = _bytes;
     if (bytes == null) {
       setState(() => _fileError = s.accountRestoreNoFile);
       return;
     }
-    if (_encrypted) return _restoreEncrypted();
+    if (isEncryptedBackup(bytes)) {
+      final preview = _preview;
+      return preview == null
+          ? _openEncrypted()
+          : _restoreEncrypted(bytes, preview);
+    }
     setState(() {
       _busy = true;
       _fileError = null;
       _passwordError = null;
     });
     final controller = context.read<StartupController>();
-    final navigator = Navigator.of(context);
+    final route = ModalRoute.of<void>(context);
     try {
       await controller.restoreFromBackup(
         bytes,
         password: _password.text.isEmpty ? null : _password.text,
       );
-      navigator.popUntil((route) => route.isFirst);
+      closeAccountRoute(route);
     } on ChatException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -265,14 +288,18 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final theme = Theme.of(context);
-    final hasCurrent = context.read<IdentityService>().current != null;
+    final hasLockedIdentity = context.select<StartupController, bool>(
+      (controller) => controller.phase == StartupPhase.locked,
+    );
+    final replacesIdentity =
+        _identityService.current != null || hasLockedIdentity;
     final bytes = _bytes;
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.accountRestoreTitle)),
       body: AccountPageBody(
         children: [
           Text(s.accountRestoreBody, style: theme.textTheme.bodyMedium),
-          if (hasCurrent) ...[
+          if (replacesIdentity) ...[
             const SizedBox(height: 12),
             Text(
               s.accountRestoreReplacesWarning,
@@ -283,7 +310,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
           ],
           const SizedBox(height: 24),
           OutlinedButton.icon(
-            onPressed: _busy ? null : _pick,
+            onPressed: _operationPending ? null : _pick,
             icon: const Icon(Icons.folder_open),
             label: Text(s.accountRestoreChooseFile),
           ),
@@ -323,15 +350,13 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
               label: s.backupXPassphrase,
               errorText: _passphraseError,
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) {
-                if (!_busy) _openEncrypted();
-              },
+              onSubmitted: (_) => _openEncrypted(),
             ),
             const SizedBox(height: 8),
             if (_preview == null)
               OutlinedButton(
                 key: const ValueKey('restore-x-open'),
-                onPressed: _busy ? null : _openEncrypted,
+                onPressed: _operationPending ? null : _openEncrypted,
                 child: Text(s.restoreXCheck),
               )
             else ...[
@@ -358,7 +383,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
           const SizedBox(height: 32),
           FilledButton(
             key: const ValueKey('restore-button'),
-            onPressed: _busy || (_encrypted && _preview == null)
+            onPressed: _operationPending || (_encrypted && _preview == null)
                 ? null
                 : _restore,
             child: Text(_busy ? s.accountRestoring : s.accountRestoreButton),

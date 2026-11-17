@@ -186,6 +186,13 @@ void main() {
   });
 
   group('PowerTool', () {
+    test('converts subnormal milliwatts directly to dBm', () {
+      expect(
+        PowerUnit.milliwatts.toDbm(double.minPositive),
+        closeTo(-3233.062, 0.001),
+      );
+    });
+
     testWidgets('watts give dBm and S-meter readings', (tester) async {
       await _pumpIn(tester, const PowerTool());
       await _enter(tester, PowerTool.valueKey, '100');

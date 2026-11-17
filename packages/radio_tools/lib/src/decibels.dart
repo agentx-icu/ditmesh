@@ -5,7 +5,7 @@ abstract final class Decibels {
   /// `10 log10(watts / 1 mW)`. Throws for a power that is not positive.
   static double wattsToDbm(double watts) {
     _checkPositive(watts, 'watts');
-    return 10 * _log10(watts * 1000);
+    return 30 + 10 * _log10(watts);
   }
 
   /// Watts for a level in dBm: `10^((dBm - 30) / 10)`.

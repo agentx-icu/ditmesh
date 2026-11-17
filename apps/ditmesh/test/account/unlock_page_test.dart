@@ -49,12 +49,16 @@ void main() {
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, false);
   });
 
-  testWidgets('"restore from backup instead" opens the restore page', (
+  testWidgets('restore from unlock warns about replacing the on-disk identity', (
     tester,
   ) async {
-    await pumpApp(tester, identity: seededIdentityService(password: 'x'));
+    final identity = seededIdentityService(password: 'x');
+    await pumpApp(tester, identity: identity);
+    expect(identity.current, isNull);
+    expect(await identity.inspect(), IdentityState.locked);
     await tester.tap(find.text(en.accountUnlockRestoreInstead));
     await settle(tester);
     expect(find.byType(RestoreBackupPage), findsOneWidget);
+    expect(find.text(en.accountRestoreReplacesWarning), findsOneWidget);
   });
 }

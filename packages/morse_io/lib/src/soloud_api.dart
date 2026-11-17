@@ -76,17 +76,20 @@ final class FlutterSoloudApi implements SoloudApi {
   /// Configured right before this adapter starts the engine (iOS category).
   final AudioSessionApi _session;
 
-  /// How [_engine] is found when no `engine` was injected; tests pass one
+  /// How [engine] is found when no engine was injected; tests pass one
   /// that throws to stand in for a native library that cannot be loaded.
   final SoLoud Function() _resolveEngine;
 
+  /// The engine this adapter leases. Also used for recorded clips so the
+  /// clip's source and lease always belong to the same engine.
+  ///
   /// Resolved on first use, not in the constructor: `SoLoud.instance` loads
   /// the native plugin library and throws when it cannot (missing or
   /// incompatible `.so`/`.dll`, no plugin in a unit test). Deferred, that
   /// failure surfaces from [init] -- inside the caller's `prepare` -- where
   /// it is handled (the Learn screens fall back to the screen flash), instead
   /// of from a constructor nobody guards.
-  SoLoud get _engine => _injected ?? _resolveEngine();
+  SoLoud get engine => _injected ?? _resolveEngine();
   final int sampleRate;
   final int bufferSize;
   final Channels channels;
@@ -101,16 +104,16 @@ final class FlutterSoloudApi implements SoloudApi {
   Future<void>? _acquiring;
   bool _holdsLease = false;
 
-  EngineLeases get _leases => _leasesByEngine[_engine] ??= EngineLeases(
-    isInitialized: () => _engine.isInitialized,
-    deinit: _engine.deinit,
+  EngineLeases get _leases => _leasesByEngine[engine] ??= EngineLeases(
+    isInitialized: () => engine.isInitialized,
+    deinit: engine.deinit,
   );
 
   /// False as well when the native library cannot be loaded at all.
   @override
   bool get isInitialized {
     try {
-      return _engine.isInitialized;
+      return engine.isInitialized;
     } on Object catch (_) {
       return false;
     }
@@ -142,7 +145,7 @@ final class FlutterSoloudApi implements SoloudApi {
     try {
       await _leases.acquire(() async {
         await _session.configureForPlayback();
-        await _engine.init(
+        await engine.init(
           sampleRate: sampleRate,
           bufferSize: bufferSize,
           channels: channels,
@@ -156,50 +159,50 @@ final class FlutterSoloudApi implements SoloudApi {
 
   @override
   Future<SidetoneSource> loadSineWaveform() async {
-    final source = await _engine.loadWaveform(WaveForm.sin, false, 1, 0);
+    final source = await engine.loadWaveform(WaveForm.sin, false, 1, 0);
     _sources[source.soundHash.hash] = source;
     return SidetoneSource(source.soundHash.hash);
   }
 
   @override
   void setWaveformFrequency(SidetoneSource source, double hz) {
-    _engine.setWaveformFreq(_source(source), hz);
+    engine.setWaveformFreq(_source(source), hz);
   }
 
   @override
   SidetoneVoice playLooping(SidetoneSource source, {required double volume}) {
-    final handle = _engine.play(_source(source), volume: volume, looping: true);
+    final handle = engine.play(_source(source), volume: volume, looping: true);
     // Never let voice culling steal the sidetone voice when the app plays
     // other sounds at the same time.
-    _engine.setProtectVoice(handle, true);
+    engine.setProtectVoice(handle, true);
     return SidetoneVoice(handle.id);
   }
 
   @override
   void setVolume(SidetoneVoice voice, double volume) {
-    _engine.setVolume(SoundHandle(voice.id), volume);
+    engine.setVolume(SoundHandle(voice.id), volume);
   }
 
   @override
   void fadeVolume(SidetoneVoice voice, double to, Duration over) {
-    _engine.fadeVolume(SoundHandle(voice.id), to, over);
+    engine.fadeVolume(SoundHandle(voice.id), to, over);
   }
 
   /// `setPause(false)` on a running voice changes nothing but first runs
   /// the engine's `ensureAudioDeviceStarted`; plain volume changes never do.
   @override
   void resumeVoice(SidetoneVoice voice) {
-    _engine.setPause(SoundHandle(voice.id), false);
+    engine.setPause(SoundHandle(voice.id), false);
   }
 
   @override
-  Future<void> stop(SidetoneVoice voice) => _engine.stop(SoundHandle(voice.id));
+  Future<void> stop(SidetoneVoice voice) => engine.stop(SoundHandle(voice.id));
 
   @override
   Future<void> disposeSource(SidetoneSource source) async {
     final audioSource = _sources.remove(source.id);
     if (audioSource != null) {
-      await _engine.disposeSource(audioSource);
+      await engine.disposeSource(audioSource);
     }
   }
 

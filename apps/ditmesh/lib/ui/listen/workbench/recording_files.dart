@@ -6,6 +6,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:morse_dsp/morse_dsp.dart';
 import 'package:path/path.dart' as p;
 
+/// The previous contents remain in staging after a failed rollback.
+final class RecordingRollbackException implements Exception {
+  const RecordingRollbackException();
+}
+
 /// A file the learner picked. Pickers give a file path when there is one;
 /// content providers without a path (Android documents, iCloud) give a
 /// byte stream ([read]), which is copied without loading it whole.
@@ -64,7 +69,12 @@ final class FileByteSource implements ByteSource {
 
   static Future<FileByteSource> open(File file) async {
     final raf = await file.open();
-    return FileByteSource._(raf, await raf.length());
+    try {
+      return FileByteSource._(raf, await raf.length());
+    } on Object {
+      await raf.close();
+      rethrow;
+    }
   }
 
   final RandomAccessFile _file;
@@ -132,10 +142,14 @@ final class RecordingLibrary {
   /// Deletes recordings no entry refers to (left behind when an entry was
   /// deleted while its recording was open). Call only when no import or
   /// save is in flight.
-  Future<void> pruneUnreferenced(Set<String> referenced) async {
+  Future<void> pruneUnreferenced(
+    Set<String> referenced, {
+    bool Function()? isCancelled,
+  }) async {
     final dir = Directory(p.join(root, 'media', 'recordings'));
     if (!await dir.exists()) return;
     await for (final entity in dir.list()) {
+      if (isCancelled?.call() ?? false) return;
       if (entity is! File) continue;
       final rel = 'media/recordings/${p.basename(entity.path)}';
       if (rel == workingFile || referenced.contains(rel)) continue;
@@ -159,7 +173,9 @@ final class RecordingLibrary {
     }
     final target = fileFor(relativePath);
     await target.parent.create(recursive: true);
-    final staged = File('${target.path}.importing');
+    final staging = await target.parent.createTemp('.import-');
+    final staged = File(p.join(staging.path, 'recording.wav'));
+    var preserveBackup = false;
     try {
       final path = picked.path;
       if (path != null) {
@@ -179,13 +195,32 @@ final class RecordingLibrary {
       } finally {
         await probe.close();
       }
-    } on Object {
-      if (await staged.exists()) await staged.delete();
-      rethrow;
+      final backup = p.join(staging.path, 'previous.wav');
+      final previous = await target.exists() ? await target.copy(backup) : null;
+      await beforeReplace?.call();
+      await staged.rename(target.path);
+      try {
+        return await open(relativePath);
+      } on Object {
+        if (previous != null) {
+          try {
+            await previous.rename(target.path);
+          } on FileSystemException {
+            preserveBackup = true;
+            throw const RecordingRollbackException();
+          }
+        }
+        rethrow;
+      }
+    } finally {
+      if (!preserveBackup) {
+        try {
+          await staging.delete(recursive: true);
+        } on FileSystemException {
+          // Cleanup cannot change the outcome of the recording replacement.
+        }
+      }
     }
-    await beforeReplace?.call();
-    await staged.rename(target.path);
-    return open(relativePath);
   }
 
   /// Streams into [target], refusing to write past the size limit.

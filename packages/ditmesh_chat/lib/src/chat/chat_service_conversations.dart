@@ -10,6 +10,9 @@ class _ConversationsPart {
   final Tim2ToxChatService _owner;
 
   final ValueStream<List<Conversation>> conversations = ValueStream(const []);
+  String? _revealAccount;
+  Set<String> _pendingReveals = {};
+  bool _revealing = false;
 
   /// Per identity and conversation: the last draft or send-intent write. A
   /// draft write that starts after a send's intent must land after it (and
@@ -52,6 +55,58 @@ class _ConversationsPart {
   }
 
   void reset() => conversations.add(const []);
+
+  // A connection can be rebuilt after a failed preference write. Keep
+  // those reveals with the account, and discard them on replacement.
+  void bindRevealAccount(String? account) {
+    if (account == _revealAccount) return;
+    _revealAccount = account;
+    _pendingReveals = {};
+    _revealing = false;
+  }
+
+  void revealOnMessage(FfiChatService svc, String conversationId) {
+    if (_owner._accountPrefix != _revealAccount ||
+        !_owner._meta.hidden.contains(conversationId)) {
+      return;
+    }
+    _pendingReveals.add(conversationId);
+    unawaited(retryReveals(svc));
+  }
+
+  Future<void> retryReveals(FfiChatService svc) async {
+    if (_revealing ||
+        _pendingReveals.isEmpty ||
+        _owner._replacing ||
+        _owner._accountPrefix != _revealAccount) {
+      return;
+    }
+    _revealing = true;
+    final pending = _pendingReveals;
+    final meta = _owner._meta;
+    try {
+      for (final id in pending.toList()) {
+        if (!_owner._isCurrent(svc) ||
+            _owner._accountPrefix != _revealAccount ||
+            !identical(pending, _pendingReveals) ||
+            _owner._replacing) {
+          return;
+        }
+        if (!pending.contains(id)) continue;
+        try {
+          await meta.unhide(id);
+          pending.remove(id);
+        } on Object catch (e, st) {
+          _owner._logger.error('[Chat] unhide after a message failed', e, st);
+        }
+      }
+      if (_owner._isCurrent(svc) && identical(pending, _pendingReveals)) {
+        rebuild(svc);
+      }
+    } finally {
+      if (identical(pending, _pendingReveals)) _revealing = false;
+    }
+  }
 
   void rebuild(FfiChatService svc) {
     final meta = _owner._meta;
@@ -246,8 +301,14 @@ class _ConversationsPart {
     _owner._ensureCurrent(svc);
     await _owner._meta.setDraft(conversationId, '');
     _owner._ensureCurrent(svc);
+    _pendingReveals.remove(conversationId);
     await _owner._meta.hide(conversationId);
     _owner._ensureCurrent(svc);
+    // clearHistory ran before these preference writes. A new visible
+    // message may have arrived while the metadata was being saved.
+    if (_lastMessage(svc, peer, _owner._blockingPart.shows) != null) {
+      revealOnMessage(svc, conversationId);
+    }
     rebuild(svc);
   }
 

@@ -1007,6 +1007,26 @@ void main() {
       },
     );
 
+    test('an explicit permission request checks if a grant was revoked', () async {
+      final h = await harness();
+      h.api.permissionGranted = false;
+
+      expect(await h.center.ensurePermission(), isFalse);
+      await h.receive('CQ');
+      expect(h.api.shown, isEmpty);
+    });
+
+    test('resuming after revocation does not post or prompt again', () async {
+      final h = await harness(foreground: true);
+      h.foreground.value = false;
+      h.api.permissionGranted = false;
+      h.foreground.value = true;
+      await h.receive('CQ');
+
+      expect(h.api.shown, isEmpty);
+      expect(h.api.permissionRequests, 1);
+    });
+
     test('Linux needs no permission and never asks', () async {
       final Harness h = await harness(platform: NotificationPlatform.linux);
       expect(await h.center.ensurePermission(), isTrue);

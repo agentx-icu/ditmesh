@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_trainer/morse_trainer.dart';
 import 'package:ditmesh/training/audio_material_store.dart';
+import 'package:ditmesh/training/training_doc_store.dart';
 import 'package:ditmesh/ui/listen/workbench/recording_files.dart';
 import 'package:ditmesh/ui/listen/workbench/workbench_screen.dart';
 import 'package:path/path.dart' as p;
@@ -13,6 +14,29 @@ import '../learn/helpers/l10n.dart';
 import '../learn/helpers/test_controller.dart';
 import 'workbench_support.dart';
 import 'workbench_wait.dart';
+
+final class _HeldMaterials implements TrainingDocStore {
+  final _store = InMemoryTrainingDocStore();
+  final reading = Completer<void>();
+  final release = Completer<void>();
+  Exception? readError;
+
+  @override
+  Future<Map<String, Object?>?> read(String name) async {
+    if (name == AudioMaterialStore.doc && !reading.isCompleted) {
+      reading.complete();
+      await release.future;
+    }
+    if (readError case final error? when name == AudioMaterialStore.doc) {
+      throw error;
+    }
+    return _store.read(name);
+  }
+
+  @override
+  Future<void> write(String name, Map<String, Object?> json) =>
+      _store.write(name, json);
+}
 
 void main() {
   late Directory root;
@@ -28,11 +52,12 @@ void main() {
   Future<(TestTraining, FakePicker, FakeClipPlayer)> pumpScreen(
     WidgetTester tester, {
     Size size = const Size(390, 2200),
+    TrainingDocStore? docs,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final t = await TestTraining.create();
+    final t = await TestTraining.create(docs: docs);
     final picker = FakePicker(
       PickedRecording(name: 'sos.wav', bytes: cwWav('SOS TEST')),
     );
@@ -113,10 +138,46 @@ void main() {
     );
   });
 
+  testWidgets('a picker error can be retried without losing the open WAV', (
+    tester,
+  ) async {
+    final (_, picker, _) = await pumpScreen(tester);
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    await waitForWorkbench(tester, find.text('sos.wav'));
+    picker.error = const FileSystemException('provider unavailable');
+    await tester.tap(find.byKey(const ValueKey('workbench-import')));
+    await waitForWorkbench(tester, find.text(en.workbenchErrorIo));
+    expect(find.text('sos.wav'), findsOneWidget);
+
+    picker.error = null;
+    picker.next = PickedRecording(name: 'cq.wav', bytes: cwWav('CQ'));
+    await tester.tap(find.byKey(const ValueKey('workbench-import')));
+    await waitForWorkbench(tester, find.text('cq.wav'));
+  });
+
+  testWidgets('the selection cannot be saved while another WAV is picked', (
+    tester,
+  ) async {
+    final (_, picker, _) = await pumpScreen(tester);
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    final save = find.byKey(const ValueKey('workbench-save'));
+    await waitForWorkbench(tester, save, enabled: true);
+    final pending = Completer<void>();
+    picker.holdPick = pending;
+    picker.next = PickedRecording(name: 'cq.wav', bytes: cwWav('CQ'));
+    await tester.tap(find.byKey(const ValueKey('workbench-import')));
+    await tester.pump();
+
+    expect(tester.widget<ButtonStyleButton>(save).onPressed, isNull);
+    pending.complete();
+    await waitForWorkbench(tester, find.text('cq.wav'));
+    await waitForWorkbench(tester, save, enabled: true);
+  });
+
   testWidgets('a saved selection with missing media offers relink', (
     tester,
   ) async {
-    final (t, _, _) = await pumpScreen(tester);
+    final (t, picker, _) = await pumpScreen(tester);
     // In-memory training docs: no real I/O, so no runAsync.
     var seeded = false;
     unawaited(
@@ -145,6 +206,13 @@ void main() {
     await waitForWorkbench(tester, find.text('Old net'));
     expect(find.text('Old net'), findsOneWidget);
     expect(find.text(en.workbenchMissing), findsOneWidget);
+    picker.error = const FileSystemException('provider unavailable');
+    await tester.tap(find.byTooltip(en.workbenchRelink));
+    await tester.pump();
+    expect(find.text(en.workbenchErrorIo), findsOneWidget);
+    expect(find.text(en.workbenchMissing), findsOneWidget);
+
+    picker.error = null;
     await tester.tap(find.byTooltip(en.workbenchRelink));
     await waitForWorkbench(
       tester,
@@ -152,12 +220,67 @@ void main() {
       absent: true,
     );
     expect(find.text(en.workbenchMissing), findsNothing);
+    expect(find.text(en.workbenchErrorIo), findsNothing);
     expect(
       await tester.runAsync(
         () => RecordingLibrary(dataDir).exists('media/recordings/rec_1.wav'),
       ),
       isTrue,
     );
+  });
+
+  testWidgets('saved material actions wait for the initial cleanup', (
+    tester,
+  ) async {
+    final docs = _HeldMaterials();
+    final orphan = RecordingLibrary(
+      dataDir,
+    ).fileFor('media/recordings/orphan.wav');
+    await tester.runAsync(() async {
+      await orphan.parent.create(recursive: true);
+      await orphan.writeAsBytes(cwWav('E'));
+    });
+
+    await pumpScreen(tester, docs: docs);
+    await docs.reading.future;
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    await waitForWorkbench(tester, find.text('sos.wav'));
+
+    IconButton libraryButton() => tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.library_music_outlined),
+    );
+    expect(libraryButton().onPressed, isNull);
+    docs.release.complete();
+    await waitForWorkbenchCondition(
+      tester,
+      () => libraryButton().onPressed != null,
+      description: 'enable the library after pruning',
+    );
+    expect(await tester.runAsync(orphan.exists), isFalse);
+  });
+
+  testWidgets('a failed library load offers a retry', (tester) async {
+    final docs = _HeldMaterials()..release.complete();
+    await pumpScreen(tester, docs: docs);
+    await waitForWorkbenchCondition(
+      tester,
+      () =>
+          tester
+              .widget<IconButton>(
+                find.widgetWithIcon(IconButton, Icons.library_music_outlined),
+              )
+              .onPressed !=
+          null,
+      description: 'enable the library',
+    );
+    docs.readError = const FileSystemException('training storage unavailable');
+    await tester.tap(find.byTooltip(en.workbenchLibrary));
+    await waitForWorkbench(tester, find.text(en.workbenchErrorIo));
+
+    docs.readError = null;
+    await tester.tap(find.text(en.actionRetry));
+    await waitForWorkbench(tester, find.text(en.workbenchLibraryEmpty));
+    expect(find.text(en.workbenchErrorIo), findsNothing);
   });
 
   testWidgets('save a selection, then restore it from the list', (

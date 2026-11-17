@@ -17,7 +17,7 @@ _DraftWriter _writerFor(ChatService service, String id) {
   );
 }
 
-class _DraftWriter {
+class _DraftWriter extends ChangeNotifier {
   _DraftWriter(this._invalidate);
   final void Function(_DraftWriter) _invalidate;
   Future<void> _tail = Future<void>.value();
@@ -43,9 +43,29 @@ class _DraftWriter {
   int supersededSeq = 0;
   bool get intentOutstanding => intentSeq > supersededSeq;
 
-  /// Sends in flight: they keep this writer, its revision and its identity
-  /// observer although every editor may have left meanwhile.
-  int inFlight = 0;
+  /// The active send keeps its revision and identity observer alive while
+  /// editors are replaced. A replacement editor shares the same send state.
+  String? _inFlightDraft;
+  bool get sending => _inFlightDraft != null;
+
+  void beginSend(String draft) {
+    sendingRevision = revision;
+    intentSeq = ++sends;
+    _inFlightDraft = draft;
+    notifyListeners();
+  }
+
+  void edit(String draft) {
+    revision++;
+    if (sending) _inFlightDraft = draft;
+  }
+
+  void finishSend() {
+    _inFlightDraft = null;
+    notifyListeners();
+    _releaseIdleObserver();
+  }
+
   final recording = KeyedDraftRecording();
   String latest = '';
   String savedDraft = '';
@@ -69,7 +89,7 @@ class _DraftWriter {
     String initialDraft,
     IdentityService? identity,
   ) {
-    if (_editors == 0 && pending == 0 && error == null && inFlight == 0) {
+    if (_editors == 0 && pending == 0 && error == null && !sending) {
       savedDraft = latest = initialDraft;
     }
     _editors++;
@@ -85,12 +105,14 @@ class _DraftWriter {
       });
     }
     return _controller ??= TextEditingController(
-      text: pending > 0 || error != null ? latest : initialDraft,
+      text:
+          _inFlightDraft ??
+          (pending > 0 || error != null ? latest : initialDraft),
     );
   }
 
   void _releaseIdleObserver() {
-    if (_editors == 0 && pending == 0 && error == null && inFlight == 0) {
+    if (_editors == 0 && pending == 0 && error == null && !sending) {
       _invalidate(this);
       unawaited(_identitySub?.cancel());
       _identitySub = null;

@@ -6,6 +6,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
+import 'account_routes.dart';
 import 'account_widgets.dart';
 
 /// Display name and status message.
@@ -35,6 +36,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _save() async {
+    if (_busy) return;
     final s = context.s;
     final name = _name.text.trim();
     if (name.isEmpty) {
@@ -47,15 +49,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _error = null;
     });
     final service = context.read<IdentityService>();
-    final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.maybeOf(context);
+    final route = ModalRoute.of<void>(context);
     try {
       await service.updateProfile(
         displayName: name,
         statusMessage: _status.text.trim(),
       );
-      messenger?.showSnackBar(SnackBar(content: Text(s.accountProfileUpdated)));
-      navigator.pop();
+      if (mounted && route?.isActive == true) {
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(s.accountProfileUpdated)));
+      }
+      closeAccountRoute(route);
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {

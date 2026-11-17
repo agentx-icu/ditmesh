@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:morse_trainer/morse_trainer.dart';
 import 'package:ditmesh/training/training_controller.dart';
+import 'package:ditmesh/training/training_doc_store.dart';
 import 'package:ditmesh/training/training_settings.dart';
 import 'package:ditmesh/training/training_settings_store.dart';
 
@@ -31,6 +32,7 @@ final class TestTraining {
     TrainingSettings? settings,
     int seed = 1,
     TestClock? clock,
+    TrainingDocStore? docs,
   }) async {
     final c = clock ?? TestClock();
     final progressStore = InMemoryTrainerStore(progress);
@@ -40,6 +42,7 @@ final class TestTraining {
       settingsStore: settingsStore,
       now: () => c.now,
       random: Random(seed),
+      docs: docs,
     );
     await controller.load();
     return TestTraining._(progressStore, settingsStore, c, controller);

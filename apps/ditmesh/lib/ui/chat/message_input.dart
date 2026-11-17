@@ -103,6 +103,7 @@ class _MessageInputState extends State<MessageInput>
     final identity = _identity;
     if (identity is PersistentIdentityService) identity.registerDataStore(this);
     _text.addListener(_onChanged);
+    _writer.addListener(_onSendingChanged);
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -134,9 +135,14 @@ class _MessageInputState extends State<MessageInput>
     _draftTimer?.cancel();
     unawaited(_persistDraft());
     _text.removeListener(_onChanged);
+    _writer.removeListener(_onSendingChanged);
     _writer.release();
     _focus.dispose();
     super.dispose();
+  }
+
+  void _onSendingChanged() {
+    if (_live) setState(() {});
   }
 
   void _onChanged() {
@@ -144,7 +150,7 @@ class _MessageInputState extends State<MessageInput>
     if (_text.text == _lastDraft) return;
     _lastDraft = _text.text;
     _writer.recording.reconcile(_lastDraft);
-    _writer.revision++;
+    _writer.edit(_lastDraft);
     setState(() {});
     _draftTimer?.cancel();
     _draftTimer = Timer(_draftDebounce, () => unawaited(_persistDraft()));
@@ -242,12 +248,12 @@ class _MessageInputState extends State<MessageInput>
   int get _bytesLeft => widget.service.maxMessageBytes - _bytesUsed;
 
   bool get _canSend =>
-      !_sending && _text.text.trim().isNotEmpty && _bytesLeft >= 0;
+      !_writer.sending && _text.text.trim().isNotEmpty && _bytesLeft >= 0;
 
   /// Send is offered while a character is still being keyed: pressing it
   /// commits that character first.
   bool get _sendEnabled =>
-      _canSend || (!_sending && _keyingPending && _bytesLeft >= 0);
+      _canSend || (!_writer.sending && _keyingPending && _bytesLeft >= 0);
 
   String get _previewId => 'draft:${widget.conversationId}';
 
@@ -276,13 +282,10 @@ class _MessageInputState extends State<MessageInput>
     final _DraftWriter writer = _writer;
     final int revision = writer.revision;
     final S s = context.s;
-    setState(() => _sending = true);
     // The service journals this send before it can commit; from now on
     // only a newer edit is saved (see _persistDraft).
-    writer
-      ..sendingRevision = revision
-      ..intentSeq = ++writer.sends
-      ..inFlight += 1;
+    _sending = true;
+    writer.beginSend(_text.text);
     try {
       final ChatMessage sent = await widget.service.sendText(
         widget.conversationId,
@@ -298,9 +301,8 @@ class _MessageInputState extends State<MessageInput>
       if (mounted || writer.revision == revision) unawaited(_persistDraft());
       if (mounted) showSnack(context, describeChatError(s, e));
     } finally {
-      writer.inFlight -= 1;
-      writer._releaseIdleObserver();
-      if (mounted) setState(() => _sending = false);
+      _sending = false;
+      writer.finishSend();
     }
   }
 
@@ -359,7 +361,7 @@ class _MessageInputState extends State<MessageInput>
       // record the text for the dispose-time draft flush instead of
       // notifying the controller now.
       _lastDraft = current + text;
-      _writer.revision++;
+      _writer.edit(_lastDraft);
       if (shared) {
         // The other editor shows the shared controller: record the commit
         // as the canonical draft (its dispose flush, should it leave in this

@@ -62,11 +62,14 @@ final class Swr {
     if (!reference.isFinite || reference <= 0) {
       throw ArgumentError.value(reference, 'reference', 'must be positive');
     }
-    // |Γ| = |Z - Z0| / |Z + Z0| with Z0 real.
-    final numerator = sqrt(pow(resistance - reference, 2) + pow(reactance, 2));
-    final denominator = sqrt(
-      pow(resistance + reference, 2) + pow(reactance, 2),
-    );
+    // |Γ| = |Z - Z0| / |Z + Z0|. A common scale cancels from the
+    // ratio and keeps the sums and squares in the representable range.
+    final scale = max(max(resistance, reactance.abs()), reference);
+    final r = resistance / scale;
+    final x = reactance / scale;
+    final z0 = reference / scale;
+    final numerator = sqrt(pow(r - z0, 2) + x * x);
+    final denominator = sqrt(pow(r + z0, 2) + x * x);
     return Swr.fromReflectionCoefficient(min(1, numerator / denominator));
   }
 

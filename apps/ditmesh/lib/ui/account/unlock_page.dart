@@ -30,7 +30,7 @@ class _UnlockPageState extends State<UnlockPage> {
   }
 
   Future<void> _unlock() async {
-    if (_password.text.isEmpty) return;
+    if (_busy || _password.text.isEmpty) return;
     final s = context.s;
     setState(() {
       _busy = true;

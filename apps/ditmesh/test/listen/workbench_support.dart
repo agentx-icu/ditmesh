@@ -52,11 +52,15 @@ final class FakePicker implements RecordingPicker {
   FakePicker([this.next]);
 
   PickedRecording? next;
+  Exception? error;
+  Completer<void>? holdPick;
   int calls = 0;
 
   @override
   Future<PickedRecording?> pick() async {
     calls++;
+    await holdPick?.future;
+    if (error case final error?) throw error;
     return next;
   }
 }
@@ -66,6 +70,9 @@ final class FakeClipPlayer implements ClipPlayer {
   final List<(Uint8List, bool)> plays = [];
   bool _on = false;
   bool disposed = false;
+  Completer<void>? holdPlay;
+  final playRequested = Completer<void>();
+  int _stopGeneration = 0;
 
   @override
   bool get isPlaying => _on;
@@ -79,6 +86,10 @@ final class FakeClipPlayer implements ClipPlayer {
     required Duration length,
     bool loop = false,
   }) async {
+    final generation = _stopGeneration;
+    if (!playRequested.isCompleted) playRequested.complete();
+    await holdPlay?.future;
+    if (generation != _stopGeneration) return;
     plays.add((wav, loop));
     _on = true;
     _c.add(true);
@@ -86,6 +97,7 @@ final class FakeClipPlayer implements ClipPlayer {
 
   @override
   Future<void> stop() async {
+    _stopGeneration++;
     if (!_on) return;
     _on = false;
     _c.add(false);

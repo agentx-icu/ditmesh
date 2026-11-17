@@ -70,9 +70,10 @@ extension PortablePreferences on AppPreferences {
   /// Applies [bytes] (from [exportPortable], possibly another device's)
   /// through the models' own validating setters and waits until it is
   /// saved. On failure the previous values are applied again and the error
-  /// rethrown, so a half-applied document never sticks. Unknown keys and
-  /// unknown versions are ignored field by field.
-  Future<void> applyPortable(
+  /// rethrown, so a half-applied document never sticks. Returns false when
+  /// the document cannot be read or uses an unsupported version.
+  /// Unversioned documents use the original field layout.
+  Future<bool> applyPortable(
     Uint8List bytes, {
     LocaleController? locale,
   }) async {
@@ -80,13 +81,17 @@ extension PortablePreferences on AppPreferences {
     try {
       doc = jsonDecode(utf8.decode(bytes));
     } on FormatException {
-      return;
+      return false;
     }
-    if (doc is! Map) return;
+    if (doc is! Map ||
+        (doc.containsKey('version') && doc['version'] != version)) {
+      return false;
+    }
     final previous = exportPortable(locale: locale);
     try {
       await _apply(doc, locale);
       await flush();
+      return true;
     } on Object {
       final old = jsonDecode(utf8.decode(previous));
       try {
@@ -99,7 +104,10 @@ extension PortablePreferences on AppPreferences {
     }
   }
 
-  Future<void> _apply(Map<Object?, Object?> doc, LocaleController? locale) async {
+  Future<void> _apply(
+    Map<Object?, Object?> doc,
+    LocaleController? locale,
+  ) async {
     double? number(Map m, String k) {
       final v = m[k];
       return v is num && v.isFinite ? v.toDouble() : null;
@@ -120,7 +128,11 @@ extension PortablePreferences on AppPreferences {
     if (doc['reference.playback'] case final Map r) {
       if (number(r, 'wpm') case final double v) reference.wpm = v;
       if (number(r, 'toneHz') case final double v) reference.toneHz = v;
-      reference.farnsworthWpm = number(r, 'farnsworthWpm');
+      if (number(r, 'farnsworthWpm') case final double v) {
+        reference.farnsworthWpm = v;
+      } else if (r.containsKey('farnsworthWpm') && r['farnsworthWpm'] == null) {
+        reference.farnsworthWpm = null;
+      }
     }
     if (doc['listen.decoder'] case final Map l) {
       final s = listen.settings;
@@ -131,7 +143,10 @@ extension PortablePreferences on AppPreferences {
               ? block!
               : s.blockSize,
           minElementMs: (number(l, 'minElementMs')?.toInt() ?? s.minElementMs)
-              .clamp(ListenSettings.minElementMinMs, ListenSettings.minElementMaxMs),
+              .clamp(
+                ListenSettings.minElementMinMs,
+                ListenSettings.minElementMaxMs,
+              ),
           autoTune: l['autoTune'] is bool ? l['autoTune']! as bool : s.autoTune,
           manualHz: (number(l, 'manualHz') ?? s.manualHz).clamp(
             ListenSettings.minHz,

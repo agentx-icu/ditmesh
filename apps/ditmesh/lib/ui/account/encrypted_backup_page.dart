@@ -8,6 +8,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
 import '../common/app_bar_title.dart';
+import 'account_routes.dart';
 import 'account_widgets.dart';
 import 'backup_actions.dart';
 import 'backup_file_gateway.dart';
@@ -61,6 +62,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
   }
 
   Future<void> _export(BuildContext anchor, BackupInventory inventory) async {
+    if (_busy) return;
     final s = context.s;
     final pass = _passphrase.text;
     final error = pass.length < EncryptedBackupPage.minPassphrase
@@ -79,7 +81,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
     final gateway = context.read<BackupFileGateway>();
     final prefs = context.read<AppPreferences>();
     final locale = context.read<LocaleController>();
-    final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
     final identity = identityService.current;
     if (identity == null) return;
     setState(() => _busy = true);
@@ -98,6 +100,11 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
               : null,
         ),
       );
+      if (!mounted) return;
+      if (route?.isCurrent != true) {
+        setState(() => _busy = false);
+        return;
+      }
       final saved = await gateway.saveBackup(
         bytes,
         fileName: backupFileName(identity),
@@ -117,7 +124,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
     ScaffoldMessenger.maybeOf(
       context,
     )?.showSnackBar(SnackBar(content: Text(message)));
-    if (result == BackupExportResult.saved) navigator.pop(result);
+    if (result == BackupExportResult.saved) closeAccountRoute(route, result);
   }
 
   bool _available(BackupCategory c, BackupInventory inv) => switch (c) {
@@ -175,11 +182,11 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
             CheckboxListTile(
               key: ValueKey('backup-x-${c.name}'),
               contentPadding: EdgeInsets.zero,
-              value: c == BackupCategory.identity ||
+              value:
+                  c == BackupCategory.identity ||
                   (_selected.contains(c) && _available(c, inv)),
-              onChanged: c == BackupCategory.identity ||
-                      !_available(c, inv) ||
-                      _busy
+              onChanged:
+                  c == BackupCategory.identity || !_available(c, inv) || _busy
                   ? null
                   : (v) => setState(
                       () => v == true ? _selected.add(c) : _selected.remove(c),
