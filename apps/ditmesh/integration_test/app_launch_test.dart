@@ -89,7 +89,7 @@ void main() {
 
     // Chat: the default "me" contact is a local notes conversation.
     await selectTab(tester, ShellTab.chat);
-    await tapTooltip(tester, s().chatContacts);
+    await openContacts(tester);
     await tapHittable(
       tester,
       find.byKey(const ValueKey<String>('contacts_self')),
@@ -111,7 +111,7 @@ void main() {
     await popIfCan(tester);
 
     // Chat: add a friend by Tox ID, open the conversation, send a line.
-    await tapTooltip(tester, s().chatContacts);
+    await openContacts(tester);
     await tapTooltip(tester, s().chatAddFriend);
     await tester.enterText(find.byType(TextField).first, kFriendToxId);
     await settle(tester);
