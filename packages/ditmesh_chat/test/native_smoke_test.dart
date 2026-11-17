@@ -27,14 +27,18 @@ import 'helpers/fakes.dart';
 ///   TIM2TOX_FFI_LIB=/abs/path/libtim2tox_ffi.{so,dylib} flutter test \
 ///       packages/ditmesh_chat/test/native_smoke_test.dart
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final probePublicDht =
+      Platform.environment['DITMESH_PUBLIC_DHT_SMOKE'] == 'true';
+  if (probePublicDht) {
+    _PublicDhtSmokeBinding();
+  } else {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  }
   final override = Platform.environment['TIM2TOX_FFI_LIB'];
   if (override != null && override.isNotEmpty) {
     Tim2ToxFfi.setLibraryPathOverride(override);
   }
   final loadable = NativeLibrarySetup.isNativeLibraryLoadable;
-  final probePublicDht =
-      Platform.environment['DITMESH_PUBLIC_DHT_SMOKE'] == 'true';
 
   test(
     'create identity, connect, queue offline messages, manage a group, stop',
@@ -100,4 +104,10 @@ void main() {
     skip: loadable ? null : 'libtim2tox_ffi is not loadable here (see README)',
     timeout: const Timeout(Duration(minutes: 4)),
   );
+}
+
+class _PublicDhtSmokeBinding extends AutomatedTestWidgetsFlutterBinding {
+  // The backend fetches the public bootstrap catalogue over HTTPS.
+  @override
+  bool get overrideHttpClient => false;
 }

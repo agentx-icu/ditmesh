@@ -51,7 +51,7 @@ void main() {
     // 1. Note to self, keyed on the on-screen straight key with real
     //    pointer timing: one long press is a dah, a dah alone is T.
     await selectTab(tester, ShellTab.chat);
-    await tapTooltip(tester, s().chatContacts);
+    await openContacts(tester);
     await tapHittable(
       tester,
       find.byKey(const ValueKey<String>('contacts_self')),

@@ -74,6 +74,15 @@ Future<void> selectTab(WidgetTester tester, ShellTab tab) async {
   await tapHittable(tester, finder, 'destination ${tab.name}');
 }
 
+Future<void> openContacts(WidgetTester tester) async {
+  await tapHittable(
+    tester,
+    find.byKey(const ValueKey('chat-contacts-open')),
+    'contacts button',
+  );
+  expectScreen(ContactsPage);
+}
+
 /// Taps [finder] after asserting it resolves to exactly one widget that a
 /// pointer can actually reach (not covered by a SnackBar, a sheet or an
 /// offstage route), then settles. `tester.tap` alone only warns on a miss.
@@ -251,8 +260,7 @@ Future<void> walkShell(
   expectBubble(copy.qso.last.text);
   await shots.capture(tester, locale, 'conversation');
   await popIfCan(tester);
-  await tapTooltip(tester, s.chatContacts);
-  expectScreen(ContactsPage);
+  await openContacts(tester);
   for (var i = 0; i < copy.friends.length; i++) {
     expect(
       find.byKey(ValueKey<String>('friend_${seedKey(i + 1)}')),

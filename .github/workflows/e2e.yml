@@ -11,6 +11,11 @@ name: E2E
 
 on:
   workflow_dispatch:
+    inputs:
+      windows_only:
+        description: Run only the Windows job
+        type: boolean
+        default: false
   pull_request:
     types: [labeled, synchronize]
 
@@ -27,7 +32,7 @@ env:
 jobs:
   macos:
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && !inputs.windows_only) ||
       contains(github.event.pull_request.labels.*.name, 'ci:e2e')
     timeout-minutes: 45
     runs-on: macos-latest
@@ -85,7 +90,7 @@ jobs:
 
   linux:
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && !inputs.windows_only) ||
       contains(github.event.pull_request.labels.*.name, 'ci:e2e')
     timeout-minutes: 45
     runs-on: ubuntu-24.04
@@ -107,7 +112,7 @@ jobs:
       - name: Install Linux desktop dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config clang libgtk-3-dev liblzma-dev libstdc++-12-dev libsecret-1-dev gnome-keyring dbus-x11 libayatana-appindicator3-dev libasound2-dev xvfb fonts-noto-cjk
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config clang lld llvm libgtk-3-dev liblzma-dev libstdc++-12-dev libsecret-1-dev gnome-keyring dbus-x11 libayatana-appindicator3-dev libasound2-dev xvfb fonts-noto-cjk
 
       - name: Bootstrap vendored dependencies
         run: dart run tool/bootstrap_deps.dart
@@ -207,6 +212,9 @@ jobs:
             echo "$HOME/shim" >> "$GITHUB_PATH"
           fi
 
+      - name: Pair an optimized MSVC DLL with its full PDB
+        run: python3 tool/ci/native_symbols_test.py NativeSymbolTests.test_actual_optimized_msvc_dll_has_matching_full_pdb
+
       - name: Bootstrap vendored dependencies
         run: dart run tool/bootstrap_deps.dart
 
@@ -245,7 +253,7 @@ jobs:
   # without it only when told so.
   android:
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && !inputs.windows_only) ||
       contains(github.event.pull_request.labels.*.name, 'ci:e2e')
     timeout-minutes: 60
     runs-on: ubuntu-24.04
@@ -299,7 +307,7 @@ jobs:
   # reason as native.yml's app-ios job (device_info_plus needs the iOS 26 SDK).
   ios:
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && !inputs.windows_only) ||
       contains(github.event.pull_request.labels.*.name, 'ci:e2e')
     timeout-minutes: 60
     runs-on: macos-26
