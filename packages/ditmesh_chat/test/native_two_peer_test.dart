@@ -65,6 +65,9 @@ class _Peer {
   String? queuedId;
   String? earlyGroupId;
   String? lastMembers;
+  int? _udpPort = int.tryParse(
+    Platform.environment['TOX_UDP_START_PORT'] ?? '',
+  );
   KeyedRecording rhythm(String sender, String text) =>
       realPeerRhythm(sender, text);
 
@@ -171,6 +174,11 @@ class _Peer {
     final port = svc.getUdpPort();
     final dht = svc.getDhtId();
     expect(port, greaterThan(0));
+    expect(
+      port,
+      _udpPort ??= port,
+      reason: 'Tox saved group peer addresses must survive the local restart',
+    );
     expect(dht, matches(RegExp(r'^[0-9A-Fa-f]{64}$')));
     await mark('endpoint.$generation', {
       'toxId': identity.toxId,
@@ -319,8 +327,11 @@ class _Peer {
         );
       }
       if (DateTime.now().isAfter(deadline)) {
+        final groupId = group?.id;
+        final wire = groupId == null ? -1 : groupWireState(groupId);
         throw TimeoutException(
-          '$role: $tag across a rejoin; sent=$sent refused=$refused seen=$seen',
+          '$role: $tag across a rejoin; sent=$sent refused=$refused seen=$seen; '
+          'dht=${engine.service?.isConnected} wire=$wire',
         );
       }
       if (!await file(other, 'seen.$tag').exists()) {
@@ -333,9 +344,9 @@ class _Peer {
         }
       }
       if (!seen &&
-          (await chat.loadHistory(conversation)).any(
-            (m) => !m.isMine && m.text.startsWith('$remote #'),
-          )) {
+          (await chat.loadHistory(
+            conversation,
+          )).any((m) => !m.isMine && m.text.startsWith('$remote #'))) {
         seen = true;
         await mark('seen.$tag');
       }
@@ -417,9 +428,9 @@ class _Peer {
     if (role == 'bob') {
       // The drain must not deliver twice. Later texts on the same lossless
       // group channel have arrived, so any duplicate of it has too.
-      final drained = (await chat.loadHistory('group_${group!.id}'))
-          .where((row) => !row.isMine && row.text == 'QRV NET ALICE')
-          .toList();
+      final drained = (await chat.loadHistory(
+        'group_${group!.id}',
+      )).where((row) => !row.isMine && row.text == 'QRV NET ALICE').toList();
       expect(drained, hasLength(1), reason: 'queued group text drained twice');
     }
     await restart();
@@ -482,12 +493,18 @@ class _Peer {
     }
   }
 
-  int groupSlot(String groupId) {
+  int groupSlot(String groupId) =>
+      _queryNativeGroup('tim2tox_ffi_debug_group_number', groupId);
+
+  int groupWireState(String groupId) =>
+      _queryNativeGroup('tim2tox_ffi_group_wire_ready', groupId);
+
+  int _queryNativeGroup(String symbol, String groupId) {
     final call = _native
         .lookupFunction<
           ffi.Int32 Function(ffi.Pointer<Utf8>),
           int Function(ffi.Pointer<Utf8>)
-        >('tim2tox_ffi_debug_group_number');
+        >(symbol);
     final id = groupId.toNativeUtf8();
     try {
       return call(id);
@@ -602,9 +619,9 @@ class _Peer {
       // Sent after the drain on the same lossless channel: once it is here,
       // a duplicate of the drained text would be too.
       await incoming('group_${group!.id}', 'SLOT BOB');
-      final rows = (await chat.loadHistory('group_${group!.id}'))
-          .where((row) => !row.isMine && row.text == 'QRV SLOT BOB')
-          .toList();
+      final rows = (await chat.loadHistory(
+        'group_${group!.id}',
+      )).where((row) => !row.isMine && row.text == 'QRV SLOT BOB').toList();
       expect(rows, hasLength(1), reason: 'queued group text drained twice');
     }
     await barrier('slot-delivery');
@@ -666,6 +683,25 @@ class _Peer {
     await barrier('rejoin-online');
     await exchangeAcrossRejoin('group_${group!.id}', 'RJ1');
     await barrier('rejoin-online-delivery');
+
+    // Inject a DHT status transition while the rejoined group is on the wire.
+    final service = engine.service!;
+    final wasConnected = service.isConnected;
+    final conversation = 'group_${group!.id}';
+    expect(groupWireState(group!.id), 1);
+    service.debugSetConnected(false);
+    try {
+      final row = await chat.sendText(
+        conversation,
+        'DHT ${role.toUpperCase()}',
+      );
+      expect(service.isConnected, isFalse);
+      expect(row.status, MessageStatus.sent);
+      await incoming(conversation, 'DHT ${other.toUpperCase()}');
+    } finally {
+      service.debugSetConnected(wasConnected);
+    }
+    await barrier('rejoin-dht-loss-delivery');
 
     // The founder leaves the network; bob rejoins while it is away; the
     // founder comes back.

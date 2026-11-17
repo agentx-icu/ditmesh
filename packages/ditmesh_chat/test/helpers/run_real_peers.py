@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import socket
 import subprocess
 import tempfile
 import time
@@ -47,12 +48,20 @@ def main():
     logs = []
     print(f"Real-peer artifacts: {root}", flush=True)
     try:
-        for role in ("alice", "bob"):
+        # Saved NGC peer addresses include the UDP port. Give each worker
+        # its own free port for every generation, including concurrent runs.
+        udp = (socket.AF_INET, socket.SOCK_DGRAM)
+        with socket.socket(*udp) as alice, socket.socket(*udp) as bob:
+            alice.bind(("", 0))
+            bob.bind(("", 0))
+            peers = (("alice", alice.getsockname()[1]),
+                     ("bob", bob.getsockname()[1]))
+        for role, port in peers:
             log = (root / f"{role}.test.log").open("w")
             logs.append(log)
             env = dict(os.environ, DITMESH_REAL_PEER_ROLE=role,
                        DITMESH_REAL_PEER_ROOT=str(root),
-                       TIM2TOX_FFI_LIB=str(library))
+                       TIM2TOX_FFI_LIB=str(library), TOX_UDP_START_PORT=str(port))
             processes.append(subprocess.Popen(
                 [args.flutter, "test", "--no-pub", "test/native_two_peer_test.dart",
                  "--reporter", "expanded"], cwd=package, env=env,

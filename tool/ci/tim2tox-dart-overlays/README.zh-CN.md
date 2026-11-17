@@ -56,3 +56,8 @@ DitMesh 显示为失败）。送达证据仍优先于失败。
 映射为本地化的升级提示。回归覆盖 `history_schema_downgrade_test.dart`、
 `recorded_receive_durability_test.dart`、`recorded_resend_test.dart` 和
 `identity_persistence_test.dart`。
+
+`0016-ngc-send-without-dht.patch` 允许已同步且有已确认成员的 NGC 群在 DHT
+断线期间发送消息并清空发件队列。旧版会议和类型未知的群在 DHT 断线时排队。
+`group_dht_reconnect_test.dart` 覆盖发送和队列回归。原生双节点用例还在 Dart
+层 DHT 状态为离线时验证真实群消息的双向传输。

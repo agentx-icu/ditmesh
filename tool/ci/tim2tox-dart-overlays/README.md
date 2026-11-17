@@ -70,3 +70,9 @@ must commit before ACK/publication. The identity boundary maps this exception
 to the localized upgrade-required error. `history_schema_downgrade_test.dart`,
 `recorded_receive_durability_test.dart`, `recorded_resend_test.dart` and
 `identity_persistence_test.dart` verify preservation and receipt behavior.
+
+`0016-ngc-send-without-dht.patch` lets a synced NGC with a confirmed peer
+send and drain its outbox during a DHT outage. Legacy conferences and unknown
+groups queue outbound messages while DHT is offline. The unit regression is
+in `group_dht_reconnect_test.dart`. The two-peer test also exchanges real group
+traffic with the Dart DHT status set to offline.

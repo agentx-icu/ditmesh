@@ -1,0 +1,122 @@
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -1765,7 +1765,7 @@
+   bool get isConnected => _isConnected;
+
+   /// TEST-ONLY stand-in for the native "can a send to this group reach anyone"
+-  /// query ([_groupWireReady]); same contract as [debugSetConnected].
++  /// query ([_canSendGroup]); same contract as [debugSetConnected].
+   bool Function(String groupId)? debugGroupWireReadyOverride;
+
+   /// TEST-ONLY: inject the exact `isConnected` transition that a real toxcore
+@@ -9401,18 +9401,31 @@
+     );
+   }
+
+-  /// Whether a text sent to [groupId] right now can reach anyone (see
+-  /// `tim2tox_ffi_group_wire_ready`). Unknown groups and anything that cannot
+-  /// be asked (older native lib, a test double) count as ready, so the send
+-  /// proceeds and fails — or succeeds — exactly as it did before.
+-  bool _groupWireReady(String groupId) {
++  /// Checks native group readiness. While the DHT is online, sends still
++  /// proceed when an older library cannot determine the group's readiness.
++  bool _canSendGroup(String groupId) {
+     final override = debugGroupWireReadyOverride;
+-    if (override != null) return override(groupId);
++    if (override != null) return _isConnected && override(groupId);
+     final p = groupId.toNativeUtf8();
+     try {
+-      return _ffi.groupWireReady(p) != 0;
++      final wireReady = _ffi.groupWireReady(p);
++      if (_isConnected) return wireReady != 0;
++      if (wireReady != 1) return false;
++
++      // A confirmed NGC channel can carry traffic after the DHT link drops.
++      // The native readiness query also reports 1 for legacy conferences
++      // without checking their peers. Only a known NGC can bypass the DHT gate.
++      const typeCapacity = 16;
++      final type = pkgffi.malloc<ffi.Int8>(typeCapacity);
++      try {
++        final result = _ffi.getGroupTypeFromStorageNative(
++            _ffi.getCurrentInstanceId(), p, type, typeCapacity);
++        return result == 1 && type.cast<pkgffi.Utf8>().toDartString() == 'group';
++      } finally {
++        pkgffi.malloc.free(type);
++      }
+     } on Object {
+-      return true;
++      return _isConnected;
+     } finally {
+       pkgffi.malloc.free(p);
+     }
+@@ -9717,7 +9730,7 @@
+
+   /// Strictly "native reports the group wire-ready": toxcore's sync
+   /// handshake is done (its own self-join) and a peer is confirmed. Unlike
+-  /// [_groupWireReady], an unknown group or an older library is NOT
++  /// [_canSendGroup], an unknown group or an older library is NOT
+   /// confirmation.
+   bool _groupJoinConfirmed(String groupId) {
+     final p = groupId.toNativeUtf8();
+@@ -11369,22 +11382,9 @@
+     // it). Always consume — even on the offline branch — so an armed value can
+     // never leak into a later send.
+     final cloudCustomData = _consumeArmedCloudCustomData(null);
+-    // P0-C1: parallel of the C2C offline-queue behavior. Group messages
+-    // used to be sent fire-and-forget even when we had no DHT connection
+-    // — Tox would silently drop them with no path for recovery, and the
+-    // user only learned about it when peers asked why their replies went
+-    // nowhere. Now: if we're not connected, queue the message and surface
+-    // it as pending; drain on the next conn:success.
+-    //
+-    // "Connected" has to mean the GROUP, not just our DHT link. A group
+-    // restored from the savefile, or just rejoined, stays CONNECTING until a
+-    // peer handshake completes — seconds to minutes after conn:success — and
+-    // in that state tox_group_send_message SUCCEEDS while delivering to
+-    // nobody (gc_send_message: `sent > 0 || confirmed_peers == 0`). NGC has
+-    // no history sync, so a message "sent" then was lost for good while
+-    // showing as delivered. Queue it; it drains when native reports the
+-    // group's first confirmed peer (a groupJoinNotification).
+-    if (!_isConnected || !_groupWireReady(groupId)) {
++    // A restored or rejoining NGC must sync and confirm a peer before a
++    // native send can reach anyone. Queue until that group becomes ready.
++    if (!_canSendGroup(groupId)) {
+       // Offline: the armed read-receipt intent is consumed HERE (it must not
+       // leak onto an unrelated next send) and stamped on the pending row. The
+       // intent is author-local metadata -- it never travels on the wire -- so
+@@ -11478,12 +11478,8 @@
+     return msg;
+   }
+
+-  /// Drains pending group messages for [groupId]. Called after a
+-  /// conn:success transition, when we believe we can reach the DHT and
+-  /// therefore the peers we're grouped with. There is no per-group-member
+-  /// presence in Tox's old-conference or new-group APIs (peers come and
+-  /// go independently), so the trigger is the overall connection state
+-  /// rather than per-peer online status as it is for C2C.
++  /// Drains pending group messages when the group becomes ready. Native
++  /// group notifications and DHT reconnection both trigger a drain.
+   Future<void> retryPendingGroupMessages(String groupId) {
+     if (groupId.isEmpty) {
+       throw ArgumentError.value(groupId, 'groupId', 'must not be empty');
+@@ -11534,7 +11530,7 @@
+         await _offlineQueuePersistence.removeItem(storageKey, item);
+         continue;
+       }
+-      if (!_isConnected || !_groupWireReady(groupId)) {
++      if (!_canSendGroup(groupId)) {
+         // Not (yet) deliverable: keep the rest queued. The drain runs again on
+         // the next conn:success and when this group reports its self-join or
+         // its first confirmed peer.
+@@ -11554,10 +11550,7 @@
+       if (item.control == OfflineSendControl.retry) {
+         final cleared =
+             await _clearRetryFailureDurably(groupId, history, item);
+-        if (!cleared ||
+-            _pollDisposed ||
+-            !_isConnected ||
+-            !_groupWireReady(groupId)) {
++        if (!cleared || _pollDisposed || !_canSendGroup(groupId)) {
+           // Keep it queued; the drain runs again on the next trigger.
+           _claimedSends.remove(item.msgID);
+           claimed.remove(item.msgID);
