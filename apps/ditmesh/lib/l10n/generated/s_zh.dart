@@ -715,7 +715,7 @@ class SZh extends S {
   String get chatScanQr => '扫描二维码';
 
   @override
-  String get chatScanQrDesktopHint => '扫描二维码需要手机摄像头';
+  String get chatScanQrDesktopHint => '当前平台不支持摄像头扫码，请粘贴 Tox ID。';
 
   @override
   String get chatScanQrTitle => '扫描 Tox ID';
@@ -4595,7 +4595,7 @@ class SZhHant extends SZh {
   String get chatScanQr => '掃描QR 碼';
 
   @override
-  String get chatScanQrDesktopHint => '掃描 QR 碼需要手機相機';
+  String get chatScanQrDesktopHint => '目前的平台不支援相機掃碼，請貼上 Tox ID。';
 
   @override
   String get chatScanQrTitle => '掃描 Tox ID';

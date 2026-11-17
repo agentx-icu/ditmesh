@@ -219,7 +219,7 @@
   "chatSendRequest": "傳送請求",
   "chatRequestSent": "好友請求已傳送",
   "chatScanQr": "掃描QR 碼",
-  "chatScanQrDesktopHint": "掃描 QR 碼需要手機相機",
+  "chatScanQrDesktopHint": "目前的平台不支援相機掃碼，請貼上 Tox ID。",
   "chatScanQrTitle": "掃描 Tox ID",
   "chatScanQrNotToxId": "這個QR 碼不是 Tox ID",
   "chatAccept": "接受",

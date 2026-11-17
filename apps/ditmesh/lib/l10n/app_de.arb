@@ -219,7 +219,7 @@
   "chatSendRequest": "Anfrage senden",
   "chatRequestSent": "Freundschaftsanfrage gesendet",
   "chatScanQr": "QR-Code scannen",
-  "chatScanQrDesktopHint": "Zum Scannen von QR-Codes ist eine Handykamera erforderlich",
+  "chatScanQrDesktopHint": "Auf dieser Plattform ist das Scannen mit der Kamera nicht verfügbar. Füge eine Tox-ID ein.",
   "chatScanQrTitle": "Tox-ID scannen",
   "chatScanQrNotToxId": "Dieser QR-Code ist keine Tox-ID",
   "chatAccept": "Annehmen",

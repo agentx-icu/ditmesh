@@ -970,9 +970,9 @@
   "@chatScanQr": {
     "description": "Add friend sheet: button that scans a Tox ID QR code with the camera"
   },
-  "chatScanQrDesktopHint": "QR scanning needs a phone camera",
+  "chatScanQrDesktopHint": "Camera scanning is unavailable on this platform. Paste a Tox ID.",
   "@chatScanQrDesktopHint": {
-    "description": "Add friend sheet (desktop): note that QR scanning needs a phone camera"
+    "description": "Add friend sheet: alternative when camera scanning is unavailable on this platform"
   },
   "chatScanQrTitle": "Scan a Tox ID",
   "@chatScanQrTitle": {

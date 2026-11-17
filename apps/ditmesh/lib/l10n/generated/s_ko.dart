@@ -715,7 +715,7 @@ class SKo extends S {
   String get chatScanQr => 'QR 코드 스캔';
 
   @override
-  String get chatScanQrDesktopHint => 'QR 코드 스캔에는 휴대폰 카메라가 필요합니다';
+  String get chatScanQrDesktopHint => '이 플랫폼에서는 카메라로 스캔할 수 없습니다. Tox ID를 붙여넣으세요.';
 
   @override
   String get chatScanQrTitle => 'Tox ID 스캔';

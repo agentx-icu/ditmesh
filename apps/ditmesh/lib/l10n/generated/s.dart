@@ -1424,10 +1424,10 @@ abstract class S {
   /// **'Scan QR'**
   String get chatScanQr;
 
-  /// Add friend sheet (desktop): note that QR scanning needs a phone camera
+  /// Add friend sheet: alternative when camera scanning is unavailable on this platform
   ///
   /// In en, this message translates to:
-  /// **'QR scanning needs a phone camera'**
+  /// **'Camera scanning is unavailable on this platform. Paste a Tox ID.'**
   String get chatScanQrDesktopHint;
 
   /// QR scan page: app bar title

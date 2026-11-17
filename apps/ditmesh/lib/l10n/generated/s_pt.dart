@@ -718,7 +718,7 @@ class SPt extends S {
   String get chatScanQr => 'Ler QR';
 
   @override
-  String get chatScanQrDesktopHint => 'A leitura de QR requer a câmera de um celular';
+  String get chatScanQrDesktopHint => 'A leitura pela câmera não está disponível nesta plataforma. Cole um ID Tox.';
 
   @override
   String get chatScanQrTitle => 'Ler um Tox ID';

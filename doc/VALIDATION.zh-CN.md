@@ -122,3 +122,27 @@ DitMesh #31（`agentx/radio-tools-rf`）与 #32（`agentx/radio-tools-rf-design`
 | 应用测试 | 1480 个通过，2 个可选图像导出跳过。每个工具都能在 360×640 手机与 1280×800 桌面、全部十种语言下打开；每页都有格式化与输入校验测试。 |
 | 平台端到端 | `app_launch_test` 与截图走查从"参考"打开无线电工具，列出全部十三个工具，在功率工具里换算 100 W，在 L 型匹配工具里匹配 25 Ω 天线。截图契约仍为 13 个场景。本地 macOS 通过 `tool/ci/run_integration_tests.sh macos` 运行：`app_launch_test`、`interaction_test` 与 `screenshots_test`（26 帧）通过；`persistence_test` 仅在钥匙串处失败（`-25308 User interaction is not allowed`，非交互 SSH 会话中登录钥匙串被锁），与本改动无关。有一次截图运行在中文轮次第一帧前停住，重跑未复现。随后 `ci:e2e` 工作流在 PR #32 上运行（[E2E 39090653248](https://github.com/agentx-icu/ditmesh/actions/runs/39090653248)），Android、iOS、Linux、macOS、Windows 全部通过。 |
 | 独立评审 | Codex（`gpt-6.1-sol`）评审了两个 PR 与后续改动：NEEDS-CHANGES，六项发现全部在提交前修复。两座 NCDXF 信标的网格已过期（VE8AT 已从尤里卡迁至伊努维克 `CP38gh`；YV5B 为 `FK60nd`）；馈线衰减表补上来源说明，并逐线缆对照公开的 100 MHz 数据做抽检；驻波比附加损耗的测试改为校验实现而非只校验公式；链路预算页拒绝负的馈线损耗；谐振行标明电抗所用的频率；`SolarDay.compute` 校验天顶角。Codex 独立确认了 dB / S 表、驻波比、自由空间损耗、无线电视距、衰减器、匹配网络、L 型网络与 NOAA 太阳公式及 ARB 键一致性；线缆衰减数值按设计仍为标称估计值。对修复项的复核返回 APPROVE，无新发现。 |
+
+## Mac 实机与商店产物验证（2026-11-18）
+
+使用 Apple 芯片 Mac 的内建相机、麦克风和扬声器进行媒体验证。Flutter 版本为 3.41.9。原生测试使用测试联系人服务打开正式的添加好友表单和扫码页。
+
+| 检查 | 结果 |
+|---|---|
+| 相机 | 原生相机预览正常显示，关闭扫码页后回到添加好友表单。组件回归覆盖启动提示、失焦后停用和恢复，以及退出尚在启动的扫码页后重新打开。 |
+| 录音和播放 | 工作台通过 SoLoud 从扬声器播放 731 Hz WAV，实时收听所用的录音组件从麦克风收到 PCM。该频段的功率在播放时升至背景值的 10 倍以上，停止后回到背景水平。此次验证覆盖录放路径，声学回环的摩尔斯文本解码结果未能确认。 |
+| macOS 签名 | arm64 应用以 ad hoc 签名通过完整性和相机、音频权限检查。安装 PKG 未签名。 |
+| iOS 签名 | IPA 通过无签名归档预检。这台 Mac 没有匹配的 App Store 分发身份或描述文件。 |
+| Android 签名 | APK 与 AAB 的版本和签名者一致，签名校验通过。分发检查正确拒绝了调试证书。 |
+
+产物检查对应 [PR #47 合并提交的原生构建](https://github.com/agentx-icu/ditmesh/actions/runs/44141823682)，提交为 `61cfc12933ba0f3c41ce2ac08488ecfedeee230e`。商店分发签名需要项目的签名凭据。本次未连接手机或平板。
+
+在 `apps/ditmesh` 目录运行原生验证：
+
+```bash
+DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
+  integration_test/manual/media_device_test.dart \
+  --dart-define=DITMESH_MEDIA_DEVICE_TEST=true
+```
+
+如需验证实物扫码与表单回填，另传 `--dart-define=DITMESH_MEDIA_QR_ADDRESS=<预期的合成Tox-ID>`，待预览启动后，将该地址对应的二维码置于摄像头前。探针不保存图像或音频。

@@ -219,7 +219,7 @@
   "chatSendRequest": "发送请求",
   "chatRequestSent": "好友请求已发送",
   "chatScanQr": "扫描二维码",
-  "chatScanQrDesktopHint": "扫描二维码需要手机摄像头",
+  "chatScanQrDesktopHint": "当前平台不支持摄像头扫码，请粘贴 Tox ID。",
   "chatScanQrTitle": "扫描 Tox ID",
   "chatScanQrNotToxId": "这个二维码不是 Tox ID",
   "chatAccept": "接受",

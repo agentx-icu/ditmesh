@@ -718,7 +718,7 @@ class SDe extends S {
   String get chatScanQr => 'QR-Code scannen';
 
   @override
-  String get chatScanQrDesktopHint => 'Zum Scannen von QR-Codes ist eine Handykamera erforderlich';
+  String get chatScanQrDesktopHint => 'Auf dieser Plattform ist das Scannen mit der Kamera nicht verfügbar. Füge eine Tox-ID ein.';
 
   @override
   String get chatScanQrTitle => 'Tox-ID scannen';

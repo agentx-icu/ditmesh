@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/contacts/add_friend_sheet.dart';
@@ -5,6 +8,17 @@ import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/contacts/tox_id.dart';
 
 import 'test_support.dart';
+
+class _HeldFriendRequest implements ChatService {
+  final result = Completer<void>();
+
+  @override
+  Future<void> addFriend(String toxId, {String message = 'ditmesh CQ'}) =>
+      result.future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   group('validateToxId', () {
@@ -46,7 +60,8 @@ void main() {
       final String valid = '$body$checksum';
       expect(validateToxId(valid), isNull);
       // One flipped character anywhere breaks the checksum.
-      final String typo = '${valid.substring(0, 10)}'
+      final String typo =
+          '${valid.substring(0, 10)}'
           '${valid[10] == '0' ? '1' : '0'}${valid.substring(11)}';
       expect(validateToxId(typo), ToxIdError.invalid);
       expect(validateToxId('${body}0000'), ToxIdError.invalid);
@@ -76,6 +91,72 @@ void main() {
     expect(h.service.outgoingFriendRequests, isEmpty);
   });
 
+  for (final platform in TargetPlatform.values) {
+    testWidgets(
+      'contact QR action follows scanner support on ${platform.name}',
+      (tester) async {
+        await pumpChat(
+          tester,
+          (h) => Scaffold(
+            body: Builder(
+              builder: (context) => FilledButton(
+                onPressed: () =>
+                    showAddFriendSheet(context, service: h.service),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        final supported = [
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+          TargetPlatform.macOS,
+        ].contains(platform);
+        expect(
+          find.text(s.chatScanQr),
+          supported ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.text(s.chatScanQrDesktopHint),
+          supported ? findsNothing : findsOneWidget,
+        );
+      },
+      variant: TargetPlatformVariant({platform}),
+    );
+  }
+
+  testWidgets(
+    'a pending friend request disables the scan action',
+    (tester) async {
+      final service = _HeldFriendRequest();
+      await pumpChat(
+        tester,
+        (_) => Scaffold(
+          body: Builder(
+            builder: (context) => FilledButton(
+              onPressed: () => showAddFriendSheet(context, service: service),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final scan = find.widgetWithText(TextButton, s.chatScanQr);
+      expect(tester.widget<TextButton>(scan).onPressed, isNotNull);
+      await tester.enterText(find.byType(TextFormField).first, kPeerToxId);
+      await tester.tap(find.text(s.chatSendRequest));
+      await tester.pump();
+      expect(tester.widget<TextButton>(scan).onPressed, isNull);
+      service.result.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(AddFriendForm), findsNothing);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.macOS}),
+  );
+
   testWidgets('valid id sends the request through the service', (tester) async {
     final ChatHarness h = await pumpChat(
       tester,
@@ -96,8 +177,8 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    // Desktop: no scan action, the hint explains why. (Mobile gets a
-    // labelled button below the field instead of a suffix icon: see the
+    // When scanning is unavailable, the hint explains the alternative.
+    // Supported platforms get a labelled button below the field: see the
     // `canScan: true` test.)
     expect(find.text(s.chatScanQrDesktopHint), findsOneWidget);
     expect(find.byIcon(Icons.qr_code_scanner), findsNothing);

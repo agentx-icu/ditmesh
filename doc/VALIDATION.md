@@ -122,3 +122,27 @@ DitMesh #31 (`agentx/radio-tools-rf`) and #32 (`agentx/radio-tools-rf-design`, s
 | Application suite | 1480 passed, 2 opt-in image exporters skipped. Every tool opens on a 360×640 phone and a 1280×800 desktop in all ten locales; each page has formatting and input-validation tests. |
 | Platform E2E | `app_launch_test` and the screenshot walk open Radio tools from Reference, list all thirteen tools, convert 100 W in the power tool and match a 25 Ω antenna in the L-network tool. The capture contract stays at 13 scenes. Local macOS run through `tool/ci/run_integration_tests.sh macos`: `app_launch_test`, `interaction_test` and `screenshots_test` (26 frames) passed; `persistence_test` failed only on the Keychain (`-25308 User interaction is not allowed`, the login keychain is locked in a non-interactive SSH session), which is unrelated to this change. One screenshot run stalled before the Chinese pass's first frame and did not reproduce on a rerun. The `ci:e2e` workflow then ran on PR #32 ([E2E run 39090653248](https://github.com/agentx-icu/ditmesh/actions/runs/39090653248)): Android, iOS, Linux, macOS and Windows all passed. |
 | Independent review | Codex (`gpt-6.1-sol`) reviewed both PRs and the follow-up: NEEDS-CHANGES with six findings, all fixed before commit. Two NCDXF locators were stale (VE8AT had moved from Eureka to Inuvik `CP38gh`; YV5B is `FK60nd`); the feedline tables now carry their provenance and a per-cable spot check against published 100 MHz figures; the SWR-loss test now checks the implementation, not only the formula; the link-budget page rejects a negative feedline loss; the resonance rows name the frequency their reactances use; `SolarDay.compute` validates the zenith angle. Codex independently confirmed the dB / S-meter, SWR, free-space loss, radio-horizon, attenuator, pad, L-network and NOAA solar maths and the ARB key parity; the cable-loss figures remain nominal estimates by design. The follow-up review of the fixes returned APPROVE with no findings. |
+
+## Mac hardware and store artifact verification — 2026-11-18
+
+Media was checked on an Apple silicon Mac with its built-in camera, microphone and speakers using Flutter 3.41.9. The native test opens the production Add Friend sheet and scanner with a test contact service.
+
+| Check | Evidence |
+|---|---|
+| Camera | The native preview appeared and the Add Friend sheet was visible again after closing the scanner. Widget regressions cover startup feedback, foreground suspend and resume, and opening again after an abandoned startup. |
+| Capture and playback | The workbench's SoLoud player played a 731 Hz WAV through the speakers. The live listener's recorder delivered microphone PCM, and power at that frequency rose by more than 10× during playback before returning to the room baseline. This run verifies the audio path. Acoustic Morse text decoding was inconclusive. |
+| macOS signature | The arm64 app passed integrity and camera/audio entitlement checks with an ad hoc signature. The installer PKG was unsigned. |
+| iOS signature | The IPA passed the unsigned-archive preflight. There was no matching App Store distribution identity or provisioning profile on this Mac. |
+| Android signature | The APK and AAB agreed on version and signer and passed signature verification. Distribution verification rejected the debug certificate. |
+
+Artifact rows refer to the [native build on the PR #47 merge commit](https://github.com/agentx-icu/ditmesh/actions/runs/44141823682), revision `61cfc12933ba0f3c41ce2ac08488ecfedeee230e`. Store distribution signatures require the project's signing credentials. No phone or tablet was connected for this session.
+
+Run the native probe from `apps/ditmesh` with:
+
+```bash
+DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
+  integration_test/manual/media_device_test.dart \
+  --dart-define=DITMESH_MEDIA_DEVICE_TEST=true
+```
+
+To verify optical QR decoding and form fill, also pass `--dart-define=DITMESH_MEDIA_QR_ADDRESS=<expected-synthetic-Tox-ID>` and hold a QR code for that exact address in front of the camera once the preview starts. The probe does not save video or audio.
