@@ -59,6 +59,7 @@ void main() {
     MobileScannerPlatform.instance = platform;
     addTearDown(() => MobileScannerPlatform.instance = original);
     addTearDown(platform.close);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpWidget(
       const MaterialApp(
         localizationsDelegates: S.localizationsDelegates,
@@ -68,7 +69,14 @@ void main() {
     );
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.pump(const Duration(seconds: 12));
+    await tester.pump(const Duration(seconds: 8));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump(const Duration(seconds: 15));
+    expect(find.byType(QrScanErrorView), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 11));
+    expect(find.byType(QrScanErrorView), findsNothing);
+    await tester.pump(const Duration(seconds: 1));
     expect(find.byType(QrScanErrorView), findsOneWidget);
 
     platform.holdStart!.complete();
@@ -110,6 +118,9 @@ void main() {
     await tester.pump();
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
+    expect(platform.starts, 2);
+    expect(find.byType(QrScanErrorView), findsNothing);
+    await tester.pump(const Duration(seconds: 11));
     expect(find.byType(QrScanErrorView), findsOneWidget);
     secondStart.complete();
     await tester.pumpAndSettle();
@@ -169,6 +180,8 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(platform.starts, 0);
+    await tester.pump(const Duration(seconds: 15));
+    expect(find.byType(QrScanErrorView), findsNothing);
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();

@@ -146,3 +146,27 @@ DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
 ```
 
 如需验证实物扫码与表单回填，另传 `--dart-define=DITMESH_MEDIA_QR_ADDRESS=<预期的合成Tox-ID>`，待预览启动后，将该地址对应的二维码置于摄像头前。探针不保存图像或音频。
+
+## 相机权限、音频路由与签名复验 — 2026-11-18
+
+实机使用 Apple 芯片 Mac、macOS 27.0.1（26A434）、Flutter 3.41.9 和内置摄像头。
+相机测试包有独立的系统授权条目，通过正式的添加好友和扫码界面操作，联系人由测试服务提供。
+
+| 检查 | 结果 |
+|---|---|
+| B1、M3、P2、X7 — 相机权限 | **已在 Mac 实机验证。** 拒绝授权会显示权限提示，重试仍被拒绝。系统设置启用测试包并重新打开应用后，CoreMediaIO 确认实体摄像头开始采集；退出扫码页后采集停止。撤销权限时使用系统的「退出并重新打开」。这条流程发现应用仍未激活、原生相机尚未开始启动时，扫码页也会提前超时。现仅在前台有原生启动等待时计时。修复版在 Mac 上等候超过原先 12 秒阈值后仍保持等待。控件回归覆盖等待焦点、等待前一相机占用者，以及启动期间失焦。 |
+| M2、X4 — 蓝牙音频 | **已在 Mac 实机验证。** CoreAudio 确认同一 DitMesh 测试进程通过 Baseus Bowie P1 输出与采集。6 秒内收到 576,000 字节的 48 kHz 单声道 PCM，结束采集后可再次播放。播放中将默认输出切到内置扬声器后，同一进程的实际输出也切换，测试结束后已恢复原默认输出。 |
+| M2、X4 — 有线音频 | **需设备。** 本次只有蓝牙耳机。接入模拟或 USB 音频设备后用同一探针检查实际输出与预期输入，再验证拔出及再次播放。手机和平板也需实机验证。 |
+| W4、X6 — 签名 | **校验产物已验证。** [PR #49 的原生构建](https://github.com/agentx-icu/ditmesh/actions/runs/44258084523) 的 macOS arm64 应用中有 23 个 Mach-O 通过完整性验证，应用为 ad hoc 签名并具备相机和音频权能，PKG 未签名。iOS 无签名 IPA 通过包内容和声明检查。Android APK 与 AAB 的校验签名者一致，版本均为 1.1.0、构建号均为 3，分发门禁正确拒绝该调试证书。打包套件运行 151 项，跳过两项。 |
+| W4、X6 — 正式商店分发 | **缺少签名材料。** 项目当前没有可用的商店签名环境。Apple 导出需要匹配的分发身份和描述文件，Play 需要项目维护者的上传证书，并另行核对分发签名。 [Apple 描述文件](https://developer.apple.com/help/account/provisioning-profiles/create-an-app-store-provisioning-profile/) · [Play 应用签名](https://support.google.com/googleplay/android-developer/answer/9842756) |
+
+在 macOS「声音」中选好输入和输出，再从 `apps/ditmesh` 运行音频路由探针。
+探针检查 PCM 是否持续到达以及结束采集后能否再次播放。对照操作系统中该测试
+进程的实际输入和输出解读日志。探针只统计字节数并丢弃样本。
+
+```bash
+DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
+  integration_test/manual/media_device_test.dart \
+  --dart-define=DITMESH_MEDIA_DEVICE_TEST=true \
+  --dart-define=DITMESH_MEDIA_AUDIO_ROUTE_TEST=true
+```

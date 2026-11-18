@@ -29,6 +29,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
   MobileScannerController _camera = MobileScannerController(autoStart: false);
   Timer? _startupTimer;
   bool _scannerMounted = false;
+  bool _starting = false;
   bool _startupTimedOut = false;
   bool _isCurrentRoute = true;
   late bool _foreground;
@@ -48,7 +49,6 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
       _ => false,
     };
     WidgetsBinding.instance.addObserver(this);
-    _watchStartup();
     _queueCamera(() async {
       if (!mounted) return;
       setState(() => _scannerMounted = true);
@@ -57,11 +57,18 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
     });
   }
 
-  void _watchStartup() {
+  void _updateStartupTimer() {
     _startupTimer?.cancel();
-    _startupTimedOut = false;
+    // Count time only during a native start on the foreground route.
+    // An in-flight start gets a fresh window when the route becomes visible.
+    if (!_mayScan ||
+        !_starting ||
+        _startupTimedOut ||
+        _camera.value.isInitialized) {
+      return;
+    }
     _startupTimer = Timer(const Duration(seconds: 12), () {
-      if (!_camera.value.isInitialized) {
+      if (_mayScan && !_camera.value.isInitialized) {
         setState(() => _startupTimedOut = true);
       }
     });
@@ -73,6 +80,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
     final current = ModalRoute.isCurrentOf(context) ?? true;
     if (current == _isCurrentRoute) return;
     _isCurrentRoute = current;
+    _updateStartupTimer();
     _queueCamera(_syncCamera);
   }
 
@@ -81,6 +89,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
     final foreground = state == AppLifecycleState.resumed;
     if (foreground == _foreground) return;
     _foreground = foreground;
+    _updateStartupTimer();
     _queueCamera(_syncCamera);
   }
 
@@ -95,7 +104,15 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
     final owner = _cameraOwner;
     if (owner != null && !identical(owner, this)) await owner._stopCamera();
     if (!_mayScan) return;
-    await _camera.start();
+    if (_startupTimedOut) setState(() => _startupTimedOut = false);
+    _starting = true;
+    _updateStartupTimer();
+    try {
+      await _camera.start();
+    } finally {
+      _starting = false;
+      _startupTimer?.cancel();
+    }
     if (_camera.value.isRunning) _cameraOwner = this;
   }
 
@@ -118,7 +135,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
         final failed = _camera;
         setState(() {
           _camera = MobileScannerController(autoStart: false);
-          _watchStartup();
+          _startupTimedOut = false;
         });
         await WidgetsBinding.instance.endOfFrame;
         await failed.dispose();
