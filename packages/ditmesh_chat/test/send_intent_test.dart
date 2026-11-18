@@ -222,6 +222,37 @@ void main() {
     expect(meta.draft(dm), '');
   });
 
+  test(
+    'a group removed while its composer is open is no longer sendable',
+    () async {
+      const groupId = 'tox_7';
+      const conversation = 'group_$groupId';
+      engineService.debugAddKnownGroupForTest(groupId);
+      expect(
+        (await chat.sendText(conversation, 'first')).status,
+        MessageStatus.pending,
+      );
+
+      await engineService.cleanupGroupState(groupId, keepHistory: true);
+      expect(engineService.knownGroups, isNot(contains(groupId)));
+      await expectLater(
+        chat.sendText(conversation, 'still composing'),
+        throwsA(
+          isA<ChatException>().having((e) => e.code, 'code', 'group_not_found'),
+        ),
+      );
+      expect(
+        engineService.offlineMessageQueuePersistence.getMessages(
+          'group:$groupId',
+        ),
+        isEmpty,
+      );
+      expect(engineService.getHistory(groupId).map((row) => row.text), [
+        'first',
+      ]);
+    },
+  );
+
   test('a draft write while recovery loads the history supersedes the '
       'intent', () async {
     ffi.friends

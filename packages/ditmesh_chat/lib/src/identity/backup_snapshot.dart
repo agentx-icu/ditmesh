@@ -75,6 +75,7 @@ final class SnapshotUnstable implements Exception {
 /// meta/conversations.json    pins, hidden conversations, drafts
 /// meta/bookmarks.json        message bookmarks
 /// prefs/app.json             the app's portable preferences document
+/// media/materials.json       audio materials index when practice is omitted
 /// media/recordings/<name>    opt-in recordings
 /// pending/outbox.json        opt-in unsent messages (review items)
 /// ```
@@ -86,6 +87,7 @@ abstract final class BackupSnapshot {
   static const String conversationsEntry = 'meta/conversations.json';
   static const String bookmarksEntry = 'meta/bookmarks.json';
   static const String preferencesEntry = 'prefs/app.json';
+  static const String audioMaterialsEntry = 'media/materials.json';
   static const String mediaPrefix = 'media/recordings/';
   static const String pendingEntry = 'pending/outbox.json';
   static const String manifestFormat = 'ditmesh-backup';
@@ -93,6 +95,8 @@ abstract final class BackupSnapshot {
   /// Training-relative files that belong to other categories.
   static const String bookmarksFile = 'chat/bookmarks.json';
   static const String restoredPendingFile = restoredPendingDoc;
+  static const String trainingMaterialsEntry =
+      '$trainingPrefix${BackupMedia.materialsDoc}';
 
   static final RegExp _mediaName = RegExp(
     r'^[A-Za-z0-9_\-]+(?:\.[A-Za-z0-9]+)?$',
@@ -117,6 +121,7 @@ abstract final class BackupSnapshot {
       return BackupCategory.conversationMeta;
     }
     if (path == preferencesEntry) return BackupCategory.preferences;
+    if (path == audioMaterialsEntry) return BackupCategory.media;
     if (path.startsWith(mediaPrefix)) {
       final name = path.substring(mediaPrefix.length);
       return _mediaName.hasMatch(name) && name != 'current.wav'

@@ -58,6 +58,7 @@ class _ListenScreenState extends State<ListenScreen>
   ListenPreferences? _preferences;
   bool _keepingAwake = false;
   bool _micPurposeExplained = false;
+  bool _visible = true;
   DialogRoute<bool>? _micPurposeDialog;
 
   @override
@@ -80,6 +81,19 @@ class _ListenScreenState extends State<ListenScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // An opaque page can cover the screen while the app stays in the
+    // foreground. Settings and permission dialogs keep its tickers enabled.
+    _visible = TickerMode.valuesOf(context).enabled;
+    if (!_visible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_visible) _stopCapture();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onControllerChanged);
@@ -96,9 +110,13 @@ class _ListenScreenState extends State<ListenScreen>
     // incoming-call banners; `paused`/`hidden` mean the UI is really gone.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      if (_controller.isListening || _controller.isBusy) {
-        unawaited(_controller.stop(fromBackground: true));
-      }
+      _stopCapture();
+    }
+  }
+
+  void _stopCapture() {
+    if (_controller.isListening || _controller.isBusy) {
+      unawaited(_controller.stop(fromBackground: true));
     }
   }
 

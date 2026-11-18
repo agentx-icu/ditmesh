@@ -65,16 +65,26 @@ abstract final class ConversationMenu {
     ),
   );
 
-  /// Clearing history removes the conversation's bookmarks.
-  static Future<void> forgetBookmarks(
+  /// Capture the profile before the delete can outlive this route.
+  static Future<MessageBookmarks?> bookmarksForRemoval(
     BuildContext context,
+  ) async {
+    try {
+      return await MessageBookmarks.of(context);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// Only a confirmed clear removes bookmarks.
+  static Future<void> forgetBookmarks(
+    Future<MessageBookmarks?> bookmarks,
     String conversationId,
   ) async {
     try {
-      final store = await MessageBookmarks.of(context);
-      await store.removeConversation(conversationId);
+      await (await bookmarks)?.removeConversation(conversationId);
     } on Object {
-      // A stale bookmark resolves to nothing and is dropped on next use.
+      // The bookmark store retries a dirty write when it is flushed.
     }
   }
 

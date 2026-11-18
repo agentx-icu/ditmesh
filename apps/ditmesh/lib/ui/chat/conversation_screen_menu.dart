@@ -19,7 +19,6 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
   set _hasMore(bool value);
   bool get _clearing;
   set _clearing(bool value);
-  set _historyLimit(int value);
   int get _generation;
   set _generation(int value);
   set _newMessages(int value);
@@ -109,6 +108,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
           _messages.addAll(_parked.where((m) => known.add(m.id)));
           _parked.clear();
           _jumpedAway = false;
+          widget.onSearchAnchor?.call(null);
         }
       });
     } on Object catch (e) {
@@ -135,45 +135,10 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final store = await MessageBookmarks.of(context);
     if (!mounted) return;
     setState(() => _bookmarkStore = store..addListener(_onBookmarks));
-    unawaited(_reconcileBookmarks(store));
-  }
-
-  /// Drops this conversation's bookmarks whose message no longer exists
-  /// (deleted elsewhere, cleared on another device's restore, ...).
-  Future<void> _reconcileBookmarks(MessageBookmarks store) async {
-    final missing = <String>{};
-    for (final b in store.inConversation(_id)) {
-      try {
-        final rows = await _service.loadAround(
-          _id,
-          b.messageId,
-          before: 0,
-          after: 0,
-        );
-        if (rows.isEmpty) missing.add(b.messageId);
-      } on Object {
-        return; // Not connected: try again next time.
-      }
-    }
-    if (missing.isNotEmpty && mounted) {
-      await store.removeMissing(_id, missing).catchError((Object _) {});
-    }
   }
 
   void _onBookmarks() {
     if (mounted) setState(() {});
-  }
-
-  /// The store to write to: a retired one (profile replaced, or a failed
-  /// replacement rolled back) is swapped for the current profile's store.
-  Future<MessageBookmarks?> _liveBookmarks() async {
-    final store = _bookmarkStore;
-    if (store == null || !store.isRetired || !mounted) return store;
-    final fresh = await MessageBookmarks.of(context);
-    if (!mounted) return fresh;
-    store.removeListener(_onBookmarks);
-    setState(() => _bookmarkStore = fresh..addListener(_onBookmarks));
-    return fresh;
   }
 
   void _showLatest() {
@@ -181,6 +146,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       // Drop the whole historical window; live arrivals during the reload
       // land in the emptied list and are merged by `_load`.
       _jumpedAway = false;
+      widget.onSearchAnchor?.call(null);
       _generation++;
       _newerFailed = false;
       _parked.clear();
@@ -212,26 +178,46 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       bookmarks: bookmarks,
     );
     if (hit == null || !mounted) return;
+    await _jumpToMessage(hit.id);
+  }
+
+  Future<void> _loadInitialHistory() async {
+    final String? anchor = widget.initialMessageId;
+    if (anchor != null) {
+      // Park live arrivals until the transferred search window is ready.
+      final int generation = _generation;
+      _jumpedAway = true;
+      if (await _jumpToMessage(anchor) ||
+          !mounted ||
+          generation != _generation) {
+        return;
+      }
+      _jumpedAway = false;
+      _messages.addAll(_parked);
+      _parked.clear();
+      _newMessages = 0;
+    }
+    await _load();
+  }
+
+  Future<bool> _jumpToMessage(String id) async {
+    widget.onSearchAnchor?.call(id);
     // Nothing is invalidated until the window is installed: a jump that
     // finds nothing (or fails) leaves the loads in flight to finish.
     final int generation = _generation;
     final int request = ++_searchRequest;
     try {
-      final rows = await _service.loadAround(_id, hit.id);
+      final rows = await _service.loadAround(_id, id);
       if (!mounted || generation != _generation || request != _searchRequest) {
-        return;
+        return false;
       }
-      if (rows.isEmpty) {
-        // Gone (cleared / deleted): its bookmark no longer resolves.
-        try {
-          await bookmarks.removeMissing(_id, {hit.id});
-        } on Object {
-          // Kept dirty; retried by the store.
-        }
-        if (mounted) showSnack(context, context.s.chatMessageGone);
-        return;
+      final at = rows.indexWhere((m) => m.id == id);
+      if (at < 0) {
+        // A blocked sender's row can become invisible without being deleted.
+        widget.onSearchAnchor?.call(null);
+        showSnack(context, context.s.chatMessageGone);
+        return false;
       }
-      final at = rows.indexWhere((m) => m.id == hit.id);
       // Outstanding page loads belong to the window being replaced.
       _generation++;
       _newerFailed = false;
@@ -253,10 +239,13 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
       });
+      return true;
     } on Object catch (e) {
-      if (mounted && request == _searchRequest) {
+      if (mounted && generation == _generation && request == _searchRequest) {
+        widget.onSearchAnchor?.call(null);
         showSnack(context, describeChatError(context.s, e));
       }
+      return false;
     }
   }
 
@@ -294,9 +283,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     }
   }
 
-  /// The blocked keys this screen last applied (null before the first
-  /// replay of [ChatService.blockedPeerChanges]).
-  Set<String>? _blockedSeen;
+  late Set<String> _blockedSeen;
 
   /// A block (from this screen, a member list or anywhere else) hides at
   /// once: a blocked peer's direct conversation closes; in a group their
@@ -306,7 +293,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
   /// service filters everything that arrives later.
   void _onBlockedPeers(Set<String> blocked) {
     if (!mounted) return;
-    final Set<String>? seen = _blockedSeen;
+    final Set<String> seen = _blockedSeen;
     _blockedSeen = {...blocked};
     final ConversationTarget target = widget.target;
     if (!_isGroup) {
@@ -315,7 +302,8 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       }
       return;
     }
-    if (seen != null && seen.difference(blocked).isNotEmpty) {
+    if (setEquals(seen, blocked)) return;
+    if (seen.difference(blocked).isNotEmpty) {
       _reloadAfterBlocking();
       return;
     }
@@ -344,6 +332,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final bool wasJumped = _jumpedAway;
     _generation++;
     _jumpedAway = false;
+    widget.onSearchAnchor?.call(null);
     _newerFailed = false;
     _parked.clear();
     setState(() {
@@ -354,6 +343,32 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       }
       _loadingOlder = false;
       _loadingNewer = false;
+    });
+    unawaited(_load());
+  }
+
+  void _onHistoryCleared(String conversationId) {
+    if (!mounted || _clearing || conversationId != _id) return;
+    _reloadClearedHistory();
+  }
+
+  void _reloadClearedHistory() {
+    _playback.cancelMessages({
+      for (final m in [..._older, ..._messages, ..._parked]) m.id,
+    });
+    _generation++;
+    _jumpedAway = false;
+    widget.onSearchAnchor?.call(null);
+    _newerFailed = false;
+    setState(() {
+      _parked.clear();
+      _older.clear();
+      _messages.clear();
+      _pendingStatuses.clear();
+      _revealed.clear();
+      _newMessages = 0;
+      _loadingOlder = _loadingNewer = false;
+      _olderError = null;
     });
     unawaited(_load());
   }
@@ -380,43 +395,12 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       _loadingOlder = false;
       _loadingNewer = false;
     });
-    // A message being deleted must not keep sounding or wait in the queue.
-    _playback.cancelMessages(ids);
+    final bookmarks = ConversationMenu.bookmarksForRemoval(context);
     try {
       await _service.clearHistory(_id);
       _localSends.recordClear(_id, ids);
-      if (!mounted) return;
-      // Back to the live timeline at once: arrivals during the bookmark
-      // cleanup below must show — and so must rows that arrived (and were
-      // parked) while the clear itself was running.
-      _jumpedAway = false;
-      final arrived = _parked.where((m) => !ids.contains(m.id)).toList();
-      _parked.clear();
-      setState(() {
-        _messages.removeWhere((m) => ids.contains(m.id));
-        final known = {for (final m in _messages) m.id};
-        _messages.addAll(arrived.where((m) => known.add(m.id)));
-        _older.clear();
-        _newMessages = 0;
-      });
-      // Clearing history invalidates its bookmarks; failures are kept dirty
-      // and retried by the store.
-      try {
-        await (await _liveBookmarks())?.removeConversation(_id);
-      } on Object {
-        // The store stays dirty and rewrites on its next flush.
-      }
-      if (!mounted) return;
-      setState(() {
-        _messages.removeWhere((m) => ids.contains(m.id));
-        _older.clear();
-        _revealed.clear();
-        _pendingStatuses.clear();
-        _historyLimit = 50;
-        _hasMore = false;
-        _error = _olderError = null;
-      });
-      _scrollToEnd();
+      if (mounted) _reloadClearedHistory();
+      await ConversationMenu.forgetBookmarks(bookmarks, _id);
     } on Object catch (e) {
       if (mounted) {
         showSnack(context, describeChatError(s, e));

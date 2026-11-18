@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
-import 'account_routes.dart';
+import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
 
 /// Set, change or remove the profile password. When the identity already has
@@ -67,7 +67,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ),
         );
       }
-      closeAccountRoute(route);
+      closeOwnedRoute(route);
     } on ChatException catch (e) {
       if (!mounted) return;
       setState(() {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:ditmesh_chat/src/adapters/prefs_adapter.dart';
 import 'package:ditmesh_chat/src/chat/friend_request_store.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
+import 'package:tim2tox_dart/models/chat_message.dart' as native;
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 
 import 'helpers/fakes.dart';
@@ -340,6 +342,217 @@ void main() {
       isTrue,
     );
     await again.dispose();
+  });
+
+  test('metadata failure after deletion reports that history was cleared', () async {
+    const id = 'c2c_$kPeerKey';
+    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+    await bind();
+    engineService.ingestC2cText(peer: kPeerKey, text: 'Old CQ', isSelf: false);
+    await pumpEventQueue();
+
+    final blockedWrite = Completer<void>();
+    store
+      ..holdOnlyKeyContaining = 'ditmesh_hidden_conversations'
+      ..holdSetStringList = blockedWrite;
+    final result = expectLater(
+      chat.deleteConversation(id),
+      throwsCode('conversation_hide_failed'),
+    );
+    await store.heldStringList.future;
+    store.holdSetStringList = null;
+    blockedWrite.completeError(StateError('preferences write failed'));
+    await result;
+
+    expect(await chat.loadHistory(id), isEmpty);
+    expect(_peers(chat).single.lastMessage, isNull);
+  });
+
+  test('clear and delete leave queued sends visible and cancellable', () async {
+    const id = 'c2c_$kPeerKey';
+    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: false));
+    await bind();
+    final queued = await chat.sendText(id, 'Queued CQ');
+    expect(queued.status, MessageStatus.pending);
+
+    await expectLater(
+      chat.clearHistory(id),
+      throwsCode('conversation_send_pending'),
+    );
+    await expectLater(
+      chat.deleteConversation(id),
+      throwsCode('conversation_send_pending'),
+    );
+    final preserved = (await chat.loadHistory(id)).single;
+    expect(preserved.id, queued.id);
+    expect(preserved.text, 'Queued CQ');
+    expect(preserved.status, MessageStatus.pending);
+    expect(_peers(chat).single.id, id);
+    expect(chat.pendingOutbox(conversationId: id)?.count, 1);
+
+    expect(
+      await chat.cancelPendingMessage(id, queued.id),
+      MessageActionResult.success,
+    );
+    await chat.deleteConversation(id);
+    expect(await chat.loadHistory(id), isEmpty);
+    expect(chat.pendingOutbox(conversationId: id)?.count, 0);
+  });
+
+  test(
+    'clear and delete report unreadable history storage and can retry',
+    () async {
+      const id = 'c2c_$kPeerKey';
+      ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+      await bind();
+      engineService.ingestC2cText(
+        peer: kPeerKey,
+        text: 'Keep until retry',
+        isSelf: false,
+      );
+      await pumpEventQueue();
+      await engineService.messageHistoryPersistence.flushPendingSaves();
+      final history = Directory(
+        IdentityPaths('${tempRoot.path}/identity').historyDirectory,
+      );
+      final saved = await history.rename('${history.path}-saved');
+      final obstruction = await File(history.path).writeAsString('unavailable');
+      try {
+        final clearing = chat.clearHistory(id);
+        engineService.ingestC2cText(
+          peer: kPeerKey,
+          text: 'Arrived during failure',
+          isSelf: false,
+        );
+        await expectLater(
+          clearing,
+          throwsA(isA<FileSystemException>()),
+        );
+        await expectLater(
+          chat.deleteConversation(id),
+          throwsA(isA<FileSystemException>()),
+        );
+        expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
+      } finally {
+        await obstruction.delete();
+        await saved.rename(history.path);
+      }
+
+      // A new arrival after the failure must not replace the old file
+      // with its row alone.
+      engineService.ingestC2cText(
+        peer: kPeerKey,
+        text: 'Arrived after failure',
+        isSelf: false,
+      );
+      await pumpEventQueue();
+      await engineService.messageHistoryPersistence.flushPendingSaves();
+      expect((await chat.loadHistory(id)).map((row) => row.text), [
+        'Keep until retry',
+        'Arrived during failure',
+        'Arrived after failure',
+      ]);
+
+      await chat.deleteConversation(id);
+      expect(_peers(chat), isEmpty);
+      expect(await chat.loadHistory(id), isEmpty);
+      expect(
+        await history.list().where((entry) => entry is File).toList(),
+        isEmpty,
+      );
+    },
+  );
+
+  test('a message received during strict clear stays on disk', () async {
+    const id = 'c2c_$kPeerKey';
+    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+    await bind();
+    engineService.ingestC2cText(
+      peer: kPeerKey,
+      text: 'Old message',
+      isSelf: false,
+    );
+    await engineService.messageHistoryPersistence.flushPendingSaves();
+
+    final clearing = chat.clearHistory(id);
+    expect(
+      engineService.ingestC2cText(
+        peer: kPeerKey,
+        text: 'Arrived during clear',
+        isSelf: false,
+      ),
+      isTrue,
+    );
+    await clearing;
+    await engineService.messageHistoryPersistence.flushPendingSaves();
+    expect(_peers(chat).single.lastMessage?.text, 'Arrived during clear');
+    expect(_peers(chat).single.unreadCount, 1);
+
+    final reopened = await newEngineService(ffi, store, tempRoot, 'identity');
+    addTearDown(reopened.dispose);
+    await reopened.loadHistory(kPeerKey);
+    expect(reopened.getHistory(kPeerKey).map((row) => row.text), [
+      'Arrived during clear',
+    ]);
+  });
+
+  test('a failed strict clear restores the already staged archive', () async {
+    const id = 'c2c_$kPeerKey';
+    await bind();
+    final directory = IdentityPaths('${tempRoot.path}/identity').historyDirectory;
+    final archive = File('$directory/$kPeerKey.archive.jsonl');
+    final archived = native.ChatMessage(
+      text: 'Archived CQ',
+      fromUserId: kPeerKey,
+      isSelf: false,
+      timestamp: DateTime.utc(2026, 10, 4),
+      msgID: 'archived-cq',
+    );
+    final content = '${jsonEncode(archived.toJson())}\n';
+    await archive.writeAsString(content);
+    // The archive is staged before the primary path is checked.
+    final obstruction = await Directory('$directory/$kPeerKey.json').create();
+    try {
+      await expectLater(chat.clearHistory(id), throwsA(isA<FileSystemException>()));
+      expect(await archive.readAsString(), content);
+      expect((await chat.loadHistory(id)).single.text, 'Archived CQ');
+    } finally {
+      await obstruction.delete();
+    }
+    await chat.clearHistory(id);
+    expect(await archive.exists(), isFalse);
+  });
+
+  test('cold start rolls back a pending clear and drops committed staging', () async {
+    final directory = IdentityPaths('${tempRoot.path}/identity').historyDirectory;
+    final message = native.ChatMessage(
+      text: 'Restore pending history',
+      fromUserId: kPeerKey,
+      isSelf: false,
+      timestamp: DateTime.utc(2026, 10, 4),
+      msgID: 'pending-clear-cq',
+    );
+    final content = jsonEncode({
+      'version': 2,
+      'conversationId': kPeerKey,
+      'messages': [message.toJson()],
+    });
+    final pending = await Directory(
+      '$directory/$kPeerKey.json.clear-pending.tmp',
+    ).create();
+    final discarded = await Directory(
+      '$directory/${'F' * 64}.json.clear-discarded.tmp',
+    ).create();
+    await File('${pending.path}/primary.tmp').writeAsString(content);
+    await File('${discarded.path}/primary.tmp').writeAsString(content);
+
+    final reopened = await newEngineService(ffi, store, tempRoot, 'identity');
+    addTearDown(reopened.dispose);
+    final loaded = await reopened.messageHistoryPersistence.loadAllHistories();
+    expect(loaded.keys, [kPeerKey]);
+    expect(loaded[kPeerKey]!.single.text, 'Restore pending history');
+    expect(await pending.exists(), isFalse);
+    expect(await discarded.exists(), isFalse);
   });
 
   test('an inbound message survives a failed conversation reveal', () async {

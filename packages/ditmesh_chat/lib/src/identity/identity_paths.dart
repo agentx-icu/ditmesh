@@ -130,7 +130,7 @@ class IdentityPaths {
   /// to it (they hold an older copy of this identity). Irreversible.
   Future<void> deleteAll() async {
     await deleteRoot();
-    for (final stage in await _stages()) {
+    for (final stage in await importStages()) {
       await stage.delete(recursive: true);
     }
   }
@@ -146,7 +146,7 @@ class IdentityPaths {
   /// between moving the old tree out and the new one in, or whose rollback
   /// failed, left it there as the only copy.
   Future<List<Directory>> interruptedImports() async => [
-    for (final stage in await _stages())
+    for (final stage in await importStages())
       if (await File(
         IdentityPaths(previousInStage(stage)).profileFile,
       ).exists())
@@ -157,7 +157,7 @@ class IdentityPaths {
   static String previousInStage(Directory stage) =>
       p.join(stage.path, 'previous');
 
-  Future<List<Directory>> _stages() async {
+  Future<List<Directory>> importStages() async {
     final parent = Directory(root).parent;
     if (!await parent.exists()) return const [];
     return [

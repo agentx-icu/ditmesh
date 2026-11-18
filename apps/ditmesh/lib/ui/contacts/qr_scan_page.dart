@@ -21,16 +21,20 @@ class QrScanPage extends StatefulWidget {
 }
 
 class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
-  static Future<void>? _previousCameraReleased;
+  // The native scanner is shared. A covered route can remain mounted while a
+  // newer scanner needs the camera, and an old start may outlive navigation.
+  static Future<void>? _cameraOperations;
+  static _QrScanPageState? _cameraOwner;
 
-  final _camera = MobileScannerController(autoStart: false);
-  final _cameraReleased = Completer<void>();
-  late Future<void> _cameraOperation;
-  late final Timer _startupTimer;
+  MobileScannerController _camera = MobileScannerController(autoStart: false);
+  Timer? _startupTimer;
   bool _scannerMounted = false;
   bool _startupTimedOut = false;
+  bool _isCurrentRoute = true;
   late bool _foreground;
+  bool _retrying = false;
   bool _done = false;
+  bool get _mayScan => mounted && _foreground && _isCurrentRoute && !_done;
 
   /// A QR code was seen that is not a Tox ID; the hint text is resolved in
   /// [build] so it follows the locale.
@@ -44,19 +48,32 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
       _ => false,
     };
     WidgetsBinding.instance.addObserver(this);
-    _startupTimer = Timer(const Duration(seconds: 12), () {
-      if (!_camera.value.isInitialized) {
-        setState(() => _startupTimedOut = true);
-      }
-    });
-    _cameraOperation = _previousCameraReleased ?? Future<void>.value();
-    _previousCameraReleased = _cameraReleased.future;
+    _watchStartup();
     _queueCamera(() async {
       if (!mounted) return;
       setState(() => _scannerMounted = true);
       await WidgetsBinding.instance.endOfFrame;
       await _syncCamera();
     });
+  }
+
+  void _watchStartup() {
+    _startupTimer?.cancel();
+    _startupTimedOut = false;
+    _startupTimer = Timer(const Duration(seconds: 12), () {
+      if (!_camera.value.isInitialized) {
+        setState(() => _startupTimedOut = true);
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final current = ModalRoute.isCurrentOf(context) ?? true;
+    if (current == _isCurrentRoute) return;
+    _isCurrentRoute = current;
+    _queueCamera(_syncCamera);
   }
 
   @override
@@ -69,16 +86,52 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
 
   Future<void> _syncCamera() async {
     if (!mounted) return;
-    if (!_foreground) {
+    if (!_mayScan) {
+      await _stopCamera();
+      return;
+    }
+    // A failed permission check stays visible until an explicit retry.
+    if (_camera.value.error != null) return;
+    final owner = _cameraOwner;
+    if (owner != null && !identical(owner, this)) await owner._stopCamera();
+    if (!_mayScan) return;
+    await _camera.start();
+    if (_camera.value.isRunning) _cameraOwner = this;
+  }
+
+  Future<void> _stopCamera() async {
+    try {
       await _camera.stop();
-    } else if (!_camera.value.isInitialized ||
-        _camera.value.hasCameraPermission) {
-      await _camera.start();
+    } finally {
+      if (identical(_cameraOwner, this)) _cameraOwner = null;
     }
   }
 
+  void _retry() {
+    if (_retrying || !_mayScan) return;
+    _retrying = true;
+    _queueCamera(() async {
+      try {
+        if (!_mayScan) return;
+        // A failed start can leave the plugin subscribed to platform events.
+        // Recreate the controller so retrying releases those subscriptions.
+        final failed = _camera;
+        setState(() {
+          _camera = MobileScannerController(autoStart: false);
+          _watchStartup();
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        await failed.dispose();
+        await _syncCamera();
+      } finally {
+        _retrying = false;
+      }
+    });
+  }
+
   void _queueCamera(Future<void> Function() operation) {
-    _cameraOperation = _cameraOperation
+    late final Future<void> queued;
+    queued = (_cameraOperations ?? Future<void>.value())
         .then((_) => operation())
         .onError<Object>(
           (error, stack) => FlutterError.reportError(
@@ -88,27 +141,24 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
               library: 'QR scanner',
             ),
           ),
-        );
+        )
+        .whenComplete(() {
+          if (identical(_cameraOperations, queued)) _cameraOperations = null;
+        });
+    _cameraOperations = queued;
   }
 
   @override
   void dispose() {
-    _startupTimer.cancel();
+    _startupTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     // A native permission prompt or camera start can finish after navigation.
     // Release that session before the next scanner tries to open the camera.
     _queueCamera(() async {
       try {
-        try {
-          await _camera.stop();
-        } finally {
-          await _camera.dispose();
-        }
+        await _stopCamera();
       } finally {
-        if (identical(_previousCameraReleased, _cameraReleased.future)) {
-          _previousCameraReleased = null;
-        }
-        _cameraReleased.complete();
+        await _camera.dispose();
       }
     });
     super.dispose();
@@ -123,7 +173,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
       : const Center(child: CircularProgressIndicator());
 
   void _onDetect(BarcodeCapture capture) {
-    if (_done || !mounted || ModalRoute.isCurrentOf(context) != true) return;
+    if (!_mayScan || ModalRoute.isCurrentOf(context) != true) return;
     for (final Barcode code in capture.barcodes) {
       if (code.format != BarcodeFormat.qrCode) continue;
       final String id = normalizeToxId(code.rawValue ?? '');
@@ -148,10 +198,12 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
         children: [
           if (_scannerMounted)
             MobileScanner(
+              key: ObjectKey(_camera),
               controller: _camera,
               onDetect: _onDetect,
               placeholderBuilder: (_) => _startupView(),
-              errorBuilder: (context, error) => QrScanErrorView(error: error),
+              errorBuilder: (context, error) =>
+                  QrScanErrorView(error: error, onRetry: _retry),
             )
           else
             _startupView(),
@@ -187,9 +239,10 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
 /// error icon. Permission denied (the user declined, or restricted it in
 /// Settings / by policy) is the one case the user can fix themselves.
 class QrScanErrorView extends StatelessWidget {
-  const QrScanErrorView({required this.error, super.key});
+  const QrScanErrorView({required this.error, this.onRetry, super.key});
 
   final MobileScannerException error;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +276,13 @@ class QrScanErrorView extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
+                    if (onRetry != null) ...[
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: onRetry,
+                        child: Text(context.s.actionRetry),
+                      ),
+                    ],
                   ],
                 ),
               ),

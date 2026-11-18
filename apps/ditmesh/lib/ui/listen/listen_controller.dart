@@ -181,6 +181,10 @@ final class ListenController extends ChangeNotifier {
       }
       return;
     }
+    _history = text;
+    _decoder.reset();
+    _shownHz = _decoder.detectedFrequency;
+    _shownLocked = false;
     _pcmSub = stream.listen(
       _onChunk,
       onError: (Object error, StackTrace stack) =>
@@ -228,8 +232,8 @@ final class ListenController extends ChangeNotifier {
       // report beyond the idle state below.
     }
     if (_disposed) return;
+    if (_status == ListenStatus.listening) _finishCapture();
     if (_status == ListenStatus.listening || _status == ListenStatus.starting) {
-      _decoder.commitPending();
       _stoppedInBackground = fromBackground;
       _setStatus(ListenStatus.idle);
     }
@@ -255,8 +259,14 @@ final class ListenController extends ChangeNotifier {
   void _onStreamDone() {
     if (_disposed || _pcmSub == null) return;
     _pcmSub = null;
-    _decoder.commitPending();
+    _finishCapture();
     _setStatus(ListenStatus.idle);
+  }
+
+  void _finishCapture() {
+    _decoder.endOfInput();
+    _decoder.commitPending();
+    meter.value = const ListenMeter();
   }
 
   /// Records a typed failure. Only debug builds stringify the platform's
@@ -282,6 +292,7 @@ final class ListenController extends ChangeNotifier {
       final sub = _pcmSub;
       _pcmSub = null;
       unawaited(sub?.cancel());
+      if (sub != null) _finishCapture();
       unawaited(_source.stop().catchError((Object _) {}));
     }
     _setStatus(ListenStatus.failed);

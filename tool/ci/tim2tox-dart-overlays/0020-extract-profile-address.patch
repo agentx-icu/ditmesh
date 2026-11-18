@@ -1,0 +1,22 @@
+diff --git a/lib/ffi/tim2tox_ffi.dart b/lib/ffi/tim2tox_ffi.dart
+--- a/lib/ffi/tim2tox_ffi.dart
++++ b/lib/ffi/tim2tox_ffi.dart
+@@ -1664,6 +1664,18 @@
+               ffi.Pointer<ffi.Int8>,
+               int)>('tim2tox_ffi_extract_tox_id_from_profile');
+
++  late final int Function(ffi.Pointer<ffi.Uint8>, int, ffi.Pointer<ffi.Uint8>,
++          int, ffi.Pointer<ffi.Int8>, int) extractToxAddressFromProfileNative =
++      _lib.lookupFunction<
++          _extract_tox_id_from_profile_c,
++          int Function(
++              ffi.Pointer<ffi.Uint8>,
++              int,
++              ffi.Pointer<ffi.Uint8>,
++              int,
++              ffi.Pointer<ffi.Int8>,
++              int)>('tim2tox_ffi_extract_tox_address_from_profile');
++
+   /// Test-only: Inject a raw JSON callback string into the Dart ReceivePort.
+   /// The JSON must match the format expected by NativeLibraryManager._handleNativeMessage.
+   /// Returns 1 on success, 0 on failure.

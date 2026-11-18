@@ -2141,6 +2141,12 @@ class SZh extends S {
   String get appearanceSubtitle => '五种风格，支持浅色与深色';
 
   @override
+  String get chatHistoryConversationHideFailed => '本机历史已清空，但无法隐藏该会话。';
+
+  @override
+  String get chatHistorySendPending => '请等待当前操作完成，或取消待发送的消息，然后重试。';
+
+  @override
   String get chatClearHistoryBody => '删除当前会话在本机保存的历史记录？其他设备上的副本不受影响。此操作无法撤销。';
 
   @override
@@ -6019,6 +6025,12 @@ class SZhHant extends SZh {
 
   @override
   String get appearanceSubtitle => '五種風格，支援淺色與深色';
+
+  @override
+  String get chatHistoryConversationHideFailed => '本機歷史已清除，但無法隱藏這段對話。';
+
+  @override
+  String get chatHistorySendPending => '請等待目前操作完成，或取消待傳送的訊息，然後重試。';
 
   @override
   String get chatClearHistoryBody => '刪除當前對話在本機儲存的歷史紀錄？其他裝置上的副本不受影響。此操作無法撤銷。';

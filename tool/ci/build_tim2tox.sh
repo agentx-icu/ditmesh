@@ -558,11 +558,11 @@ build_linux() {
   if command -v ninja >/dev/null 2>&1; then gen=(-G Ninja); fi
 
   configure_and_build "$build_dir" "$TARGET" \
-    "${gen[@]}" \
+    ${gen[@]+"${gen[@]}"} \
     -DCMAKE_BUILD_TYPE="$NATIVE_BUILD_TYPE" \
     -DCMAKE_CXX_FLAGS="-g -Wno-error=deprecated-copy -Wno-error=format -include arpa/inet.h" \
     -DCMAKE_C_FLAGS="-g -Wno-error=format" \
-    "${dep_args[@]}"
+    ${dep_args[@]+"${dep_args[@]}"}
 
   built_lib="$(find_built "$build_dir" libtim2tox_ffi.so)"
   cp "$built_lib" "$OUTPUT_DIR/"
@@ -648,14 +648,14 @@ build_macos() {
   if command -v ninja >/dev/null 2>&1; then gen=(-G Ninja); fi
 
   configure_and_build "$build_dir" "$TARGET" \
-    "${gen[@]}" \
+    ${gen[@]+"${gen[@]}"} \
     -DCMAKE_BUILD_TYPE="$NATIVE_BUILD_TYPE" \
     -DCMAKE_OSX_SYSROOT="$macos_sysroot" \
     -DCMAKE_OSX_ARCHITECTURES="$arch" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOS_MIN" \
     -DCMAKE_CXX_FLAGS="-g -Wno-error=deprecated-copy -Wno-error=format" \
     -DCMAKE_C_FLAGS="-g -Wno-error=format" \
-    "${dep_args[@]}"
+    ${dep_args[@]+"${dep_args[@]}"}
 
   built_lib="$(find_built "$build_dir" libtim2tox_ffi.dylib)"
   cp "$built_lib" "$OUTPUT_DIR/"

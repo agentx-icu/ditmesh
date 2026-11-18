@@ -1,0 +1,111 @@
+diff --git a/ffi/tim2tox_ffi.cpp b/ffi/tim2tox_ffi.cpp
+--- a/ffi/tim2tox_ffi.cpp
++++ b/ffi/tim2tox_ffi.cpp
+@@ -6106,13 +6106,15 @@
+     return required_size;
+ }
+
+-int tim2tox_ffi_extract_tox_id_from_profile(
++static int extract_profile_identity(
+     const uint8_t* profile_data, size_t profile_len,
+     const uint8_t* passphrase, size_t passphrase_len,
+-    char* out_tox_id, size_t out_tox_id_len
++    char* out_tox_id, size_t out_tox_id_len,
++    bool full_address
+ ) {
+-    if (!profile_data || profile_len == 0 || !out_tox_id || out_tox_id_len < 65) {
+-        return -1; // Need at least 64 chars + null terminator
++    const size_t bytes = full_address ? TOX_ADDRESS_SIZE : TOX_PUBLIC_KEY_SIZE;
++    if (!profile_data || profile_len == 0 || !out_tox_id || out_tox_id_len < bytes * 2 + 1) {
++        return -1;
+     }
+     
+     // Decrypt if encrypted
+@@ -6144,13 +6146,15 @@
+         data_len = decrypted_size;
+     }
+     
+-    // Create temporary Tox instance to extract public key
++    // Read the identity without bringing a profile online.
+     Tox_Options* options = tox_options_new(nullptr);
+     if (!options) {
+         return -1;
+     }
+     
+     tox_options_default(options);
++    tox_options_set_udp_enabled(options, false);
++    tox_options_set_local_discovery_enabled(options, false);
+     tox_options_set_savedata_type(options, TOX_SAVEDATA_TYPE_TOX_SAVE);
+     tox_options_set_savedata_data(options, data_to_load, data_len);
+     tox_options_set_savedata_length(options, data_len);
+@@ -6163,22 +6167,45 @@
+     tox_options_free(options);
+     
+     if (!tox || error_new != TOX_ERR_NEW_OK) {
+-        return -1; // Failed to create Tox instance
++        if (tox) tox_kill(tox);
++        return -1;
+     }
+     
+     // Get public key
+-    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+-    tox_self_get_public_key(tox, public_key);
++    uint8_t identity[TOX_ADDRESS_SIZE];
++    if (full_address) {
++        tox_self_get_address(tox, identity);
++    } else {
++        tox_self_get_public_key(tox, identity);
++    }
+     
+     // Convert to hex string
+-    for (size_t i = 0; i < TOX_PUBLIC_KEY_SIZE; i++) {
+-        snprintf(out_tox_id + i * 2, 3, "%02X", public_key[i]);
+-    }
+-    out_tox_id[TOX_PUBLIC_KEY_SIZE * 2] = '\0';
++    for (size_t i = 0; i < bytes; i++) {
++        snprintf(out_tox_id + i * 2, 3, "%02X", identity[i]);
++    }
++    out_tox_id[bytes * 2] = '\0';
+     
+     tox_kill(tox);
+     
+-    return TOX_PUBLIC_KEY_SIZE * 2; // Return length of hex string
++    return static_cast<int>(bytes * 2);
++}
++
++int tim2tox_ffi_extract_tox_id_from_profile(
++    const uint8_t* profile_data, size_t profile_len,
++    const uint8_t* passphrase, size_t passphrase_len,
++    char* out_tox_id, size_t out_tox_id_len
++) {
++    return extract_profile_identity(profile_data, profile_len, passphrase,
++                                    passphrase_len, out_tox_id, out_tox_id_len, false);
++}
++
++int tim2tox_ffi_extract_tox_address_from_profile(
++    const uint8_t* profile_data, size_t profile_len,
++    const uint8_t* passphrase, size_t passphrase_len,
++    char* out_tox_id, size_t out_tox_id_len
++) {
++    return extract_profile_identity(profile_data, profile_len, passphrase,
++                                    passphrase_len, out_tox_id, out_tox_id_len, true);
+ }
+
+ int tim2tox_ffi_inject_callback(const char* json_callback) {
+diff --git a/ffi/tim2tox_ffi.h b/ffi/tim2tox_ffi.h
+--- a/ffi/tim2tox_ffi.h
++++ b/ffi/tim2tox_ffi.h
+@@ -993,6 +993,13 @@
+     char* out_tox_id, size_t out_tox_id_len
+ );
+
++// As above, but writes the full 76-character address (77 bytes with NUL).
++int tim2tox_ffi_extract_tox_address_from_profile(
++    const uint8_t* profile_data, size_t profile_len,
++    const uint8_t* passphrase, size_t passphrase_len,
++    char* out_tox_id, size_t out_tox_id_len
++);
++
+ // Get the number of peers in a conference (for Dart to set memberCount)
+ // instance_id: 0 = current instance
+ // conference_number: the conference index

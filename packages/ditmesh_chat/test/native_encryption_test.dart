@@ -2,6 +2,7 @@
 library;
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh_chat/ditmesh_chat.dart';
@@ -15,6 +16,57 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final library = Platform.environment['TIM2TOX_FFI_LIB'];
   final available = library != null && File(library).existsSync();
+
+  for (final password in [null, 'savedata password']) {
+    test(
+      'raw Tox import keeps the full address (protected: ${password != null})',
+      () async {
+        final root = await Directory.systemTemp.createTemp('native_raw_tox_');
+        addTearDown(() => root.delete(recursive: true));
+
+        Future<DitmeshChatBackend> openBackend(IdentityPaths paths) =>
+            DitmeshChatBackend.create(
+              paths: paths,
+              store: MemoryKeyValueStore(),
+              secureStore: MemorySecureStore(),
+              nativeLibraryPathOverride: library,
+              logger: MemoryChatLogger(),
+            );
+
+        final sourcePaths = IdentityPaths('${root.path}/source');
+        final source = await openBackend(sourcePaths);
+        final original = await source.identity.create(
+          displayName: 'Source',
+          password: password,
+        );
+        final bytes = await File(sourcePaths.profileFile).readAsBytes();
+        await source.dispose();
+
+        final targetPaths = IdentityPaths('${root.path}/target');
+        final target = await openBackend(targetPaths);
+        addTearDown(target.dispose);
+        final restored = await target.identity.importBackup(
+          bytes,
+          password: password,
+        );
+        expect(restored.toxId, original.toxId);
+        expect(restored.toxId, matches(RegExp(r'^[0-9A-F]{76}$')));
+        expect(await File(targetPaths.profileFile).readAsBytes(), bytes);
+        await expectLater(
+          target.identity.importBackup(Uint8List.fromList([1, 2, 3])),
+          throwsA(
+            isA<ChatException>().having(
+              (e) => e.code,
+              'code',
+              'invalid_backup',
+            ),
+          ),
+        );
+        expect(target.identity.current?.toxId, original.toxId);
+      },
+      skip: available ? null : 'Set TIM2TOX_FFI_LIB to a built native library',
+    );
+  }
 
   test(
     'the profile stays encrypted through create, run, persist, re-key, crash',

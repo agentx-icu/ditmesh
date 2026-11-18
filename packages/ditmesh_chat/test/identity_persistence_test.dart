@@ -335,6 +335,42 @@ void main() {
     },
   );
 
+  for (final action in ['delete', 'legacy backup', 'encrypted backup']) {
+    test('failed $action keeps the previous identity locked', () async {
+      final original = newService();
+      await original.create(displayName: 'Before', password: 'old');
+      final legacy = await original.exportBackup();
+      final encrypted = await original.exportEncryptedBackup(
+        const EncryptedBackupRequest(passphrase: 'archive', categories: {}),
+      );
+      await original.dispose();
+
+      final locked = newService();
+      locked.registerDataStore(
+        _DataStore()
+          ..onReplacement = () async => throw StateError('write failed'),
+      );
+      final replacement = switch (action) {
+        'delete' => locked.deleteIdentity(),
+        'legacy backup' => locked.importBackup(legacy, password: 'old'),
+        _ => locked.restoreEncryptedBackup(
+          encrypted,
+          'archive',
+          identityPassword: 'old',
+        ),
+      };
+      await expectLater(replacement, throwsStateError);
+      expect(locked.current, isNull);
+      expect(await locked.inspect(), IdentityState.locked);
+      await expectLater(
+        locked.open(),
+        throwsA(isA<ChatException>().having((e) => e.code, 'code', 'locked')),
+      );
+      expect((await locked.unlock('old')).displayName, 'Before');
+      await locked.dispose();
+    });
+  }
+
   test(
     'encrypted profile recovers a verifier interrupted during password change',
     () async {

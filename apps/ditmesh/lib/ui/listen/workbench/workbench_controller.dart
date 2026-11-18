@@ -73,7 +73,7 @@ class WorkbenchController extends ChangeNotifier {
   bool get decoding => _token != null;
   double? get progress => _progress;
   SegmentDecodeResult? get result => _result;
-  bool get playing => _playing;
+  bool get playbackActive => _playing || _playPending;
   bool get loop => _loop;
   bool get busy => _busy;
   WorkbenchFailure? get failure => _failure;
@@ -233,6 +233,7 @@ class WorkbenchController extends ChangeNotifier {
   }
 
   void setLoop(bool loop) {
+    if (playbackActive) return;
     _loop = loop;
     notifyListeners();
   }
@@ -240,7 +241,7 @@ class WorkbenchController extends ChangeNotifier {
   void _invalidate() {
     _cancelDecode();
     // Playback of the old selection or tuning is stale too.
-    if (_playing || _playPending) unawaited(stopPlayback());
+    if (playbackActive) unawaited(stopPlayback());
     _result = null;
     notifyListeners();
   }
@@ -301,7 +302,7 @@ class WorkbenchController extends ChangeNotifier {
 
   Future<void> togglePlay() async {
     if (_busy || _disposed) return;
-    if (_playing || _playPending) {
+    if (playbackActive) {
       await stopPlayback();
       return;
     }
@@ -309,6 +310,7 @@ class WorkbenchController extends ChangeNotifier {
     if (reader == null || _end <= _start) return;
     final gen = ++_playGen;
     _playPending = true;
+    notifyListeners();
     final frames = math.min(_end - _start, reader.info.frameAt(maxPlay));
     try {
       final mono = await reader.readMono(_start, frames);
@@ -321,7 +323,10 @@ class WorkbenchController extends ChangeNotifier {
     } on Object {
       if (!_disposed && gen == _playGen) onIoError?.call();
     } finally {
-      if (gen == _playGen) _playPending = false;
+      if (!_disposed && gen == _playGen) {
+        _playPending = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -329,7 +334,10 @@ class WorkbenchController extends ChangeNotifier {
   /// resuming is up to the learner.
   Future<void> stopPlayback() async {
     final gen = ++_playGen;
-    _playPending = false;
+    if (_playPending) {
+      _playPending = false;
+      if (!_disposed) notifyListeners();
+    }
     try {
       await player.stop();
     } on Object {

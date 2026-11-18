@@ -248,17 +248,6 @@ void main() {
       final left = await c.loadAudioMaterials();
       expect(left.map((e) => e.id), ['c']);
     });
-
-    test('unreferenced recordings are pruned; the working one stays', () async {
-      final lib = RecordingLibrary(root.path);
-      for (final name in <String>['current.wav', 'rec_a.wav', 'rec_b.wav']) {
-        await lib.fileFor('media/recordings/$name').create(recursive: true);
-      }
-      await lib.pruneUnreferenced({'media/recordings/rec_a.wav'});
-      expect(await lib.exists('media/recordings/current.wav'), isTrue);
-      expect(await lib.exists('media/recordings/rec_a.wav'), isTrue);
-      expect(await lib.exists('media/recordings/rec_b.wav'), isFalse);
-    });
   });
 
   testWidgets('opening the workbench stops the microphone first', (

@@ -667,6 +667,8 @@
   "appearanceLight": "Hell",
   "appearanceDark": "Dunkel",
   "appearanceSubtitle": "Fünf Stile mit hellem und dunklem Modus",
+  "chatHistoryConversationHideFailed": "Der lokale Verlauf wurde gelöscht. Die Unterhaltung konnte nicht ausgeblendet werden.",
+  "chatHistorySendPending": "Warte, bis der aktuelle Vorgang abgeschlossen ist, oder brich wartende Nachrichten ab. Versuche es dann erneut.",
   "chatClearHistoryBody": "Den Verlauf dieses Gesprächs auf diesem Gerät löschen? Kopien auf anderen Geräten sind nicht betroffen. Dies kann nicht rückgängig gemacht werden.",
   "chatLoadEarlier": "Ältere Nachrichten laden",
   "chatHistoryLoadFailed": "Ältere Nachrichten konnten nicht geladen werden. Tippe, um es erneut zu versuchen.",

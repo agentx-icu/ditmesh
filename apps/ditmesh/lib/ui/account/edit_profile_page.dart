@@ -6,7 +6,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
-import 'account_routes.dart';
+import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
 
 /// Display name and status message.
@@ -60,7 +60,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           context,
         )?.showSnackBar(SnackBar(content: Text(s.accountProfileUpdated)));
       }
-      closeAccountRoute(route);
+      closeOwnedRoute(route);
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {

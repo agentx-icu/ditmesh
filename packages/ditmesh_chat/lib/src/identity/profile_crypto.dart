@@ -29,6 +29,9 @@ abstract interface class ProfileCrypto {
   /// 64-hex public key of a PLAINTEXT savedata blob. Throws [ChatException]
   /// `invalid_profile` when the bytes are not a Tox savedata.
   String extractPublicKey(Uint8List plaintext);
+
+  /// Full 76-hex Tox address, including the saved nospam and checksum.
+  String extractAddress(Uint8List plaintext);
 }
 
 /// [ProfileCrypto] over `libtim2tox_ffi`. Ported from toxee's
@@ -76,8 +79,12 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
   @override
   Uint8List encrypt(Uint8List plaintext, String password) {
     final outLen = plaintext.length + toxPassEncryptionExtraLength;
-    return _withBuffers(plaintext, password, outLen, (inPtr, pwPtr, pwLen,
-        outPtr) {
+    return _withBuffers(plaintext, password, outLen, (
+      inPtr,
+      pwPtr,
+      pwLen,
+      outPtr,
+    ) {
       final n = _ffi.passEncryptNative(
         inPtr,
         plaintext.length,
@@ -99,8 +106,12 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
       throw const ChatException('wrong_password', 'Profile cannot be opened');
     }
     final outLen = ciphertext.length - toxPassEncryptionExtraLength;
-    return _withBuffers(ciphertext, password, outLen, (inPtr, pwPtr, pwLen,
-        outPtr) {
+    return _withBuffers(ciphertext, password, outLen, (
+      inPtr,
+      pwPtr,
+      pwLen,
+      outPtr,
+    ) {
       final n = _ffi.passDecryptNative(
         inPtr,
         ciphertext.length,
@@ -120,13 +131,32 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
   }
 
   @override
-  String extractPublicKey(Uint8List plaintext) {
+  String extractPublicKey(Uint8List plaintext) =>
+      _extractIdentity(plaintext, _ffi.extractToxIdFromProfileNative, 64);
+
+  @override
+  String extractAddress(Uint8List plaintext) =>
+      _extractIdentity(plaintext, _ffi.extractToxAddressFromProfileNative, 76);
+
+  String _extractIdentity(
+    Uint8List plaintext,
+    int Function(
+      ffi.Pointer<ffi.Uint8>,
+      int,
+      ffi.Pointer<ffi.Uint8>,
+      int,
+      ffi.Pointer<ffi.Int8>,
+      int,
+    )
+    read,
+    int hexLength,
+  ) {
     final profilePtr = _alloc(plaintext.length);
     final idRaw = _alloc(128);
     final idBuf = idRaw.cast<ffi.Int8>();
     try {
       profilePtr.asTypedList(plaintext.length).setAll(0, plaintext);
-      final n = _ffi.extractToxIdFromProfileNative(
+      final n = read(
         profilePtr,
         plaintext.length,
         ffi.Pointer<ffi.Uint8>.fromAddress(0),
@@ -134,10 +164,10 @@ class Tim2ToxProfileCrypto implements ProfileCrypto {
         idBuf,
         128,
       );
-      if (n <= 0) {
+      if (n != hexLength) {
         throw const ChatException(
           'invalid_profile',
-          'Not a Tox profile (public key unreadable)',
+          'Not a Tox profile (identity unreadable)',
         );
       }
       return idBuf.cast<pkgffi.Utf8>().toDartString(length: n).toUpperCase();

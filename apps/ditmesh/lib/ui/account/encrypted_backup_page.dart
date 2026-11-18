@@ -8,7 +8,7 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
 import '../common/app_bar_title.dart';
-import 'account_routes.dart';
+import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
 import 'backup_actions.dart';
 import 'backup_file_gateway.dart';
@@ -124,7 +124,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
     ScaffoldMessenger.maybeOf(
       context,
     )?.showSnackBar(SnackBar(content: Text(message)));
-    if (result == BackupExportResult.saved) closeAccountRoute(route, result);
+    if (result == BackupExportResult.saved) closeOwnedRoute(route, result);
   }
 
   bool _available(BackupCategory c, BackupInventory inv) => switch (c) {

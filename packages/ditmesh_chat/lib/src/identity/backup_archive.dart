@@ -21,6 +21,13 @@ abstract final class BackupArchive {
     const invalid = ChatException('invalid_backup', 'Backup is malformed');
     final inner = BackupEnvelope.open(bytes, passphrase, crypto);
     final container = BackupContainer.decode(inner, inner: true);
+    final hasMediaIndex = container.entries.containsKey(
+      BackupSnapshot.audioMaterialsEntry,
+    );
+    if (hasMediaIndex &&
+        container.entries.containsKey(BackupSnapshot.trainingMaterialsEntry)) {
+      throw invalid;
+    }
     final rawManifest = container.entries[BackupSnapshot.manifestEntry];
     if (rawManifest == null) throw invalid;
     final manifest = BackupSnapshot.decodeJson(rawManifest);
@@ -81,7 +88,15 @@ abstract final class BackupArchive {
       } else if (a.$1 != items || a.$2 != size) {
         throw invalid;
       }
-      sizes[c] = BackupCategorySize(items: items, bytes: size);
+      // The manifest counts every entry. The recording count excludes its
+      // index, but the preview's byte count still covers the whole category.
+      final mediaIndexEntries = c == BackupCategory.media && hasMediaIndex
+          ? 1
+          : 0;
+      sizes[c] = BackupCategorySize(
+        items: items - mediaIndexEntries,
+        bytes: size,
+      );
     }
     final pending = manifest['pending'];
     final createdAt = DateTime.tryParse('${manifest['createdAt']}');

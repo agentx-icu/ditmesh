@@ -15,18 +15,12 @@ import '../learn/helpers/test_controller.dart';
 import 'workbench_support.dart';
 import 'workbench_wait.dart';
 
-final class _HeldMaterials implements TrainingDocStore {
+final class _FallibleMaterials implements TrainingDocStore {
   final _store = InMemoryTrainingDocStore();
-  final reading = Completer<void>();
-  final release = Completer<void>();
   Exception? readError;
 
   @override
   Future<Map<String, Object?>?> read(String name) async {
-    if (name == AudioMaterialStore.doc && !reading.isCompleted) {
-      reading.complete();
-      await release.future;
-    }
     if (readError case final error? when name == AudioMaterialStore.doc) {
       throw error;
     }
@@ -93,7 +87,11 @@ void main() {
     expect(find.byKey(const ValueKey('workbench-waveform')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('workbench-play')));
-    await waitForWorkbench(tester, find.text(en.workbenchStop));
+    await waitForWorkbenchCondition(
+      tester,
+      () => player.isPlaying,
+      description: 'start playback',
+    );
     expect(player.plays, hasLength(1));
 
     await tester.tap(find.byKey(const ValueKey('workbench-decode')));
@@ -118,6 +116,52 @@ void main() {
     expect(record.isKnownUnassisted, isTrue);
     expect(t.controller.progress.srs.cards, isEmpty);
     expect(t.controller.progress.charStats, isEmpty);
+  });
+
+  testWidgets('a covering page stops playback and restores the Loop control', (
+    tester,
+  ) async {
+    final (_, _, player) = await pumpScreen(tester);
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    await waitForWorkbench(tester, find.text('sos.wav'));
+    final loop = find.widgetWithText(FilterChip, en.workbenchLoop);
+    expect(tester.widget<FilterChip>(loop).onSelected, isNotNull);
+    await tester.tap(loop);
+    await tester.pump();
+    final nativeStart = Completer<void>();
+    player.holdPlay = nativeStart;
+    await tester.tap(find.byKey(const ValueKey('workbench-play')));
+    await waitForWorkbenchCondition(
+      tester,
+      () => player.playRequested.isCompleted,
+      description: 'prepare playback',
+    );
+    expect(tester.widget<FilterChip>(loop).onSelected, isNull);
+    nativeStart.complete();
+    await waitForWorkbenchCondition(
+      tester,
+      () => player.isPlaying,
+      description: 'start looping playback',
+    );
+    expect(player.plays.single.$2, isTrue);
+    expect(tester.widget<FilterChip>(loop).onSelected, isNull);
+
+    final navigator = Navigator.of(
+      tester.element(find.byType(WorkbenchScreen)),
+    );
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Conversation')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(player.isPlaying, isFalse);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(player.plays, hasLength(1));
+    expect(tester.widget<FilterChip>(loop).onSelected, isNotNull);
   });
 
   testWidgets('a rejected file reports why and keeps the screen usable', (
@@ -174,9 +218,7 @@ void main() {
     await waitForWorkbench(tester, save, enabled: true);
   });
 
-  testWidgets('a saved selection with missing media offers relink', (
-    tester,
-  ) async {
+  testWidgets('missing media keeps the note and offers relink', (tester) async {
     final (t, picker, _) = await pumpScreen(tester);
     // In-memory training docs: no real I/O, so no runAsync.
     var seeded = false;
@@ -188,6 +230,7 @@ void main() {
               title: 'Old net',
               file: 'media/recordings/rec_1.wav',
               originalName: 'net.wav',
+              note: 'Operator changed after the first call',
               start: Duration.zero,
               end: const Duration(seconds: 2),
               sampleRate: 8000,
@@ -205,21 +248,20 @@ void main() {
     await tester.tap(find.byTooltip(en.workbenchLibrary));
     await waitForWorkbench(tester, find.text('Old net'));
     expect(find.text('Old net'), findsOneWidget);
-    expect(find.text(en.workbenchMissing), findsOneWidget);
+    final missing = find.text(
+      '${en.workbenchMissing}\nOperator changed after the first call',
+    );
+    expect(missing, findsOneWidget);
     picker.error = const FileSystemException('provider unavailable');
     await tester.tap(find.byTooltip(en.workbenchRelink));
     await tester.pump();
     expect(find.text(en.workbenchErrorIo), findsOneWidget);
-    expect(find.text(en.workbenchMissing), findsOneWidget);
+    expect(missing, findsOneWidget);
 
     picker.error = null;
     await tester.tap(find.byTooltip(en.workbenchRelink));
-    await waitForWorkbench(
-      tester,
-      find.text(en.workbenchMissing),
-      absent: true,
-    );
-    expect(find.text(en.workbenchMissing), findsNothing);
+    await waitForWorkbench(tester, missing, absent: true);
+    expect(missing, findsNothing);
     expect(find.text(en.workbenchErrorIo), findsNothing);
     expect(
       await tester.runAsync(
@@ -229,38 +271,53 @@ void main() {
     );
   });
 
-  testWidgets('saved material actions wait for the initial cleanup', (
+  testWidgets('recovering an older index keeps its missing WAVs on disk', (
     tester,
   ) async {
-    final docs = _HeldMaterials();
-    final orphan = RecordingLibrary(
-      dataDir,
-    ).fileFor('media/recordings/orphan.wav');
+    final docsDir = Directory(p.join(dataDir, 'docs'));
+    final docs = FileTrainingDocStore(docsDir);
+    final audio = RecordingLibrary(dataDir).fileFor('media/recordings/new.wav');
     await tester.runAsync(() async {
-      await orphan.parent.create(recursive: true);
-      await orphan.writeAsBytes(cwWav('E'));
+      await audio.parent.create(recursive: true);
+      await audio.writeAsBytes(cwWav('E'));
+      final newMaterial = AudioMaterial(
+        id: 'new',
+        title: 'New recording',
+        file: 'media/recordings/new.wav',
+        originalName: 'new.wav',
+        start: Duration.zero,
+        end: const Duration(milliseconds: 500),
+        sampleRate: 8000,
+        channels: 1,
+        createdAt: DateTime.utc(2026),
+      );
+      await docs.write(AudioMaterialStore.doc, {'v': 1, 'materials': []});
+      await docs.write(AudioMaterialStore.doc, {
+        'v': 1,
+        'materials': [newMaterial.toJson()],
+      });
+      await File(
+        p.join(docsDir.path, '${AudioMaterialStore.doc}.json'),
+      ).writeAsString('{');
     });
 
     await pumpScreen(tester, docs: docs);
-    await docs.reading.future;
-    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
-    await waitForWorkbench(tester, find.text('sos.wav'));
-
-    IconButton libraryButton() => tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.library_music_outlined),
+    final library = find.widgetWithIcon(
+      IconButton,
+      Icons.library_music_outlined,
     );
-    expect(libraryButton().onPressed, isNull);
-    docs.release.complete();
     await waitForWorkbenchCondition(
       tester,
-      () => libraryButton().onPressed != null,
-      description: 'enable the library after pruning',
+      () => tester.widget<IconButton>(library).onPressed != null,
+      description: 'enable the library',
     );
-    expect(await tester.runAsync(orphan.exists), isFalse);
+    await tester.tap(library);
+    await waitForWorkbench(tester, find.text(en.workbenchLibraryEmpty));
+    expect(await tester.runAsync(audio.exists), isTrue);
   });
 
   testWidgets('a failed library load offers a retry', (tester) async {
-    final docs = _HeldMaterials()..release.complete();
+    final docs = _FallibleMaterials();
     await pumpScreen(tester, docs: docs);
     await waitForWorkbenchCondition(
       tester,

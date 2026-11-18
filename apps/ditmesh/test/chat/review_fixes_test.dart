@@ -255,6 +255,12 @@ final class _GatedSearch implements ChatService {
   final List<MessageSearchCancel?> cancels = [];
 
   @override
+  Set<String> get blockedPeers => const {};
+
+  @override
+  Stream<Set<String>> get blockedPeerChanges => const Stream.empty();
+
+  @override
   Future<MessageSearchPage> searchMessages(
     String conversationId,
     MessageSearchQuery query, {

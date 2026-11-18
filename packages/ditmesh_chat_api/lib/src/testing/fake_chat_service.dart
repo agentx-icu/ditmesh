@@ -214,7 +214,7 @@ final class FakeChatService
       throw const ChatException('friend_not_found', 'No such friend');
     }
     _publishFriends();
-    await deleteConversation(c2cConversationId(publicKey));
+    _deleteConversationRows(c2cConversationId(publicKey));
   }
 
   FriendRequest? _takeFriendRequest(String publicKey) {
@@ -277,6 +277,11 @@ final class FakeChatService
       );
     }
     _requireSession();
+    _FakeConversationRows(this)._refuseClearWithPending(conversationId);
+    _deleteConversationRows(conversationId);
+  }
+
+  void _deleteConversationRows(String conversationId) {
     _messages.remove(conversationId);
     _conversations.remove(conversationId);
     _hidden.add(conversationId);
@@ -347,6 +352,7 @@ final class FakeChatService
   @override
   Future<void> clearHistory(String conversationId) async {
     _requireSession();
+    _FakeConversationRows(this)._refuseClearWithPending(conversationId);
     _FakeConversationRows(this)._clear(conversationId);
   }
 
@@ -447,7 +453,7 @@ final class FakeChatService
     _groups.remove(groupId);
     _members.remove(groupId);
     _groupChanges.add(groups);
-    await deleteConversation(groupConversationId(groupId));
+    _deleteConversationRows(groupConversationId(groupId));
   }
 
   @override

@@ -427,6 +427,21 @@ class FakeProfileCrypto implements ProfileCrypto {
     }
     return text.substring(_profileMagic.length, _profileMagic.length + 64);
   }
+  @override
+  String extractAddress(Uint8List plaintext) {
+    final publicKey = extractPublicKey(plaintext);
+    final checksum = [0, 0];
+    for (var byte = 0; byte < publicKey.length ~/ 2; byte++) {
+      final offset = byte * 2;
+      checksum[byte % 2] ^= int.parse(
+        publicKey.substring(offset, offset + 2),
+        radix: 16,
+      );
+    }
+    final tail = checksum.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    return '${publicKey}00000000${tail.toUpperCase()}';
+  }
+
 }
 
 /// A headless `FfiChatService` over [ffi], the way toxee's tests build one.

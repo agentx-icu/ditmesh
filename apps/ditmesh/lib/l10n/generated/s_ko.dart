@@ -2141,6 +2141,12 @@ class SKo extends S {
   String get appearanceSubtitle => '밝은 모드와 어두운 모드를 지원하는 다섯 가지 스타일';
 
   @override
+  String get chatHistoryConversationHideFailed => '로컬 기록은 삭제되었지만 대화를 숨기지 못했습니다.';
+
+  @override
+  String get chatHistorySendPending => '현재 작업이 끝날 때까지 기다리거나 대기 중인 메시지를 취소한 후 다시 시도하세요.';
+
+  @override
   String get chatClearHistoryBody => '이 기기에 저장된 대화 기록을 삭제할까요? 다른 기기의 사본에는 영향을 주지 않습니다. 되돌릴 수 없습니다.';
 
   @override

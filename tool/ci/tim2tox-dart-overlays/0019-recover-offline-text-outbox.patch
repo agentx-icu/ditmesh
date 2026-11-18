@@ -1,0 +1,1010 @@
+diff --git a/lib/service/ffi_chat_service.dart b/lib/service/ffi_chat_service.dart
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -8584,8 +8584,20 @@
+   /// [MessageHistoryPersistence.loadArchivedHistory]), oldest first. Same id
+   /// normalization as [getHistory].
+   Future<List<ChatMessage>> getArchivedHistory(String id) async {
+-    return _messageHistoryPersistence.loadArchivedHistory(
++    final rows = await _messageHistoryPersistence.loadArchivedHistory(
+         ConversationIdUtils.normalize(_canonicalSelfAware(id)));
++    final queued = _offlineQueuePersistence.queuedMsgIDs(dispatchableOnly: true)
++      ..removeAll(_dispatchedSends);
++    return [
++      for (final row in rows)
++        if (row.isSelf &&
++            !row.isCancelled &&
++            !_deliveryProven(row) &&
++            queued.contains(row.msgID))
++          row.copyWith(isPending: true, isFailed: false)
++        else
++          row,
++    ];
+   }
+
+   Future<bool> hasArchivedHistory(String id) async {
+@@ -11587,6 +11599,7 @@
+       var dispatched = false;
+       // See the C2C drain: set once the send succeeded, before the removal.
+       var sent = false;
++      final scope = _messageHistoryPersistence.receiptScope(groupId);
+       try {
+         _sendGroupTextByKindChecked(groupId, item.text, item.contentKind);
+         sent = true;
+@@ -11615,7 +11628,6 @@
+         // msgID matches by millisecond, which two identical texts can share,
+         // and it keeps the pending gate. A row that already carries a `gmid:`
+         // alias was sent and is never re-stamped.
+-        var stampedSettledRow = false;
+         if (drainedAlias != null && history != null) {
+           final itemMs = item.timestamp.millisecondsSinceEpoch;
+           final exactIdentity = item.msgID?.isNotEmpty ?? false;
+@@ -11631,7 +11643,6 @@
+               history[i] = msg.copyWith(
+                 altMsgIds: [...msg.altMsgIds, drainedAlias],
+               );
+-              stampedSettledRow = !msg.isPending;
+               break;
+             }
+           }
+@@ -11646,58 +11657,14 @@
+         // re-remove. (A removeItem throw above leaves dispatched=false, which is
+         // treated as not-yet-dispatched, matching the C2C drain.)
+         dispatched = true;
+-        // Flip the matching pending bubble to delivered. Identity via
+-        // _offlineRowMatchesItem (msgID-first, exact-ms fallback) — not a ±10s
+-        // window, which could cross two identical group texts queued close
+-        // together. (Same Bug-F-class fix as the C2C drain matchers.)
+-        if (history != null) {
+-          final itemMs = item.timestamp.millisecondsSinceEpoch;
+-          for (int i = history.length - 1; i >= 0; i--) {
+-            final msg = history[i];
+-            // A row an earlier attempt marked failed (exact identity only)
+-            // is delivered now as well.
+-            final exactFailed = msg.isFailed &&
+-                (item.msgID?.isNotEmpty ?? false) &&
+-                msg.msgID == item.msgID;
+-            if (msg.isSelf &&
+-                (msg.isPending || exactFailed) &&
+-                msg.filePath == null &&
+-                msg.text == item.text &&
+-                msg.contentKind == item.contentKind &&
+-                _offlineRowMatchesItem(msg, item, itemMs)) {
+-              // The alias was stamped before the awaits above; this only
+-              // clears the pending (or failed) flag.
+-              history[i] = msg.copyWith(isPending: false, isFailed: false);
+-              _lastByPeer[groupId] = history[i];
+-              try {
+-                await _saveHistory(groupId);
+-              } catch (_) {}
+-              if (exactFailed) {
+-                _reportFailureCleared(msg.msgID);
+-              }
+-              // Saving yielded: the row may have moved or the whole
+-              // conversation may have been cleared in the meantime.
+-              if (identical(history,
+-                  _messageHistoryPersistence.getCachedList(groupId))) {
+-                final current = _tombstoneRowIndex(history, item);
+-                if (current >= 0) {
+-                  try {
+-                    _messages.add(history[current]);
+-                  } catch (_) {}
+-                }
+-              }
+-              break;
+-            }
+-          }
+-          // A restarted (already non-pending) row skipped the flip above, so
+-          // its new alias must be persisted here or the next restart drops it
+-          // while the queue item is already gone.
+-          if (stampedSettledRow) {
+-            try {
+-              await _saveHistory(groupId);
+-            } catch (_) {}
+-          }
+-        }
++        await _finishDrainedText(
++          groupId,
++          item,
++          drainedAlias,
++          scope,
++          isGroup: true,
++        );
++        history = _historyById[groupId];
+         await Future.delayed(const Duration(milliseconds: 100));
+       } on _InvalidTextTransportPayload catch (e, stackTrace) {
+         _logger?.logError(
+@@ -12993,22 +12960,21 @@
+
+   /// Makes the row of a cancelled / failed tombstone say so durably, then
+   /// removes the tombstone. Delivery proof beats a failed tombstone (the row
+-  /// stays delivered). The tombstone stays when the row is not in the loaded
+-  /// window or the history write fails; it is never dispatched either way,
++  /// stays delivered). The tombstone stays when the row is absent or the
++  /// history write fails; it is never dispatched either way,
+   /// and the next drain tries again.
+   ///
+   /// [owner] is the cancel that holds this message's op guard itself.
+   Future<void> _settleTombstone(String storageKey, String historyKey,
+       OfflineMessageItem item, List<ChatMessage>? history,
+       {bool owner = false}) async {
+-    if (history == null) return;
+     // [item] may be a drain's snapshot: a retry may have turned it back into
+     // a send (and sent it) meanwhile. Only the tombstone still queued counts.
+     if (!_getOfflineQueue(storageKey).contains(item)) return;
+     final id = item.msgID;
+     final hasId = id != null && id.isNotEmpty;
+     if (hasId && !owner && _sendControlOps.contains(id)) return;
+-    final at = _tombstoneRowIndex(history, item);
++    final at = history == null ? -1 : _tombstoneRowIndex(history, item);
+     if (at < 0) {
+       // A legacy item without a msgID whose row is not in the window can
+       // never be matched again; it is never dispatched, so let it go.
+@@ -13016,23 +12982,31 @@
+         try {
+           await _offlineQueuePersistence.removeItem(storageKey, item);
+         } catch (_) {}
++      } else {
++        if (!owner) _sendControlOps.add(id);
++        try {
++          final scope = _messageHistoryPersistence.receiptScope(historyKey);
++          final settled = await _messageHistoryPersistence
++              .updateArchivedOwnText(
++                historyKey,
++                id,
++                (row) => _settledTombstoneRow(row, item),
++              );
++          if (settled != null && scope.isCurrent) {
++            if (!settled.isFailed) _reportFailureCleared(id);
++            _publishRow(historyKey, settled);
++            await _offlineQueuePersistence.removeItem(storageKey, item);
++          }
++        } catch (_) {
++          // Leave a durable tombstone to settle on the next drain.
++        } finally {
++          if (!owner) _sendControlOps.remove(id);
++        }
+       }
+       return;
+     }
+-    final row = history[at];
+-    ChatMessage settled = row;
+-    if (item.control == OfflineSendControl.cancelled) {
+-      if (!row.isCancelled) {
+-        settled =
+-            row.copyWith(isPending: false, isFailed: false, isCancelled: true);
+-      }
+-    } else if (!row.isCancelled &&
+-        !_deliveryProven(row) &&
+-        !(hasId && _dispatchedSends.contains(id))) {
+-      if (!row.isFailed || row.isPending) {
+-        settled = row.copyWith(isPending: false, isFailed: true);
+-      }
+-    }
++    final row = history![at];
++    final settled = _settledTombstoneRow(row, item);
+     if (!identical(settled, row)) {
+       history[at] = settled;
+       if (row.isFailed && !settled.isFailed) _reportFailureCleared(row.msgID);
+@@ -13042,6 +13016,20 @@
+       await _saveHistoryStrict(historyKey);
+       await _offlineQueuePersistence.removeItem(storageKey, item);
+     } catch (_) {}
++  }
++
++  ChatMessage _settledTombstoneRow(ChatMessage row, OfflineMessageItem item) {
++    if (item.control == OfflineSendControl.cancelled && !row.isCancelled) {
++      return row.copyWith(isPending: false, isFailed: false, isCancelled: true);
++    }
++    if (item.control == OfflineSendControl.failed &&
++        !row.isCancelled &&
++        !_deliveryProven(row) &&
++        !_dispatchedSends.contains(item.msgID) &&
++        (!row.isFailed || row.isPending)) {
++      return row.copyWith(isPending: false, isFailed: true);
++    }
++    return row;
+   }
+
+   /// The row a tombstone [item] is about: by msgID, or for a legacy item
+@@ -13163,7 +13151,6 @@
+     }
+     final historyKey =
+         isGroup ? conversation : _normalizeFriendId(conversation);
+-    final history = _historyById[historyKey];
+     // DitMesh: a committed failed tombstone is the row's failure even when
+     // the row's own write did not land before a restart (it is settled only
+     // by a drain, which needs the peer online).
+@@ -13172,15 +13159,6 @@
+         (!_deliveryProven(m) &&
+             _queuedTextItem(conversation, msgID, isGroup)?.item.control ==
+                 OfflineSendControl.failed);
+-    final index = history == null
+-        ? -1
+-        : history.lastIndexWhere((m) =>
+-            m.isSelf &&
+-            m.msgID == msgID &&
+-            failed(m) &&
+-            !m.isCancelled &&
+-            (m.filePath == null || m.filePath!.isEmpty));
+-    if (history == null || index < 0) return SendControlResult.notApplicable;
+     if (_claimedSends.contains(msgID) || _sendControlOps.contains(msgID)) {
+       return SendControlResult.notApplicable;
+     }
+@@ -13193,7 +13171,28 @@
+     }
+     _sendControlOps.add(msgID);
+     try {
+-      final before = history[index];
++      final scope = _messageHistoryPersistence.receiptScope(historyKey);
++      final history = _historyById[historyKey];
++      final index = history == null ? -1 : _ownRowIndex(history, msgID);
++      final ChatMessage? before;
++      if (index >= 0) {
++        before = history![index];
++      } else {
++        final archived = await _messageHistoryPersistence.loadArchivedHistory(
++          historyKey,
++        );
++        final at = _ownRowIndex(archived, msgID);
++        before = at < 0 ? null : archived[at];
++      }
++      if (!scope.isCurrent ||
++          _sessionClosed ||
++          before == null ||
++          !failed(before) ||
++          before.isCancelled ||
++          _deliveryProven(before) ||
++          (before.filePath?.isNotEmpty ?? false)) {
++        return SendControlResult.notApplicable;
++      }
+       try {
+         if (existing != null) {
+           if (!await _offlineQueuePersistence.replaceItem(
+@@ -13220,12 +13219,21 @@
+       } catch (_) {
+         return SendControlResult.persistFailed;
+       }
+-      final at = _ownRowIndex(history, msgID);
++      if (!scope.isCurrent || _sessionClosed) return SendControlResult.success;
++      final current = _historyById[historyKey];
++      final at = current == null ? -1 : _ownRowIndex(current, msgID);
+       if (at >= 0) {
+-        final pending = history[at].copyWith(isPending: true, isFailed: false);
+-        history[at] = pending;
++        final pending = current![at].copyWith(isPending: true, isFailed: false);
++        current[at] = pending;
+         _publishRow(historyKey, pending);
+         unawaited(_saveHistory(historyKey));
++      } else {
++        // The queue is the durable pending state. Leave the old failure on
++        // disk until the drain clears it, and publish this state immediately.
++        _publishRow(
++          historyKey,
++          before.copyWith(isPending: true, isFailed: false),
++        );
+       }
+     } finally {
+       _sendControlOps.remove(msgID);
+@@ -13243,8 +13251,7 @@
+   /// send it again. Durably clear the failure first. False keeps the item
+   /// queued (the marker stays, so the next attempt clears again): also when
+   /// the conversation's history cannot be loaded, since its row may be the
+-  /// failed one. A row that left the loaded window (over 1000 newer rows) is
+-  /// sent as is; a Retry cannot reach it there.
++  /// failed one. Retry applies the same barrier to an archived row.
+   ///
+   /// For the whole wait a stale failure copy cannot merge into the row
+   /// ([_clearingRetryFailures], see sentThisSession); a failure that still
+@@ -13265,16 +13272,36 @@
+
+   Future<bool> _clearRetryFailureOf(
+       String historyKey, List<ChatMessage>? history, String id) async {
++    final scope = _messageHistoryPersistence.receiptScope(historyKey);
+     if (history == null) {
+       try {
+         await _loadHistory(historyKey);
+       } catch (_) {}
+       history = _historyById[historyKey];
+-      if (history == null) return false;
+-    }
+-    final at = _ownRowIndex(history, id);
+-    if (at < 0) return true;
+-    final row = history[at];
++    }
++    if (!scope.isCurrent) return false;
++    final at = history == null ? -1 : _ownRowIndex(history, id);
++    if (at < 0) {
++      try {
++        final archived = await _messageHistoryPersistence.updateArchivedOwnText(
++          historyKey,
++          id,
++          (row) => row.isCancelled || !row.isFailed
++              ? row
++              : row.copyWith(isFailed: false, isPending: true),
++        );
++        if (!scope.isCurrent ||
++            _pollDisposed ||
++            (archived?.isCancelled ?? false)) {
++          return false;
++        }
++        _reportFailureCleared(id);
++        return true;
++      } catch (_) {
++        return false;
++      }
++    }
++    final row = history![at];
+     if (row.isCancelled) return false;
+     if (row.isFailed || !row.isPending) {
+       history[at] = row.copyWith(isPending: true, isFailed: false);
+@@ -13284,6 +13311,7 @@
+     } catch (_) {
+       return false;
+     }
++    if (!scope.isCurrent || _pollDisposed) return false;
+     final now = _ownRowIndex(history, id);
+     if (now >= 0 && (history[now].isFailed || history[now].isCancelled)) {
+       return false;
+@@ -13302,7 +13330,16 @@
+       List<ChatMessage>? history, OfflineMessageItem item,
+       {required bool isFile}) async {
+     if (history == null || _failedRowIndex(history, item, isFile: isFile) < 0) {
+-      return false;
++      final id = item.msgID;
++      if (isFile || id == null || id.isEmpty) return false;
++      final scope = _messageHistoryPersistence.receiptScope(historyKey);
++      final archived = await _messageHistoryPersistence.loadArchivedHistory(
++        historyKey,
++      );
++      if (!scope.isCurrent ||
++          _failedRowIndex(archived, item, isFile: false) < 0) {
++        return false;
++      }
+     }
+     final tombstone = _withControl(item, OfflineSendControl.failed);
+     try {
+@@ -13521,38 +13558,13 @@
+     // cached online status (refreshed by the same getFriendList poll that
+     // drives drain) and bail with the offline sentinel so the queue
+     // item and pending bubble stay intact for the next transition.
+-    if (_friendOnlineStatus[normalizedPeerId] == 'offline') {
++    if (_sessionClosed ||
++        _pollDisposed ||
++        _friendOnlineStatus[normalizedPeerId] == 'offline') {
+       throw const _OfflineDuringDrain();
+     }
+
+-    ChatMessage? pendingMsg;
+-    int? pendingMsgIndex;
+-    if (history != null) {
+-      // codex (Bug F follow-up): match THIS item's pending row via
+-      // _offlineRowMatchesItem — msgID-first (durable; the queue item now
+-      // carries the pending row's msgID), with EXACT-ms timestamp as the
+-      // backward-compat fallback for legacy no-msgID queue files. NOT a ±10s
+-      // window: a window matcher that took the most-recent row could, with two
+-      // identical offline texts queued within 10s, reconcile the WRONG (newer)
+-      // pending row; and since reload clears `isPending` on history rows
+-      // (message_history_persistence.dart, "mark all historical messages as
+-      // not pending"), that mis-ownership becomes sticky across a crash.
+-      final itemMs = item.timestamp.millisecondsSinceEpoch;
+-      for (int i = history.length - 1; i >= 0; i--) {
+-        final msg = history[i];
+-        if (msg.isSelf &&
+-            msg.isPending &&
+-            msg.filePath == null &&
+-            msg.text == item.text &&
+-            msg.contentKind == item.contentKind &&
+-            _offlineRowMatchesItem(msg, item, itemMs)) {
+-          pendingMsg = msg;
+-          pendingMsgIndex = i;
+-          break;
+-        }
+-      }
+-    }
+-
++    final scope = _messageHistoryPersistence.receiptScope(normalizedPeerId);
+     final extensionEpoch = _sessionEpoch;
+     String? extensionId;
+     try {
+@@ -13581,7 +13593,6 @@
+             _offlineRowMatchesItem(history[i], item,
+                 item.timestamp.millisecondsSinceEpoch)) {
+           history[i] = history[i].copyWith(altMsgIds: [...history[i].altMsgIds, alias]);
+-          if (pendingMsgIndex == i) pendingMsg = history[i];
+           break;
+         }
+       }
+@@ -13591,111 +13602,83 @@
+     // history reconcile) so a crash can't make the next drain re-send.
+     if (onDispatched != null) await onDispatched();
+
+-    if (pendingMsg != null && pendingMsgIndex != null && history != null) {
+-      // Re-found after the await: the window may have been trimmed and a
+-      // receipt may have replaced the row meanwhile.
+-      final at = _currentRowIndex(history, pendingMsg);
+-      if (at >= 0) {
+-        final current = history[at];
+-        if (current.isFailed) _reportFailureCleared(current.msgID);
+-        final updatedMsg = current.copyWith(isPending: false, isFailed: false);
+-        history[at] = updatedMsg;
+-        _lastByPeer[normalizedPeerId] = updatedMsg;
+-        try {
+-          await _saveHistory(normalizedPeerId);
+-        } catch (_) {}
+-        try {
+-          _messages.add(updatedMsg);
+-        } catch (_) {}
+-      }
+-    } else {
+-      // Fallback: no matching *pending* row in the in-memory history (lost
+-      // across restart, trimmed, or composition→item timestamp drift > 10s).
+-      //
+-      // Bug F fix: appendHistory's content-dedup no longer covers self-sends,
+-      // so this fallback must guarantee its OWN idempotency or a re-drain could
+-      // append a duplicate of an already-delivered self row. Re-scan for THIS
+-      // item's own row (pending OR already-delivered) via _offlineRowMatchesItem
+-      // (msgID-first, exact-ms fallback) and reconcile it in place instead of
+-      // appending. NOT a window: a 10s window was too broad — it could match a
+-      // DIFFERENT identical-text message that merely happens to be nearby, and
+-      // wrongly suppress this send, re-creating Bug F in the fallback path.
+-      ChatMessage? existing;
+-      int? existingIndex;
+-      if (history != null) {
+-        final itemMs = item.timestamp.millisecondsSinceEpoch;
+-        for (int i = history.length - 1; i >= 0; i--) {
+-          final msg = history[i];
+-          if (msg.isSelf &&
+-              msg.filePath == null &&
+-              msg.text == item.text &&
+-              msg.contentKind == item.contentKind &&
+-              _offlineRowMatchesItem(msg, item, itemMs)) {
+-            existing = msg;
+-            existingIndex = i;
+-            break;
+-          }
+-        }
+-      }
+-      if (existing != null && existingIndex != null && history != null) {
+-        // Already present (e.g. a prior drain delivered it): ensure it reads as
+-        // delivered, but do NOT append a second row. A row an earlier attempt
+-        // marked failed (the item survived because its removal did not reach
+-        // disk) is delivered now: clear the failure and re-emit that change.
+-        final wasFailed = existing.isFailed;
+-        final updatedMsg = existing.isPending || wasFailed
+-            ? existing.copyWith(isPending: false, isFailed: false)
+-            : existing;
+-        history[existingIndex] = updatedMsg;
+-        _lastByPeer[normalizedPeerId] = updatedMsg;
+-        try {
+-          await _saveHistory(normalizedPeerId);
+-        } catch (_) {}
+-        if (wasFailed) {
+-          _reportFailureCleared(updatedMsg.msgID);
+-          try {
+-            _messages.add(updatedMsg);
+-          } catch (_) {}
+-        }
+-      } else {
+-        // Genuinely absent: create a fresh delivered message but keep the
+-        // original composition timestamp.
+-        //
+-        // codex: REUSE the queue item's durable msgID (the id of the original
+-        // pending row) instead of minting a new one. Otherwise, if this branch
+-        // saves history and the process dies before the queue item is removed,
+-        // the surviving item carries the old id while history has a new id — the
+-        // next drain can't correlate them and may resend/duplicate. Only
+-        // synthesize a fresh id for legacy items that predate the queue-item
+-        // msgID field (item.msgID == null).
+-        final itemMsgID = item.msgID;
+-        final String msgID;
+-        if (itemMsgID != null && itemMsgID.isNotEmpty) {
+-          msgID = itemMsgID;
+-        } else {
+-          final sequence = _msgIDSequence++;
+-          msgID =
+-              '${item.timestamp.millisecondsSinceEpoch}_${sequence}_$_selfId';
+-        }
+-        final msg = ChatMessage(
+-          text: item.text,
+-          fromUserId: _selfId,
+-          isSelf: true,
+-          timestamp: item.timestamp,
+-          groupId: null,
+-          isPending: false,
+-          msgID: msgID,
+-          cloudCustomData: item.cloudCustomData,
+-          contentKind: item.contentKind,
+-          altMsgIds: [if (alias != null) alias],
+-        );
+-        _lastByPeer[normalizedPeerId] = msg;
+-        _appendHistory(normalizedPeerId, msg);
+-        _messages.add(msg);
+-        await _saveHistory(normalizedPeerId);
+-      }
+-    }
++    if (_sessionEpoch != extensionEpoch) return;
++    await _finishDrainedText(normalizedPeerId, item, alias, scope);
+     _drainUnmatchedDeliveryAcks(normalizedPeerId);
++  }
++
++  ChatMessage _deliveredQueuedText(ChatMessage row, String? alias) {
++    if (!row.isPending &&
++        !row.isFailed &&
++        (alias == null || row.altMsgIds.contains(alias))) {
++      return row;
++    }
++    return row.copyWith(
++      isPending: false,
++      isFailed: false,
++      altMsgIds: [
++        ...row.altMsgIds,
++        if (alias != null && !row.altMsgIds.contains(alias)) alias,
++      ],
++    );
++  }
++
++  /// Reconcile the current window, an older archived copy, or a queue-only
++  /// text. The queue entry is gone by this point, so no error retries a send.
++  Future<void> _finishDrainedText(
++    String key,
++    OfflineMessageItem item,
++    String? alias,
++    MessageHistoryReceiptScope scope, {
++    bool isGroup = false,
++  }) async {
++    if (!scope.isCurrent || _sessionClosed || _pollDisposed) return;
++
++    Future<bool> updateCurrentWindow() async {
++      final current = _historyById[key];
++      final at = current == null ? -1 : _tombstoneRowIndex(current, item);
++      if (at < 0) return false;
++      final row = current![at];
++      current[at] = _deliveredQueuedText(row, alias);
++      if (row.isFailed) _reportFailureCleared(row.msgID);
++      await _saveHistory(key);
++      if (scope.isCurrent && identical(current, _historyById[key])) {
++        final now = _tombstoneRowIndex(current, item);
++        if (now >= 0) _publishRow(key, current[now]);
++      }
++      return true;
++    }
++
++    if (await updateCurrentWindow() || !scope.isCurrent) return;
++    final id = item.msgID;
++    if (id != null && id.isNotEmpty) {
++      final archived = await _messageHistoryPersistence.updateArchivedOwnText(
++        key,
++        id,
++        (row) => _deliveredQueuedText(row, alias),
++      );
++      if (!scope.isCurrent || _sessionClosed) return;
++      if (archived != null) {
++        _reportFailureCleared(id);
++        _publishRow(key, archived);
++        return;
++      }
++      // History may have loaded while we looked at the archive.
++      if (await updateCurrentWindow() || !scope.isCurrent) return;
++    }
++    final row = _queuedTextRow(
++      item,
++      id != null && id.isNotEmpty
++          ? id
++          : '${item.timestamp.millisecondsSinceEpoch}_${_msgIDSequence++}_$_selfId',
++      group: isGroup ? key : null,
++      alias: alias,
++      pending: false,
++    );
++    _messageHistoryPersistence.appendHistory(key, row).ignore();
++    _rememberRecoveredPreview(key, row);
++    _publishRow(key, row);
++    await _saveHistory(key);
+   }
+
+   // Replay a queued file item via sendFile(addToChatHistory: false): the
+@@ -13808,13 +13791,153 @@
+   //
+   // The histories are loaded before it: rows still queued show pending again.
+   Future<void> _loadOfflineQueue() async {
+-    await _offlineQueuePersistence.loadQueue(clearOnLoad: false);
++    final queue = await _offlineQueuePersistence.loadQueue(
++      clearOnLoad: false,
++      canonicalizeC2cKeys: true,
++    );
++    await _restoreQueueOnlyTextRows(queue);
+     for (final id in _historyById.keys.toList()) {
+       final changed = _restoreQueuedPending(id);
+       final last = _lastByPeer[id];
+       final restored = last == null ? null : changed[last.msgID];
+       if (restored != null) _lastByPeer[id] = restored;
+     }
++  }
++
++  /// The queue commits before the optimistic history row. Restore any row
++  /// lost in that gap so the user can see and control the committed send.
++  Future<void> _restoreQueueOnlyTextRows(
++    Map<String, List<OfflineMessageItem>> queue,
++  ) async {
++    final epoch = _sessionEpoch;
++    for (final entry in queue.entries) {
++      final isGroup = entry.key.startsWith('group:');
++      final key = isGroup ? entry.key.substring('group:'.length) : entry.key;
++      if (key.isEmpty || (isGroup && historyPurgeGroups.contains(key)))
++        continue;
++      final scope = _messageHistoryPersistence.receiptScope(key);
++      bool current() =>
++          scope.isCurrent && !_sessionClosed && _sessionEpoch == epoch;
++      final hot = List<ChatMessage>.of(_historyById[key] ?? const []);
++      List<ChatMessage>? archived;
++      final matchedLegacyRows = Set<ChatMessage>.identity();
++      final occupied = {
++        for (final item in entry.value)
++          if (item.msgID != null && item.msgID!.isNotEmpty) item.msgID!,
++      };
++      var restored = false;
++      for (final item in entry.value) {
++        if (!current()) break;
++        if (item.kind != 'text' ||
++            item.text.isEmpty ||
++            (item.filePath?.isNotEmpty ?? false) ||
++            !OfflineSendControl.dispatchable(item.control)) {
++          continue;
++        }
++        var id = item.msgID;
++        final legacy = id == null || id.isEmpty;
++        ChatMessage? match(List<ChatMessage> rows) {
++          if (!legacy) {
++            final at = _ownRowIndex(rows, id!);
++            return at < 0 ? null : rows[at];
++          }
++          final at = rows.lastIndexWhere(
++            (row) =>
++                !matchedLegacyRows.contains(row) &&
++                !occupied.contains(row.msgID) &&
++                _tombstoneRowIndex([row], item) == 0,
++          );
++          return at < 0 ? null : rows[at];
++        }
++
++        var existing = match(hot);
++        if (existing == null) {
++          try {
++            archived ??= await _messageHistoryPersistence.loadArchivedHistory(
++              key,
++              throwOnReadFailure: true,
++            );
++          } catch (_) {
++            // Without a readable archive we cannot tell whether the row
++            // already exists. Keep the queue and retry recovery next boot.
++            break;
++          }
++          if (!current()) break;
++          existing = match(archived);
++        }
++        if (legacy) {
++          if (existing != null) {
++            matchedLegacyRows.add(existing);
++            if (existing.msgID == null || existing.msgID!.isEmpty) continue;
++          }
++          id =
++              existing?.msgID ??
++              'queued:${DateTime.now().microsecondsSinceEpoch}:${_msgIDSequence++}:$_selfId';
++          // Persist the ID first. Another interruption repeats the same
++          // recovery, and the reconstructed row can be cancelled by ID.
++          try {
++            if (!await _offlineQueuePersistence.replaceItem(entry.key, item, (
++              kind: item.kind,
++              text: item.text,
++              filePath: item.filePath,
++              fileName: item.fileName,
++              timestamp: item.timestamp,
++              msgID: id,
++              cloudCustomData: item.cloudCustomData,
++              contentKind: item.contentKind,
++              control: item.control,
++            )))
++              continue;
++          } catch (error, stack) {
++            _logger?.logError(
++              '[FfiChatService] could not recover queued ID',
++              error,
++              stack,
++            );
++            continue;
++          }
++          occupied.add(id);
++        }
++        if (!current()) break;
++        if (existing != null) continue;
++        final row = _queuedTextRow(item, id!, group: isGroup ? key : null);
++        _messageHistoryPersistence.appendHistory(key, row).ignore();
++        _rememberRecoveredPreview(key, row);
++        restored = true;
++      }
++      // Persist any recovered rows without waiting for the debounce. A
++      // failed history write is retried by persistence and leaves the
++      // authoritative queue intact for a later restart.
++      if (restored && current()) await _saveHistory(key);
++    }
++  }
++
++  void _rememberRecoveredPreview(String key, ChatMessage row) {
++    final last = _lastByPeer[key];
++    if (last == null || !row.timestamp.isBefore(last.timestamp)) {
++      _lastByPeer[key] = row;
++    }
++  }
++
++  ChatMessage _queuedTextRow(
++    OfflineMessageItem item,
++    String id, {
++    String? group,
++    String? alias,
++    bool pending = true,
++  }) {
++    return ChatMessage(
++      text: item.text,
++      fromUserId: _selfId,
++      isSelf: true,
++      timestamp: item.timestamp,
++      groupId: group,
++      isPending: pending,
++      msgID: id,
++      cloudCustomData: item.cloudCustomData,
++      contentKind: item.contentKind,
++      altMsgIds: [if (alias != null) alias],
++    );
+   }
+
+   /// Clear all account data (history, offline queue, files)
+diff --git a/lib/utils/message_history_persistence.dart b/lib/utils/message_history_persistence.dart
+--- a/lib/utils/message_history_persistence.dart
++++ b/lib/utils/message_history_persistence.dart
+@@ -2997,7 +2997,10 @@
+   /// still present in memory (a crash between the archive append and the
+   /// main-file rewrite leaves a row in both), and tolerates damaged lines:
+   /// one bad line costs that line, not the archive.
+-  Future<List<ChatMessage>> loadArchivedHistory(String conversationId) {
++  Future<List<ChatMessage>> loadArchivedHistory(
++    String conversationId, {
++    bool throwOnReadFailure = false,
++  }) {
+     final normalizedId = ConversationIdUtils.normalize(conversationId);
+     final cached = _archiveCacheId == normalizedId ? _archiveCacheRows : null;
+     // Cache hit: the cache is invalidated (under the lock) by every drain,
+@@ -3038,6 +3041,7 @@
+           e,
+           st,
+         );
++        if (throwOnReadFailure) rethrow;
+         // Not cached: a transient failure must not pin an empty archive.
+         return _archivedView(normalizedId, const <ChatMessage>[]);
+       }
+@@ -3075,6 +3079,91 @@
+     return combined
+         .where((m) => !identitiesOf(m).any(excluded.contains))
+         .toList();
++  }
++
++  /// Updates the exact outgoing text row in the archive under the same
++  /// conversation fence as deletion and overflow writes. Returns null if
++  /// the row is absent; I/O failures propagate so a send can stay queued.
++  Future<ChatMessage?> updateArchivedOwnText(
++    String conversationId,
++    String msgID,
++    ChatMessage Function(ChatMessage) update,
++  ) {
++    final id = ConversationIdUtils.normalize(conversationId);
++    final token = _token(id);
++    bool current() =>
++        !_disposed &&
++        !_isStale(id, token) &&
++        !(_recentlyDeleted[id]?.containsKey(msgID) ?? false);
++    return _serialized(id, () async {
++      if (!current()) return null;
++      if (_pendingArchive[id]?.any((row) => row.isSelf && row.msgID == msgID) ??
++          false) {
++        await _drainPendingArchive(id, await _resolveStorageRoots());
++      }
++      final archive = await _getArchiveFile(id);
++      if (!await archive.exists()) return null;
++      final lines = await archive.readAsLines();
++      ChatMessage? found;
++      var changed = false;
++      for (var i = 0; i < lines.length; i++) {
++        final Map<String, dynamic> data;
++        final ChatMessage row;
++        try {
++          data = jsonDecode(lines[i]) as Map<String, dynamic>;
++          row = ChatMessage.fromJson(data);
++        } catch (_) {
++          // Preserve damaged and unknown rows verbatim.
++          continue;
++        }
++        if (!row.isSelf ||
++            row.msgID != msgID ||
++            (row.filePath?.isNotEmpty ?? false)) {
++          continue;
++        }
++        found = update(row);
++        if (identical(found, row)) continue;
++        final updated = found.toJson();
++        for (final field in const [
++          'isPending',
++          'isFailed',
++          'isCancelled',
++          'altMsgIds',
++        ]) {
++          if (updated.containsKey(field)) {
++            data[field] = updated[field];
++          } else {
++            data.remove(field);
++          }
++        }
++        lines[i] = jsonEncode(data);
++        changed = true;
++      }
++      if (!current()) return null;
++      if (changed) {
++        try {
++          await _writeArchiveLines(archive, lines);
++        } finally {
++          if (_archiveCacheId == id) {
++            _archiveCacheId = null;
++            _archiveCacheRows = null;
++          }
++        }
++      }
++      return current() ? found : null;
++    });
++  }
++
++  Future<void> _writeArchiveLines(File archive, List<String> lines) async {
++    final tempFile = File('${archive.path}.tmp');
++    final raf = await tempFile.open(mode: FileMode.write);
++    try {
++      await raf.writeString('${lines.join('\n')}\n');
++      await raf.flush();
++    } finally {
++      await raf.close();
++    }
++    await _renameWithRetry(tempFile, archive.path);
+   }
+
+   /// Delete archived rows by id (primary or alias). Returns how many went.
+@@ -3125,15 +3214,7 @@
+             if (kept.isEmpty) {
+               await archiveFile.delete();
+             } else {
+-              final tempFile = File('${archiveFile.path}.tmp');
+-              final raf = await tempFile.open(mode: FileMode.write);
+-              try {
+-                await raf.writeString('${kept.join('\n')}\n');
+-                await raf.flush();
+-              } finally {
+-                await raf.close();
+-              }
+-              await _renameWithRetry(tempFile, archiveFile.path);
++              await _writeArchiveLines(archiveFile, kept);
+             }
+           }
+         }
+diff --git a/lib/utils/offline_message_queue_persistence.dart b/lib/utils/offline_message_queue_persistence.dart
+--- a/lib/utils/offline_message_queue_persistence.dart
++++ b/lib/utils/offline_message_queue_persistence.dart
+@@ -178,10 +178,25 @@
+   /// `clearOnLoad: true`.
+   Future<Map<String, List<OfflineMessageItem>>> loadQueue({
+     bool clearOnLoad = false,
++    bool canonicalizeC2cKeys = false,
+   }) {
+     return _runSerialized(() async {
+       final file = await _getQueueFile();
+       final fileStore = _OfflineMessageQueueFileStore(file);
++
++      Future<Map<String, List<OfflineMessageItem>>> useSnapshot(
++        Map<String, List<OfflineMessageItem>> snapshot,
++      ) async {
++        if (canonicalizeC2cKeys) {
++          final canonical = _canonicalizeC2cQueue(snapshot);
++          if (canonical != null) {
++            await _writeSnapshot(canonical);
++            snapshot = canonical;
++          }
++        }
++        _replaceCache(snapshot);
++        return _snapshotQueue(snapshot);
++      }
+
+       if (clearOnLoad) {
+         await fileStore.deleteArtifacts();
+@@ -193,18 +208,14 @@
+         final primary = await fileStore.tryReadSnapshot(file);
+         if (primary.isSuccess) {
+           await fileStore.deleteStagingArtifacts();
+-          final snapshot = primary.queue!;
+-          _replaceCache(snapshot);
+-          return _snapshotQueue(snapshot);
++          return useSnapshot(primary.queue!);
+         }
+
+         final backup = await fileStore.tryReadSnapshot(fileStore.backupFile);
+         if (backup.isSuccess) {
+           await fileStore.restorePrimaryFromBackup();
+           await fileStore.deleteStagingArtifacts();
+-          final snapshot = backup.queue!;
+-          _replaceCache(snapshot);
+-          return _snapshotQueue(snapshot);
++          return useSnapshot(backup.queue!);
+         }
+
+         throw OfflineMessageQueueCorruptionException(
+@@ -218,9 +229,7 @@
+         if (backup.isSuccess) {
+           await fileStore.restorePrimaryFromBackup();
+           await fileStore.deleteStagingArtifacts();
+-          final snapshot = backup.queue!;
+-          _replaceCache(snapshot);
+-          return _snapshotQueue(snapshot);
++          return useSnapshot(backup.queue!);
+         }
+         throw OfflineMessageQueueCorruptionException(
+           fileStore.backupFile.path,
+@@ -232,6 +241,56 @@
+       _offlineQueue.clear();
+       return <String, List<OfflineMessageItem>>{};
+     });
++  }
++
++  static final _c2cKeyPattern = RegExp(
++    r'^[a-fA-F0-9]{64}(?:[a-fA-F0-9]{12})?$',
++  );
++
++  /// Older builds used both the public key and the full Tox address as queue
++  /// keys. Merge those buckets before the first drain can claim either one.
++  static Map<String, List<OfflineMessageItem>>? _canonicalizeC2cQueue(
++    Map<String, List<OfflineMessageItem>> snapshot,
++  ) {
++    String canonicalKey(String key) =>
++        _c2cKeyPattern.hasMatch(key) ? key.substring(0, 64).toUpperCase() : key;
++    final migratedKeys = {
++      for (final key in snapshot.keys)
++        if (canonicalKey(key) != key) canonicalKey(key),
++    };
++    if (migratedKeys.isEmpty) return null;
++    final merged = <String, List<OfflineMessageItem>>{};
++    final positions = <String, Map<String, int>>{};
++    int rank(String? control) => switch (control) {
++      OfflineSendControl.cancelled => 3,
++      final value when !OfflineSendControl.dispatchable(value) => 2,
++      OfflineSendControl.retry => 1,
++      _ => 0,
++    };
++    for (final entry in snapshot.entries) {
++      final key = canonicalKey(entry.key);
++      if (!migratedKeys.contains(key)) {
++        merged[key] = entry.value;
++        continue;
++      }
++      final items = merged.putIfAbsent(key, () => []);
++      final byId = positions.putIfAbsent(key, () => {});
++      for (final item in entry.value) {
++        final id = item.msgID;
++        if (id == null || id.isEmpty) {
++          items.add(item);
++          continue;
++        }
++        final at = byId[id];
++        if (at == null) {
++          byId[id] = items.length;
++          items.add(item);
++        } else if (rank(item.control) > rank(items[at].control)) {
++          items[at] = item;
++        }
++      }
++    }
++    return merged;
+   }
+
+   /// Add a message to the offline queue for a peer and wait until it is durable.

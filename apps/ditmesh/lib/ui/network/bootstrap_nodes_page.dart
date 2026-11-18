@@ -2,6 +2,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:flutter/material.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
+import '../common/close_owned_route.dart';
 import '../moderation/site_links.dart';
 import '../responsive.dart';
 import 'bootstrap_labels.dart';
@@ -17,6 +18,7 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
   late Future<BootstrapCatalogue> _catalogue = widget.service.loadNodes();
   final Map<String, BootstrapProbeVerdict> _verdicts = {};
   final Set<String> _busy = {};
+  bool _selecting = false;
   Future<void> _test(BootstrapNode node) async {
     setState(() => _busy.add(node.id));
     BootstrapProbeVerdict result;
@@ -33,6 +35,8 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
   }
 
   Future<void> _select(BootstrapNode node) async {
+    if (_selecting) return;
+    final route = ModalRoute.of<void>(context);
     final s = context.s;
     final verdict = _verdicts[node.id];
     final warning = verdict == null
@@ -64,11 +68,14 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
-    setState(() => _busy.add(node.id));
+    if (confirmed != true || !mounted || _selecting) return;
+    setState(() {
+      _selecting = true;
+      _busy.add(node.id);
+    });
     try {
       await widget.service.selectNode(node);
-      if (mounted) Navigator.pop(context);
+      closeOwnedRoute(route);
     } on Object {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -76,7 +83,12 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
         ).showSnackBar(SnackBar(content: Text(s.bootstrapOperationFailed)));
       }
     } finally {
-      if (mounted) setState(() => _busy.remove(node.id));
+      if (mounted) {
+        setState(() {
+          _selecting = false;
+          _busy.remove(node.id);
+        });
+      }
     }
   }
 
@@ -171,7 +183,9 @@ class _BootstrapNodesPageState extends State<BootstrapNodesPage> {
                                   'bootstrap-node-select-${node.id}',
                                 ),
                                 onPressed:
-                                    _busy.contains(node.id) || !node.online
+                                    _selecting ||
+                                        _busy.contains(node.id) ||
+                                        !node.online
                                     ? null
                                     : () => _select(node),
                                 child: Text(s.bootstrapSwitchConfirm),

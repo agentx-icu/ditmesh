@@ -33,6 +33,35 @@ final class _FailingPlaybackStore implements KeyValueStore {
 }
 
 void main() {
+  test('replayed same-key restore clears loaded app settings', () async {
+    final identity = FakeIdentityService();
+    final owner = await identity.create(displayName: 'Before');
+    final key = owner.publicKey;
+    final store = InMemoryKeyValueStore({
+      'notifications.muted.$key': '["c2c_peer"]',
+      'chat.guide.$key': '{"dismissed":true}',
+      'chat.conversations.$key': '{"c2c_peer":{"wpm":33}}',
+      'chat.playback': '{"wpm":22}',
+    });
+    final prefs = AppPreferences(store, backendLabel: 'test', identity: identity);
+    addTearDown(prefs.dispose);
+    addTearDown(identity.dispose);
+
+    expect(prefs.notifications.mutedConversations, {'c2c_peer'});
+    expect(prefs.firstChat.dismissed, isTrue);
+    final old = prefs.conversations.forConversation('c2c_peer', prefs.playback);
+    expect(old.wpm, 33);
+    await prefs.clearRestoredIdentityPreferences(key);
+
+    expect(prefs.notifications.mutedConversations, isEmpty);
+    expect(prefs.firstChat.dismissed, isFalse);
+    final after = prefs.conversations.forConversation('c2c_peer', prefs.playback);
+    expect(after.wpm, 22);
+    for (final family in ['notifications.muted', 'chat.guide', 'chat.conversations']) {
+      expect(store.getString('$family.$key'), isNull);
+    }
+  });
+
   test(
     'an unrelated successful save cannot hide a failed preference write',
     () async {

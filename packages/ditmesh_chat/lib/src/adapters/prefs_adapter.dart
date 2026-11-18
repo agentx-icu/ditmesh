@@ -130,29 +130,33 @@ class Tim2ToxPreferencesAdapter
   @override
   Future<void> clear() async {
     if (_accountPrefix.isEmpty) return;
-    // An identity removed before its first connect never ran the migration.
-    // Its old refusal list must not be inherited by the next identity.
-    await _store.remove('dismissed_friend_applications');
-    final suffix = '_$_accountPrefix';
-    final doomed = _store.keys().where((key) {
-      if (key.endsWith(suffix)) return true;
-      for (final family in const [
-        'conversation_draft_',
-        'pending_read_receipts_',
-        'pending_group_read_receipts_',
-      ]) {
-        if (!key.startsWith(family)) continue;
-        final scope = key.substring(family.length).split('_').first;
-        if ((scope.length == 64 || scope.length == 76) &&
-            scope.toUpperCase().startsWith(_accountPrefix.toUpperCase())) {
-          return true;
-        }
-      }
-      return false;
-    }).toList();
+    final doomed = _store
+        .keys()
+        .where((key) => ownsPreferenceKey(key, _accountPrefix))
+        .toList();
     for (final k in doomed) {
       await _store.remove(k);
     }
+  }
+
+  static bool ownsPreferenceKey(String key, String accountPrefix) {
+    if (accountPrefix.isEmpty) return false;
+    // The single installed identity owns the legacy, unscoped refusal list.
+    if (key == 'dismissed_friend_applications') return true;
+    if (key.endsWith('_$accountPrefix')) return true;
+    for (final family in const [
+      'conversation_draft_',
+      'pending_read_receipts_',
+      'pending_group_read_receipts_',
+    ]) {
+      if (!key.startsWith(family)) continue;
+      final scope = key.substring(family.length).split('_').first;
+      if ((scope.length == 64 || scope.length == 76) &&
+          scope.toUpperCase().startsWith(accountPrefix.toUpperCase())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // ---- Groups --------------------------------------------------------------

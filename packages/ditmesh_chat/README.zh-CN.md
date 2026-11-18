@@ -105,11 +105,14 @@ ditmesh/identity/
 | chatHistory | `chat/history/<path>`（去掉排队中的行） |
 | conversationMeta | `meta/conversations.json`（置顶、隐藏、草稿）、`meta/bookmarks.json` |
 | preferences | `prefs/app.json`：播放、译码、通知选项与免打扰、外观、语言——不含窗口位置、按键绑定或网络设置 |
-| media（可选） | `media/recordings/<name>` |
+| media（可选） | `media/recordings/<name>`，未选择练习数据时另含 `media/materials.json` |
 | pendingMessages（可选） | `pending/outbox.json`，恢复后只作为待查看的条目，绝不放回实时发送队列 |
 
 `identity/backup_archive.dart` 在任何恢复步骤写盘之前打开整个归档并对照清单校验；
 `identity_backup_v2.dart` 生成预览并执行分阶段、事务式的恢复。
+
+只导出录音时，备份会带上录音索引，方便恢复后在工作台打开选段。旧版 DitMesh
+在预览时会拒绝此索引。若要在旧版恢复，请在导出时同时勾选**已保存的录音**和**训练进度与素材**。
 
 **基础身份备份**（`IdentityService.exportBackup` / `importBackup`）。`BackupContainer` 版本 1，
 无依赖、带长度前缀的归档：

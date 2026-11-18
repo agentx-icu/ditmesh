@@ -38,3 +38,8 @@ The required Linux and macOS CI jobs exercise two isolated real UDP peers, direc
 messages, encrypted restart, durable queues and group restoration. The public
 DHT network probe is separate and explicitly enabled with
 `DITMESH_PUBLIC_DHT_SMOKE=true`.
+
+`0004-extract-profile-address.patch` reads the full Tox address from a saved
+profile without opening a live session. It leaves the existing public-key
+ABI intact. The native encryption suite imports both plaintext and
+password-protected raw profiles and compares their full addresses.

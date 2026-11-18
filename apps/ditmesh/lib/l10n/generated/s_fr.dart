@@ -2148,6 +2148,12 @@ class SFr extends S {
   String get appearanceSubtitle => 'Cinq styles avec modes clair et sombre';
 
   @override
+  String get chatHistoryConversationHideFailed => 'L’historique local a été effacé. La conversation n’a pas pu être masquée.';
+
+  @override
+  String get chatHistorySendPending => 'Attendez la fin de l’opération en cours ou annulez les messages en attente, puis réessayez.';
+
+  @override
   String get chatClearHistoryBody => 'Supprimer l’historique de cette conversation sur cet appareil ? Les copies sur les autres appareils sont conservées. Cette action est irréversible.';
 
   @override

@@ -4112,6 +4112,18 @@ abstract class S {
   /// **'Five styles with light and dark modes'**
   String get appearanceSubtitle;
 
+  /// History deletion succeeded but the conversation metadata update failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local history was cleared. The conversation could not be hidden.'**
+  String get chatHistoryConversationHideFailed;
+
+  /// Chat feedback when clearing history would remove the controls for queued sends, or when a send conflicts with a history clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the current operation to finish or cancel queued messages, then try again.'**
+  String get chatHistorySendPending;
+
   /// Conversation: body of the clear-history confirmation
   ///
   /// In en, this message translates to:

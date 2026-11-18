@@ -9,7 +9,9 @@ import '../../i18n/l10n_extension.dart';
 import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
 import '../../training/training_settings.dart';
+import '../chat/chat_layout.dart';
 import '../common/app_bar_title.dart';
+import '../common/close_owned_route.dart';
 import '../common/field_label.dart';
 import '../responsive.dart';
 import 'key_test_area.dart';
@@ -67,7 +69,13 @@ class KeySetupPage extends StatelessWidget {
                 groupValue: active.id,
                 onChanged: (id) async {
                   if (id == null) return;
-                  await profiles.select(id);
+                  try {
+                    await profiles.select(id);
+                  } on Object {
+                    if (context.mounted) {
+                      showSnack(context, context.s.errorUnknown);
+                    }
+                  }
                 },
                 child: Column(
                   children: [
@@ -134,6 +142,7 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
   KeyerAction? _capturing;
   final FocusNode _captureFocus = FocusNode(debugLabel: 'key-capture');
   String? _error;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -198,14 +207,28 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
     return KeyEventResult.handled;
   }
 
-  Future<void> _save() async {
+  Future<void> _save() => _update(
+    (profiles) => profiles.save(_draft.copyWith(name: _name.text.trim())),
+  );
+
+  Future<void> _delete() =>
+      _update((profiles) => profiles.delete(widget.profile.id));
+
+  Future<void> _update(Future<void> Function(KeyProfiles) operation) async {
+    if (_saving) return;
     final s = context.s;
     final profiles = context.read<KeyProfiles>();
-    final navigator = Navigator.of(context);
-    final profile = _draft.copyWith(name: _name.text.trim());
+    final route = ModalRoute.of<void>(context);
+    setState(() {
+      _saving = true;
+      _capturing = null;
+      _error = null;
+    });
     try {
-      await profiles.save(profile);
+      await operation(profiles);
+      closeOwnedRoute(route);
     } on KeyProfileException catch (e) {
+      if (!mounted) return;
       setState(
         () => _error = switch (e.error) {
           KeyProfileError.conflict => s.keysConflictSave(keyLabels(e.keys)),
@@ -213,16 +236,11 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
           KeyProfileError.missing => s.keysMissing,
         },
       );
-      return;
+    } on Object {
+      if (mounted) setState(() => _error = s.errorUnknown);
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    navigator.pop();
-  }
-
-  Future<void> _delete() async {
-    final profiles = context.read<KeyProfiles>();
-    final navigator = Navigator.of(context);
-    await profiles.delete(widget.profile.id);
-    navigator.pop();
   }
 
   @override
@@ -241,7 +259,7 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
             IconButton(
               tooltip: s.actionDelete,
               icon: const Icon(Icons.delete_outline),
-              onPressed: _delete,
+              onPressed: _saving ? null : _delete,
             ),
         ],
       ),
@@ -257,6 +275,7 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                 TextField(
                   key: const Key('keys-name'),
                   controller: _name,
+                  enabled: !_saving,
                   decoration: InputDecoration(
                     label: FieldLabel(s.keysName),
                     border: const OutlineInputBorder(),
@@ -276,7 +295,7 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                           : keyLabels(_keysOf(a)),
                     ),
                     trailing: TextButton(
-                      onPressed: () => _startCapture(a),
+                      onPressed: _saving ? null : () => _startCapture(a),
                       child: Text(s.keysSet),
                     ),
                   ),
@@ -291,7 +310,11 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(s.keysSwapPaddles),
                   value: _draft.swapPaddles,
-                  onChanged: (v) => setState(() => _draft = _draft.copyWith(swapPaddles: v)),
+                  onChanged: _saving
+                      ? null
+                      : (v) => setState(
+                          () => _draft = _draft.copyWith(swapPaddles: v),
+                        ),
                 ),
                 Text(s.keysKeyerMode, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
@@ -307,7 +330,11 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                           KeyerMode.iambicB => s.keysIambicB,
                         }),
                         selected: _draft.keyerMode == m,
-                        onSelected: (_) => setState(() => _draft = _draft.copyWith(keyerMode: m)),
+                        onSelected: _saving
+                            ? null
+                            : (_) => setState(
+                                () => _draft = _draft.copyWith(keyerMode: m),
+                              ),
                       ),
                   ],
                 ),
@@ -317,7 +344,11 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                   title: Text(s.keysAdapterKeyer),
                   subtitle: Text(s.keysAdapterKeyerHint),
                   value: _draft.adapterKeyer,
-                  onChanged: (v) => setState(() => _draft = _draft.copyWith(adapterKeyer: v)),
+                  onChanged: _saving
+                      ? null
+                      : (v) => setState(
+                          () => _draft = _draft.copyWith(adapterKeyer: v),
+                        ),
                 ),
                 SwitchListTile(
                   key: const Key('keys-sidetone'),
@@ -325,14 +356,18 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                   title: Text(s.keysAppSidetone),
                   subtitle: Text(s.keysAppSidetoneHint),
                   value: _draft.appSidetone,
-                  onChanged: (v) => setState(() => _draft = _draft.copyWith(appSidetone: v)),
+                  onChanged: _saving
+                      ? null
+                      : (v) => setState(
+                          () => _draft = _draft.copyWith(appSidetone: v),
+                        ),
                 ),
                 const SizedBox(height: 8),
                 KeyTestArea(profile: _draft, sink: widget.testSink),
                 const SizedBox(height: 16),
                 FilledButton(
                   key: const Key('keys-save'),
-                  onPressed: _save,
+                  onPressed: _saving ? null : _save,
                   child: Text(s.actionSave),
                 ),
               ],

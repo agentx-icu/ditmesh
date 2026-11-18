@@ -204,8 +204,7 @@ class _LibrarySheetState extends State<_LibrarySheet> {
     setState(() => _error = null);
     try {
       final stillUsed = await widget.training.deleteAudioMaterial(m.id);
-      // Keep the open recording for other selections. The next workbench
-      // prunes it if nothing refers to it.
+      // Keep the open recording available for further selections.
       final open = m.file == widget.controller.file;
       if (!stillUsed && !open && m.file != RecordingLibrary.workingFile) {
         await widget.controller.library.delete(m.file);
@@ -254,10 +253,13 @@ class _LibrarySheetState extends State<_LibrarySheet> {
                         minTileHeight: 56,
                         title: Text(m.title),
                         subtitle: Text(
-                          present
-                              ? '${formatClock(m.start)} – ${formatClock(m.end)}'
-                                    '${m.note.isEmpty ? '' : '\n${m.note}'}'
-                              : s.workbenchMissing,
+                          [
+                            if (present)
+                              '${formatClock(m.start)} – ${formatClock(m.end)}'
+                            else
+                              s.workbenchMissing,
+                            if (m.note.isNotEmpty) m.note,
+                          ].join('\n'),
                         ),
                         onTap: present ? () => unawaited(_open(m)) : null,
                         trailing: Row(

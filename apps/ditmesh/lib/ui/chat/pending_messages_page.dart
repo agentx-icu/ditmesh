@@ -8,6 +8,7 @@ import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
 import '../responsive.dart';
 import 'conversation_menu.dart';
+import 'local_message_sends.dart';
 import 'message_status_icon.dart';
 
 /// Reads the whole persisted history, including queue rows older than the
@@ -26,6 +27,7 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
   StreamSubscription<ChatMessage>? _events;
   StreamSubscription<List<Conversation>>? _conversations;
   StreamSubscription<bool>? _session;
+  StreamSubscription<String>? _historyClears;
   MessageSearchCancel? _cancel;
   int _generation = 0;
   bool _loading = true;
@@ -44,6 +46,12 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
     super.initState();
     _visible = widget.service.conversations.map((c) => c.id).toSet();
     _events = widget.service.messageEvents.listen(_onEvent);
+    _historyClears = LocalMessageSends.forService(widget.service).historyClears
+        .listen((id) {
+          if (!mounted || !widget.service.hasSession) return;
+          _rows.removeWhere((_, m) => m.conversationId == id);
+          unawaited(_load());
+        });
     _conversations = widget.service.conversationChanges.listen((conversations) {
       if (!mounted) return;
       final visible = conversations.map((c) => c.id).toSet();
@@ -163,6 +171,7 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
     unawaited(_events?.cancel());
     unawaited(_conversations?.cancel());
     unawaited(_session?.cancel());
+    unawaited(_historyClears?.cancel());
     super.dispose();
   }
 

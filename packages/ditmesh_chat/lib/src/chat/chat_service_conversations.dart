@@ -285,18 +285,84 @@ class _ConversationsPart {
     }
   }
 
-  /// Clears the history and hides the conversation until the next message
-  /// (a friend or group stays; deleting the relationship is a separate call).
-  /// The note to self is refused ([refuseSelf]) before anything changes.
-  Future<void> delete(FfiChatService svc, String conversationId) async {
-    refuseSelf(conversationId);
-    final peer = ConversationIds.peerOf(conversationId);
-    if (ConversationIds.isGroup(conversationId)) {
-      await svc.clearGroupHistory(peer);
-    } else {
-      await svc.clearC2CHistory(peer);
+  final _clearing = <(FfiChatService, String)>{};
+  final _sending = <(FfiChatService, String), int>{};
+
+  /// A new send or retry must not create a queue entry while its history
+  /// row is being deleted. Send intents still start synchronously.
+  Future<T> trackSend<T>(
+    FfiChatService svc,
+    String conversationId,
+    Future<T> Function() send,
+  ) async {
+    final key = (svc, PendingMessageStatus.queueKeyOf(conversationId));
+    if (_clearing.contains(key)) throw _sendPending;
+    _sending.update(key, (count) => count + 1, ifAbsent: () => 1);
+    try {
+      return await send();
+    } finally {
+      final remaining = _sending[key]! - 1;
+      if (remaining == 0) {
+        _sending.remove(key);
+      } else {
+        _sending[key] = remaining;
+      }
     }
-    _owner._ensureCurrent(svc);
+  }
+
+  static const _sendPending = ChatException(
+    'conversation_send_pending',
+    'Resolve queued or in-progress sends before clearing history',
+  );
+
+  /// Resolve queued sends before clearing their history rows. Those rows
+  /// are how users can find and cancel the durable sends.
+  Future<void> clear(
+    FfiChatService svc,
+    String conversationId, {
+    bool hide = false,
+  }) async {
+    final key = (svc, PendingMessageStatus.queueKeyOf(conversationId));
+    final outbox = PendingMessageStatus(svc.offlineMessageQueuePersistence);
+    if (_sending.containsKey(key) ||
+        outbox.hasDispatchable(conversationId) ||
+        !_clearing.add(key)) {
+      throw _sendPending;
+    }
+    try {
+      final peer = ConversationIds.peerOf(conversationId);
+      if (ConversationIds.isGroup(conversationId)) {
+        await svc.clearGroupHistory(peer, strict: true);
+      } else {
+        await svc.clearC2CHistory(peer, strict: true);
+      }
+      _owner._ensureCurrent(svc);
+      try {
+        if (hide) await _hideAfterClear(svc, conversationId);
+      } on Object catch (error, stack) {
+        _owner._ensureCurrent(svc);
+        _owner._logger.error(
+          '[Chat] Could not hide cleared conversation',
+          error,
+          stack,
+        );
+        throw const ChatException(
+          'conversation_hide_failed',
+          'Local history was cleared, but the conversation could not be hidden',
+        );
+      } finally {
+        if (_owner._isCurrent(svc)) rebuild(svc);
+      }
+    } finally {
+      _clearing.remove(key);
+    }
+  }
+
+  Future<void> _hideAfterClear(
+    FfiChatService svc,
+    String conversationId,
+  ) async {
+    final peer = ConversationIds.peerOf(conversationId);
     await _owner._meta.setPinned(conversationId, false);
     _owner._ensureCurrent(svc);
     await _owner._meta.setDraft(conversationId, '');
@@ -309,7 +375,6 @@ class _ConversationsPart {
     if (_lastMessage(svc, peer, _owner._blockingPart.shows) != null) {
       revealOnMessage(svc, conversationId);
     }
-    rebuild(svc);
   }
 
   Future<void> close() => conversations.close();

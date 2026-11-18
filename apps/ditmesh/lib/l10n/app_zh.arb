@@ -673,6 +673,8 @@
   "appearanceLight": "浅色",
   "appearanceDark": "深色",
   "appearanceSubtitle": "五种风格，支持浅色与深色",
+  "chatHistoryConversationHideFailed": "本机历史已清空，但无法隐藏该会话。",
+  "chatHistorySendPending": "请等待当前操作完成，或取消待发送的消息，然后重试。",
   "chatClearHistoryBody": "删除当前会话在本机保存的历史记录？其他设备上的副本不受影响。此操作无法撤销。",
   "chatLoadEarlier": "加载更早消息",
   "chatHistoryLoadFailed": "更早消息加载失败，点击重试。",

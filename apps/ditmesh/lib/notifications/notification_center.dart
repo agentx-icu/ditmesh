@@ -323,20 +323,19 @@ class NotificationCenter {
     if (recent.length > NotificationComposer.maxInboxLines) {
       recent.removeRange(0, recent.length - NotificationComposer.maxInboxLines);
     }
-    final List<String> lines = [
-      for (final ChatMessage m in recent)
-        _composer.inboxLine(m, isGroup: isGroup),
-    ];
     final int generation = _ledger.posted(id, message);
     unawaited(
       _post(
-        _composer.message(
+        () => _composer.message(
           message: message,
           title: title,
           isGroup: isGroup,
-          lines: lines,
+          lines: [
+            for (final m in recent) _composer.inboxLine(m, isGroup: isGroup),
+          ],
         ),
-        stillWanted: () => _ledger.isCurrent(id, generation),
+        stillWanted: () =>
+            !_prefs.isMuted(id) && _ledger.isCurrent(id, generation),
       ),
     );
   }
@@ -353,7 +352,7 @@ class NotificationCenter {
         final String key = request.publicKey;
         unawaited(
           _post(
-            _composer.friendRequest(request),
+            () => _composer.friendRequest(request),
             stillWanted: () => _knownFriendRequests.contains(key),
           ),
         );
@@ -377,7 +376,7 @@ class NotificationCenter {
         final String inviteId = invite.inviteId;
         unawaited(
           _post(
-            _composer.groupInvite(
+            () => _composer.groupInvite(
               invite,
               fromName: _friendName(invite.fromPublicKey),
             ),
@@ -437,21 +436,21 @@ class NotificationCenter {
 
   // ---- Posting -----------------------------------------------------------------
 
-  /// Posts [request] when the permission allows it. Never prompts: the
+  /// Checks permission before composing from the current settings. The
   /// permission is asked in the foreground (see [_askPermissionIfForeground]);
   /// a grant from an earlier run or from Settings is picked up silently.
   /// [stillWanted] is re-checked after that await so a banner the user made
   /// moot meanwhile (opened, read, answered) is not shown stale.
-  Future<void> _post(
-    NotificationRequest request, {
+  Future<bool> _post(
+    NotificationRequest Function() compose, {
     required bool Function() stillWanted,
   }) async {
-    if (!_ready || _disposed) return;
+    if (!_ready || _disposed) return false;
     final String? account = _account;
     if (_platform.needsRuntimePermission &&
         !_permissionGranted &&
         !await _checkPermission()) {
-      return;
+      return false;
     }
     // Let the event's other listeners (the open conversation claiming or
     // reading it) run first, also when no permission check was awaited: an
@@ -459,11 +458,15 @@ class NotificationCenter {
     await Future<void>.microtask(() {});
     // A post for an identity that was switched away meanwhile is stale
     // whatever stillWanted says (the new one may reuse a key or invite id).
-    if (_disposed || _account != account || !stillWanted()) return;
+    if (_disposed || _account != account || !_prefs.enabled || !stillWanted()) {
+      return false;
+    }
     try {
-      await _notifications.show(request);
+      await _notifications.show(compose());
+      return true;
     } catch (error, stack) {
       _report('show', error, stack);
+      return false;
     }
   }
 

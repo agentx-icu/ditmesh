@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/network/bootstrap_nodes_page.dart';
 import 'package:ditmesh/ui/network/lan_bootstrap_panel.dart';
@@ -30,6 +32,7 @@ class _Network extends FakeNetworkBootstrapService {
   Object? loadError;
   Object? probeError;
   Object? lanError;
+  Completer<void>? waitForSelection;
   int loads = 0;
   @override
   Future<BootstrapCatalogue> loadNodes() async {
@@ -44,6 +47,15 @@ class _Network extends FakeNetworkBootstrapService {
     final e = probeError;
     if (e != null) throw e;
     return super.probe(node);
+  }
+
+  @override
+  Future<void> selectNode(
+    BootstrapNode node, {
+    bool requireProbe = false,
+  }) async {
+    await waitForSelection?.future;
+    await super.selectNode(node, requireProbe: requireProbe);
   }
 
   @override
@@ -222,6 +234,37 @@ void main() {
           .onPressed,
       isNotNull,
     );
+  });
+
+  testWidgets('a pending node switch closes only its picker', (tester) async {
+    final selection = Completer<void>();
+    final service = await _pumpNodes(
+      tester,
+      configure: (n) => n.waitForSelection = selection,
+    );
+    await _tapKey(tester, 'bootstrap-node-select-${_online.id}');
+    final confirm = find.byKey(const ValueKey('bootstrap-switch-confirm'));
+    await tester.tap(confirm);
+    // Wait for the dialog transition while the node row shows progress.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    final page = find.byType(BootstrapNodesPage);
+    final navigator = Navigator.of(tester.element(page));
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Next page')),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    selection.complete();
+    await tester.pumpAndSettle();
+
+    expect(service.selected, [_online]);
+    expect(find.text('Next page'), findsOneWidget);
+    expect(find.byType(BootstrapNodesPage, skipOffstage: false), findsNothing);
   });
 
   group('LanBootstrapPanel', () {

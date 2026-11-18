@@ -12,6 +12,7 @@ import '../chat/conversation_list.dart';
 import '../chat/conversation_route.dart';
 import '../chat/conversation_screen.dart';
 import '../chat/conversation_target.dart';
+import '../chat/message_input.dart';
 import '../chat/restored_pending.dart';
 import '../chat/first_chat_guide.dart';
 import '../chat/pending_messages_page.dart';
@@ -42,6 +43,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   ConversationTarget? _selected;
+  final Set<String> _deleting = {};
   StreamSubscription<ConversationTarget>? _shellConversations;
   StreamSubscription<void>? _shellContacts;
   StreamSubscription<void>? _shellSearch;
@@ -82,6 +84,24 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   final DetailPaneKey _detailKey = DetailPaneKey();
+  // A confirmation opened by the list can outlive either layout.
+  final GlobalKey _listKey = GlobalKey();
+
+  void _closeDetail(String id) {
+    if (_selected?.id != id) return;
+    _detailKey.rememberSearchAnchor(null);
+    setState(() => _selected = null);
+  }
+
+  Future<void> _deleteConversation(ChatService service, String id) async {
+    setState(() => _deleting.add(id));
+    try {
+      await deleteConversationWithDraft(service, id);
+      if (mounted) _closeDetail(id);
+    } finally {
+      if (mounted) setState(() => _deleting.remove(id));
+    }
+  }
 
   void _open(BuildContext context, ConversationTarget target) {
     if (isMasterDetail(context)) {
@@ -163,18 +183,21 @@ class _ChatPageState extends State<ChatPage> {
     }
     final bool twoPane = isMasterDetail(context);
     // Window shrank below the breakpoint (iPad rotated to portrait): the
-    // pane is gone, the conversation continues as a route - or, while a
-    // dialog covers the page, stays mounted offstage until it can.
+    // conversation continues as a route after any dialog or delete.
     final bool parked =
         !twoPane &&
         _selected != null &&
-        !reopenCollapsedDetail(
-          this,
-          selection: () => _selected,
-          forget: () => setState(() => _selected = null),
-        );
+        (_deleting.contains(_selected?.id) ||
+            !reopenCollapsedDetail(
+              this,
+              detail: _detailKey,
+              selection: () =>
+                  _deleting.contains(_selected?.id) ? null : _selected,
+              forget: () => setState(() => _selected = null),
+            ));
 
     final Widget list = Scaffold(
+      key: _listKey,
       appBar: AppBar(
         title: AppBarTitle(ChatPage.title(s)),
         actions: [
@@ -229,6 +252,7 @@ class _ChatPageState extends State<ChatPage> {
                 emptyText: ChatPage.description(s),
                 onOpen: (c) =>
                     _open(context, ConversationTarget.fromConversation(c)),
+                onDelete: (id) => _deleteConversation(service, id),
               ),
             ),
           ],
@@ -243,7 +267,8 @@ class _ChatPageState extends State<ChatPage> {
             key: _detailKey.of(selected.id),
             target: selected,
             embedded: true,
-            onClosed: () => setState(() => _selected = null),
+            onClosed: () => _closeDetail(selected.id),
+            onSearchAnchor: _detailKey.rememberSearchAnchor,
           );
     if (!twoPane) {
       return singlePaneLayout(list: list, parkedDetail: parked ? detail : null);

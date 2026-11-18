@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -17,6 +18,25 @@ KeyProfile _vail() => KeyProfile(
   dit: {LogicalKeyboardKey.bracketLeft},
   dah: {LogicalKeyboardKey.bracketRight},
 );
+
+class _ScriptedKeyStore implements KeyValueStore {
+  final _store = InMemoryKeyValueStore();
+  Completer<void>? nextWrite;
+
+  @override
+  String? getString(String key) => _store.getString(key);
+
+  @override
+  Future<void> setString(String key, String value) async {
+    final pending = nextWrite;
+    nextWrite = null;
+    await pending?.future;
+    await _store.setString(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) => _store.remove(key);
+}
 
 void main() {
   group('profile', () {
@@ -93,6 +113,30 @@ void main() {
       expect(s.saved, isEmpty);
       expect(kv.getString(KeyProfiles.storageKey), isNull);
     });
+
+    test(
+      'a failed profile write cannot leak into a queued selection or save',
+      () async {
+        final store = _ScriptedKeyStore();
+        final profiles = KeyProfiles(store);
+        final failedWrite = store.nextWrite = Completer<void>();
+        final first = expectLater(profiles.save(_vail()), throwsStateError);
+        final next = _vail().copyWith(id: 'other');
+        final subsequent = [
+          profiles.select('vail'),
+          profiles.save(next),
+          profiles.useDefaults(),
+        ];
+        failedWrite.completeError(StateError('disk full'));
+        await first;
+        await Future.wait(subsequent);
+        expect(profiles.saved, [next]);
+        expect(profiles.active, KeyProfile.defaults);
+        final reloaded = KeyProfiles(store);
+        expect(reloaded.saved, [next]);
+        expect(reloaded.active, KeyProfile.defaults);
+      },
+    );
 
     test('a wrong-typed field never takes the app down', () {
       final odd = {..._vail().toJson(), 'keyerMode': 1, 'swapPaddles': 'yes'};

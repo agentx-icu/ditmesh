@@ -1,0 +1,24 @@
+diff --git a/lib/service/ffi_chat_service.dart b/lib/service/ffi_chat_service.dart
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -11654,9 +11654,17 @@
+               } catch (_) {}
+               if (exactFailed) {
+                 _reportFailureCleared(msg.msgID);
+-                try {
+-                  _messages.add(history[i]);
+-                } catch (_) {}
++              }
++              // Saving yielded: the row may have moved or the whole
++              // conversation may have been cleared in the meantime.
++              if (identical(history,
++                  _messageHistoryPersistence.getCachedList(groupId))) {
++                final current = _tombstoneRowIndex(history, item);
++                if (current >= 0) {
++                  try {
++                    _messages.add(history[current]);
++                  } catch (_) {}
++                }
+               }
+               break;
+             }

@@ -8,6 +8,8 @@ import 'package:path/path.dart' as p;
 import '../training/guest_profile.dart';
 import 'startup_connection.dart';
 
+part 'startup_restore.dart';
+
 /// Where the app is in its identity lifecycle. The [StartupGate] renders one
 /// screen per phase; everything behind [ready] is the normal shell.
 enum StartupPhase {
@@ -75,8 +77,14 @@ class StartupController extends ChangeNotifier {
     GuestHooks? guest,
     NetworkBootstrapService? networkBootstrap,
     DateTime Function()? now,
+    Future<void> Function(Identity owner, String publicKey)?
+    clearRestoredIdentityPreferences,
+    Future<bool> Function(Identity owner, Uint8List document)?
+    applyBackupPreferences,
     this.chatEnabled = true,
   }) : _guest = guest,
+       _clearRestoredIdentityPreferences = clearRestoredIdentityPreferences,
+       _applyBackupPreferences = applyBackupPreferences,
        _now = now ?? DateTime.now {
     _connection = StartupConnection(
       identity: _identity,
@@ -89,6 +97,10 @@ class StartupController extends ChangeNotifier {
 
   final IdentityService _identity;
   final GuestHooks? _guest;
+  final Future<void> Function(Identity owner, String publicKey)?
+  _clearRestoredIdentityPreferences;
+  final Future<bool> Function(Identity owner, Uint8List document)?
+  _applyBackupPreferences;
   late final StartupConnection _connection;
 
   /// False in the offline build (`AppFeatures.chat`): no identity is ever
@@ -169,6 +181,7 @@ class StartupController extends ChangeNotifier {
         case IdentityState.ready:
           _set(StartupPhase.opening);
           await _identity.open();
+          await _applyRestoredPreferences(_identity.current);
           // Leaving guest mode into a plain identity: offer the guest
           // progress like restore / unlock do, never merge it.
           final fromGuest = _cameFromGuest;
@@ -341,6 +354,7 @@ class StartupController extends ChangeNotifier {
   /// so the unlock screen can render the error inline.
   Future<void> unlock(String password) async {
     await _identity.unlock(password);
+    await _applyRestoredPreferences(_identity.current);
     final fromGuest = _cameFromGuest;
     _cameFromGuest = false;
     guestMode.value = false;
@@ -385,47 +399,18 @@ class StartupController extends ChangeNotifier {
 
   /// Restores an identity from backup bytes. The user evidently has a backup,
   /// so the wizard is skipped. Throws `wrong_password` / `invalid_backup`.
-  Future<Identity> restoreFromBackup(
-    Uint8List bytes, {
-    String? password,
-  }) async {
-    final identity = await _identity.importBackup(bytes, password: password);
-    final fromGuest = _cameFromGuest;
-    _cameFromGuest = false;
-    guestMode.value = false;
-    // Restored progress is used; guest scores are never silently merged.
-    _guestChoicePending = fromGuest && await _guestHasProgress();
-    _becomeReady();
-    return identity;
-  }
+  Future<Identity> restoreFromBackup(Uint8List bytes, {String? password}) =>
+      _restoreFromBackup(bytes, password);
 
   /// Restores a complete encrypted backup (F10). Same gate behaviour as
   /// [restoreFromBackup]; the report lists what came back and what did not.
   /// Throws `wrong_passphrase`, `wrong_password`, `invalid_backup`, ...
-  Future<RestoreReport> restoreEncryptedBackup(
+  Future<({RestoreReport report, bool preferencesFailed})>
+  restoreEncryptedBackup(
     Uint8List bytes,
     String passphrase, {
     String? identityPassword,
-  }) async {
-    final backups = switch (_identity) {
-      final EncryptedBackupService b => b,
-      _ => throw const ChatException(
-        'unsupported_backup_version',
-        'This backend cannot read encrypted backups',
-      ),
-    };
-    final report = await backups.restoreEncryptedBackup(
-      bytes,
-      passphrase,
-      identityPassword: identityPassword,
-    );
-    final fromGuest = _cameFromGuest;
-    _cameFromGuest = false;
-    guestMode.value = false;
-    _guestChoicePending = fromGuest && await _guestHasProgress();
-    _becomeReady();
-    return report;
-  }
+  }) => _restoreEncryptedBackup(bytes, passphrase, identityPassword);
 
   /// Refreshes the running session's bootstrap, e.g. from the connection chip.
   /// `connect()` alone is idempotent once the native Tox engine has started.
@@ -457,6 +442,17 @@ class StartupController extends ChangeNotifier {
     // the restore may already have made us ready. Act on what is current.
     if (identity != null || _identity.current != null) return;
     if (_phase == StartupPhase.ready || _phase == StartupPhase.backupRequired) {
+      if (_identity case final IdentityRestoreRecovery recovery
+          when recovery.identityRecoveryPending) {
+        _set(
+          StartupPhase.failed,
+          error: const ChatException(
+            'identity_recovery_pending',
+            'The interrupted identity restore is still being recovered',
+          ),
+        );
+        return;
+      }
       _set(StartupPhase.onboarding);
     }
   }

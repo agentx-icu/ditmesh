@@ -2141,6 +2141,12 @@ class SJa extends S {
   String get appearanceSubtitle => '5 つのスタイルにライト・ダークモードを用意';
 
   @override
+  String get chatHistoryConversationHideFailed => '端末の履歴は消去されましたが、会話を非表示にできませんでした。';
+
+  @override
+  String get chatHistorySendPending => '処理が終わるまで待つか、送信待ちのメッセージを取り消してから、もう一度お試しください。';
+
+  @override
   String get chatClearHistoryBody => 'このデバイスに保存された会話履歴を削除しますか？他のデバイスのコピーには影響しません。この操作は取り消せません。';
 
   @override

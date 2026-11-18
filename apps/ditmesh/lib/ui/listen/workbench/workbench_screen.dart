@@ -80,6 +80,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
   late final ClipPlayer _player =
       widget.player ?? _playerFactory?.create() ?? SoloudClipPlayer();
   bool _unavailable = false;
+  bool _visible = true;
   bool _picking = false;
   bool _saving = false;
   bool get _mediaBusy => _picking || _saving || (_c?.busy ?? false);
@@ -147,21 +148,11 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
       }
       return;
     }
-    bool isStale() => !mounted || !identical(_c, controller);
-    try {
-      // Keep saved-material actions disabled until pruning finishes.
-      final referenced = {
-        for (final m in await training.loadAudioMaterials()) m.file,
-      };
-      if (isStale()) return;
-      await controller.library.pruneUnreferenced(
-        referenced,
-        isCancelled: isStale,
-      );
-    } on Object {
-      // Housekeeping only.
+    // A recovered or partially readable index can omit existing recordings.
+    // Opening the workbench must leave their WAV files available to recover.
+    if (mounted && identical(_c, controller)) {
+      setState(() => _training = training);
     }
-    if (!isStale()) setState(() => _training = training);
   }
 
   Future<TrainingController> _hostController() {
@@ -172,6 +163,17 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
 
   void _changed() {
     if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _visible = TickerMode.valuesOf(context).enabled;
+    if (!_visible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_visible) unawaited(_c?.stopPlayback());
+      });
+    }
   }
 
   @override
@@ -415,13 +417,13 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
             FilledButton.tonalIcon(
               key: const ValueKey('workbench-play'),
               onPressed: () => unawaited(c.togglePlay()),
-              icon: Icon(c.playing ? Icons.stop : Icons.play_arrow),
-              label: Text(c.playing ? s.workbenchStop : s.workbenchPlay),
+              icon: Icon(c.playbackActive ? Icons.stop : Icons.play_arrow),
+              label: Text(c.playbackActive ? s.workbenchStop : s.workbenchPlay),
             ),
             FilterChip(
               label: Text(s.workbenchLoop),
               selected: c.loop,
-              onSelected: c.setLoop,
+              onSelected: c.playbackActive ? null : c.setLoop,
             ),
             OutlinedButton.icon(
               key: const ValueKey('workbench-save'),

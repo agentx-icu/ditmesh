@@ -7,7 +7,7 @@ import '../../i18n/l10n_extension.dart';
 import '../../startup/startup_controller.dart';
 import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
-import 'account_routes.dart';
+import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
 import 'delete_identity_dialog.dart';
 
@@ -66,7 +66,7 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
         password: _wantsPassword ? _password.text : null,
       );
       // The startup gate now renders the backup wizard.
-      closeAccountRoute(route);
+      closeOwnedRoute(route);
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {

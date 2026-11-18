@@ -11,21 +11,24 @@ import 'conversation_target.dart';
 const String kConversationRouteName = 'conversation';
 
 /// The route every pushed [ConversationScreen] uses.
-Route<void> conversationRoute(ConversationTarget target) =>
-    MaterialPageRoute<void>(
-      settings: RouteSettings(
-        name: kConversationRouteName,
-        arguments: target.id,
-      ),
-      builder: (_) => ConversationScreen(target: target),
-    );
+Route<void> conversationRoute(
+  ConversationTarget target, {
+  String? initialMessageId,
+}) => MaterialPageRoute<void>(
+  settings: RouteSettings(name: kConversationRouteName, arguments: target.id),
+  builder: (_) =>
+      ConversationScreen(target: target, initialMessageId: initialMessageId),
+);
 
 /// Opens [target] full-screen (the single-pane layout of the chat and groups
 /// pages).
 Future<void> pushConversation(
   BuildContext context,
-  ConversationTarget target,
-) => Navigator.of(context).push(conversationRoute(target));
+  ConversationTarget target, {
+  String? initialMessageId,
+}) => Navigator.of(
+  context,
+).push(conversationRoute(target, initialMessageId: initialMessageId));
 
 /// The route on top of [navigator] (without changing anything).
 Route<dynamic>? topRoute(NavigatorState navigator) {
@@ -78,6 +81,7 @@ void openConversationRoute(
 /// writer in `message_input.dart` (pending text wins over the stored draft).
 bool reopenCollapsedDetail(
   State page, {
+  required DetailPaneKey detail,
   required ConversationTarget? Function() selection,
   required VoidCallback forget,
 }) {
@@ -90,8 +94,11 @@ bool reopenCollapsedDetail(
     final ConversationTarget? target = selection();
     // Covered after all (a dialog opened this frame): the next build retries.
     if (target == null || !onScreen()) return;
+    final String? messageId = detail.takeSearchAnchor(target.id);
     forget();
-    unawaited(pushConversation(page.context, target));
+    unawaited(
+      pushConversation(page.context, target, initialMessageId: messageId),
+    );
   });
   return true;
 }
@@ -114,13 +121,24 @@ Widget singlePaneLayout({required Widget list, Widget? parkedDetail}) => Stack(
 /// across a layout change, and a different selection gets a fresh screen.
 final class DetailPaneKey {
   String? _id;
+  String? _searchAnchor;
   GlobalKey _key = GlobalKey();
 
   GlobalKey of(String id) {
     if (id != _id) {
       _id = id;
+      _searchAnchor = null;
       _key = GlobalKey(debugLabel: 'detail_$id');
     }
     return _key;
+  }
+
+  void rememberSearchAnchor(String? messageId) => _searchAnchor = messageId;
+
+  String? takeSearchAnchor(String id) {
+    if (id != _id) return null;
+    final anchor = _searchAnchor;
+    _searchAnchor = null;
+    return anchor;
   }
 }

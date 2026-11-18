@@ -36,6 +36,8 @@ class PasswordVerifier {
   static String _key(String toxId) =>
       'ditmesh.password.${toxId.trim().toUpperCase()}';
 
+  static bool sharesKey(String left, String right) => _key(left) == _key(right);
+
   Future<bool> hasPassword(String toxId) async {
     final v = await _store.read(_key(toxId));
     return v != null && v.isNotEmpty;

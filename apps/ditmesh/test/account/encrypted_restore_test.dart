@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
+import 'package:ditmesh/notifications/notification_prefs.dart';
 import 'package:ditmesh/ui/account/backup_file_gateway.dart';
 import 'package:ditmesh/ui/account/backup_wizard_page.dart';
 import 'package:ditmesh/ui/account/restore_backup_page.dart';
@@ -14,6 +15,7 @@ import 'package:ditmesh/ui/shell/app_shell.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh_chat_api/testing.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 
 import 'test_app.dart';
 
@@ -65,6 +67,7 @@ void main() {
             jsonEncode({
               'version': ?preferencesVersion,
               'chat.playback': {'wpm': 23},
+              'notifications': {'muted': ['c2c_${'A' * 64}']},
             }),
           ),
         ),
@@ -150,6 +153,26 @@ void main() {
     expect(identity.current?.toxId, testIdentity().toxId);
     expect(find.byType(RestoreReportPage), findsOneWidget);
     expect(find.text(en.restoreXReportPrefsFailed), findsOneWidget);
+  });
+
+  testWidgets('restoring the locked same identity applies its saved mutes', (
+    tester,
+  ) async {
+    identity = seededIdentityService(password: 'old');
+    files.pickResult = await backupOf();
+    await pumpApp(tester, identity: identity, backupFiles: files);
+    await tapVisible(tester, find.text(en.accountUnlockRestoreInstead));
+    await tapVisible(tester, find.text(en.accountRestoreChooseFile));
+    await tester.enterText(_field('restore-x-passphrase'), 'correct horse');
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-open')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-button')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
+
+    final report = find.byType(RestoreReportPage);
+    expect(report, findsOneWidget);
+    expect(find.text(en.restoreXReportPrefsFailed), findsNothing);
+    final prefs = tester.element(report).read<NotificationPrefs>();
+    expect(prefs.mutedConversations, {'c2c_${'A' * 64}'});
   });
 
   test('restored unsent messages are listed and dismissed, never sent', () {

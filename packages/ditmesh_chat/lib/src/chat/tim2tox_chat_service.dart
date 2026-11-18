@@ -107,6 +107,7 @@ class Tim2ToxChatService
 
   late final _FriendsPart _friendsPart;
   late final _GroupsPart _groupsPart;
+  @override
   late final _ConversationsPart _conversationsPart;
   late final _BlockingPart _blockingPart;
 
@@ -311,7 +312,7 @@ class Tim2ToxChatService
   @override
   Future<void> deleteConversation(String conversationId) async {
     _conversationsPart.refuseSelf(conversationId);
-    await _conversationsPart.delete(_requireService(), conversationId);
+    await _conversationsPart.clear(_requireService(), conversationId, hide: true);
   }
 
   // ---- Messages -------------------------------------------------------------
@@ -372,17 +373,8 @@ class Tim2ToxChatService
   }) => _sendText(conversationId, text, recording: recording);
 
   @override
-  Future<void> clearHistory(String conversationId) async {
-    final svc = _requireService();
-    final peer = ConversationIds.peerOf(conversationId);
-    if (ConversationIds.isGroup(conversationId)) {
-      await svc.clearGroupHistory(peer);
-    } else {
-      await svc.clearC2CHistory(peer);
-    }
-    _ensureCurrent(svc);
-    _conversationsPart.rebuild(svc);
-  }
+  Future<void> clearHistory(String conversationId) async =>
+      _conversationsPart.clear(_requireService(), conversationId);
 
   // ---- Groups (delegated) --------------------------------------------------
 

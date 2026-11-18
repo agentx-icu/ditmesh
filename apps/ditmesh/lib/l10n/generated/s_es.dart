@@ -2148,6 +2148,12 @@ class SEs extends S {
   String get appearanceSubtitle => 'Cinco estilos con modos claro y oscuro';
 
   @override
+  String get chatHistoryConversationHideFailed => 'Se borró el historial local. No se pudo ocultar la conversación.';
+
+  @override
+  String get chatHistorySendPending => 'Espera a que termine la operación en curso o cancela los mensajes en cola. Luego inténtalo de nuevo.';
+
+  @override
   String get chatClearHistoryBody => '¿Eliminar el historial de esta conversación de este dispositivo? Las copias de otros dispositivos no se verán afectadas. No se puede deshacer.';
 
   @override
