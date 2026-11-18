@@ -12,6 +12,7 @@ class _ScannerPlatform extends MobileScannerPlatform {
   int starts = 0;
   int stops = 0;
   Completer<void>? holdStart;
+  bool permissionGranted = true;
   final _barcodes = StreamController<BarcodeCapture?>.broadcast();
 
   void emit(BarcodeCapture capture) => _barcodes.add(capture);
@@ -29,6 +30,11 @@ class _ScannerPlatform extends MobileScannerPlatform {
   Future<MobileScannerViewAttributes> start(StartOptions options) async {
     starts++;
     await holdStart?.future;
+    if (!permissionGranted) {
+      throw const MobileScannerException(
+        errorCode: MobileScannerErrorCode.permissionDenied,
+      );
+    }
     return const MobileScannerViewAttributes(
       cameraDirection: CameraFacing.back,
       currentTorchMode: TorchState.off,
@@ -200,7 +206,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('a covered scanner cannot pop a newer page', (tester) async {
+  testWidgets('a covered scanner releases and reacquires the camera', (
+    tester,
+  ) async {
     final original = MobileScannerPlatform.instance;
     final platform = _ScannerPlatform();
     MobileScannerPlatform.instance = platform;
@@ -229,6 +237,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(platform.stops, 1);
     final id = FakeIdentityService.toxIdForSeed(42);
     final capture = BarcodeCapture(
       barcodes: [Barcode(format: BarcodeFormat.qrCode, rawValue: id)],
@@ -239,9 +248,95 @@ void main() {
 
     nav.pop();
     await tester.pumpAndSettle();
+    expect(platform.starts, 2);
     platform.emit(capture);
     await tester.pumpAndSettle();
     expect(await scanned, id);
     expect(find.text('contacts'), findsOneWidget);
+  });
+
+  testWidgets('the current scanner takes over from a covered scanner', (
+    tester,
+  ) async {
+    final original = MobileScannerPlatform.instance;
+    final platform = _ScannerPlatform();
+    MobileScannerPlatform.instance = platform;
+    addTearDown(() => MobileScannerPlatform.instance = original);
+    addTearDown(platform.close);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final key = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: key,
+        localizationsDelegates: S.localizationsDelegates,
+        supportedLocales: S.supportedLocales,
+        home: const Scaffold(body: Text('contacts')),
+      ),
+    );
+    final nav = key.currentState!;
+    void open() {
+      unawaited(
+        nav.push(MaterialPageRoute<void>(builder: (_) => const QrScanPage())),
+      );
+    }
+
+    open();
+    await tester.pumpAndSettle();
+    open();
+    await tester.pumpAndSettle();
+    expect((platform.starts, platform.stops), (2, 1));
+    nav.pop();
+    await tester.pumpAndSettle();
+    expect((platform.starts, platform.stops), (3, 2));
+    nav.pop();
+    await tester.pumpAndSettle();
+    expect((platform.starts, platform.stops), (3, 3));
+  });
+
+  testWidgets('a denied scanner can retry after access changes', (
+    tester,
+  ) async {
+    final original = MobileScannerPlatform.instance;
+    final platform = _ScannerPlatform()..permissionGranted = false;
+    MobileScannerPlatform.instance = platform;
+    addTearDown(() => MobileScannerPlatform.instance = original);
+    addTearDown(platform.close);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final key = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: key,
+        locale: const Locale('en'),
+        localizationsDelegates: S.localizationsDelegates,
+        supportedLocales: S.supportedLocales,
+        home: const Scaffold(body: Text('contacts')),
+      ),
+    );
+    final scanned = key.currentState!.push(
+      MaterialPageRoute<String>(builder: (_) => const QrScanPage()),
+    );
+    await tester.pumpAndSettle();
+    final strings = lookupS(const Locale('en'));
+    expect(find.text(strings.chatScanQrPermissionDenied), findsOneWidget);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pumpAndSettle();
+    platform.permissionGranted = true;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(platform.starts, 1, reason: 'return cannot re-prompt automatically');
+    await tester.tap(find.widgetWithText(OutlinedButton, strings.actionRetry));
+    await tester.pumpAndSettle();
+    expect(platform.starts, 2);
+    expect(find.byType(QrScanErrorView), findsNothing);
+
+    final id = FakeIdentityService.toxIdForSeed(42);
+    platform.emit(
+      BarcodeCapture(
+        barcodes: [Barcode(format: BarcodeFormat.qrCode, rawValue: id)],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(await scanned, id);
   });
 }

@@ -1,0 +1,391 @@
+diff --git a/lib/utils/message_history_persistence.dart b/lib/utils/message_history_persistence.dart
+--- a/lib/utils/message_history_persistence.dart
++++ b/lib/utils/message_history_persistence.dart
+@@ -161,7 +161,11 @@
+   /// (and after an in-progress [clearAllHistories]). The slot is claimed
+   /// synchronously, before any await, so callers racing on the same tick
+   /// still serialize in call order.
+-  Future<T> _serialized<T>(String normalizedId, Future<T> Function() body) async {
++  Future<T> _serialized<T>(
++    String normalizedId,
++    Future<T> Function() body, {
++    void Function()? onFailure,
++  }) async {
+     final prev = _writeFences[normalizedId] ?? Future<void>.value();
+     final barrier = _clearAllBarrier;
+     final completer = Completer<void>();
+@@ -174,9 +178,14 @@
+       }
+       if (barrier != null) await barrier;
+       final primary = await _getHistoryFile(normalizedId);
++      await _recoverStrictClear(primary);
+       await requireSupportedHistorySchema(primary, _historyFormatVersion);
+       await requireSupportedHistorySchema(File('${primary.path}.bak'), _historyFormatVersion);
+       return await body();
++    } catch (_) {
++      // A rollback must run before the fence opens to later operations.
++      onFailure?.call();
++      rethrow;
+     } finally {
+       // The fence only SERIALIZES (the next operation ignores this one's
+       // outcome), so it always completes normally: an errored fence nobody
+@@ -2199,6 +2208,9 @@
+     final storageRoots = await _resolveStorageRoots();
+     // Overflow rows first: if this throws, the main file below is NOT
+     // rewritten, so the rows it still holds are not lost.
++    // Resolving roots yielded. A clear may have detached this generation
++    // and installed fresh pending overflow that belongs to the next save.
++    if (_isStale(normalizedId, token)) return;
+     await _drainPendingArchive(normalizedId, storageRoots);
+     final jsonList = messages.map((msg) {
+       final m = msg.toJson();
+@@ -2810,6 +2822,7 @@
+         return result;
+       }
+
++      await _recoverAllStrictClears(dir);
+       final entries = dir
+           .listSync()
+           .whereType<File>()
+@@ -3923,11 +3936,133 @@
+   /// [keepArchive] - keep rows older than the in-memory window. Only for the
+   /// "last in-memory row was deleted" case; clearing a conversation drops them.
+   Future<void> clearHistory(String conversationId,
+-      {bool keepArchive = false}) async {
++      {bool keepArchive = false, bool strict = false}) async {
+     // Normalize conversationId for comparison
+     final normalizedConversationId =
+         ConversationIdUtils.normalize(conversationId);
++
++    if (strict) {
++      return _clearHistoryStrict(
++          conversationId, normalizedConversationId, keepArchive: keepArchive);
++    }
++    _clearCachedHistory(conversationId, normalizedConversationId,
++        keepArchive: keepArchive);
++
++    // The delete runs under the conversation lock: a write already running
++    // (a debounced save whose timer fired, mid rename with a pre-clear
++    // snapshot) finishes first and is then deleted; everything queued after
++    // this clear runs after the delete. A later incoming message is a
++    // legitimate new conversation.
++    //
++    // H7: filenames are deterministic — `_getHistoryFile` derives them from
++    // `ConversationIdUtils.normalize` + `sanitizeForFilename`, so no
++    // directory scan is needed.
++    await _serialized(normalizedConversationId, () async {
++      if (keepArchive) {
++        // BEFORE the main file goes. Rows pushed out of the memory window are
++        // durable only once the archive holds them, and until then the MAIN
++        // FILE is the copy that still has them (a save that cannot append the
++        // archive aborts its own rewrite, precisely to keep that invariant).
++        // Draining afterwards and swallowing the failure deleted the last
++        // copy of those rows: nothing else drains `_pendingArchive` for a
++        // conversation with no cached list, and dispose only counts them.
++        // A failure now leaves the rows queued, the main file intact and the
++        // flush path ([flushPendingSaves]) owing the write — and propagates,
++        // so the caller does not report a delete it did not perform.
++        await _drainPendingArchive(
++            normalizedConversationId, await _resolveStorageRoots());
++      }
++      try {
++        final file = await _getHistoryFile(normalizedConversationId);
++        try {
++          if (await file.exists()) {
++            await file.delete();
++          }
++        } catch (_) {
++          // Best-effort; memory cache is already cleared above.
++        }
++        // Also drop any backup file we may have left around.
++        try {
++          final backup = await _getBackupFile(normalizedConversationId);
++          if (await backup.exists()) {
++            await backup.delete();
++          }
++        } catch (_) {}
++        if (!keepArchive) {
++          await _deleteArchive(normalizedConversationId);
++        }
++      } catch (e) {
++        // Log error but don't throw - clearing should continue
++        // The file may not exist or may be locked, but we've cleared memory cache
++      }
++    });
++  }
+
++  /// Detach the old cache at invocation so messages arriving during the
++  /// clear belong to a fresh generation. The snapshots are only needed if
++  /// the underlying file operation fails.
++  Future<void> _clearHistoryStrict(
++    String conversationId,
++    String id, {
++    required bool keepArchive,
++  }) {
++    if (_disposed) {
++      throw StateError('History store is closed');
++    }
++    final affected = <String>{
++      conversationId,
++      id,
++      ..._historyById.keys.where((key) => ConversationIdUtils.equals(key, id)),
++    };
++    final oldRows = <ChatMessage>[
++      for (final key in affected) ...?_historyById[key],
++    ];
++    final hadCache = affected.any(_historyById.containsKey);
++    final oldArchive = <ChatMessage>[
++      if (!keepArchive)
++        for (final key in <String>{id, conversationId}) ...?_pendingArchive[key],
++    ];
++    final oldDeleted = <String, int>{
++      for (final key in <String>{id, conversationId}) ...?_recentlyDeleted[key],
++    };
++    _clearCachedHistory(conversationId, id, keepArchive: keepArchive);
++    final token = _token(id);
++
++    return _serialized(id, () async {
++      if (_disposed || _isStale(id, token)) {
++        throw StateError('History owner changed before deletion');
++      }
++      if (keepArchive) {
++        await _drainPendingArchive(id, await _resolveStorageRoots());
++      }
++      await _stageStrictClear(await _getHistoryFile(id),
++          keepArchive: keepArchive);
++    }, onFailure: () {
++      if (_disposed || _isStale(id, token)) return;
++      final deleted = <String, int>{...oldDeleted, ...?_recentlyDeleted[id]};
++      final rows = _dedupeByIdentity([...oldRows, ...?_historyById[id]])
++        ..removeWhere((row) => identitiesOf(row).any(deleted.containsKey));
++      final overflow = rows.length > _maxMessagesInMemory
++          ? rows.length - _maxMessagesInMemory
++          : 0;
++      final archived = _dedupeByIdentity([
++        ...oldArchive,
++        ...?_pendingArchive[id],
++        ...rows.take(overflow),
++      ])..removeWhere((row) => identitiesOf(row).any(deleted.containsKey));
++
++      // A newer save might already be waiting with only the fresh window.
++      // Invalidate it before reinstalling and saving the complete history.
++      _clearCachedHistory(conversationId, id, keepArchive: false);
++      if (hadCache || rows.isNotEmpty) _historyById[id] = rows.sublist(overflow);
++      if (archived.isNotEmpty) _pendingArchive[id] = archived;
++      if (deleted.isNotEmpty) _recentlyDeleted[id] = deleted;
++      (_resaveCached(id) ?? _drainArchiveOnly(id))?.ignore();
++    });
++  }
++
++  void _clearCachedHistory(String conversationId,
++      String normalizedConversationId, {required bool keepArchive}) {
+     // Cancel any in-flight debounced saves for this conversation — otherwise
+     // a queued save could resurrect the in-memory list we are about to clear.
+     _appendDebounceTimers.remove(conversationId)?.cancel();
+@@ -3989,56 +4124,106 @@
+       _archiveCacheRows = null;
+     }
+
+-    // The delete runs under the conversation lock: a write already running
+-    // (a debounced save whose timer fired, mid rename with a pre-clear
+-    // snapshot) finishes first and is then deleted; everything queued after
+-    // this clear runs after the delete. A later incoming message is a
+-    // legitimate new conversation.
+-    //
+-    // H7: filenames are deterministic — `_getHistoryFile` derives them from
+-    // `ConversationIdUtils.normalize` + `sanitizeForFilename`, so no
+-    // directory scan is needed.
+-    await _serialized(normalizedConversationId, () async {
+-      if (keepArchive) {
+-        // BEFORE the main file goes. Rows pushed out of the memory window are
+-        // durable only once the archive holds them, and until then the MAIN
+-        // FILE is the copy that still has them (a save that cannot append the
+-        // archive aborts its own rewrite, precisely to keep that invariant).
+-        // Draining afterwards and swallowing the failure deleted the last
+-        // copy of those rows: nothing else drains `_pendingArchive` for a
+-        // conversation with no cached list, and dispose only counts them.
+-        // A failure now leaves the rows queued, the main file intact and the
+-        // flush path ([flushPendingSaves]) owing the write — and propagates,
+-        // so the caller does not report a delete it did not perform.
+-        await _drainPendingArchive(
+-            normalizedConversationId, await _resolveStorageRoots());
++  }
++
++  static const _clearPendingSuffix = '.clear-pending.tmp';
++  static const _clearDiscardedSuffix = '.clear-discarded.tmp';
++
++  static List<(File, String)> _strictClearFiles(File primary) => [
++    (File('${primary.path}.bak'), 'backup.tmp'),
++    (File('${primary.path.substring(0, primary.path.length - 5)}.archive.jsonl'),
++        'archive.tmp'),
++    (primary, 'primary.tmp'),
++  ];
++
++  /// Moving all live files on the same volume is reversible until the
++  /// pending directory is renamed. After that rename, it cannot be loaded
++  /// as history even if removing the discarded files needs a later retry.
++  Future<void> _stageStrictClear(File primary, {required bool keepArchive}) async {
++    final pending = Directory('${primary.path}$_clearPendingSuffix');
++    final discarded = Directory('${primary.path}$_clearDiscardedSuffix');
++    var stageCreated = false;
++    try {
++      for (final (file, name) in _strictClearFiles(primary)) {
++        if (keepArchive && name == 'archive.tmp') continue;
++        final type = await FileSystemEntity.type(file.path, followLinks: false);
++        if (type == FileSystemEntityType.notFound) continue;
++        if (type != FileSystemEntityType.file) {
++          throw FileSystemException('Expected a regular history file', file.path);
++        }
++        if (!stageCreated) {
++          await pending.create();
++          stageCreated = true;
++        }
++        await _renameWithRetry(file, p.join(pending.path, name));
+       }
+-      try {
+-        final file = await _getHistoryFile(normalizedConversationId);
++      if (!stageCreated) return;
++      await pending.rename(discarded.path);
++    } catch (_) {
++      if (stageCreated) {
+         try {
+-          if (await file.exists()) {
+-            await file.delete();
+-          }
+-        } catch (_) {
+-          // Best-effort; memory cache is already cleared above.
++          await _restoreStrictClear(primary, pending);
++        } catch (e, st) {
++          // Keep the journal. Subsequent fenced operations retry recovery
++          // before reading or rewriting any of this conversation's files.
++          _logger?.logError('Could not roll back history clear', e, st);
+         }
+-        // Also drop any backup file we may have left around.
+-        try {
+-          final backup = await _getBackupFile(normalizedConversationId);
+-          if (await backup.exists()) {
+-            await backup.delete();
+-          }
+-        } catch (_) {}
+-        if (!keepArchive) {
+-          await _deleteArchive(normalizedConversationId);
+-        }
+-      } catch (e) {
+-        // Log error but don't throw - clearing should continue
+-        // The file may not exist or may be locked, but we've cleared memory cache
++      }
++      rethrow;
++    }
++    await _removeStrictClearStage(discarded);
++  }
++
++  Future<void> _restoreStrictClear(File primary, Directory pending) async {
++    for (final (file, name) in _strictClearFiles(primary).reversed) {
++      final staged = File(p.join(pending.path, name));
++      if (!await staged.exists()) continue;
++      final type = await FileSystemEntity.type(file.path, followLinks: false);
++      if (type != FileSystemEntityType.notFound) {
++        throw FileSystemException('Cannot replace a live history file', file.path);
+       }
+-    });
++      await _renameWithRetry(staged, file.path);
++    }
++    await _removeStrictClearStage(pending);
+   }
+
++  Future<void> _removeStrictClearStage(Directory stage) async {
++    try {
++      await stage.delete(recursive: true);
++    } on PathNotFoundException {
++      // Already cleaned up.
++    } on FileSystemException catch (e, st) {
++      _logger?.logError('Could not remove history clear staging', e, st);
++    }
++  }
++
++  Future<void> _recoverStrictClear(File primary) async {
++    final pending = Directory('${primary.path}$_clearPendingSuffix');
++    if (await pending.exists()) await _restoreStrictClear(primary, pending);
++    final discarded = Directory('${primary.path}$_clearDiscardedSuffix');
++    if (await discarded.exists()) await _removeStrictClearStage(discarded);
++  }
++
++  /// Find interrupted clears even when the primary file was already moved.
++  Future<void> _recoverAllStrictClears(Directory dir) async {
++    final ids = <String>{};
++    await for (final entity in dir.list(followLinks: false)) {
++      if (entity is! Directory) continue;
++      final name = p.basename(entity.path);
++      for (final suffix in [_clearPendingSuffix, _clearDiscardedSuffix]) {
++        if (!name.endsWith('.json$suffix')) continue;
++        ids.add(name.substring(0, name.length - suffix.length - 5));
++      }
++    }
++    for (final id in ids) {
++      try {
++        await _serialized(id, () async {});
++      } catch (e, st) {
++        _logger?.logError('Could not recover history clear staging', e, st);
++      }
++    }
++  }
++
+   /// Clear all message histories
+   Future<void> clearAllHistories() async {
+     // Cancel any in-flight debounced saves so they don't recreate files we
+diff --git a/lib/service/ffi_chat_service.dart b/lib/service/ffi_chat_service.dart
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -8750,10 +8750,15 @@
+   /// This is called by UIKit when user clicks "Clear Chat History" in profile page
+   /// This deletes the persisted history file (JSON) but does NOT delete actual media files
+   /// (images, videos, audio, documents) that may be referenced in the messages
+-  Future<void> clearC2CHistory(String userID) async {
++  Future<void> clearC2CHistory(String userID, {bool strict = false}) async {
+     userID = _canonicalSelfAware(userID);
+     // Normalize friend ID to 64 characters (public key length)
+     final normalizedUserID = _normalizeFriendId(userID);
++    if (strict) {
++      await _messageHistoryPersistence.clearHistory(normalizedUserID, strict: true);
++      _refreshStrictClearMetadata(normalizedUserID, isGroup: false);
++      return;
++    }
+
+     // Eagerly drop any matching cache entry from the persistence-owned map.
+     // Persistence's `clearHistory` (called below) also clears in-memory state,
+@@ -8815,7 +8820,12 @@
+   /// This is called by UIKit when user clicks "Clear Chat History" in group profile page
+   /// This deletes the persisted history file (JSON) but does NOT delete actual media files
+   /// (images, videos, audio, documents) that may be referenced in the messages
+-  Future<void> clearGroupHistory(String groupID) async {
++  Future<void> clearGroupHistory(String groupID, {bool strict = false}) async {
++    if (strict) {
++      await _messageHistoryPersistence.clearHistory(groupID, strict: true);
++      _refreshStrictClearMetadata(groupID, isGroup: true);
++      return;
++    }
+     print('[FfiChatService] clearGroupHistory: ENTRY - groupID=$groupID');
+     // Eagerly drop the cached list. `clearHistory` below also clears the cache
+     // and removes the on-disk file.
+@@ -8851,6 +8861,21 @@
+         '[FfiChatService] clearGroupHistory: EXIT - Completed for groupID=$groupID');
+   }
+
++  /// The strict clear detached the old cache before any I/O. Preserve the
++  /// preview and unread state of arrivals into the new history window.
++  void _refreshStrictClearMetadata(String id, {required bool isGroup}) {
++    _lastByPeer.remove(id);
++    final unreadKey = _unreadKey(id);
++    _unreadByPeer.remove(unreadKey);
++    final rows = _messageHistoryPersistence.getCachedList(id);
++    if (rows == null || rows.isEmpty) return;
++    refreshConversationCacheFromHistory(id);
++    if (isGroup && _activePeerId != unreadKey) {
++      _unreadByPeer[unreadKey] =
++          rows.where((row) => !row.isSelf && !row.isRead).length;
++    }
++  }
++
+   /// Delete friend
+   /// This is called by UIKit when user clicks "Delete" in profile page
+   Future<void> deleteFriend(String userID) async {

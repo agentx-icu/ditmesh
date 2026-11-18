@@ -8,6 +8,7 @@ mixin _MessageManagement implements ChatService {
   FfiChatService _requireService();
   void _ensureCurrent(FfiChatService svc);
   MessageMapper get _mapper;
+  _ConversationsPart get _conversationsPart;
 
   /// Whether a row is shown (chat text, not from a blocked peer).
   bool _shows(t2t.ChatMessage m);
@@ -150,10 +151,10 @@ mixin _MessageManagement implements ChatService {
     }
     final svc = _requireService();
     final peer = ConversationIds.peerOf(conversationId);
-    final result = await action(
+    final result = await _conversationsPart.trackSend(
       svc,
-      peer,
-      ConversationIds.isGroup(conversationId),
+      conversationId,
+      () => action(svc, peer, ConversationIds.isGroup(conversationId)),
     );
     _ensureCurrent(svc);
     switch (result) {

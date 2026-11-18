@@ -133,6 +133,7 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
     );
     var pendingItems = [for (final (i, q) in reviewable.indexed) q.toItem(i)];
 
+    Uint8List? audioIndex;
     for (final (rel, file) in await BackupSnapshot.files(
       _paths.trainingDirectory,
     )) {
@@ -150,12 +151,21 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
           ...pendingItems,
           ...BackupSnapshot.pendingItems(await readFile(file)),
         ];
-      } else if (cats.contains(BackupCategory.training)) {
-        add(
-          BackupCategory.training,
-          '${BackupSnapshot.trainingPrefix}$rel',
-          await readFile(file),
-        );
+      } else {
+        final inTraining = cats.contains(BackupCategory.training);
+        final inMedia =
+            rel == BackupMedia.materialsDoc &&
+            cats.contains(BackupCategory.media);
+        if (!inTraining && !inMedia) continue;
+        final bytes = await readFile(file);
+        if (inTraining) {
+          add(
+            BackupCategory.training,
+            '${BackupSnapshot.trainingPrefix}$rel',
+            bytes,
+          );
+        }
+        if (inMedia) audioIndex = bytes;
       }
     }
     var withheld = 0;
@@ -188,9 +198,11 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
     if (cats.contains(BackupCategory.preferences) && prefs != null) {
       add(BackupCategory.preferences, BackupSnapshot.preferencesEntry, prefs);
     }
-    if (cats.contains(BackupCategory.media)) {
+    if (audioIndex != null) {
       var total = 0;
-      for (final name in await _referencedMedia()) {
+      final names = BackupMedia.referenced(utf8.decode(audioIndex)).toList()
+        ..sort();
+      for (final name in names) {
         final file = File(p.join(_mediaDirectory, name));
         if (!await file.exists()) continue;
         final bytes = await readFile(file);
@@ -201,10 +213,15 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
             'Recordings exceed the backup size limit',
           );
         }
+        add(BackupCategory.media, '${BackupSnapshot.mediaPrefix}$name', bytes);
+      }
+      if (sizes.containsKey(BackupCategory.media) &&
+          !cats.contains(BackupCategory.training)) {
+        // The workbench needs its index to reopen the restored recordings.
         add(
           BackupCategory.media,
-          '${BackupSnapshot.mediaPrefix}$name',
-          bytes,
+          BackupSnapshot.audioMaterialsEntry,
+          audioIndex,
         );
       }
     }
@@ -260,10 +277,10 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       File('${_paths.offlineQueueFile}.bak'),
     ])
       if (await f.exists()) f,
-    for (final (rel, f) in await BackupSnapshot.files(
-      _paths.trainingDirectory,
-    ))
+    for (final (rel, f) in await BackupSnapshot.files(_paths.trainingDirectory))
       if (rel == BackupSnapshot.restoredPendingFile ||
+          (rel == BackupMedia.materialsDoc &&
+              cats.contains(BackupCategory.media)) ||
           (rel == BackupSnapshot.bookmarksFile
               ? cats.contains(BackupCategory.conversationMeta)
               : cats.contains(BackupCategory.training)))
@@ -340,6 +357,8 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
             key.substring(BackupSnapshot.historyPrefix.length),
             value,
           );
+        } else if (key == BackupSnapshot.audioMaterialsEntry) {
+          await put(staged.trainingDirectory, BackupMedia.materialsDoc, value);
         } else if (key.startsWith(BackupSnapshot.mediaPrefix)) {
           await put(
             p.join(staged.root, 'media', 'recordings'),

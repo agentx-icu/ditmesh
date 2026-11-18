@@ -8,7 +8,9 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../common/fitting_hint.dart';
 import 'chat_layout.dart';
+import 'conversation_menu.dart';
 import 'conversation_tile.dart';
+import 'local_message_sends.dart';
 
 /// Searchable, pinned-first conversation list bound to
 /// [ChatService.conversationChanges].
@@ -97,7 +99,20 @@ class _ConversationListState extends State<ConversationList> {
             body: s.chatDeleteConversationBody,
             confirmLabel: s.chatDelete,
           );
-          if (ok) await service.deleteConversation(c.id);
+          if (!ok || !mounted) return;
+          final bookmarks = ConversationMenu.bookmarksForRemoval(context);
+          ChatException? hideFailure;
+          try {
+            await service.deleteConversation(c.id);
+          } on ChatException catch (error) {
+            if (error.code != 'conversation_hide_failed') rethrow;
+            hideFailure = error;
+          }
+          LocalMessageSends.forService(service).recordClear(c.id, const {});
+          if (hideFailure != null && mounted) {
+            showSnack(context, describeChatError(s, hideFailure));
+          }
+          await ConversationMenu.forgetBookmarks(bookmarks, c.id);
       }
     } on Object catch (e) {
       if (mounted) showSnack(context, describeChatError(s, e));

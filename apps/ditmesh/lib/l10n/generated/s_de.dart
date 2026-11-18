@@ -2148,6 +2148,12 @@ class SDe extends S {
   String get appearanceSubtitle => 'Fünf Stile mit hellem und dunklem Modus';
 
   @override
+  String get chatHistoryConversationHideFailed => 'Der lokale Verlauf wurde gelöscht. Die Unterhaltung konnte nicht ausgeblendet werden.';
+
+  @override
+  String get chatHistorySendPending => 'Warte, bis der aktuelle Vorgang abgeschlossen ist, oder brich wartende Nachrichten ab. Versuche es dann erneut.';
+
+  @override
   String get chatClearHistoryBody => 'Den Verlauf dieses Gesprächs auf diesem Gerät löschen? Kopien auf anderen Geräten sind nicht betroffen. Dies kann nicht rückgängig gemacht werden.';
 
   @override

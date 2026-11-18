@@ -61,3 +61,11 @@ DitMesh 显示为失败）。送达证据仍优先于失败。
 断线期间发送消息并清空发件队列。旧版会议和类型未知的群在 DHT 断线时排队。
 `group_dht_reconnect_test.dart` 覆盖发送和队列回归。原生双节点用例还在 Dart
 层 DHT 状态为离线时验证真实群消息的双向传输。
+
+`0017-strict-history-clear.patch` 让 DitMesh 的主动历史删除报告文件系统错误，上游
+其他调用仍保留尽力清理的行为。它在会话写入保护下暂存所有副本，并在下次读取或启动时恢复中断的操作。
+`chat_service_test.dart` 覆盖删除失败、重试及保留待发送操作。
+
+`0018-publish-group-outbox-status.patch` 在传输接受普通排队群消息时发布该消息的
+状态变化。对端未发回执时，历史和待发送消息页面也能收到更新。
+`group_dht_reconnect_test.dart` 覆盖此事件。

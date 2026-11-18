@@ -127,12 +127,17 @@ private `manifest.json` and one entry group per `BackupCategory`
 | chatHistory | `chat/history/<path>` (queued rows removed) |
 | conversationMeta | `meta/conversations.json` (pins, hidden, drafts), `meta/bookmarks.json` |
 | preferences | `prefs/app.json`: playback, decoder, notification choices and mutes, appearance, language — never window geometry, key bindings or network settings |
-| media (opt-in) | `media/recordings/<name>` |
+| media (opt-in) | `media/recordings/<name>` and `media/materials.json` when training is omitted |
 | pendingMessages (opt-in) | `pending/outbox.json`, restored only as inert review items, never back into the live send queue |
 
 `identity/backup_archive.dart` opens and validates the whole archive against
 its manifest before any restore step writes; `identity_backup_v2.dart` builds
 the preview and performs the staged, transactional restore.
+
+A media-only backup includes its recordings index so the workbench can
+reopen the selections after restore. Older DitMesh versions reject the index
+during preview. To restore on such a version, export with both **Saved
+recordings** and **Training progress and materials** selected.
 
 **Basic identity backup** (`IdentityService.exportBackup` / `importBackup`).
 `BackupContainer` version 1, a dependency-free, length-prefixed archive:

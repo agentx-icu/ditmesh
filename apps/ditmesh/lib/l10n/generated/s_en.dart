@@ -2148,6 +2148,12 @@ class SEn extends S {
   String get appearanceSubtitle => 'Five styles with light and dark modes';
 
   @override
+  String get chatHistoryConversationHideFailed => 'Local history was cleared. The conversation could not be hidden.';
+
+  @override
+  String get chatHistorySendPending => 'Wait for the current operation to finish or cancel queued messages, then try again.';
+
+  @override
   String get chatClearHistoryBody => 'Delete this conversation’s history on this device? Copies on other devices are unaffected. This cannot be undone.';
 
   @override

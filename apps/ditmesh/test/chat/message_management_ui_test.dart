@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
@@ -138,8 +140,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(s.chatSearchMessages));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(s.chatSearchBookmarked));
+    final filter = find.widgetWithText(FilterChip, s.chatSearchBookmarked);
+    await tester.ensureVisible(filter);
     await tester.pumpAndSettle();
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilterChip>(filter).selected, isTrue);
     expect(find.text('CQ CQ DE ANN'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -152,6 +158,68 @@ void main() {
     h.service.receiveMessage(_id, 'CQ AGAIN');
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.bookmark), findsNothing);
+  });
+
+  testWidgets('a blocked group sender keeps their bookmark after reopening', (
+    tester,
+  ) async {
+    final h = ChatHarness();
+    final group = await h.service.createGroup('Morse net');
+    final target = ConversationTarget.fromGroup(group);
+    h.service.receiveMessage(
+      target.id,
+      'CQ FROM ANN',
+      senderId: kPeerKey,
+      senderName: 'Ann',
+    );
+    await pumpChat(
+      tester,
+      (_) => ConversationScreen(target: target),
+      harness: h,
+    );
+    await _menu(tester, 'CQ FROM ANN', s.chatAddBookmark);
+    expect(find.byIcon(Icons.bookmark), findsOneWidget);
+
+    await h.service.blockPeer(kPeerKey);
+    await tester.pumpWidget(h.wrap(const SizedBox()));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(h.wrap(ConversationScreen(target: target)));
+    await tester.pumpAndSettle();
+    expect(find.text('CQ FROM ANN'), findsNothing);
+
+    await h.service.unblockPeer(kPeerKey);
+    await tester.pumpAndSettle();
+    expect(find.text('CQ FROM ANN'), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsOneWidget);
+  });
+
+  testWidgets('clear history refreshes another mounted conversation view', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn();
+      return ConversationScreen(target: _ann());
+    });
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaited(
+      navigator.push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => ConversationScreen(target: _ann()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(s.chatClearHistory));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(s.chatClearHistory).last);
+    await tester.pumpAndSettle();
+    expect(await h.service.loadHistory(_id), isEmpty);
+
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('CQ CQ DE ANN'), findsNothing);
   });
 
   testWidgets('a queued send can be cancelled; a claimed one cannot', (

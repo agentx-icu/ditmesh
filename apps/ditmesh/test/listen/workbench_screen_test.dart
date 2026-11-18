@@ -174,9 +174,7 @@ void main() {
     await waitForWorkbench(tester, save, enabled: true);
   });
 
-  testWidgets('a saved selection with missing media offers relink', (
-    tester,
-  ) async {
+  testWidgets('missing media keeps the note and offers relink', (tester) async {
     final (t, picker, _) = await pumpScreen(tester);
     // In-memory training docs: no real I/O, so no runAsync.
     var seeded = false;
@@ -188,6 +186,7 @@ void main() {
               title: 'Old net',
               file: 'media/recordings/rec_1.wav',
               originalName: 'net.wav',
+              note: 'Operator changed after the first call',
               start: Duration.zero,
               end: const Duration(seconds: 2),
               sampleRate: 8000,
@@ -205,21 +204,20 @@ void main() {
     await tester.tap(find.byTooltip(en.workbenchLibrary));
     await waitForWorkbench(tester, find.text('Old net'));
     expect(find.text('Old net'), findsOneWidget);
-    expect(find.text(en.workbenchMissing), findsOneWidget);
+    final missing = find.text(
+      '${en.workbenchMissing}\nOperator changed after the first call',
+    );
+    expect(missing, findsOneWidget);
     picker.error = const FileSystemException('provider unavailable');
     await tester.tap(find.byTooltip(en.workbenchRelink));
     await tester.pump();
     expect(find.text(en.workbenchErrorIo), findsOneWidget);
-    expect(find.text(en.workbenchMissing), findsOneWidget);
+    expect(missing, findsOneWidget);
 
     picker.error = null;
     await tester.tap(find.byTooltip(en.workbenchRelink));
-    await waitForWorkbench(
-      tester,
-      find.text(en.workbenchMissing),
-      absent: true,
-    );
-    expect(find.text(en.workbenchMissing), findsNothing);
+    await waitForWorkbench(tester, missing, absent: true);
+    expect(missing, findsNothing);
     expect(find.text(en.workbenchErrorIo), findsNothing);
     expect(
       await tester.runAsync(

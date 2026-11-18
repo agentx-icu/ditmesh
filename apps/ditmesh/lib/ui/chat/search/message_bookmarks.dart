@@ -56,7 +56,7 @@ class MessageBookmarks extends ChangeNotifier {
   static MessageBookmarks forProfile(String dataDirectory, String profileKey) {
     // While identity data is being replaced nothing may read or write the
     // old files: hand out a throw-away retired store.
-    if (_blocked) return MessageBookmarks._(null).._retired = true;
+    if (_blocked) return MessageBookmarks.retired();
     return _instances.putIfAbsent(
       '$dataDirectory#$profileKey',
       () => MessageBookmarks._(
@@ -98,6 +98,10 @@ class MessageBookmarks extends ChangeNotifier {
 
   /// The replacement finished (a new identity is open): serve stores again.
   static void unblock() => _blocked = false;
+
+  /// A discarded profile lookup can never accept further writes.
+  factory MessageBookmarks.retired() =>
+      MessageBookmarks._(null).._retired = true;
 
   /// In-memory store for tests and stub identities.
   @visibleForTesting

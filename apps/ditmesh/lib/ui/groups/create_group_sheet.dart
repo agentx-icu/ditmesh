@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/close_owned_route.dart';
 import '../common/field_label.dart';
 
 /// Create a group. Kind is fixed to NGC; an "advanced" expander exposes the
@@ -62,12 +63,13 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
       _busy = true;
       _error = null;
     });
+    final route = ModalRoute.of(context);
     try {
       final Group group = await widget.service.createGroup(
         _name.text.trim(),
         kind: _conference ? GroupKind.conference : GroupKind.group,
       );
-      if (mounted) Navigator.of(context).pop(group);
+      closeOwnedRoute(route, group);
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {

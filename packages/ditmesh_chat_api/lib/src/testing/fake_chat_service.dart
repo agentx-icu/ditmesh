@@ -214,7 +214,7 @@ final class FakeChatService
       throw const ChatException('friend_not_found', 'No such friend');
     }
     _publishFriends();
-    await deleteConversation(c2cConversationId(publicKey));
+    _deleteConversationRows(c2cConversationId(publicKey));
   }
 
   FriendRequest? _takeFriendRequest(String publicKey) {
@@ -277,6 +277,11 @@ final class FakeChatService
       );
     }
     _requireSession();
+    _refuseClearWithPending(conversationId);
+    _deleteConversationRows(conversationId);
+  }
+
+  void _deleteConversationRows(String conversationId) {
     _messages.remove(conversationId);
     _conversations.remove(conversationId);
     _hidden.add(conversationId);
@@ -347,7 +352,23 @@ final class FakeChatService
   @override
   Future<void> clearHistory(String conversationId) async {
     _requireSession();
+    _refuseClearWithPending(conversationId);
     _FakeConversationRows(this)._clear(conversationId);
+  }
+
+  void _refuseClearWithPending(String conversationId) {
+    final rows = _messages[conversationId] ?? const <ChatMessage>[];
+    if (rows.any(
+      (m) =>
+          m.isMine &&
+          (m.status == MessageStatus.pending ||
+              m.status == MessageStatus.sending),
+    )) {
+      throw const ChatException(
+        'conversation_send_pending',
+        'Resolve queued or in-progress sends before clearing history',
+      );
+    }
   }
 
   @override
@@ -447,7 +468,7 @@ final class FakeChatService
     _groups.remove(groupId);
     _members.remove(groupId);
     _groupChanges.add(groups);
-    await deleteConversation(groupConversationId(groupId));
+    _deleteConversationRows(groupConversationId(groupId));
   }
 
   @override

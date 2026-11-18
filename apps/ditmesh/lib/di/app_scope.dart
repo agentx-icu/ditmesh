@@ -237,10 +237,22 @@ class _AppScopeState extends State<AppScope> {
         Provider<TrainingControllerHost?>.value(value: _training),
         Provider<GuestStore?>.value(value: _guest),
         Provider<BookmarksResolver?>.value(
-          value: () async => MessageBookmarks.forProfile(
-            await _identity.dataDirectory(),
-            _identity.current?.publicKey ?? '',
-          ),
+          value: () async {
+            final identity = _identity;
+            final owner = identity.current;
+            final directory = await identity.dataDirectory();
+            // A replacement can finish while the data directory is resolving.
+            // Delayed work from the old route must never touch the new store.
+            if (!mounted ||
+                !identical(identity, _identity) ||
+                !identical(owner, identity.current)) {
+              return MessageBookmarks.retired();
+            }
+            return MessageBookmarks.forProfile(
+              directory,
+              owner?.publicKey ?? '',
+            );
+          },
         ),
       ],
       child: widget.child,

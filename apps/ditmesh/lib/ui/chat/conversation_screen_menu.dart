@@ -19,7 +19,6 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
   set _hasMore(bool value);
   bool get _clearing;
   set _clearing(bool value);
-  set _historyLimit(int value);
   int get _generation;
   set _generation(int value);
   set _newMessages(int value);
@@ -135,45 +134,10 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final store = await MessageBookmarks.of(context);
     if (!mounted) return;
     setState(() => _bookmarkStore = store..addListener(_onBookmarks));
-    unawaited(_reconcileBookmarks(store));
-  }
-
-  /// Drops this conversation's bookmarks whose message no longer exists
-  /// (deleted elsewhere, cleared on another device's restore, ...).
-  Future<void> _reconcileBookmarks(MessageBookmarks store) async {
-    final missing = <String>{};
-    for (final b in store.inConversation(_id)) {
-      try {
-        final rows = await _service.loadAround(
-          _id,
-          b.messageId,
-          before: 0,
-          after: 0,
-        );
-        if (rows.isEmpty) missing.add(b.messageId);
-      } on Object {
-        return; // Not connected: try again next time.
-      }
-    }
-    if (missing.isNotEmpty && mounted) {
-      await store.removeMissing(_id, missing).catchError((Object _) {});
-    }
   }
 
   void _onBookmarks() {
     if (mounted) setState(() {});
-  }
-
-  /// The store to write to: a retired one (profile replaced, or a failed
-  /// replacement rolled back) is swapped for the current profile's store.
-  Future<MessageBookmarks?> _liveBookmarks() async {
-    final store = _bookmarkStore;
-    if (store == null || !store.isRetired || !mounted) return store;
-    final fresh = await MessageBookmarks.of(context);
-    if (!mounted) return fresh;
-    store.removeListener(_onBookmarks);
-    setState(() => _bookmarkStore = fresh..addListener(_onBookmarks));
-    return fresh;
   }
 
   void _showLatest() {
@@ -222,12 +186,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
         return;
       }
       if (rows.isEmpty) {
-        // Gone (cleared / deleted): its bookmark no longer resolves.
-        try {
-          await bookmarks.removeMissing(_id, {hit.id});
-        } on Object {
-          // Kept dirty; retried by the store.
-        }
+        // A blocked sender's row can become invisible without being deleted.
         if (mounted) showSnack(context, context.s.chatMessageGone);
         return;
       }
@@ -358,6 +317,31 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     unawaited(_load());
   }
 
+  void _onHistoryCleared(String conversationId) {
+    if (!mounted || _clearing || conversationId != _id) return;
+    _reloadClearedHistory();
+  }
+
+  void _reloadClearedHistory() {
+    _playback.cancelMessages({
+      for (final m in [..._older, ..._messages, ..._parked]) m.id,
+    });
+    _generation++;
+    _jumpedAway = false;
+    _newerFailed = false;
+    setState(() {
+      _parked.clear();
+      _older.clear();
+      _messages.clear();
+      _pendingStatuses.clear();
+      _revealed.clear();
+      _newMessages = 0;
+      _loadingOlder = _loadingNewer = false;
+      _olderError = null;
+    });
+    unawaited(_load());
+  }
+
   Future<void> _clearHistory() async {
     final S s = context.s;
     final bool ok = await confirm(
@@ -380,43 +364,12 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       _loadingOlder = false;
       _loadingNewer = false;
     });
-    // A message being deleted must not keep sounding or wait in the queue.
-    _playback.cancelMessages(ids);
+    final bookmarks = ConversationMenu.bookmarksForRemoval(context);
     try {
       await _service.clearHistory(_id);
       _localSends.recordClear(_id, ids);
-      if (!mounted) return;
-      // Back to the live timeline at once: arrivals during the bookmark
-      // cleanup below must show — and so must rows that arrived (and were
-      // parked) while the clear itself was running.
-      _jumpedAway = false;
-      final arrived = _parked.where((m) => !ids.contains(m.id)).toList();
-      _parked.clear();
-      setState(() {
-        _messages.removeWhere((m) => ids.contains(m.id));
-        final known = {for (final m in _messages) m.id};
-        _messages.addAll(arrived.where((m) => known.add(m.id)));
-        _older.clear();
-        _newMessages = 0;
-      });
-      // Clearing history invalidates its bookmarks; failures are kept dirty
-      // and retried by the store.
-      try {
-        await (await _liveBookmarks())?.removeConversation(_id);
-      } on Object {
-        // The store stays dirty and rewrites on its next flush.
-      }
-      if (!mounted) return;
-      setState(() {
-        _messages.removeWhere((m) => ids.contains(m.id));
-        _older.clear();
-        _revealed.clear();
-        _pendingStatuses.clear();
-        _historyLimit = 50;
-        _hasMore = false;
-        _error = _olderError = null;
-      });
-      _scrollToEnd();
+      if (mounted) _reloadClearedHistory();
+      await ConversationMenu.forgetBookmarks(bookmarks, _id);
     } on Object catch (e) {
       if (mounted) {
         showSnack(context, describeChatError(s, e));

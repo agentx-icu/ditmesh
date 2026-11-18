@@ -2148,6 +2148,12 @@ class SPt extends S {
   String get appearanceSubtitle => 'Cinco estilos com modos claro e escuro';
 
   @override
+  String get chatHistoryConversationHideFailed => 'O histórico local foi apagado. Não foi possível ocultar a conversa.';
+
+  @override
+  String get chatHistorySendPending => 'Aguarde a conclusão da operação atual ou cancele as mensagens em fila e tente novamente.';
+
+  @override
   String get chatClearHistoryBody => 'Excluir o histórico desta conversa neste dispositivo? As cópias em outros dispositivos não serão afetadas. Esta ação não pode ser desfeita.';
 
   @override

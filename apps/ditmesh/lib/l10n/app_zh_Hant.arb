@@ -667,6 +667,8 @@
   "appearanceLight": "淺色",
   "appearanceDark": "深色",
   "appearanceSubtitle": "五種風格，支援淺色與深色",
+  "chatHistoryConversationHideFailed": "本機歷史已清除，但無法隱藏這段對話。",
+  "chatHistorySendPending": "請等待目前操作完成，或取消待傳送的訊息，然後重試。",
   "chatClearHistoryBody": "刪除當前對話在本機儲存的歷史紀錄？其他裝置上的副本不受影響。此操作無法撤銷。",
   "chatLoadEarlier": "載入更早訊息",
   "chatHistoryLoadFailed": "更早訊息載入失敗，點選重試。",

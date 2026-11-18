@@ -56,6 +56,25 @@ class PendingMessageStatus {
     return ConversationIds.isGroup(conversationId) ? 'group:$peer' : peer;
   }
 
+  /// Checks legacy raw C2C keys too, since a drain may send from either
+  /// storage key and a clear must preserve the queued message's history.
+  bool hasDispatchable(String conversationId) {
+    final canonical = queueKeyOf(conversationId);
+    final keys = ConversationIds.isGroup(conversationId)
+        ? [canonical]
+        : queue.getPeerIds().where(
+            (key) =>
+                !key.startsWith('group:') &&
+                ConversationIds.normalizeKey(key) ==
+                    ConversationIds.normalizeKey(canonical),
+          );
+    return keys.any(
+      (key) => queue
+          .getMessages(key)
+          .any((item) => OfflineSendControl.dispatchable(item.control)),
+    );
+  }
+
   /// Durable outbox contents (F09): for one conversation, or every queue key
   /// (a legacy entry stored under a raw, un-normalized address counts for
   /// the identity but, like [isQueued], not for its conversation)

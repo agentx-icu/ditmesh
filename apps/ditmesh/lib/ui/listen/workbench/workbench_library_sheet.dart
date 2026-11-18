@@ -254,10 +254,13 @@ class _LibrarySheetState extends State<_LibrarySheet> {
                         minTileHeight: 56,
                         title: Text(m.title),
                         subtitle: Text(
-                          present
-                              ? '${formatClock(m.start)} – ${formatClock(m.end)}'
-                                    '${m.note.isEmpty ? '' : '\n${m.note}'}'
-                              : s.workbenchMissing,
+                          [
+                            if (present)
+                              '${formatClock(m.start)} – ${formatClock(m.end)}'
+                            else
+                              s.workbenchMissing,
+                            if (m.note.isNotEmpty) m.note,
+                          ].join('\n'),
                         ),
                         onTap: present ? () => unawaited(_open(m)) : null,
                         trailing: Row(

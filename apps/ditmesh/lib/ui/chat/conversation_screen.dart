@@ -71,6 +71,7 @@ class _ConversationScreenState extends State<ConversationScreen>
   late final StreamSubscription<Set<String>> _blocked;
   @override
   late final LocalMessageSends _localSends;
+  late final StreamSubscription<String> _historyClears;
   @override
   final ScrollController _scroll = ScrollController();
   final GlobalKey _timelineOrigin = GlobalKey();
@@ -96,7 +97,6 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   /// Rows of the latest page; "load earlier" grows [_historyLimit] by it.
   static const int _pageSize = 50;
-  @override
   int _historyLimit = _pageSize;
   @override
   int _generation = 0;
@@ -137,6 +137,7 @@ class _ConversationScreenState extends State<ConversationScreen>
     _blocked = _service.blockedPeerChanges.listen(_onBlockedPeers);
     _localSends = LocalMessageSends.forService(_service)
       ..addListener(_onLocalSend);
+    _historyClears = _localSends.historyClears.listen(_onHistoryCleared);
     _scroll.addListener(_onScroll);
     unawaited(_load());
     unawaited(_initBookmarks());
@@ -165,6 +166,7 @@ class _ConversationScreenState extends State<ConversationScreen>
     unawaited(_events.cancel());
     unawaited(_blocked.cancel());
     _localSends.removeListener(_onLocalSend);
+    unawaited(_historyClears.cancel());
     _scroll.dispose();
     if (_ownsPlayback) {
       _playback.dispose();

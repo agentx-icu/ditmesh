@@ -2162,6 +2162,12 @@ class SRu extends S {
   String get appearanceSubtitle => 'Пять стилей со светлым и тёмным режимами';
 
   @override
+  String get chatHistoryConversationHideFailed => 'Локальная история очищена. Не удалось скрыть переписку.';
+
+  @override
+  String get chatHistorySendPending => 'Дождитесь завершения текущей операции или отмените сообщения в очереди, затем повторите попытку.';
+
+  @override
   String get chatClearHistoryBody => 'Удалить историю этой беседы на этом устройстве? Копии на других устройствах сохранятся. Это действие нельзя отменить.';
 
   @override

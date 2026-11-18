@@ -111,7 +111,9 @@ abstract interface class ChatService {
   /// Clears the conversation's history and removes it from [conversations]
   /// until the next message. For [selfConversationId] it throws
   /// `ChatException('self_conversation', ...)` and changes nothing (history,
-  /// draft and pin all stay).
+  /// draft and pin all stay). Pending sends are handled as in [clearHistory].
+  /// `conversation_hide_failed` means history was cleared but the metadata
+  /// update failed, so the conversation may remain visible.
   Future<void> deleteConversation(String conversationId);
 
   // ---- Messages ------------------------------------------------------------
@@ -154,6 +156,9 @@ abstract interface class ChatService {
   /// Tox single-message budget after Tim2Tox's fragment header (1322 bytes).
   int get maxMessageBytes;
 
+  /// Deletes local history. Pending sends must be resolved first so their
+  /// queue controls remain available. Throws `conversation_send_pending`
+  /// if a send is queued or in progress.
   Future<void> clearHistory(String conversationId);
 
   // ---- Message management (F07) ---------------------------------------------

@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../common/close_owned_route.dart';
 import '../common/field_label.dart';
 import '../contacts/tox_id.dart';
 
@@ -60,12 +61,13 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
     setState(() => _error = null);
     if (!(_form.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);
+    final route = ModalRoute.of(context);
     try {
       await widget.service.joinGroup(
         normalizeToxId(_chatId.text),
         password: _password.text.isEmpty ? null : _password.text,
       );
-      if (mounted) Navigator.of(context).pop(true);
+      closeOwnedRoute(route, true);
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {

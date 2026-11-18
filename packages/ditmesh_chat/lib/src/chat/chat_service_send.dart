@@ -10,6 +10,19 @@ extension _Sending on Tim2ToxChatService {
     KeyedRecording? recording,
   }) async {
     final svc = _requireService();
+    return _conversationsPart.trackSend(
+      svc,
+      conversationId,
+      () => _sendTextForSession(svc, conversationId, text, recording),
+    );
+  }
+
+  Future<ChatMessage> _sendTextForSession(
+    FfiChatService svc,
+    String conversationId,
+    String text,
+    KeyedRecording? recording,
+  ) async {
     final bytes = utf8.encode(text).length;
     if (bytes > Tim2ToxChatService.toxMessageBudget) {
       throw ChatException(

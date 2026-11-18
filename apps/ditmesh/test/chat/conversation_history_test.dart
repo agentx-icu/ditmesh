@@ -6,6 +6,7 @@ import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/chat/conversation_timeline.dart';
 import 'package:ditmesh/ui/chat/message_bubble.dart';
+import 'package:ditmesh/ui/chat/search/message_bookmarks.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
@@ -293,6 +294,9 @@ void main() {
     'a cleared outgoing row cannot return when its send future finishes',
     (t) async {
       final (h, service) = await setup(t, count: 3);
+      // Hold the UI's send result after transport accepts it. Real pending
+      // queue rows now block history clearing until resolved.
+      h.service.setFriendOnline(kPeerKey, true);
       service
         ..createBeforeSendGate = true
         ..sendGate = Completer<void>();
@@ -316,6 +320,9 @@ void main() {
     'clear completion after closing still rejects a deleted send in a new route',
     (t) async {
       final (h, service) = await setup(t, count: 3);
+      // Hold the UI's send result after transport accepts it. Real pending
+      // queue rows now block history clearing until resolved.
+      h.service.setFriendOnline(kPeerKey, true);
       service
         ..createBeforeSendGate = true
         ..sendGate = Completer<void>();
@@ -346,6 +353,27 @@ void main() {
       expect(t.takeException(), isNull);
     },
   );
+
+  testWidgets('a completed clear removes bookmarks after the route leaves', (
+    t,
+  ) async {
+    final (h, service) = await setup(t, count: 1);
+    final row = (await h.service.loadHistory(id)).single;
+    final bookmarks = await MessageBookmarks.of(
+      t.element(find.byType(ConversationScreen)),
+    );
+    await bookmarks.toggle(id, row.id, row.timestamp);
+    service.clearGate = Completer<void>();
+    await openClear(t);
+    await t.tap(find.widgetWithText(FilledButton, s.chatClearHistory));
+    await t.pump();
+    await t.pumpWidget(h.wrap(const SizedBox()));
+    await t.pumpAndSettle();
+
+    service.clearGate!.complete();
+    await t.pumpAndSettle();
+    expect(bookmarks.contains(id, row.id), isFalse);
+  });
 
   testWidgets('loading earlier records preserves a visible bubble position', (
     t,

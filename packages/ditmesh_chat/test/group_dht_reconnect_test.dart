@@ -38,6 +38,11 @@ void main() {
     expect(queued.isPending, isTrue);
     expect(native.sent, isEmpty);
 
+    final updates = chat.messages.where((row) => row.msgID == queued.msgID);
+    final states = <bool>[];
+    final subscription = updates.listen((row) => states.add(row.isPending));
+    addTearDown(subscription.cancel);
+
     native.wireReady = 1;
     await chat.retryPendingGroupMessages(groupId);
     await chat.retryPendingGroupMessages(groupId);
@@ -46,6 +51,7 @@ void main() {
     expect(chat.isConnected, isFalse);
     expect(native.sent, ['queued', 'fresh']);
     expect(fresh.isPending, isFalse);
+    expect(states, [false]);
     expect(
       chat
           .getHistory(groupId)

@@ -76,3 +76,14 @@ send and drain its outbox during a DHT outage. Legacy conferences and unknown
 groups queue outbound messages while DHT is offline. The unit regression is
 in `group_dht_reconnect_test.dart`. The two-peer test also exchanges real group
 traffic with the Dart DHT status set to offline.
+
+`0017-strict-history-clear.patch` lets explicit DitMesh history deletion
+report filesystem errors while preserving upstream best-effort behavior for
+other callers. It stages all copies behind the conversation write fence and
+recovers interrupted clears on the next read or startup. `chat_service_test.dart` covers
+failed deletion, retry, and preservation of pending-send controls.
+
+`0018-publish-group-outbox-status.patch` emits the settled row when an ordinary
+queued group message is accepted by the transport. The history and pending
+messages views receive the change even when a peer sends no delivery receipt.
+`group_dht_reconnect_test.dart` covers this event.

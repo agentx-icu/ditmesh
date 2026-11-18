@@ -79,7 +79,13 @@ class _GroupsPageState extends State<GroupsPage> {
 
   Future<void> _create(BuildContext context, ChatService service) async {
     final Group? group = await showCreateGroupSheet(context, service: service);
-    if (group != null && context.mounted) _open(context, group);
+    // A notification can open another conversation while creation is pending.
+    if (group != null &&
+        context.mounted &&
+        TickerMode.valuesOf(context).enabled &&
+        ModalRoute.isCurrentOf(context) == true) {
+      _open(context, group);
+    }
   }
 
   Future<void> _join(BuildContext context, ChatService service) async {

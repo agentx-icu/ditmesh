@@ -9,8 +9,13 @@ import 'package:ditmesh/ui/listen/listen_settings.dart';
 
 import 'fake_pcm_source.dart';
 
-void _pushText(FakePcmSource source, String text, {double wpm = 20}) {
-  final pcm = SyntheticMorse(snrDb: 20).renderText(text, wpm: wpm);
+void _pushText(
+  FakePcmSource source,
+  String text, {
+  double wpm = 20,
+  Duration tail = const Duration(milliseconds: 600),
+}) {
+  final pcm = SyntheticMorse(snrDb: 20, tail: tail).renderText(text, wpm: wpm);
   for (final chunk in SyntheticMorse.toByteChunks(pcm, 960)) {
     source.push(chunk);
   }
@@ -64,6 +69,34 @@ void main() {
     expect(source.isStreaming, isFalse);
     expect(controller.text.trim(), 'SOS');
   });
+
+  for (final sourceEnded in [false, true]) {
+    test(
+      'capture boundary keeps the last tone (sourceEnded=$sourceEnded)',
+      () async {
+        final source = FakePcmSource();
+        final controller = ListenController(source: source);
+        addTearDown(controller.dispose);
+        await controller.start();
+        _pushText(source, 'T', tail: Duration.zero);
+        expect(controller.meter.value.toneOn, isTrue);
+
+        if (sourceEnded) {
+          await source.endStream();
+        } else {
+          await controller.stop();
+        }
+        expect(controller.status, ListenStatus.idle);
+        expect(controller.text, 'T');
+        expect(controller.meter.value, const ListenMeter());
+
+        await controller.start();
+        _pushText(source, 'E', tail: Duration.zero);
+        await controller.stop();
+        expect(controller.text, 'TE');
+      },
+    );
+  }
 
   test('permission denied does not start the stream', () async {
     final source = FakePcmSource(permissionGranted: false);

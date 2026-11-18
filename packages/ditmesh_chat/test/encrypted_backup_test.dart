@@ -366,11 +366,25 @@ void main() {
       // Where the app keeps them: the materials document under the training
       // documents, the audio under the identity root.
       final training = await svc.dataDirectory();
+      final materials = jsonEncode({
+        'v': 1,
+        'materials': [
+          {
+            'id': 'x',
+            'title': 'Net',
+            'note': 'CQ',
+            'file': 'media/recordings/rec_a.wav',
+            'startUs': 0,
+            'endUs': 125000,
+            'sampleRate': 8000,
+            'channels': 1,
+            'createdAt': t0.toIso8601String(),
+          },
+        ],
+      });
       File(p.join(training, BackupMedia.materialsDoc))
         ..createSync(recursive: true)
-        ..writeAsStringSync(
-          '{"v":1,"materials":[{"id":"x","file":"media/recordings/rec_a.wav"}]}',
-        );
+        ..writeAsStringSync(materials);
       File(p.join(paths.root, 'media', 'recordings', 'rec_a.wav'))
         ..createSync(recursive: true)
         ..writeAsBytesSync(List<int>.filled(2048, 7));
@@ -383,6 +397,16 @@ void main() {
       final withMedia = await svc.exportEncryptedBackup(
         request({..._all, BackupCategory.media}),
       );
+      final onlyMedia = await svc.exportEncryptedBackup(
+        request({BackupCategory.media}),
+      );
+      final mediaPreview = await svc.previewEncryptedBackup(
+        onlyMedia,
+        'correct horse',
+      );
+      final mediaSize = mediaPreview.sizes[BackupCategory.media]!;
+      expect(mediaSize.items, 1, reason: 'the index is recording metadata');
+      expect(mediaSize.bytes, 2048 + utf8.encode(materials).length);
       expect(
         (await svc.previewEncryptedBackup(
           without,
@@ -398,12 +422,32 @@ void main() {
         'correct horse',
       );
       expect(report.restored, contains(BackupCategory.media));
-      expect(
-        File(
-          p.join(other.root, 'media', 'recordings', 'rec_a.wav'),
-        ).lengthSync(),
-        2048,
+      final materialIndex = File(
+        p.join(other.trainingDirectory, BackupMedia.materialsDoc),
       );
+      final recording = File(
+        p.join(other.root, 'media', 'recordings', 'rec_a.wav'),
+      );
+      final practice = File(p.join(other.trainingDirectory, 'progress.json'));
+      expect(materialIndex.readAsStringSync(), materials);
+      expect(recording.lengthSync(), 2048);
+
+      final mediaReport = await restored.restoreEncryptedBackup(
+        onlyMedia,
+        'correct horse',
+      );
+      expect(mediaReport.restored, {
+        BackupCategory.identity,
+        BackupCategory.media,
+      });
+      expect(materialIndex.readAsStringSync(), materials);
+      expect(recording.lengthSync(), 2048);
+      expect(practice.existsSync(), isFalse);
+
+      await restored.restoreEncryptedBackup(without, 'correct horse');
+      expect(materialIndex.readAsStringSync(), materials);
+      expect(recording.existsSync(), isFalse);
+      expect(practice.existsSync(), isTrue);
       await restored.dispose();
     },
   );

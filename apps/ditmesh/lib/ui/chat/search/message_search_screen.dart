@@ -9,6 +9,7 @@ import '../../common/fitting_hint.dart';
 import '../../responsive.dart';
 import '../chat_layout.dart';
 import '../conversation_timeline.dart';
+import '../local_message_sends.dart';
 import 'message_bookmarks.dart';
 
 enum _Sender { anyone, me, them }
@@ -49,6 +50,7 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
   final List<ChatMessage> _results = <ChatMessage>[];
   final Set<String> _revealed = <String>{};
   Timer? _debounce;
+  StreamSubscription<String>? _historyClears;
   MessageSearchCursor? _next;
   _Sender _sender = _Sender.anyone;
   DateTimeRange? _range;
@@ -60,6 +62,13 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
   @override
   void initState() {
     super.initState();
+    _historyClears = LocalMessageSends.forService(widget.service).historyClears
+        .where((id) => id == widget.conversationId)
+        .listen((_) {
+          if (!mounted) return;
+          _revealed.clear();
+          unawaited(_search());
+        });
     unawaited(_search());
   }
 
@@ -173,6 +182,7 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
     _generation++;
     _cancel?.cancel();
     _debounce?.cancel();
+    unawaited(_historyClears?.cancel());
     _query.dispose();
     super.dispose();
   }

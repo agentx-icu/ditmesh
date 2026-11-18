@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +16,25 @@ import 'package:ditmesh/ui/keying/key_test_area.dart';
 import 'package:provider/provider.dart';
 
 import '../learn/helpers/l10n.dart';
+
+class _PendingKeyStore implements KeyValueStore {
+  final _store = InMemoryKeyValueStore();
+  Completer<void>? pending;
+  int writes = 0;
+
+  @override
+  String? getString(String key) => _store.getString(key);
+
+  @override
+  Future<void> setString(String key, String value) async {
+    writes++;
+    await pending?.future;
+    await _store.setString(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) => _store.remove(key);
+}
 
 void main() {
   late KeyProfiles profiles;
@@ -61,6 +82,7 @@ void main() {
   }
 
   testWidgets('capture, conflict, reserved key, then save and activate', (tester) async {
+    profiles = KeyProfiles(InMemoryKeyValueStore());
     await pumpEditor(tester, KeyProfile.defaults.copyWith(id: 'p1'));
     await tester.enterText(find.byKey(const Key('keys-name')), 'Vail');
     await capture(tester, KeyerAction.dit, LogicalKeyboardKey.bracketLeft);
@@ -71,13 +93,94 @@ void main() {
     expect(find.textContaining('Tab'), findsWidgets);
     await capture(tester, KeyerAction.dah, LogicalKeyboardKey.bracketRight);
     await tester.tap(find.byKey(const Key('keys-save')));
-    // The save's store write, then the pop.
-    await tester.runAsync(() => profiles.flush());
     await tester.pumpAndSettle();
     expect(find.byType(KeyProfileEditorPage), findsNothing);
     expect(profiles.active.name, 'Vail');
     expect(profiles.active.dit, {LogicalKeyboardKey.bracketLeft});
     expect(profiles.active.dah, {LogicalKeyboardKey.bracketRight});
+  });
+
+  testWidgets('a pending key profile save closes only its editor', (
+    tester,
+  ) async {
+    final store = _PendingKeyStore()..pending = Completer<void>();
+    profiles = KeyProfiles(store);
+    await pumpEditor(tester, KeyProfile.defaults.copyWith(id: 'p-slow'));
+    final button = find.byKey(const Key('keys-save'));
+    final save = tester.widget<FilledButton>(button).onPressed!;
+    save();
+    save();
+    await tester.pump();
+    final navigator = Navigator.of(tester.element(button));
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Next page')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    store.pending!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Next page'), findsOneWidget);
+    expect(
+      find.byType(KeyProfileEditorPage, skipOffstage: false),
+      findsNothing,
+    );
+    expect(store.writes, 1);
+  });
+
+  testWidgets('a key profile save failure leaves the editor open for retry', (
+    tester,
+  ) async {
+    final store = _PendingKeyStore()..pending = Completer<void>();
+    profiles = KeyProfiles(store);
+    await pumpEditor(tester, KeyProfile.defaults.copyWith(id: 'p-failed'));
+    final button = find.byKey(const Key('keys-save'));
+    await tester.tap(button);
+    await tester.pump();
+    store.pending!.completeError(StateError('disk full'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(KeyProfileEditorPage), findsOneWidget);
+    expect(find.text(en.errorUnknown), findsOneWidget);
+    expect(profiles.saved, isEmpty);
+    expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+    store.pending = null;
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.byType(KeyProfileEditorPage), findsNothing);
+    expect(store.writes, 2);
+  });
+
+  testWidgets('a key profile delete can be retried after a store failure', (
+    tester,
+  ) async {
+    final store = _PendingKeyStore();
+    profiles = KeyProfiles(store);
+    final profile = KeyProfile.defaults.copyWith(id: 'p-delete');
+    final setup = profiles.save(profile);
+    await tester.pump();
+    await setup;
+    await pumpEditor(tester, profile);
+    final delete = find.byTooltip(en.actionDelete);
+    store.pending = Completer<void>();
+    await tester.tap(delete);
+    await tester.pump();
+    store.pending!.completeError(StateError('disk full'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(en.errorUnknown), findsOneWidget);
+    expect(delete, findsOneWidget);
+    expect(profiles.saved, [profile]);
+    store.pending = null;
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    expect(find.byType(KeyProfileEditorPage), findsNothing);
+    expect(profiles.saved, isEmpty);
   });
 
   testWidgets('the test area keys with the draft bindings; repeats ignored; '

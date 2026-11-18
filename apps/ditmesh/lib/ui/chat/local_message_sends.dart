@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
@@ -13,9 +15,14 @@ class LocalMessageSends extends ChangeNotifier {
 
   ChatMessage? latest;
   final Map<String, Set<String>> _cleared = {};
+  final _historyClears = StreamController<String>.broadcast();
+
+  /// Successful deletions so other open screens can refresh their history.
+  Stream<String> get historyClears => _historyClears.stream;
 
   void recordClear(String conversationId, Set<String> ids) {
     (_cleared[conversationId] ??= {}).addAll(ids);
+    _historyClears.add(conversationId);
   }
 
   void publish(ChatMessage message) {

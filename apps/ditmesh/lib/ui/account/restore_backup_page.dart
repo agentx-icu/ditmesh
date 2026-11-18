@@ -11,7 +11,7 @@ import '../../i18n/l10n_extension.dart';
 import '../../i18n/locale_controller.dart';
 import '../../startup/startup_controller.dart';
 import '../common/app_bar_title.dart';
-import 'account_routes.dart';
+import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
 import 'backup_file_gateway.dart';
 import 'encrypted_backup_page.dart';
@@ -206,7 +206,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
         }
       }
       if (route == null || !route.isCurrent) {
-        closeAccountRoute(route);
+        closeOwnedRoute(route);
         return;
       }
       await route.navigator!.pushReplacement<void, void>(
@@ -260,7 +260,7 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
         bytes,
         password: _password.text.isEmpty ? null : _password.text,
       );
-      closeAccountRoute(route);
+      closeOwnedRoute(route);
     } on ChatException catch (e) {
       if (!mounted) return;
       setState(() {

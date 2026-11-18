@@ -2938,6 +2938,14 @@
   "@appearanceSubtitle": {
     "description": "Subtitle describing the appearance options (currently unused)"
   },
+  "chatHistoryConversationHideFailed": "Local history was cleared. The conversation could not be hidden.",
+  "@chatHistoryConversationHideFailed": {
+    "description": "History deletion succeeded but the conversation metadata update failed."
+  },
+  "chatHistorySendPending": "Wait for the current operation to finish or cancel queued messages, then try again.",
+  "@chatHistorySendPending": {
+    "description": "Chat feedback when clearing history would remove the controls for queued sends, or when a send conflicts with a history clear."
+  },
   "chatClearHistoryBody": "Delete this conversation’s history on this device? Copies on other devices are unaffected. This cannot be undone.",
   "@chatClearHistoryBody": {
     "description": "Conversation: body of the clear-history confirmation"

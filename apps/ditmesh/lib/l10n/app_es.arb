@@ -667,6 +667,8 @@
   "appearanceLight": "Claro",
   "appearanceDark": "Oscuro",
   "appearanceSubtitle": "Cinco estilos con modos claro y oscuro",
+  "chatHistoryConversationHideFailed": "Se borró el historial local. No se pudo ocultar la conversación.",
+  "chatHistorySendPending": "Espera a que termine la operación en curso o cancela los mensajes en cola. Luego inténtalo de nuevo.",
   "chatClearHistoryBody": "¿Eliminar el historial de esta conversación de este dispositivo? Las copias de otros dispositivos no se verán afectadas. No se puede deshacer.",
   "chatLoadEarlier": "Cargar mensajes anteriores",
   "chatHistoryLoadFailed": "No se pudieron cargar los mensajes anteriores. Toca para reintentar.",
