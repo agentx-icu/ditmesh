@@ -129,13 +129,13 @@ Media was checked on an Apple silicon Mac with its built-in camera, microphone a
 
 | Check | Evidence |
 |---|---|
-| Camera | The native preview appeared and the Add Friend sheet was visible again after closing the scanner. Widget regressions cover startup feedback, foreground suspend and resume, and opening again after an abandoned startup. |
+| Camera | The built-in camera read the synthetic QR code. The scanner closed and filled the exact expected Tox ID in Add Friend without sending a request. Widget regressions cover startup feedback, foreground suspend and resume, and opening again after an abandoned startup. |
 | Capture and playback | The workbench's SoLoud player played a 731 Hz WAV through the speakers. The live listener's recorder delivered microphone PCM, and power at that frequency rose by more than 10× during playback before returning to the room baseline. This run verifies the audio path. Acoustic Morse text decoding was inconclusive. |
 | macOS signature | The arm64 app passed integrity and camera/audio entitlement checks with an ad hoc signature. The installer PKG was unsigned. |
 | iOS signature | The IPA passed the unsigned-archive preflight. There was no matching App Store distribution identity or provisioning profile on this Mac. |
 | Android signature | The APK and AAB agreed on version and signer and passed signature verification. Distribution verification rejected the debug certificate. |
 
-Artifact rows refer to the [native build on the PR #47 merge commit](https://github.com/agentx-icu/ditmesh/actions/runs/44141823682), revision `61cfc12933ba0f3c41ce2ac08488ecfedeee230e`. Store distribution signatures require the project's signing credentials. No phone or tablet was connected for this session.
+Artifact rows refer to the [native build on the PR #47 merge commit](https://github.com/agentx-icu/ditmesh/actions/runs/44141823682), revision `61cfc12933ba0f3c41ce2ac08488ecfedeee230e`. Store distribution signatures require the project's signing credentials and the [store-specific packaging paths](release/STORE_READINESS.md). No phone or tablet was connected for this session.
 
 Run the native probe from `apps/ditmesh` with:
 

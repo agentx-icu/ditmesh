@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/contacts/add_friend_sheet.dart';
 import 'package:ditmesh/ui/contacts/qr_scan_page.dart';
+import 'package:ditmesh/ui/contacts/tox_id.dart';
 import 'package:ditmesh/ui/listen/record_pcm_source.dart';
 import 'package:ditmesh/ui/listen/workbench/workbench_controller.dart';
 import 'package:ditmesh_chat_api/testing.dart';
@@ -74,11 +75,29 @@ void main() {
         timeout: const Duration(minutes: 2),
         reason: 'The expected QR code did not close the scanner.',
       );
-      final values = tester
-          .widgetList<EditableText>(find.byType(EditableText))
-          .map((field) => field.controller.text);
-      expect(values, contains(_qrAddress));
-      expect(service.outgoingFriendRequests, isEmpty);
+      final id = tester
+          .widget<EditableText>(
+            find
+                .descendant(
+                  of: find.byType(AddFriendForm),
+                  matching: find.byType(EditableText),
+                )
+                .first,
+          )
+          .controller
+          .text;
+      expect(isValidToxId(id), isTrue);
+      expect(
+        service.outgoingFriendRequests.isEmpty,
+        isTrue,
+        reason: 'Scanning must not send a friend request.',
+      );
+      debugPrint('MEDIA_CAMERA_EVIDENCE decodedValidToxId=true');
+      expect(
+        id == _qrAddress,
+        isTrue,
+        reason: 'The scanned Tox ID did not match the synthetic QR fixture.',
+      );
       debugPrint('MEDIA_CAMERA_EVIDENCE toxQrPopulated=true');
     }
     await tester.pumpAndSettle();
