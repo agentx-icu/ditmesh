@@ -715,7 +715,7 @@ class SJa extends S {
   String get chatScanQr => 'QR コードをスキャン';
 
   @override
-  String get chatScanQrDesktopHint => 'QR コードの読み取りにはスマートフォンのカメラが必要です';
+  String get chatScanQrDesktopHint => 'このプラットフォームではカメラで読み取れません。Tox ID を貼り付けてください。';
 
   @override
   String get chatScanQrTitle => 'Tox ID をスキャン';

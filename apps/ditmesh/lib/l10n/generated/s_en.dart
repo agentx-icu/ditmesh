@@ -718,7 +718,7 @@ class SEn extends S {
   String get chatScanQr => 'Scan QR';
 
   @override
-  String get chatScanQrDesktopHint => 'QR scanning needs a phone camera';
+  String get chatScanQrDesktopHint => 'Camera scanning is unavailable on this platform. Paste a Tox ID.';
 
   @override
   String get chatScanQrTitle => 'Scan a Tox ID';

@@ -219,7 +219,7 @@
   "chatSendRequest": "リクエストを送信",
   "chatRequestSent": "友達リクエストを送信しました",
   "chatScanQr": "QR コードをスキャン",
-  "chatScanQrDesktopHint": "QR コードの読み取りにはスマートフォンのカメラが必要です",
+  "chatScanQrDesktopHint": "このプラットフォームではカメラで読み取れません。Tox ID を貼り付けてください。",
   "chatScanQrTitle": "Tox ID をスキャン",
   "chatScanQrNotToxId": "この QR コードは Tox ID ではありません",
   "chatAccept": "承認",

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
@@ -8,13 +9,12 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/nearby_controller.dart';
 import '../nearby/nearby_page.dart';
-import '../chat/chat_layout.dart';
 import '../common/field_label.dart';
 import 'qr_scan_page.dart';
 import 'tox_id.dart';
 
-/// Bottom sheet: paste a Tox ID (validated live), optional greeting, QR scan
-/// on phones. Resolves to true when a request was sent.
+/// Bottom sheet to paste or scan a Tox ID and send an optional greeting.
+/// Resolves to true when a request was sent.
 Future<bool> showAddFriendSheet(
   BuildContext context, {
   required ChatService service,
@@ -30,7 +30,14 @@ Future<bool> showAddFriendSheet(
       child: AddFriendForm(
         service: service,
         ownToxId: ownToxId,
-        canScan: canScan ?? isTouchPlatform,
+        canScan:
+            canScan ??
+            switch (defaultTargetPlatform) {
+              TargetPlatform.android ||
+              TargetPlatform.iOS ||
+              TargetPlatform.macOS => true,
+              _ => false,
+            },
       ),
     ),
   );
@@ -48,7 +55,7 @@ class AddFriendForm extends StatefulWidget {
   final ChatService service;
   final String? ownToxId;
 
-  /// Whether the QR button is enabled (phones); desktop shows a hint instead.
+  /// Whether the QR scanner is available on the current platform.
   final bool canScan;
 
   @override
@@ -65,6 +72,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
   /// [build] so a locale change re-renders it.
   String? _serverErrorCode;
   bool _busy = false;
+  bool _scanning = false;
 
   @override
   void didChangeDependencies() {
@@ -85,13 +93,20 @@ class _AddFriendFormState extends State<AddFriendForm> {
   }
 
   Future<void> _scan() async {
-    final String? scanned = await QrScanPage.open(context);
-    if (scanned == null || !mounted) return;
-    _id.text = scanned;
-    _form.currentState?.validate();
+    if (_busy || _scanning) return;
+    _scanning = true;
+    try {
+      final String? scanned = await QrScanPage.open(context);
+      if (scanned == null || !mounted) return;
+      _id.text = scanned;
+      _form.currentState?.validate();
+    } finally {
+      _scanning = false;
+    }
   }
 
   Future<void> _submit() async {
+    if (_busy || _scanning) return;
     setState(() => _serverErrorCode = null);
     if (!(_form.currentState?.validate() ?? false)) return;
     final String fallback = context.s.chatDefaultRequestMessage;
@@ -185,7 +200,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
-                    onPressed: () => unawaited(_scan()),
+                    onPressed: _busy ? null : () => unawaited(_scan()),
                     icon: const Icon(Icons.qr_code_scanner),
                     label: Text(s.chatScanQr),
                   ),

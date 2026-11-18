@@ -718,7 +718,7 @@ class SEs extends S {
   String get chatScanQr => 'Escanear QR';
 
   @override
-  String get chatScanQrDesktopHint => 'Para escanear QR se necesita la cámara de un teléfono';
+  String get chatScanQrDesktopHint => 'El escaneo con cámara no está disponible en esta plataforma. Pega un ID de Tox.';
 
   @override
   String get chatScanQrTitle => 'Escanear un Tox ID';

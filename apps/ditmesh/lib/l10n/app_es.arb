@@ -219,7 +219,7 @@
   "chatSendRequest": "Enviar solicitud",
   "chatRequestSent": "Solicitud de amistad enviada",
   "chatScanQr": "Escanear QR",
-  "chatScanQrDesktopHint": "Para escanear QR se necesita la cámara de un teléfono",
+  "chatScanQrDesktopHint": "El escaneo con cámara no está disponible en esta plataforma. Pega un ID de Tox.",
   "chatScanQrTitle": "Escanear un Tox ID",
   "chatScanQrNotToxId": "Este código QR no es un Tox ID",
   "chatAccept": "Aceptar",

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -6,8 +8,7 @@ import '../common/app_bar_title.dart';
 import 'tox_id.dart';
 
 /// Full-screen camera scanner that pops with the first valid Tox ID it sees.
-/// Only reachable on Android / iOS; the add-friend sheet disables the entry
-/// point elsewhere (desktop has no `mobile_scanner` implementation).
+/// The add-friend sheet exposes this on Android, iOS and macOS.
 class QrScanPage extends StatefulWidget {
   const QrScanPage({super.key});
 
@@ -19,12 +20,107 @@ class QrScanPage extends StatefulWidget {
   State<QrScanPage> createState() => _QrScanPageState();
 }
 
-class _QrScanPageState extends State<QrScanPage> {
+class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
+  static Future<void>? _previousCameraReleased;
+
+  final _camera = MobileScannerController(autoStart: false);
+  final _cameraReleased = Completer<void>();
+  late Future<void> _cameraOperation;
+  late final Timer _startupTimer;
+  bool _scannerMounted = false;
+  bool _startupTimedOut = false;
+  late bool _foreground;
   bool _done = false;
 
   /// A QR code was seen that is not a Tox ID; the hint text is resolved in
   /// [build] so it follows the locale.
   bool _sawForeignCode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _foreground = switch (WidgetsBinding.instance.lifecycleState) {
+      null || AppLifecycleState.detached || AppLifecycleState.resumed => true,
+      _ => false,
+    };
+    WidgetsBinding.instance.addObserver(this);
+    _startupTimer = Timer(const Duration(seconds: 12), () {
+      if (!_camera.value.isInitialized) {
+        setState(() => _startupTimedOut = true);
+      }
+    });
+    _cameraOperation = _previousCameraReleased ?? Future<void>.value();
+    _previousCameraReleased = _cameraReleased.future;
+    _queueCamera(() async {
+      if (!mounted) return;
+      setState(() => _scannerMounted = true);
+      await WidgetsBinding.instance.endOfFrame;
+      await _syncCamera();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final foreground = state == AppLifecycleState.resumed;
+    if (foreground == _foreground) return;
+    _foreground = foreground;
+    _queueCamera(_syncCamera);
+  }
+
+  Future<void> _syncCamera() async {
+    if (!mounted) return;
+    if (!_foreground) {
+      await _camera.stop();
+    } else if (!_camera.value.isInitialized ||
+        _camera.value.hasCameraPermission) {
+      await _camera.start();
+    }
+  }
+
+  void _queueCamera(Future<void> Function() operation) {
+    _cameraOperation = _cameraOperation
+        .then((_) => operation())
+        .onError<Object>(
+          (error, stack) => FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stack,
+              library: 'QR scanner',
+            ),
+          ),
+        );
+  }
+
+  @override
+  void dispose() {
+    _startupTimer.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    // A native permission prompt or camera start can finish after navigation.
+    // Release that session before the next scanner tries to open the camera.
+    _queueCamera(() async {
+      try {
+        try {
+          await _camera.stop();
+        } finally {
+          await _camera.dispose();
+        }
+      } finally {
+        if (identical(_previousCameraReleased, _cameraReleased.future)) {
+          _previousCameraReleased = null;
+        }
+        _cameraReleased.complete();
+      }
+    });
+    super.dispose();
+  }
+
+  Widget _startupView() => _startupTimedOut
+      ? const QrScanErrorView(
+          error: MobileScannerException(
+            errorCode: MobileScannerErrorCode.genericError,
+          ),
+        )
+      : const Center(child: CircularProgressIndicator());
 
   void _onDetect(BarcodeCapture capture) {
     if (_done || !mounted || ModalRoute.isCurrentOf(context) != true) return;
@@ -50,12 +146,15 @@ class _QrScanPageState extends State<QrScanPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            // The plugin owns this controller and observes lifecycle changes.
-            // Passing a custom controller disables its pause/resume handling.
-            onDetect: _onDetect,
-            errorBuilder: (context, error) => QrScanErrorView(error: error),
-          ),
+          if (_scannerMounted)
+            MobileScanner(
+              controller: _camera,
+              onDetect: _onDetect,
+              placeholderBuilder: (_) => _startupView(),
+              errorBuilder: (context, error) => QrScanErrorView(error: error),
+            )
+          else
+            _startupView(),
           if (_sawForeignCode)
             Positioned(
               left: 16,

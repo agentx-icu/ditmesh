@@ -724,7 +724,7 @@ class SRu extends S {
   String get chatScanQr => 'Сканировать QR';
 
   @override
-  String get chatScanQrDesktopHint => 'Для сканирования QR нужна камера телефона';
+  String get chatScanQrDesktopHint => 'На этой платформе сканирование камерой недоступно. Вставьте Tox ID.';
 
   @override
   String get chatScanQrTitle => 'Сканировать Tox ID';

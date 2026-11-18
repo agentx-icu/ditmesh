@@ -219,7 +219,7 @@
   "chatSendRequest": "Отправить запрос",
   "chatRequestSent": "Запрос дружбы отправлен",
   "chatScanQr": "Сканировать QR",
-  "chatScanQrDesktopHint": "Для сканирования QR нужна камера телефона",
+  "chatScanQrDesktopHint": "На этой платформе сканирование камерой недоступно. Вставьте Tox ID.",
   "chatScanQrTitle": "Сканировать Tox ID",
   "chatScanQrNotToxId": "Этот QR-код не содержит Tox ID",
   "chatAccept": "Принять",

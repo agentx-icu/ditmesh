@@ -219,7 +219,7 @@
   "chatSendRequest": "Enviar solicitação",
   "chatRequestSent": "Solicitação de amizade enviada",
   "chatScanQr": "Ler QR",
-  "chatScanQrDesktopHint": "A leitura de QR requer a câmera de um celular",
+  "chatScanQrDesktopHint": "A leitura pela câmera não está disponível nesta plataforma. Cole um ID Tox.",
   "chatScanQrTitle": "Ler um Tox ID",
   "chatScanQrNotToxId": "Este código QR não é um Tox ID",
   "chatAccept": "Aceitar",

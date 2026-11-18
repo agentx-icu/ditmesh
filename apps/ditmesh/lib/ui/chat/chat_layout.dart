@@ -17,8 +17,7 @@ bool isMasterDetail(BuildContext context) =>
 /// Width of the list pane in master-detail mode.
 const double kMasterPaneWidth = 360;
 
-/// Touch-first platforms get swipe actions and QR scanning; desktop gets
-/// right-click menus and a "needs a camera" hint instead.
+/// Touch-first platforms get swipe actions; desktop gets right-click menus.
 bool get isTouchPlatform =>
     defaultTargetPlatform == TargetPlatform.android ||
     defaultTargetPlatform == TargetPlatform.iOS;

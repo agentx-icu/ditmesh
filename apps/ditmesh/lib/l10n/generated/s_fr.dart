@@ -718,7 +718,7 @@ class SFr extends S {
   String get chatScanQr => 'Scanner un code QR';
 
   @override
-  String get chatScanQrDesktopHint => 'La lecture des codes QR nécessite une caméra de téléphone';
+  String get chatScanQrDesktopHint => 'La lecture avec la caméra est indisponible sur cette plateforme. Collez un identifiant Tox.';
 
   @override
   String get chatScanQrTitle => 'Scanner un identifiant Tox';
