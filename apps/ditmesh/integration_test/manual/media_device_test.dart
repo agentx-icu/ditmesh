@@ -20,9 +20,14 @@ import 'package:morse_io/morse_io.dart';
 
 const _enabled = bool.fromEnvironment('DITMESH_MEDIA_DEVICE_TEST');
 const _qrAddress = String.fromEnvironment('DITMESH_MEDIA_QR_ADDRESS');
+const _selectedRoute = bool.fromEnvironment('DITMESH_MEDIA_AUDIO_ROUTE_TEST');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (_selectedRoute) {
+    _testSelectedRoute();
+    return;
+  }
 
   testWidgets('the contact scanner opens and closes the native preview', (
     tester,
@@ -172,6 +177,55 @@ void main() {
     },
     skip: !_enabled,
   );
+}
+
+void _testSelectedRoute() {
+  testWidgets('the selected route plays, captures and returns to playback', (
+    tester,
+  ) async {
+    const rate = 48000;
+    const length = Duration(seconds: 6);
+    final player = SoloudClipPlayer();
+    final samples = Float64List(rate);
+    for (var i = 0; i < samples.length; i++) {
+      if (i < rate ~/ 3) {
+        samples[i] = 0.05 * math.sin(2 * math.pi * 731 * i / rate);
+      }
+    }
+    final wav = WorkbenchController.monoWav(samples, rate);
+
+    Future<void> play(String stage) async {
+      await player.play(wav, length: length, loop: true);
+      expect(player.isPlaying, isTrue);
+      debugPrint('MEDIA_ROUTE_EVIDENCE playback=$stage');
+      await Future<void>.delayed(length);
+      await player.stop();
+      expect(player.isPlaying, isFalse);
+    }
+
+    final source = RecordPcmSource();
+    addTearDown(player.dispose);
+    addTearDown(source.dispose);
+    await play('initial');
+    expect(await source.hasPermission(), isTrue);
+    final pcm = await source.start(sampleRate: rate, channels: 1);
+    var bytes = 0;
+    final capture = pcm.listen((chunk) => bytes += chunk.length);
+    try {
+      debugPrint('MEDIA_ROUTE_EVIDENCE capture=active');
+      final sampleWindow = length ~/ 2;
+      await Future<void>.delayed(sampleWindow);
+      final firstBytes = bytes;
+      expect(firstBytes, greaterThan(0));
+      await Future<void>.delayed(sampleWindow);
+      expect(bytes, greaterThan(firstBytes));
+      debugPrint('MEDIA_ROUTE_EVIDENCE captureBytes=$bytes');
+    } finally {
+      await capture.cancel();
+      await source.stop();
+    }
+    await play('afterCapture');
+  }, skip: !_enabled);
 }
 
 Future<void> _waitFor(

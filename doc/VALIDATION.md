@@ -146,3 +146,30 @@ DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
 ```
 
 To verify optical QR decoding and form fill, also pass `--dart-define=DITMESH_MEDIA_QR_ADDRESS=<expected-synthetic-Tox-ID>` and hold a QR code for that exact address in front of the camera once the preview starts. The probe does not save video or audio.
+
+## Camera access, audio routes and signing follow-up — 2026-11-18
+
+The hardware run used an Apple silicon Mac on macOS 27.0.1 (26A434), Flutter
+3.41.9 and the built-in camera. The camera test bundle had its own macOS
+permission entry and used the production Add Friend and scanner screens with
+a synthetic contact service.
+
+| Check | Result |
+|---|---|
+| B1, M3, P2, X7 — Camera permission | **Verified on Mac.** Denying access showed the permission-specific message. Retry stayed denied. Enabling the isolated app in Settings and reopening it started a CoreMediaIO stream on the physical camera. Leaving the scanner released the stream. Revocation used macOS's Quit & Reopen. During this flow, the scanner's timeout could expire while the app was inactive and no native start had run. The fix starts that timer only for an active, pending native startup. The rebuilt Mac probe stayed in the waiting state beyond the former 12-second threshold. The widget regressions cover waiting for focus, waiting for the previous camera owner, and losing focus during a pending start. |
+| M2, X4 — Bluetooth audio | **Verified on Mac.** CoreAudio attributed active playback and input to the Baseus Bowie P1. The recorder supplied 576,000 bytes of mono PCM at 48 kHz in six seconds, and playback worked again after capture. During active playback the default output moved to the Mac speakers, CoreAudio showed the same test process using the new output, and the original default was restored. |
+| M2, X4 — Wired audio | **Needs device.** Only Bluetooth hardware was available. Repeat the route probe with an analog or USB output, verify its actual output and intended input in CoreAudio, then check disconnection and playback again. The phone and tablet hardware paths also need devices. |
+| W4, X6 — Signing | **Validation artifacts verified.** The [PR #49 native build](https://github.com/agentx-icu/ditmesh/actions/runs/44258084523) produced a macOS arm64 bundle with 23 verified Mach-O files, an ad hoc signature and camera/audio entitlements. The PKG was unsigned. The unsigned iOS IPA passed bundle and declaration checks. The Android APK and AAB matched on the validation signer at version 1.1.0 build 3, and the distribution gate rejected that debug certificate. The packaging suite ran 151 tests with two skips. |
+| W4, X6 — Store distribution | **Blocked on signing inputs.** The project has no available store signing environment for this run. Apple export needs a matching distribution identity and profile, and Play needs the owner's upload certificate plus separately verified delivery signing. [Apple provisioning](https://developer.apple.com/help/account/provisioning-profiles/create-an-app-store-provisioning-profile/) · [Play App Signing](https://support.google.com/googleplay/android-developer/answer/9842756) |
+
+Select the intended devices in macOS Sound, then run the isolated route probe
+from `apps/ditmesh`. It checks that PCM keeps arriving and that playback works
+again after capture. Pair its markers with OS evidence of the active input and
+output of the test process. The probe counts bytes and discards the samples.
+
+```bash
+DITMESH_ALLOW_MISSING_FFI=1 flutter test --no-pub -d macos \
+  integration_test/manual/media_device_test.dart \
+  --dart-define=DITMESH_MEDIA_DEVICE_TEST=true \
+  --dart-define=DITMESH_MEDIA_AUDIO_ROUTE_TEST=true
+```
