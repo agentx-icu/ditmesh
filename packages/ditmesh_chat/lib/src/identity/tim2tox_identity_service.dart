@@ -14,6 +14,7 @@ import '../chat/conversation_meta_store.dart';
 import '../engine/chat_engine.dart';
 import '../logging/chat_logger.dart';
 import '../util/atomic_file.dart';
+import '../util/posix_fsync.dart';
 import '../util/posix_permissions.dart';
 import '../util/value_stream.dart';
 import 'backup_archive.dart';
@@ -32,6 +33,7 @@ part 'identity_profile.dart';
 part 'identity_backup_inventory.dart';
 part 'identity_ownership.dart';
 part 'identity_recovery.dart';
+part 'identity_restore_transaction.dart';
 
 /// [IdentityService] over Tim2Tox. States: `none` (no `tox_profile.tox`),
 /// `locked` (the verifier holds a password or the file is encrypted, and this
@@ -48,7 +50,10 @@ part 'identity_recovery.dart';
 /// password and repairs a verifier interrupted during a password change or
 /// restore.
 class Tim2ToxIdentityService
-    implements PersistentIdentityService, EncryptedBackupService {
+    implements
+        PersistentIdentityService,
+        EncryptedBackupService,
+        IdentityRestoreRecovery {
   Tim2ToxIdentityService({
     required IdentityPaths paths,
     required ChatEngine engine,
@@ -89,6 +94,10 @@ class Tim2ToxIdentityService
   // Set once [inspect] has excluded the existing identity container.
   bool _backupExclusionChecked = false;
 
+  @override
+  bool get identityRecoveryPending => _recoveryBlocked;
+  bool _recoveryBlocked = false;
+
   /// Exposed for the backend / diagnostics.
   IdentityPaths get paths => _paths;
 
@@ -115,6 +124,7 @@ class Tim2ToxIdentityService
   }
 
   void _publish(IdentityRecord record) {
+    _recoveryBlocked = false;
     _record = record;
     _identity.force(record.toIdentity());
   }
@@ -122,19 +132,16 @@ class Tim2ToxIdentityService
   // ---- inspect / open / unlock / create ------------------------------------
 
   @override
-  Future<IdentityState> inspect() async {
+  Future<IdentityState> inspect() => _runMutation(() async {
     // Startup runs inspect for every state (none / locked / ready), so this
     // is where an existing install gets its backup exclusion even if it is
     // never unlocked. Once per service; no directory is created for it.
     if (!_backupExclusionChecked) {
       _backupExclusionChecked = await _paths.excludeExistingFromBackup();
     }
-    // A restore killed between its two renames left the previous identity
-    // in staging and no root. Serialised with the mutations: a restore in
-    // progress has the same shape for a moment and must not be mistaken.
-    if (!_paths.profileExists) await _runMutation(_recoverInterruptedImport);
+    await _recoverInterruptedImport();
     return _inspect();
-  }
+  });
 
   Future<IdentityState> _inspect() async {
     if (!_paths.profileExists) return IdentityState.none;
@@ -156,8 +163,8 @@ class Tim2ToxIdentityService
   Future<Identity> open() => _runMutation(_open);
 
   Future<Identity> _open() async {
-    if (_record != null) return _record!.toIdentity();
     await _recoverInterruptedImport();
+    if (_record != null) return _record!.toIdentity();
     if (!_paths.profileExists) {
       throw const ChatException('no_identity', 'No identity on disk');
     }
@@ -176,8 +183,8 @@ class Tim2ToxIdentityService
       _runMutation(() => _unlock(password));
 
   Future<Identity> _unlock(String password) async {
-    if (_record != null) return _record!.toIdentity();
     await _recoverInterruptedImport();
+    if (_record != null) return _record!.toIdentity();
     if (!_paths.profileExists) {
       throw const ChatException('no_identity', 'No identity on disk');
     }
@@ -310,12 +317,26 @@ class Tim2ToxIdentityService
     () => _restoreEncrypted(bytes, passphrase, identityPassword),
   ).whenComplete(() => _opened = null);
 
+  @override
+  Future<bool?> finishPendingAppRestore(
+    Identity owner, {
+    required Future<void> Function(String publicKey) clearPreviousPreferences,
+    required Future<bool> Function(Uint8List document) applyPreferences,
+  }) => _runMutation(
+    () => _finishPendingAppRestore(
+      owner,
+      clearPreviousPreferences,
+      applyPreferences,
+    ),
+  );
+
   // ---- connect / disconnect / delete ----------------------------------------
 
   @override
   Future<void> connect() => _runMutation(_connectImpl);
 
   Future<void> _connectImpl() async {
+    await _recoverInterruptedImport();
     if (_started) return;
     final record = _requireRecord();
     final password = _sessionPassword;
@@ -381,33 +402,7 @@ class Tim2ToxIdentityService
   }
 
   @override
-  Future<void> deleteIdentity() => _runMutation(() async {
-    _opened = null;
-    final record = _record ?? await IdentityRecord.read(_paths.identityFile);
-    final password = _sessionPassword;
-    try {
-      await _prepareForReplacement();
-      await _disconnectImpl();
-      _requireTeardownConfirmed();
-      Future<void> removeFiles() async {
-        if (record != null) await _clearPreferences(record.toxId);
-        await _paths.deleteAll();
-        _forgetIdentity();
-      }
-
-      if (record == null) {
-        await removeFiles();
-      } else {
-        await _verifier.replacePassword(record.toxId, null, removeFiles);
-      }
-    } catch (_) {
-      if (_paths.profileExists && record != null) {
-        _sessionPassword = password;
-        _publish(record);
-      }
-      rethrow;
-    }
-  });
+  Future<void> deleteIdentity() => _runMutation(_deleteIdentity);
 
   @override
   void registerDataStore(IdentityDataStore store) => _dataStores.add(store);
@@ -436,15 +431,6 @@ class Tim2ToxIdentityService
     _sessionPassword = null;
     _identity.force(null);
     _status.add(ConnectionStatus.offline);
-  }
-
-  Future<void> _clearPreferences(String toxId) async {
-    final store = _store;
-    if (store == null || toxId.length < 16) return;
-    await Tim2ToxPreferencesAdapter(
-      store,
-      accountPrefix: toxId.substring(0, 16).toUpperCase(),
-    ).clear();
   }
 
   Future<T> _runMutation<T>(Future<T> Function() action) {

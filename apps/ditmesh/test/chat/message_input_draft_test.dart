@@ -24,6 +24,8 @@ class _DelayedService implements ChatService {
   final List<Completer<void>> writeGates = [];
   bool delayWrites = false;
   bool failDraftWrites = false;
+  bool deleteStarted = false;
+  bool failDelete = false;
 
   @override
   int get maxMessageBytes => delegate.maxMessageBytes;
@@ -48,6 +50,16 @@ class _DelayedService implements ChatService {
     }
     if (failDraftWrites) throw StateError('disk unavailable');
     await delegate.setDraft(id, text);
+  }
+
+  @override
+  Future<void> deleteConversation(String id) async {
+    deleteStarted = true;
+    if (failDelete) {
+      await delegate.clearHistory(id);
+      throw const ChatException('conversation_hide_failed', 'Hide failed');
+    }
+    await delegate.deleteConversation(id);
   }
 
   @override
@@ -178,6 +190,54 @@ void main() {
     await t.pump();
     expect(draft(h, id), 'SECOND');
   });
+
+  for (final failDelete in [false, true]) {
+    testWidgets(
+      'drafts submitted during a ${failDelete ? 'failed' : 'successful'} '
+      'conversation delete are ${failDelete ? 'saved' : 'discarded'}',
+      (t) async {
+        final (h, service, id) = await setup(t);
+        service
+          ..delayWrites = true
+          ..failDelete = failDelete;
+        await keyIn(t, 'IN FLIGHT');
+        await t.pump(const Duration(milliseconds: 450));
+        final deleting = deleteConversationWithDraft(service, id);
+        final done = failDelete
+            ? expectLater(
+                deleting,
+                throwsA(
+                  isA<ChatException>().having(
+                    (error) => error.code,
+                    'code',
+                    'conversation_hide_failed',
+                  ),
+                ),
+              )
+            : deleting;
+        await keyIn(t, 'QUEUED BEHIND DELETE');
+        await t.pump(const Duration(milliseconds: 450));
+        expect(service.deleteStarted, isFalse);
+        expect(service.writes, ['IN FLIGHT']);
+
+        service.writeGates.first.complete();
+        await t.pump();
+        await done;
+        expect(service.deleteStarted, isTrue);
+        if (failDelete) {
+          expect(service.writes, ['IN FLIGHT', 'QUEUED BEHIND DELETE']);
+          service.writeGates.last.complete();
+          await t.pump();
+          expect(draft(h, id), 'QUEUED BEHIND DELETE');
+        } else {
+          await t.pumpWidget(h.wrap(const SizedBox()));
+          h.service.receiveMessage(id, 'A NEW MESSAGE');
+          expect(service.writes, ['IN FLIGHT']);
+          expect(draft(h, id), isEmpty);
+        }
+      },
+    );
+  }
 
   testWidgets(
     'reopening shares pending writes and restores the newest queued draft',

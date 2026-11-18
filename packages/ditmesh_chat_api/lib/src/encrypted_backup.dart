@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 import 'keyed_recording.dart';
 
 import 'backup_media.dart';
+import 'models.dart';
 
 /// What a complete backup can carry (F10). [identity] is always included;
 /// everything else is chosen on export.
@@ -142,6 +143,7 @@ final class RestoreReport {
     required this.pendingNotResumed,
     required this.queuedInvitesNotResumed,
     this.preferences,
+    this.restoredIdentity,
   });
 
   final Set<BackupCategory> restored;
@@ -158,6 +160,9 @@ final class RestoreReport {
 
   /// The portable preferences document for the app to apply, or null.
   final Uint8List? preferences;
+
+  /// The session produced by this restore, when supplied by the backend.
+  final Identity? restoredIdentity;
 }
 
 /// An unsent message brought over from the source device, kept outside the
@@ -236,13 +241,31 @@ abstract interface class EncryptedBackupService {
   /// restore (decrypted contents and the passphrase).
   void forgetPreview();
 
-  /// Replaces the current identity with the backup's, transactionally: on
-  /// any failure the previous installation stays in place. Restored pending
-  /// messages and invitations never send, not even after a restart.
+  /// Replaces the current identity with the backup's. Failures before the
+  /// commit preserve the previous installation. A committed replacement may
+  /// need to finish recovery before it can open. Restored pending messages
+  /// and invitations never send, even after a restart.
   Future<RestoreReport> restoreEncryptedBackup(
     Uint8List bytes,
     String passphrase, {
     String? identityPassword,
+  });
+}
+
+/// Optional recovery support for a backend that can stage app preferences
+/// alongside the imported identity.
+abstract interface class IdentityRestoreRecovery {
+  /// An interrupted restore has temporarily closed the previous session.
+  /// Its app-owned preferences may still be needed if it is recovered.
+  bool get identityRecoveryPending;
+
+  /// Finishes the app work staged for [owner]. Returns null when there is no
+  /// work. Both callbacks must save durably before returning successfully,
+  /// and must complete without starting a new identity mutation.
+  Future<bool?> finishPendingAppRestore(
+    Identity owner, {
+    required Future<void> Function(String publicKey) clearPreviousPreferences,
+    required Future<bool> Function(Uint8List document) applyPreferences,
   });
 }
 

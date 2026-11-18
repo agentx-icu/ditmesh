@@ -139,25 +139,6 @@ final class RecordingLibrary {
     return File(resolved);
   }
 
-  /// Deletes recordings no entry refers to (left behind when an entry was
-  /// deleted while its recording was open). Call only when no import or
-  /// save is in flight.
-  Future<void> pruneUnreferenced(
-    Set<String> referenced, {
-    bool Function()? isCancelled,
-  }) async {
-    final dir = Directory(p.join(root, 'media', 'recordings'));
-    if (!await dir.exists()) return;
-    await for (final entity in dir.list()) {
-      if (isCancelled?.call() ?? false) return;
-      if (entity is! File) continue;
-      final rel = 'media/recordings/${p.basename(entity.path)}';
-      if (rel == workingFile || referenced.contains(rel)) continue;
-      if (!_safe.hasMatch(rel)) continue;
-      await entity.delete();
-    }
-  }
-
   /// Copies [picked] into [relativePath] (the working slot by default)
   /// after validating it, and opens it. Throws [WavFormatException] for
   /// anything unsupported; the previous file is replaced only on success,

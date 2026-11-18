@@ -7,6 +7,11 @@ part of 'message_input.dart';
 // A pending dispose flush must finish before a reopened editor's newer draft.
 final _draftWriters = Expando<Map<String, _DraftWriter>>();
 
+/// Orders deletion with composer saves. A successful delete retires the old
+/// writer so delayed or dispose-time saves cannot restore the cleared draft.
+Future<void> deleteConversationWithDraft(ChatService service, String id) =>
+    _writerFor(service, id).delete(() => service.deleteConversation(id));
+
 _DraftWriter _writerFor(ChatService service, String id) {
   final writers = _draftWriters[service] ??= {};
   return writers.putIfAbsent(
@@ -23,6 +28,13 @@ class _DraftWriter extends ChangeNotifier {
   Future<void> _tail = Future<void>.value();
   Future<void> get settled => _tail;
   int pending = 0;
+  Future<void>? _deletion;
+
+  Future<void> _queue(Future<void> Function() run) {
+    final next = _tail.then((_) => run());
+    _tail = next.then<void>((_) {}, onError: (Object _) {});
+    return next;
+  }
 
   /// Edit revision of the shared text, bumped by every editor's change and
   /// by a teardown commit, so an editor that left still sees later edits.
@@ -96,12 +108,7 @@ class _DraftWriter extends ChangeNotifier {
     if (_identitySub == null && identity != null) {
       final key = identity.current?.publicKey;
       _identitySub = identity.identityChanges.listen((value) {
-        if (value == null || value.publicKey != key) {
-          valid = false;
-          _invalidate(this);
-          unawaited(_identitySub?.cancel());
-          _identitySub = null;
-        }
+        if (value == null || value.publicKey != key) _retire();
       });
     }
     return _controller ??= TextEditingController(
@@ -112,11 +119,22 @@ class _DraftWriter extends ChangeNotifier {
   }
 
   void _releaseIdleObserver() {
-    if (_editors == 0 && pending == 0 && error == null && !sending) {
+    if (_editors == 0 &&
+        pending == 0 &&
+        _deletion == null &&
+        error == null &&
+        !sending) {
       _invalidate(this);
       unawaited(_identitySub?.cancel());
       _identitySub = null;
     }
+  }
+
+  void _retire() {
+    valid = false;
+    _invalidate(this);
+    unawaited(_identitySub?.cancel());
+    _identitySub = null;
   }
 
   void release() {
@@ -130,7 +148,7 @@ class _DraftWriter extends ChangeNotifier {
   Future<void> save(String draft, Future<void> Function() write) {
     latest = draft;
     pending++;
-    return _tail = _tail.then((_) async {
+    return _queue(() async {
       try {
         await write();
       } finally {
@@ -139,4 +157,18 @@ class _DraftWriter extends ChangeNotifier {
       }
     });
   }
+
+  Future<void> delete(Future<void> Function() deleteConversation) =>
+      _deletion ??= _queue(() async {
+        try {
+          if (!valid) {
+            throw const ChatException('not_connected', 'Identity changed');
+          }
+          await deleteConversation();
+          _retire();
+        } finally {
+          _deletion = null;
+          _releaseIdleObserver();
+        }
+      });
 }

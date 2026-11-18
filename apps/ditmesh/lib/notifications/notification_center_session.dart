@@ -57,50 +57,51 @@ extension _NotificationSession on NotificationCenter {
       if (lines.isEmpty) {
         unawaited(_clearConversation(id));
       } else {
-        _repostSilently(id, lines);
+        unawaited(_repostSilently(id, lines));
       }
     }
   }
 
-  void _repostSilently(String id, List<ChatMessage> recent) {
+  Future<void> _repostSilently(String id, List<ChatMessage> recent) async {
     final ChatMessage latest = recent.last;
     final Conversation? conversation = _conversationFor(id);
     final bool isGroup =
         (conversation?.kind ?? NotificationComposer.kindFromId(id)) ==
         ConversationKind.group;
-    final NotificationRequest composed = _composer.message(
-      message: latest,
-      title:
-          conversation?.title ??
-          (isGroup
-              ? NotificationComposer.shortKey(
-                  NotificationComposer.peerFromId(id),
-                )
-              : NotificationComposer.senderLabel(latest)),
-      isGroup: isGroup,
-      lines: [
-        for (final ChatMessage m in recent)
-          _composer.inboxLine(m, isGroup: isGroup),
-      ],
-    );
     final int generation = _ledger.posted(id, latest);
-    unawaited(
-      _post(
-        NotificationRequest(
-          id: composed.id,
-          channel: composed.channel,
-          title: composed.title,
-          body: composed.body,
-          payload: composed.payload,
-          groupKey: composed.groupKey,
-          lines: composed.lines,
-          summary: composed.summary,
-          sound: false,
-          silentUpdate: true,
-        ),
-        stillWanted: () => _ledger.isCurrent(id, generation),
-      ),
-    );
+    final account = _account;
+    bool stillCurrent() =>
+        _account == account && _ledger.isCurrent(id, generation);
+    final shown = await _post(() {
+      final composed = _composer.message(
+        message: latest,
+        title:
+            conversation?.title ??
+            (isGroup
+                ? NotificationComposer.shortKey(
+                    NotificationComposer.peerFromId(id),
+                  )
+                : NotificationComposer.senderLabel(latest)),
+        isGroup: isGroup,
+        lines: [
+          for (final m in recent) _composer.inboxLine(m, isGroup: isGroup),
+        ],
+      );
+      return NotificationRequest(
+        id: composed.id,
+        channel: composed.channel,
+        title: composed.title,
+        body: composed.body,
+        payload: composed.payload,
+        groupKey: composed.groupKey,
+        lines: composed.lines,
+        summary: composed.summary,
+        sound: false,
+        silentUpdate: true,
+      );
+    }, stillWanted: () => !_prefs.isMuted(id) && stillCurrent());
+    // A restricted or failed replacement can leave the old text visible.
+    if (!shown && stillCurrent()) await _clearConversation(id);
   }
 
   /// Another identity (or none): everything posted belongs to the old one.

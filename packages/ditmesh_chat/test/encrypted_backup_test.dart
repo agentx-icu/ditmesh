@@ -697,6 +697,124 @@ void main() {
     await svc.dispose();
   });
 
+  test('portable preferences remain with the restored session until saved',
+      () async {
+    final source = await seeded(password: 'id-pass');
+    final oldSession = source.current!;
+    final bytes = await source.exportEncryptedBackup(request(_all));
+    final report = await source.restoreEncryptedBackup(
+      bytes,
+      'correct horse',
+      identityPassword: 'id-pass',
+    );
+    expect(report.restoredIdentity, same(source.current));
+    expect(report.restoredIdentity!.toxId, oldSession.toxId);
+    final cleared = <String>[];
+    Future<void> clear(String publicKey) async => cleared.add(publicKey);
+
+    expect(
+      await source.finishPendingAppRestore(
+        oldSession,
+        clearPreviousPreferences: clear,
+        applyPreferences: (_) async {
+          fail('a superseded session must not apply preferences');
+        },
+      ),
+      isFalse,
+    );
+    expect(cleared, isEmpty);
+    await expectLater(
+      source.finishPendingAppRestore(
+        report.restoredIdentity!,
+        clearPreviousPreferences: clear,
+        applyPreferences: (_) async {
+          throw StateError('settings write failed');
+        },
+      ),
+      throwsStateError,
+    );
+    expect(cleared, [oldSession.publicKey]);
+    await source.dispose();
+
+    final restarted = service(paths, kv: store);
+    addTearDown(restarted.dispose);
+    expect(await restarted.inspect(), IdentityState.locked);
+    await restarted.unlock('id-pass');
+    final current = restarted.current!;
+    expect(
+      await restarted.finishPendingAppRestore(
+        current,
+        clearPreviousPreferences: clear,
+        applyPreferences: (document) async {
+          expect(document, prefs);
+          return false;
+        },
+      ),
+      isFalse,
+    );
+    expect(
+      await restarted.finishPendingAppRestore(
+        current,
+        clearPreviousPreferences: clear,
+        applyPreferences: (document) async {
+          expect(document, prefs);
+          return true;
+        },
+      ),
+      isTrue,
+    );
+    expect(
+      await restarted.finishPendingAppRestore(
+        current,
+        clearPreviousPreferences: clear,
+        applyPreferences: (_) async {
+          fail('saved preferences must not be replayed');
+        },
+      ),
+      isNull,
+    );
+    expect(cleared, [oldSession.publicKey]);
+  });
+
+  for (final encrypted in [false, true]) {
+    test('restart clears the previous app scope with no preferences document '
+        '(encrypted archive: $encrypted)', () async {
+      final original = await seeded();
+      final key = original.current!.publicKey;
+      if (encrypted) {
+        final bytes = await original.exportEncryptedBackup(request({}));
+        await original.restoreEncryptedBackup(bytes, 'correct horse');
+      } else {
+        await original.importBackup(await original.exportBackup());
+      }
+      await original.dispose();
+
+      final restarted = service(paths, kv: store);
+      addTearDown(restarted.dispose);
+      await restarted.open();
+      final cleared = <String>[];
+      await expectLater(
+        restarted.finishPendingAppRestore(
+          restarted.current!,
+          clearPreviousPreferences: (_) async => throw StateError('disk full'),
+          applyPreferences: (_) async => fail('archive had no preferences'),
+        ),
+        throwsStateError,
+      );
+      for (final expected in [true, null]) {
+        expect(
+          await restarted.finishPendingAppRestore(
+            restarted.current!,
+            clearPreviousPreferences: (key) async => cleared.add(key),
+            applyPreferences: (_) async => fail('archive had no preferences'),
+          ),
+          expected,
+        );
+      }
+      expect(cleared, [key]);
+    });
+  }
+
   group('snapshot helpers', () {
     final queued = [
       QueuedRow(

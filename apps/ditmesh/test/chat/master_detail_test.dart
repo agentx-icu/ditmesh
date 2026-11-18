@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/chat/chat_layout.dart';
 import 'package:ditmesh/ui/chat/conversation_list.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
+import 'package:ditmesh/ui/chat/conversation_tile.dart';
 import 'package:ditmesh/ui/chat/message_input.dart';
+import 'package:ditmesh/ui/chat/search/message_search_screen.dart';
 import 'package:ditmesh/ui/pages/chat_page.dart';
 import 'package:ditmesh/ui/pages/groups_page.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
@@ -61,6 +63,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ConversationList), findsOneWidget);
   });
+
+  for (final bool shrink in [false, true]) {
+    testWidgets('deleting the selected conversation discards its pending draft'
+        '${shrink ? ' after collapsing the panes' : ''}', (tester) async {
+      final ChatHarness h = await pumpChat(tester, (h) {
+        h.addAnn();
+        return const ChatPage();
+      }, size: kDesktop);
+      final id = 'c2c_$kPeerKey';
+      await tester.tap(find.text('Ann').first);
+      await tester.pumpAndSettle();
+      final Finder draft = find.descendant(
+        of: find.byType(MessageInput),
+        matching: find.byType(TextField),
+      );
+      final controller = tester.widget<TextField>(draft).controller!;
+      controller.text = 'PERSISTED DRAFT';
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(h.service.conversations.single.draft, 'PERSISTED DRAFT');
+
+      await tester.tap(find.byType(PopupMenuButton<ConversationAction>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(s.chatDelete));
+      await tester.pumpAndSettle();
+      if (shrink) {
+        tester.view.physicalSize = const Size(820, 1180);
+        await tester.pumpAndSettle();
+      }
+      controller.text = 'PENDING DRAFT';
+      await tester.tap(find.widgetWithText(FilledButton, s.chatDelete));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(ConversationScreen), findsNothing);
+      expect(h.service.conversations, isEmpty);
+
+      h.service.receiveMessage(id, 'NEW MSG');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ann').first);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(draft).controller!.text, isEmpty);
+      expect(h.service.conversations.single.draft, isEmpty);
+    });
+  }
 
   testWidgets('contacts opens from the app bar and starts a chat inline', (
     tester,
@@ -159,6 +204,61 @@ void main() {
 
     for (final bool groups in <bool>[false, true]) {
       testWidgets(
+        'a search result opens in the ${groups ? 'group' : 'chat'} route '
+        'after collapsing the pane',
+        (tester) async {
+          final String id = groups ? 'group_tox_1' : 'c2c_$kPeerKey';
+          await pumpChat(tester, (h) {
+            if (groups) {
+              h.service.addFakeGroup(
+                const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+              );
+            } else {
+              h.addAnn(withMessage: false);
+            }
+            final start = DateTime(2026, 9, 30);
+            h.service.receiveMessage(id, 'NEEDLE QTH PARIS', timestamp: start);
+            for (int i = 1; i <= 60; i++) {
+              h.service.receiveMessage(
+                id,
+                'NEWER QSO $i',
+                timestamp: start.add(Duration(minutes: i)),
+              );
+            }
+            return groups ? const GroupsPage() : const ChatPage();
+          }, size: landscape);
+          await tester.tap(find.text(groups ? 'Net' : 'Ann').first);
+          await tester.pumpAndSettle();
+          expect(find.text('NEEDLE QTH PARIS'), findsNothing);
+
+          await tester.tap(
+            find.descendant(
+              of: find.byType(ConversationScreen),
+              matching: find.byType(PopupMenuButton<String>),
+            ),
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(s.chatSearchMessages));
+          await tester.pumpAndSettle();
+          final search = find.byType(MessageSearchScreen);
+          await tester.enterText(
+            find.descendant(of: search, matching: find.byType(TextField)),
+            'needle',
+          );
+          await tester.pump(const Duration(milliseconds: 400));
+          await tester.pumpAndSettle();
+
+          await rotate(tester, portrait);
+          await tester.tap(find.text('NEEDLE QTH PARIS'));
+          await tester.pumpAndSettle();
+          expect(search, findsNothing);
+          expect(find.byType(ConversationScreen), findsOneWidget);
+          expect(find.byType(BackButton), findsOneWidget);
+          expect(find.text('NEEDLE QTH PARIS'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
         'a dialog over the ${groups ? 'group' : 'chat'} pane survives the '
         'collapse; the route reopens once it closes',
         (tester) async {
@@ -177,6 +277,11 @@ void main() {
           await tester.pumpAndSettle();
           final String id = groups ? 'group_tox_1' : 'c2c_$kPeerKey';
           expect(await h.service.loadHistory(id), isNotEmpty);
+          final Finder draft = find.descendant(
+            of: find.byType(MessageInput),
+            matching: find.byType(TextField),
+          );
+          tester.widget<TextField>(draft).controller!.text = 'KEEP THIS DRAFT';
           await tester.tap(
             find.descendant(
               of: find.byType(ConversationScreen),
@@ -200,6 +305,10 @@ void main() {
 
           expect(find.byType(ConversationScreen), findsOneWidget);
           expect(find.byType(BackButton), findsOneWidget);
+          expect(
+            tester.widget<TextField>(draft).controller!.text,
+            'KEEP THIS DRAFT',
+          );
         },
       );
     }

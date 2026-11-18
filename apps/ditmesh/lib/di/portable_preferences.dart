@@ -91,12 +91,14 @@ extension PortablePreferences on AppPreferences {
     try {
       await _apply(doc, locale);
       await flush();
+      await locale?.flush();
       return true;
     } on Object {
       final old = jsonDecode(utf8.decode(previous));
       try {
         await _apply(old as Map, locale);
         await flush();
+        await locale?.flush();
       } on Object catch (e) {
         debugLog(() => '[PortablePreferences] rollback failed: $e');
       }

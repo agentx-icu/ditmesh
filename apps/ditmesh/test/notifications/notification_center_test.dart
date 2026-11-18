@@ -348,6 +348,34 @@ void main() {
       },
     );
 
+    for (final disableAll in [false, true]) {
+      test(
+        'blocking withdraws existing restricted alerts ($disableAll)',
+        () async {
+          final h = await harness();
+          final group = h.chat.addFakeGroup(
+            const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+          );
+          final id = FakeChatService.groupConversationId(group.id);
+          h.chat.receiveMessage(id, 'GM', senderId: kAnn, senderName: 'Ann');
+          await pumpEventQueue();
+          h.chat.receiveMessage(id, 'SPAM', senderId: kBob, senderName: 'Bob');
+          await pumpEventQueue();
+          expect(h.api.active.single.lines, hasLength(2));
+
+          if (disableAll) {
+            h.prefs.enabled = false;
+          } else {
+            h.prefs.setMuted(id, true);
+          }
+          await h.chat.blockPeer(kBob);
+          await pumpEventQueue();
+
+          expect(h.api.active, isEmpty);
+        },
+      );
+    }
+
     test(
       'group message from a nameless peer falls back to the short key',
       () async {
@@ -405,7 +433,7 @@ void main() {
         ..sound = false;
       await h.receive('CQ');
       expect(h.api.shown.single.body, en.notificationNewMessage);
-      expect(h.api.shown.single.body, 'New message');
+      expect(h.api.shown.single.body, en.notificationNewMessage);
       expect(h.api.shown.single.sound, isFalse);
     });
   });
@@ -522,6 +550,39 @@ void main() {
   // No grant cached yet, so each post first runs the silent OS check: the
   // window in which the user can open or read the conversation.
   group('a post overtaken by the user reading the conversation', () {
+    test('a delayed message uses the current content settings', () async {
+      final h = Harness();
+      addTearDown(h.dispose);
+      await h.start(grant: false);
+      final check = Completer<bool>();
+      h.api.permissionCheckAnswer = check.future;
+
+      await h.receive('CQ PRIVATE');
+      h.prefs
+        ..showText = false
+        ..showPattern = false;
+      check.complete(true);
+      await pumpEventQueue();
+
+      expect(h.api.shown, hasLength(1));
+      expect(h.api.shown.single.body, en.notificationNewMessage);
+    });
+
+    test('disabling alerts suppresses a post waiting for permission', () async {
+      final h = Harness();
+      addTearDown(h.dispose);
+      await h.start(grant: false);
+      final check = Completer<bool>();
+      h.api.permissionCheckAnswer = check.future;
+
+      await h.receive('CQ');
+      h.prefs.enabled = false;
+      check.complete(true);
+      await pumpEventQueue();
+
+      expect(h.api.shown, isEmpty);
+    });
+
     test('android: resumed and read while the permission check runs', () async {
       final Harness h = Harness();
       addTearDown(h.dispose);
@@ -1007,14 +1068,17 @@ void main() {
       },
     );
 
-    test('an explicit permission request checks if a grant was revoked', () async {
-      final h = await harness();
-      h.api.permissionGranted = false;
+    test(
+      'an explicit permission request checks if a grant was revoked',
+      () async {
+        final h = await harness();
+        h.api.permissionGranted = false;
 
-      expect(await h.center.ensurePermission(), isFalse);
-      await h.receive('CQ');
-      expect(h.api.shown, isEmpty);
-    });
+        expect(await h.center.ensurePermission(), isFalse);
+        await h.receive('CQ');
+        expect(h.api.shown, isEmpty);
+      },
+    );
 
     test('resuming after revocation does not post or prompt again', () async {
       final h = await harness(foreground: true);

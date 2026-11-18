@@ -117,6 +117,8 @@ final class AppPreferences implements IdentityDataStore {
   late final ListenPreferences listen;
   final Map<ChangeNotifier, VoidCallback> _listeners = {};
   StreamSubscription<Identity?>? _identitySub;
+  final _hydratedIdentities = StreamController<Identity?>.broadcast();
+  Identity? _hydratedIdentity;
   Future<void> _pending = Future<void>.value();
   final Map<String, ({String? value, Object version})> _dirty = {};
   final Map<String, Object> _saveErrors = {};
@@ -206,15 +208,44 @@ final class AppPreferences implements IdentityDataStore {
 
   void _onIdentity(Identity? identity) {
     if (_disposed) return;
-    final key = identity?.publicKey.toUpperCase();
     _replacing = false;
-    if (key == _identityKey) return;
+    _loadIdentityPreferences(identity?.publicKey.toUpperCase());
+    _hydratedIdentity = identity;
+    _hydratedIdentities.add(identity);
+  }
+
+  /// Wait for the session's own scoped preferences before applying a backup.
+  Future<void> waitForIdentity(Identity identity) async {
+    if (identical(identity, _hydratedIdentity)) return;
+    await _hydratedIdentities.stream.firstWhere((v) => identical(v, identity));
+  }
+
+  Future<void> clearRestoredIdentityPreferences(
+    String previousPublicKey,
+  ) async {
+    final key = previousPublicKey.toUpperCase();
+    _clearIdentityPreferences(key);
+    if (_identityKey == key) _loadIdentityPreferences(key, reload: true);
+    await flush();
+  }
+
+  void _clearIdentityPreferences(String key) {
+    _change('notifications.muted.$key', null);
+    _change('chat.guide.$key', null);
+    _change('chat.conversations.$key', null);
+  }
+
+  void _loadIdentityPreferences(String? key, {bool reload = false}) {
+    if (key == _identityKey && !reload) return;
     final old = _identityKey;
     _identityKey = key;
-    if (key == null && old != null) {
-      _change('notifications.muted.$old', null);
-      _change('chat.guide.$old', null);
-      _change('chat.conversations.$old', null);
+    final recoveryPending = switch (_identity) {
+      final IdentityRestoreRecovery recovering =>
+        recovering.identityRecoveryPending,
+      _ => false,
+    };
+    if (key == null && old != null && !recoveryPending) {
+      _clearIdentityPreferences(old);
     }
     Iterable<String> muted = const [];
     try {
@@ -294,6 +325,7 @@ final class AppPreferences implements IdentityDataStore {
       identity.unregisterDataStore(this);
     }
     unawaited(_identitySub?.cancel());
+    unawaited(_hydratedIdentities.close());
     settings.dispose();
     for (final entry in _listeners.entries) {
       entry.key.removeListener(entry.value);

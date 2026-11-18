@@ -97,14 +97,17 @@ class BackupContainer {
   /// opt-in recordings may add up to [BackupMedia.maxBytes].
   static const int maxBytes = maxBackupFileBytes;
 
+  static bool hasMagic(Uint8List bytes) =>
+      bytes.length >= magic.length &&
+      magic.indexed.every((part) => bytes[part.$1] == part.$2);
+
   /// Decodes a legacy (v1) backup, or with [inner] the v2 archive found
   /// inside an encrypted envelope. Duplicate paths, unsafe paths, entry
   /// counts above [maxEntries] and trailing bytes are rejected.
   static BackupContainer decode(Uint8List bytes, {bool inner = false}) {
     const invalid = ChatException('invalid_backup', 'Not a ditmesh backup');
-    if (bytes.length < 10 || bytes.length > maxBytes) throw invalid;
-    for (var i = 0; i < 4; i++) {
-      if (bytes[i] != magic[i]) throw invalid;
+    if (bytes.length < 10 || bytes.length > maxBytes || !hasMagic(bytes)) {
+      throw invalid;
     }
     final data = ByteData.sublistView(bytes);
     final ver = data.getUint8(4);

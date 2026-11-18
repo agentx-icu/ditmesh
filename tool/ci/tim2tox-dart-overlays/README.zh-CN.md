@@ -69,3 +69,11 @@ DitMesh 显示为失败）。送达证据仍优先于失败。
 `0018-publish-group-outbox-status.patch` 在传输接受普通排队群消息时发布该消息的
 状态变化。对端未发回执时，历史和待发送消息页面也能收到更新。
 `group_dht_reconnect_test.dart` 覆盖此事件。
+
+`0019-recover-offline-text-outbox.patch` 从已落盘的队列恢复缺失的文本消息，
+在重试或送达时更新已归档的消息，并在首次发送队列消息前合并旧版私聊队列键。
+`outbox_recovery_audit_test.dart` 覆盖重启恢复、归档消息重试和旧队列键迁移。
+
+`0020-extract-profile-address.patch` 绑定返回完整 Tox 地址的原生资料读取函数。
+直接导入资料时保留完整地址，支持未加密和密码保护的资料。
+`native_encryption_test.dart` 使用原生库验证这两种格式。

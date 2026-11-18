@@ -117,6 +117,24 @@ void main() {
       expect(fake.sink.isOn, isFalse);
     });
 
+    testWidgets('editing the encoded pattern stops its playback', (
+      tester,
+    ) async {
+      final fake = await _pump(tester);
+      final input = find.byKey(TextToMorseView.inputKey);
+      await tester.enterText(input, 'SOS SOS');
+      await tester.pump();
+      await tester.tap(find.byKey(TextToMorseView.playKey));
+      await tester.pump();
+      expect(find.text(en.referenceStop), findsOneWidget);
+      expect(fake.sink.isOn, isTrue);
+
+      await tester.enterText(input, 'E');
+      await tester.pump();
+      expect(find.text(en.referencePlay), findsOneWidget);
+      expect(fake.sink.isOn, isFalse);
+    });
+
     testWidgets('no telegraph row for plain Latin text', (tester) async {
       await _pump(tester);
       await tester.enterText(find.byKey(TextToMorseView.inputKey), 'CQ DX');

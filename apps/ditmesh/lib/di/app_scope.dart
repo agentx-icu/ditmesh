@@ -30,6 +30,7 @@ import 'app_preferences.dart';
 import 'app_services.dart';
 import 'app_settings.dart';
 import 'backend_factory.dart';
+import 'portable_preferences.dart';
 
 /// Builds the backend services once from a [BackendFactory] and exposes them
 /// to the whole widget tree — including routes pushed on the root navigator,
@@ -112,6 +113,14 @@ class _AppScopeState extends State<AppScope> {
   late final StartupController _startup = StartupController(
     _identity,
     networkBootstrap: _network,
+    clearRestoredIdentityPreferences: (owner, publicKey) async {
+      await _preferences.waitForIdentity(owner);
+      await _preferences.clearRestoredIdentityPreferences(publicKey);
+    },
+    applyBackupPreferences: (owner, doc) async {
+      await _preferences.waitForIdentity(owner);
+      return _preferences.applyPortable(doc, locale: _locale);
+    },
   );
   late final BackupFileGateway _backupFiles =
       widget.backupFiles ?? const PlatformBackupFileGateway();

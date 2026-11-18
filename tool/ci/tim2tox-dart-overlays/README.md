@@ -87,3 +87,14 @@ failed deletion, retry, and preservation of pending-send controls.
 queued group message is accepted by the transport. The history and pending
 messages views receive the change even when a peer sends no delivery receipt.
 `group_dht_reconnect_test.dart` covers this event.
+
+`0019-recover-offline-text-outbox.patch` restores missing text rows from the
+committed queue, reconciles archived rows when they are retried or delivered,
+and merges legacy private-message queue keys before the first drain.
+`outbox_recovery_audit_test.dart` covers recovery across restart, archive
+retry, and migration of old queue keys.
+
+`0020-extract-profile-address.patch` binds the native profile reader that
+returns the full Tox address. Raw profile import preserves that address and
+accepts both plain and password-protected profiles.
+`native_encryption_test.dart` checks both against the native library.

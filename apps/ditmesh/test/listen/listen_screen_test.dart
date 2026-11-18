@@ -59,6 +59,43 @@ void _pushText(FakePcmSource source, String text, {double wpm = 20}) {
 }
 
 void main() {
+  testWidgets('an opaque route stops capture without restarting on return', (
+    tester,
+  ) async {
+    final source = FakePcmSource();
+    await _pump(tester, source);
+    await tester.tap(find.text(en.listenStart));
+    await tester.pumpAndSettle();
+    expect(source.isStreaming, isTrue);
+
+    final context = tester.element(find.byType(ListenScreen));
+    final navigator = Navigator.of(context);
+    final dialog = showDialog<void>(
+      context: context,
+      builder: (_) => const AlertDialog(content: Text('Settings dialog')),
+    );
+    await tester.pumpAndSettle();
+    expect(source.isStreaming, isTrue);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    await dialog;
+
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Conversation')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(source.isStreaming, isFalse);
+    expect(source.stopCalls, 1);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(source.startCalls, 1);
+    expect(find.text(en.listenStart), findsOneWidget);
+  });
+
   testWidgets('manual tuning and retune update the persisted preferences', (
     tester,
   ) async {

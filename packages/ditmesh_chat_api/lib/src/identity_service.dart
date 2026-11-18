@@ -46,6 +46,7 @@ abstract interface class IdentityService {
   Future<Uint8List> exportBackup({bool includeMedia = false});
 
   /// Restore from [exportBackup] output. Replaces any current identity.
+  /// The DitMesh backend also accepts raw plaintext or protected Tox savedata.
   Future<Identity> importBackup(Uint8List bytes, {String? password});
 
   /// Start the Tox node: bootstrap DHT, begin polling. Idempotent.

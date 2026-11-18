@@ -32,8 +32,9 @@ Future<FakeLocalNotificationsApi> _pump(
   String? launchPayload,
   String? password,
   bool termsAccepted = true,
+  Size size = const Size(390, 844),
 }) async {
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -92,6 +93,27 @@ void main() {
     expect(find.textContaining(_peerConv), findsNothing);
   });
 
+  testWidgets('a cold group tap stays open while the wide group list loads', (
+    tester,
+  ) async {
+    const group = Group(id: 'tox_4', name: 'DX', kind: GroupKind.group);
+    await _pump(
+      tester,
+      size: const Size(1280, 800),
+      launchPayload: const OpenConversationTarget('group_tox_4').encode(),
+    );
+    final shell = tester.element(find.byType(GroupsPage));
+    final chat =
+        Provider.of<ChatService>(shell, listen: false) as FakeChatService;
+    expect(chat.groups, isEmpty);
+    chat.addFakeGroup(group);
+    await settle(tester);
+    final screen = tester.widget<ConversationScreen>(
+      find.byType(ConversationScreen),
+    );
+    expect(screen.target.id, 'group_tox_4');
+  });
+
   testWidgets('a cold-start tap survives the unlock page of a '
       'password-locked identity', (tester) async {
     await _pump(
@@ -146,7 +168,10 @@ void main() {
     await settle(tester);
     api.tapTarget(OpenConversationTarget(_peerConv));
     await settle(tester);
-    expect(find.byType(ConversationScreen, skipOffstage: false), findsOneWidget);
+    expect(
+      find.byType(ConversationScreen, skipOffstage: false),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a friend-request tap opens contacts', (tester) async {
@@ -181,9 +206,9 @@ void main() {
     );
     // Something unrelated covers the shell (an account / settings page).
     unawaited(
-      Navigator.of(shell).push(
-        MaterialPageRoute<void>(builder: (_) => const Scaffold()),
-      ),
+      Navigator.of(
+        shell,
+      ).push(MaterialPageRoute<void>(builder: (_) => const Scaffold())),
     );
     await settle(tester);
     api.tapTarget(GroupInviteTarget(invite.inviteId));

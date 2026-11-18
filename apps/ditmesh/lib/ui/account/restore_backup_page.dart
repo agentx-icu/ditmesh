@@ -4,11 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
-import '../../di/app_preferences.dart';
-import '../../di/portable_preferences.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
-import '../../i18n/locale_controller.dart';
 import '../../startup/startup_controller.dart';
 import '../common/app_bar_title.dart';
 import '../common/close_owned_route.dart';
@@ -185,34 +182,23 @@ class _RestoreBackupPageState extends State<RestoreBackupPage> {
       _passwordError = null;
     });
     final controller = context.read<StartupController>();
-    final prefs = context.read<AppPreferences>();
-    final locale = context.read<LocaleController>();
     try {
-      final report = await controller.restoreEncryptedBackup(
-        bytes,
-        passphrase,
-        identityPassword: identityPassword,
-      );
-      // Let the identity change reach the preference owners first, so the
-      // restored mutes land under the restored identity.
-      await Future<void>.delayed(Duration.zero);
-      var prefsFailed = false;
-      final doc = report.preferences;
-      if (doc != null) {
-        try {
-          prefsFailed = !await prefs.applyPortable(doc, locale: locale);
-        } on Object {
-          prefsFailed = true;
-        }
-      }
+      final (:report, :preferencesFailed) = await controller
+          .restoreEncryptedBackup(
+            bytes,
+            passphrase,
+            identityPassword: identityPassword,
+          );
       if (route == null || !route.isCurrent) {
         closeOwnedRoute(route);
         return;
       }
       await route.navigator!.pushReplacement<void, void>(
         MaterialPageRoute<void>(
-          builder: (_) =>
-              RestoreReportPage(report: report, preferencesFailed: prefsFailed),
+          builder: (_) => RestoreReportPage(
+            report: report,
+            preferencesFailed: preferencesFailed,
+          ),
         ),
       );
     } on ChatException catch (e) {

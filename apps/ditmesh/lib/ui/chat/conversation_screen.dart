@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
@@ -37,20 +38,23 @@ part 'conversation_screen_menu.dart';
 /// One conversation (c2c or group): history + live events, Morse bubbles,
 /// training mode, auto-play, playback settings and the keyed input.
 ///
-/// [embedded] hides the back button for the master-detail right pane; the
-/// owner passes [onClosed] to clear its selection when the user leaves a
-/// group from here.
+/// [embedded] hides the back button. Its owner uses [onClosed] to clear the
+/// selection and [onSearchAnchor] to pass a history jump across a collapse.
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({
     super.key,
     required this.target,
     this.embedded = false,
     this.onClosed,
+    this.initialMessageId,
+    this.onSearchAnchor,
   });
 
   final ConversationTarget target;
   final bool embedded;
   final VoidCallback? onClosed;
+  final String? initialMessageId;
+  final ValueChanged<String?>? onSearchAnchor;
 
   @override
   State<ConversationScreen> createState() => _ConversationScreenState();
@@ -134,12 +138,13 @@ class _ConversationScreenState extends State<ConversationScreen>
       if (mounted) _attention.start();
     });
     _events = _service.messageEvents.listen(_onEvent);
+    _blockedSeen = _service.blockedPeers;
     _blocked = _service.blockedPeerChanges.listen(_onBlockedPeers);
     _localSends = LocalMessageSends.forService(_service)
       ..addListener(_onLocalSend);
     _historyClears = _localSends.historyClears.listen(_onHistoryCleared);
     _scroll.addListener(_onScroll);
-    unawaited(_load());
+    unawaited(_loadInitialHistory());
     unawaited(_initBookmarks());
   }
 

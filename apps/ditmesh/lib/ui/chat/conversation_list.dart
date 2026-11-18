@@ -11,6 +11,7 @@ import 'chat_layout.dart';
 import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 import 'local_message_sends.dart';
+import 'message_input.dart';
 
 /// Searchable, pinned-first conversation list bound to
 /// [ChatService.conversationChanges].
@@ -27,10 +28,12 @@ class ConversationList extends StatefulWidget {
     this.emptyText,
     this.swipeEnabled,
     this.searchFocusNode,
+    this.onDelete,
   });
 
   final ChatService service;
   final ValueChanged<Conversation> onOpen;
+  final Future<void> Function(String)? onDelete;
   final String? selectedId;
 
   /// Shown when there are no conversations at all; defaults to
@@ -103,7 +106,8 @@ class _ConversationListState extends State<ConversationList> {
           final bookmarks = ConversationMenu.bookmarksForRemoval(context);
           ChatException? hideFailure;
           try {
-            await service.deleteConversation(c.id);
+            await (widget.onDelete?.call(c.id) ??
+                deleteConversationWithDraft(service, c.id));
           } on ChatException catch (error) {
             if (error.code != 'conversation_hide_failed') rethrow;
             hideFailure = error;

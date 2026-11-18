@@ -3,23 +3,76 @@ part of 'tim2tox_identity_service.dart';
 /// Recovery from a restore the process did not survive, and the guard that
 /// keeps the profile tree untouched while a native teardown is unconfirmed.
 ///
-/// Both importers commit with two renames: `root → <stage>/previous`, then
-/// `<stage>/identity → root`. Death between them leaves no root and the only
-/// copy of the previous identity in staging. The tree is rolled back (never
-/// rolled forward: the staged restore's preference work is not journaled and
-/// the user still has the backup file). Callers hold the mutation lock.
+/// Current restores use a journal. On older builds a crash between two
+/// renames could leave no root and the previous identity in an unmarked
+/// staging directory. Roll back those stages as well. Callers hold the
+/// mutation lock.
 extension _IdentityRecovery on Tim2ToxIdentityService {
+  Future<void> _deleteIdentity() async {
+    _opened = null;
+    final authenticated = _record;
+    final record =
+        authenticated ?? await IdentityRecord.read(_paths.identityFile);
+    final password = _sessionPassword;
+    try {
+      await _prepareForReplacement();
+      await _disconnectImpl();
+      _requireTeardownConfirmed();
+      Future<void> removeFiles() async {
+        if (record != null) await _clearPreferences(record.toxId);
+        await _paths.deleteAll();
+        _recoveryBlocked = false;
+        _forgetIdentity();
+      }
+
+      if (record == null) {
+        await removeFiles();
+      } else {
+        await _verifier.replacePassword(record.toxId, null, removeFiles);
+      }
+    } catch (_) {
+      _restoreAuthentication(
+        _paths.profileExists ? authenticated : null,
+        password,
+      );
+      rethrow;
+    }
+  }
+
+  void _restoreAuthentication(IdentityRecord? authenticated, String? password) {
+    if (authenticated == null) {
+      _forgetIdentity();
+      return;
+    }
+    _sessionPassword = password;
+    _publish(authenticated);
+  }
+
+  Future<void> _clearPreferences(String toxId) async {
+    final store = _store;
+    if (store == null || toxId.length < 16) return;
+    await Tim2ToxPreferencesAdapter(
+      store,
+      accountPrefix: toxId.substring(0, 16).toUpperCase(),
+    ).clear();
+  }
+
   /// Returns false while a previous identity is still waiting in staging:
   /// this attempt failed, or several candidates make the choice ambiguous.
   /// `inspect` / `open` / `unlock` then report no identity as before (the
   /// next start retries), but `create` must not install a new root over it.
-  Future<bool> _recoverInterruptedImport() async {
+  Future<bool> _recoverInterruptedImport({bool requireCleanup = false}) async {
+    await _recoverJournaledImports(requireCleanup: requireCleanup);
     if (_paths.profileExists) return true;
     final List<Directory> stages;
     try {
       stages = await _paths.interruptedImports();
     } on Object catch (e, st) {
-      _logger.error('[Identity] could not look for interrupted restores', e, st);
+      _logger.error(
+        '[Identity] could not look for interrupted restores',
+        e,
+        st,
+      );
       return false;
     }
     if (stages.isEmpty) return true;
@@ -33,6 +86,7 @@ extension _IdentityRecovery on Tim2ToxIdentityService {
     final stage = stages.single;
     final previous = IdentityPaths(IdentityPaths.previousInStage(stage));
     try {
+      _requireTeardownConfirmed();
       final old = await IdentityRecord.read(previous.identityFile);
       final staged = await IdentityRecord.read(
         IdentityPaths(p.join(stage.path, 'identity')).identityFile,
@@ -49,7 +103,11 @@ extension _IdentityRecovery on Tim2ToxIdentityService {
       );
       return true;
     } on Object catch (e, st) {
-      _logger.error('[Identity] recovery of the previous identity failed', e, st);
+      _logger.error(
+        '[Identity] recovery of the previous identity failed',
+        e,
+        st,
+      );
       return false;
     }
   }
@@ -65,7 +123,8 @@ extension _IdentityRecovery on Tim2ToxIdentityService {
     IdentityRecord? old,
     IdentityRecord? staged,
   ) async {
-    if (staged != null && (old == null || staged.toxId != old.toxId)) {
+    if (staged != null &&
+        (old == null || !PasswordVerifier.sharesKey(staged.toxId, old.toxId))) {
       await _verifier.removePassword(staged.toxId);
       return;
     }

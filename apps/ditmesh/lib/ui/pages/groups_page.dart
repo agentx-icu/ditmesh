@@ -38,6 +38,7 @@ class GroupsPage extends StatefulWidget {
 
 class _GroupsPageState extends State<GroupsPage> {
   ConversationTarget? _selected;
+  bool _selectedWasListed = false;
   final DetailPaneKey _detailKey = DetailPaneKey();
   StreamSubscription<ConversationTarget>? _shellConversations;
 
@@ -57,10 +58,18 @@ class _GroupsPageState extends State<GroupsPage> {
     super.dispose();
   }
 
+  void _selectDetail(ConversationTarget? target) {
+    if (_selected?.id != target?.id) {
+      _selectedWasListed = false;
+      _detailKey.rememberSearchAnchor(null);
+    }
+    setState(() => _selected = target);
+  }
+
   void _open(BuildContext context, Group group) {
     final ConversationTarget target = ConversationTarget.fromGroup(group);
     if (isMasterDetail(context)) {
-      setState(() => _selected = target);
+      _selectDetail(target);
       return;
     }
     unawaited(pushConversation(context, target));
@@ -71,7 +80,7 @@ class _GroupsPageState extends State<GroupsPage> {
     if (!mounted) return;
     final bool exposed = ModalRoute.of(context)?.isCurrent ?? true;
     if (isMasterDetail(context) && exposed) {
-      setState(() => _selected = target);
+      _selectDetail(target);
       return;
     }
     openConversationRoute(Navigator.of(context), target);
@@ -112,8 +121,9 @@ class _GroupsPageState extends State<GroupsPage> {
         _selected != null &&
         !reopenCollapsedDetail(
           this,
+          detail: _detailKey,
           selection: () => _selected,
-          forget: () => setState(() => _selected = null),
+          forget: () => _selectDetail(null),
         );
 
     final Widget list = Scaffold(
@@ -138,13 +148,21 @@ class _GroupsPageState extends State<GroupsPage> {
         builder: (context, snapshot) {
           final List<Group> groups = snapshot.data ?? const <Group>[];
           final ConversationTarget? selected = _selected;
-          if (selected != null && !groups.any((g) => g.id == selected.peerId)) {
-            // Left (or was removed from) the open group: drop the pane.
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && _selected?.id == selected.id) {
-                setState(() => _selected = null);
-              }
-            });
+          if (selected != null) {
+            if (groups.any((g) => g.id == selected.peerId)) {
+              _selectedWasListed = true;
+            } else if (_selectedWasListed && service.hasSession) {
+              // Startup may send a notification target before the group
+              // directory arrives. Only close a group that was listed.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted &&
+                    identical(_selected, selected) &&
+                    service.hasSession &&
+                    !service.groups.any((g) => g.id == selected.peerId)) {
+                  _selectDetail(null);
+                }
+              });
+            }
           }
           return Column(
             children: [
@@ -179,7 +197,8 @@ class _GroupsPageState extends State<GroupsPage> {
             key: _detailKey.of(selected.id),
             target: selected,
             embedded: true,
-            onClosed: () => setState(() => _selected = null),
+            onClosed: () => _selectDetail(null),
+            onSearchAnchor: _detailKey.rememberSearchAnchor,
           );
     // Above both layouts: a refusal is reported whatever the pane shows.
     return GroupJoinFeedback(

@@ -1,5 +1,7 @@
 part of 'tim2tox_identity_service.dart';
 
+const _pendingBackupPreferencesFile = 'restored-app-preferences.json';
+
 /// Complete encrypted backups (F10): inventory, consistent export, preview
 /// and transactional restore. Layout: `backup_snapshot.dart`; envelope:
 /// `backup_envelope.dart`.
@@ -316,135 +318,93 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
         throw const ChatException('invalid_backup', 'Identity mismatch');
       }
     }
-    final record = IdentityRecord.decode(backup.identity!)!.copyWith(
-      hasPassword: encrypted,
-    );
+    final record = IdentityRecord.decode(
+      backup.identity!,
+    )!.copyWith(hasPassword: encrypted);
     final pendingItems = BackupSnapshot.pendingItems(
       backup.entries[BackupSnapshot.pendingEntry],
     );
     final metaDoc = backup.entries[BackupSnapshot.conversationsEntry];
     final groupsDoc = backup.entries[BackupSnapshot.groupsEntry];
+    final portablePreferences = backup.entries[BackupSnapshot.preferencesEntry];
 
-    final root = Directory(_paths.root);
-    await PosixPermissions.createPrivateDirectory(root.parent.path);
-    await _paths.excludeFromBackup();
-    final stage = await root.parent.createTemp(IdentityPaths.importStagePrefix);
-    final previous = Directory(p.join(stage.path, 'previous'));
-    final staged = IdentityPaths(p.join(stage.path, 'identity'));
-    var replaced = false;
-    final old = _record ?? await IdentityRecord.read(_paths.identityFile);
-    final oldPassword = _sessionPassword;
-    try {
-      await staged.ensureDirectories();
-      await writeBytesAtomic(File(staged.profileFile), profile);
-      await record.write(staged.identityFile);
-      Future<void> put(String dir, String rel, Uint8List data) async {
-        final target = File(p.join(dir, p.joinAll(rel.split('/'))));
-        await target.parent.create(recursive: true);
-        await target.writeAsBytes(data, flush: true);
-      }
+    await _replaceIdentityFromBackup(
+      record,
+      encrypted ? identityPassword : null,
+      (staged) async {
+        await writeBytesAtomic(File(staged.profileFile), profile);
+        await record.write(staged.identityFile);
+        if (portablePreferences != null) {
+          await writeBytesAtomic(
+            File(p.join(staged.root, _pendingBackupPreferencesFile)),
+            portablePreferences,
+          );
+        }
+        Future<void> put(String dir, String rel, Uint8List data) async {
+          final target = File(p.join(dir, p.joinAll(rel.split('/'))));
+          await target.parent.create(recursive: true);
+          await target.writeAsBytes(data, flush: true);
+        }
 
-      for (final MapEntry(:key, :value) in backup.entries.entries) {
-        if (key.startsWith(BackupSnapshot.trainingPrefix)) {
+        for (final MapEntry(:key, :value) in backup.entries.entries) {
+          if (key.startsWith(BackupSnapshot.trainingPrefix)) {
+            await put(
+              staged.trainingDirectory,
+              key.substring(BackupSnapshot.trainingPrefix.length),
+              value,
+            );
+          } else if (key.startsWith(BackupSnapshot.historyPrefix)) {
+            await put(
+              staged.historyDirectory,
+              key.substring(BackupSnapshot.historyPrefix.length),
+              value,
+            );
+          } else if (key == BackupSnapshot.audioMaterialsEntry) {
+            await put(
+              staged.trainingDirectory,
+              BackupMedia.materialsDoc,
+              value,
+            );
+          } else if (key.startsWith(BackupSnapshot.mediaPrefix)) {
+            await put(
+              p.join(staged.root, 'media', 'recordings'),
+              key.substring(BackupSnapshot.mediaPrefix.length),
+              value,
+            );
+          } else if (key == BackupSnapshot.bookmarksEntry) {
+            await put(
+              staged.trainingDirectory,
+              BackupSnapshot.bookmarksFile,
+              value,
+            );
+          }
+        }
+        // Unsent messages become inert review items: no queue file is ever
+        // written, so nothing can drain them, now or after a restart.
+        if (pendingItems.isNotEmpty) {
           await put(
             staged.trainingDirectory,
-            key.substring(BackupSnapshot.trainingPrefix.length),
-            value,
+            BackupSnapshot.restoredPendingFile,
+            BackupSnapshot.encodePending(pendingItems),
           );
-        } else if (key.startsWith(BackupSnapshot.historyPrefix)) {
-          await put(
-            staged.historyDirectory,
-            key.substring(BackupSnapshot.historyPrefix.length),
-            value,
-          );
-        } else if (key == BackupSnapshot.audioMaterialsEntry) {
-          await put(staged.trainingDirectory, BackupMedia.materialsDoc, value);
-        } else if (key.startsWith(BackupSnapshot.mediaPrefix)) {
-          await put(
-            p.join(staged.root, 'media', 'recordings'),
-            key.substring(BackupSnapshot.mediaPrefix.length),
-            value,
-          );
-        } else if (key == BackupSnapshot.bookmarksEntry) {
-          await put(staged.trainingDirectory, BackupSnapshot.bookmarksFile, value);
         }
-      }
-      // Unsent messages become inert review items: no queue file is ever
-      // written, so nothing can drain them, now or after a restart.
-      if (pendingItems.isNotEmpty) {
-        await put(
-          staged.trainingDirectory,
-          BackupSnapshot.restoredPendingFile,
-          BackupSnapshot.encodePending(pendingItems),
-        );
-      }
-      await _prepareForReplacement();
-      await _disconnectImpl();
-      _requireTeardownConfirmed();
-      final store = _store;
-      final before = store == null ? null : KvSnapshot.capture(store);
-      await _verifier.replacePassword(
-        record.toxId,
-        encrypted ? identityPassword : null,
-        () async {
-          if (await root.exists()) await root.rename(previous.path);
-          var movedIn = false;
-          try {
-            await Directory(staged.root).rename(root.path);
-            movedIn = true;
-            if (old != null) await _clearPreferences(old.toxId);
-            await _clearPreferences(record.toxId);
-            // Before the next connect() reads them (restore runs stopped).
-            if (groupsDoc != null && store != null) {
-              await GroupDescriptors.restore(
-                store,
-                _accountPrefix(record.toxId),
-                BackupSnapshot.decodeJson(groupsDoc),
-              );
-            }
-            if (metaDoc != null) {
-              await _metaFor(record.toxId)?.importPortable(
-                BackupSnapshot.decodeJson(metaDoc),
-              );
-            }
-            replaced = true;
-          } catch (_) {
-            // Put the previous installation back: preferences first, then
-            // the tree (the restored one returns to staging).
-            if (store != null && before != null) {
-              try {
-                await before.restore(store);
-              } on Object catch (e, st) {
-                _logger.error('[Backup] preference rollback failed', e, st);
-              }
-            }
-            if (movedIn) await root.rename(staged.root);
-            if (await previous.exists()) await previous.rename(root.path);
-            rethrow;
-          }
-        },
-      );
-      _forgetIdentity();
-      _sessionPassword = encrypted ? identityPassword : null;
-      _publish(record);
-      if (old != null && old.toxId != record.toxId) {
-        // Cleanup after the commit: a failure here must not report the
-        // committed restore as failed.
-        try {
-          await _verifier.removePassword(old.toxId);
-        } on Object catch (e, st) {
-          _logger.error('[Backup] could not remove the old verifier', e, st);
+      },
+      restorePreferences: () async {
+        final store = _store;
+        if (groupsDoc != null && store != null) {
+          await GroupDescriptors.restore(
+            store,
+            _accountPrefix(record.toxId),
+            BackupSnapshot.decodeJson(groupsDoc),
+          );
         }
-      }
-    } catch (_) {
-      if (!replaced && old != null) {
-        _sessionPassword = oldPassword;
-        _publish(old);
-      }
-      rethrow;
-    } finally {
-      await _discardStage(stage, previous, committed: replaced);
-    }
+        if (metaDoc != null) {
+          await _metaFor(
+            record.toxId,
+          )?.importPortable(BackupSnapshot.decodeJson(metaDoc));
+        }
+      },
+    );
     final restored = preview.sizes.keys.toSet()..add(BackupCategory.identity);
     return RestoreReport(
       restored: restored,
@@ -452,7 +412,32 @@ extension _EncryptedBackup on Tim2ToxIdentityService {
       pendingForReview: pendingItems.length,
       pendingNotResumed: preview.pendingIncluded ? 0 : preview.pendingMessages,
       queuedInvitesNotResumed: preview.queuedInvites,
-      preferences: backup.entries[BackupSnapshot.preferencesEntry],
+      preferences: portablePreferences,
+      restoredIdentity: current,
     );
+  }
+
+  Future<bool?> _finishPendingAppRestore(
+    Identity owner,
+    Future<void> Function(String publicKey) clearPreviousPreferences,
+    Future<bool> Function(Uint8List document) applyPreferences,
+  ) async {
+    await _recoverInterruptedImport();
+    if (!identical(current, owner)) return false;
+    final previous = File(p.join(_paths.root, _pendingAppRestoreScope));
+    final clearPrevious = await previous.exists();
+    if (clearPrevious) {
+      await clearPreviousPreferences(await previous.readAsString());
+      await previous.delete();
+      PosixDirectorySync.sync(previous.parent.path);
+    }
+    final file = File(p.join(_paths.root, _pendingBackupPreferencesFile));
+    if (!await file.exists()) return clearPrevious ? true : null;
+    final applied = await applyPreferences(await file.readAsBytes());
+    if (applied) {
+      await file.delete();
+      PosixDirectorySync.sync(file.parent.path);
+    }
+    return applied;
   }
 }

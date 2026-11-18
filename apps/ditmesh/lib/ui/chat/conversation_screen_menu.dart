@@ -108,6 +108,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
           _messages.addAll(_parked.where((m) => known.add(m.id)));
           _parked.clear();
           _jumpedAway = false;
+          widget.onSearchAnchor?.call(null);
         }
       });
     } on Object catch (e) {
@@ -145,6 +146,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       // Drop the whole historical window; live arrivals during the reload
       // land in the emptied list and are merged by `_load`.
       _jumpedAway = false;
+      widget.onSearchAnchor?.call(null);
       _generation++;
       _newerFailed = false;
       _parked.clear();
@@ -176,21 +178,46 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       bookmarks: bookmarks,
     );
     if (hit == null || !mounted) return;
+    await _jumpToMessage(hit.id);
+  }
+
+  Future<void> _loadInitialHistory() async {
+    final String? anchor = widget.initialMessageId;
+    if (anchor != null) {
+      // Park live arrivals until the transferred search window is ready.
+      final int generation = _generation;
+      _jumpedAway = true;
+      if (await _jumpToMessage(anchor) ||
+          !mounted ||
+          generation != _generation) {
+        return;
+      }
+      _jumpedAway = false;
+      _messages.addAll(_parked);
+      _parked.clear();
+      _newMessages = 0;
+    }
+    await _load();
+  }
+
+  Future<bool> _jumpToMessage(String id) async {
+    widget.onSearchAnchor?.call(id);
     // Nothing is invalidated until the window is installed: a jump that
     // finds nothing (or fails) leaves the loads in flight to finish.
     final int generation = _generation;
     final int request = ++_searchRequest;
     try {
-      final rows = await _service.loadAround(_id, hit.id);
+      final rows = await _service.loadAround(_id, id);
       if (!mounted || generation != _generation || request != _searchRequest) {
-        return;
+        return false;
       }
-      if (rows.isEmpty) {
+      final at = rows.indexWhere((m) => m.id == id);
+      if (at < 0) {
         // A blocked sender's row can become invisible without being deleted.
-        if (mounted) showSnack(context, context.s.chatMessageGone);
-        return;
+        widget.onSearchAnchor?.call(null);
+        showSnack(context, context.s.chatMessageGone);
+        return false;
       }
-      final at = rows.indexWhere((m) => m.id == hit.id);
       // Outstanding page loads belong to the window being replaced.
       _generation++;
       _newerFailed = false;
@@ -212,10 +239,13 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
       });
+      return true;
     } on Object catch (e) {
-      if (mounted && request == _searchRequest) {
+      if (mounted && generation == _generation && request == _searchRequest) {
+        widget.onSearchAnchor?.call(null);
         showSnack(context, describeChatError(context.s, e));
       }
+      return false;
     }
   }
 
@@ -253,9 +283,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     }
   }
 
-  /// The blocked keys this screen last applied (null before the first
-  /// replay of [ChatService.blockedPeerChanges]).
-  Set<String>? _blockedSeen;
+  late Set<String> _blockedSeen;
 
   /// A block (from this screen, a member list or anywhere else) hides at
   /// once: a blocked peer's direct conversation closes; in a group their
@@ -265,7 +293,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
   /// service filters everything that arrives later.
   void _onBlockedPeers(Set<String> blocked) {
     if (!mounted) return;
-    final Set<String>? seen = _blockedSeen;
+    final Set<String> seen = _blockedSeen;
     _blockedSeen = {...blocked};
     final ConversationTarget target = widget.target;
     if (!_isGroup) {
@@ -274,7 +302,8 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
       }
       return;
     }
-    if (seen != null && seen.difference(blocked).isNotEmpty) {
+    if (setEquals(seen, blocked)) return;
+    if (seen.difference(blocked).isNotEmpty) {
       _reloadAfterBlocking();
       return;
     }
@@ -303,6 +332,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     final bool wasJumped = _jumpedAway;
     _generation++;
     _jumpedAway = false;
+    widget.onSearchAnchor?.call(null);
     _newerFailed = false;
     _parked.clear();
     setState(() {
@@ -328,6 +358,7 @@ mixin _ConversationMenuActions on State<ConversationScreen> {
     });
     _generation++;
     _jumpedAway = false;
+    widget.onSearchAnchor?.call(null);
     _newerFailed = false;
     setState(() {
       _parked.clear();

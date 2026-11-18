@@ -1,8 +1,7 @@
 part of 'tim2tox_chat_service.dart';
 
-/// Sending text. Tim2Tox queues a C2C text for any key it does not see
-/// online, friend or not, and a queue item for a non-friend never drains
-/// (and never fails), so the target is checked against native state first.
+/// Check that the conversation can still accept messages before submitting
+/// a text to Tim2Tox, including when the destination is offline.
 extension _Sending on Tim2ToxChatService {
   Future<ChatMessage> _sendText(
     String conversationId,
@@ -37,6 +36,16 @@ extension _Sending on Tim2ToxChatService {
     final isGroup = ConversationIds.isGroup(conversationId);
     final peer = ConversationIds.peerOf(conversationId);
     final key = ConversationIds.normalizeKey(peer);
+    void requireGroupMembership() {
+      if (isGroup && !svc.knownGroups.contains(peer)) {
+        throw const ChatException(
+          'group_not_found',
+          'Not a member of that group',
+        );
+      }
+    }
+
+    requireGroupMembership();
     // The note to self is stored locally, never sent.
     final checked = !isGroup && key != _selfKey;
     final removals = _friendsPart.removals;
@@ -61,6 +70,7 @@ extension _Sending on Tim2ToxChatService {
       throw ChatException('send_failed', 'Could not record the send: $e');
     }
     _ensureCurrent(svc);
+    requireGroupMembership();
     final t2t.ChatMessage row;
     try {
       if (isGroup) {

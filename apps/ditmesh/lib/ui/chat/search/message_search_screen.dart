@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
@@ -51,6 +52,7 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
   final Set<String> _revealed = <String>{};
   Timer? _debounce;
   StreamSubscription<String>? _historyClears;
+  StreamSubscription<Set<String>>? _blockedChanges;
   MessageSearchCursor? _next;
   _Sender _sender = _Sender.anyone;
   DateTimeRange? _range;
@@ -69,6 +71,13 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
           _revealed.clear();
           unawaited(_search());
         });
+    var blocked = widget.service.blockedPeers;
+    _blockedChanges = widget.service.blockedPeerChanges.listen((next) {
+      if (!mounted || setEquals(blocked, next)) return;
+      blocked = next;
+      _revealed.clear();
+      unawaited(_search());
+    });
     unawaited(_search());
   }
 
@@ -183,6 +192,7 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
     _cancel?.cancel();
     _debounce?.cancel();
     unawaited(_historyClears?.cancel());
+    unawaited(_blockedChanges?.cancel());
     _query.dispose();
     super.dispose();
   }

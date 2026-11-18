@@ -160,6 +160,31 @@ void main() {
     expect(find.byIcon(Icons.bookmark), findsNothing);
   });
 
+  testWidgets('open search refreshes when a group member is blocked', (
+    tester,
+  ) async {
+    final h = ChatHarness();
+    final group = await h.service.createGroup('Morse net');
+    final target = ConversationTarget.fromGroup(group);
+    h.service.receiveMessage(target.id, 'CQ FROM ANN', senderId: kPeerKey);
+    h.service.receiveMessage(target.id, 'CQ FROM BOB', senderId: 'C' * 64);
+    await pumpChat(
+      tester,
+      (_) => ConversationScreen(target: target),
+      harness: h,
+    );
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(s.chatSearchMessages));
+    await tester.pumpAndSettle();
+    expect(find.text('CQ FROM ANN'), findsOneWidget);
+
+    await h.service.blockPeer(kPeerKey);
+    await tester.pumpAndSettle();
+    expect(find.text('CQ FROM ANN'), findsNothing);
+    expect(find.text('CQ FROM BOB'), findsOneWidget);
+  });
+
   testWidgets('a blocked group sender keeps their bookmark after reopening', (
     tester,
   ) async {

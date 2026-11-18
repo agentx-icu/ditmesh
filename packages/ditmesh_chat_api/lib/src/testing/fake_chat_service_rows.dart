@@ -78,6 +78,21 @@ extension _FakeConversationRows on FakeChatService {
     return List<ChatMessage>.unmodifiable(eligible.sublist(start));
   }
 
+  void _refuseClearWithPending(String conversationId) {
+    final rows = _messages[conversationId] ?? const <ChatMessage>[];
+    if (rows.any(
+      (m) =>
+          m.isMine &&
+          (m.status == MessageStatus.pending ||
+              m.status == MessageStatus.sending),
+    )) {
+      throw const ChatException(
+        'conversation_send_pending',
+        'Resolve queued or in-progress sends before clearing history',
+      );
+    }
+  }
+
   void _clear(String conversationId) {
     _messages.remove(conversationId);
     final Conversation? existing = _conversations[conversationId];

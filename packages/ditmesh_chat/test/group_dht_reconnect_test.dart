@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tim2tox_dart/models/chat_message.dart';
 import 'package:tim2tox_dart/service/ffi_chat_service.dart';
 import 'package:tim2tox_dart/utils/offline_message_queue_persistence.dart';
 
@@ -72,6 +73,41 @@ void main() {
       expect(native.sent, isEmpty);
     }
   });
+
+  test(
+    'drain reconstructs a queue-only NGC row under the original ID',
+    () async {
+      final timestamp = DateTime(2026, 1, 1);
+      await chat.offlineMessageQueuePersistence.saveQueue({
+        'group:$groupId': [
+          (
+            kind: 'text',
+            text: 'queued',
+            filePath: null,
+            fileName: null,
+            timestamp: timestamp,
+            msgID: 'queue-only',
+            cloudCustomData: null,
+            contentKind: ChatMessageContentKind.normal,
+            control: null,
+          ),
+        ],
+      });
+      final reported = <ChatMessage>[];
+      final subscription = chat.messages.listen(reported.add);
+      addTearDown(subscription.cancel);
+      native.wireReady = 1;
+      await chat.retryPendingGroupMessages(groupId);
+      await chat.retryPendingGroupMessages(groupId);
+      expect(native.sent, ['queued']);
+      final row = chat.getHistory(groupId).single;
+      expect(row.msgID, 'queue-only');
+      expect(row.groupId, groupId);
+      expect(row.timestamp, timestamp);
+      expect(row.isPending, isFalse);
+      expect(reported.map((row) => row.msgID), ['queue-only']);
+    },
+  );
 }
 
 class _GroupFfi extends FakeTim2ToxFfi {

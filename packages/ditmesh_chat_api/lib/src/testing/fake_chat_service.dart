@@ -277,7 +277,7 @@ final class FakeChatService
       );
     }
     _requireSession();
-    _refuseClearWithPending(conversationId);
+    _FakeConversationRows(this)._refuseClearWithPending(conversationId);
     _deleteConversationRows(conversationId);
   }
 
@@ -352,23 +352,8 @@ final class FakeChatService
   @override
   Future<void> clearHistory(String conversationId) async {
     _requireSession();
-    _refuseClearWithPending(conversationId);
+    _FakeConversationRows(this)._refuseClearWithPending(conversationId);
     _FakeConversationRows(this)._clear(conversationId);
-  }
-
-  void _refuseClearWithPending(String conversationId) {
-    final rows = _messages[conversationId] ?? const <ChatMessage>[];
-    if (rows.any(
-      (m) =>
-          m.isMine &&
-          (m.status == MessageStatus.pending ||
-              m.status == MessageStatus.sending),
-    )) {
-      throw const ChatException(
-        'conversation_send_pending',
-        'Resolve queued or in-progress sends before clearing history',
-      );
-    }
   }
 
   @override

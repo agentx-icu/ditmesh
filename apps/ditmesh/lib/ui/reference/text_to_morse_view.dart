@@ -64,7 +64,11 @@ class _TextToMorseViewState extends State<TextToMorseView> {
     super.dispose();
   }
 
-  void _onChanged(String value) => setState(() => _recompute(value));
+  void _onChanged(String value) {
+    final previousPattern = _pattern;
+    setState(() => _recompute(value));
+    if (_pattern != previousPattern) _stopPlayback();
+  }
 
   void _recompute(String text) {
     _source = ChineseTelegraphCode.transliterate(text, codebook: _codebook);
@@ -82,15 +86,16 @@ class _TextToMorseViewState extends State<TextToMorseView> {
 
   void _setCodebook(TelegraphCodebook book) {
     if (book == _codebook) return;
-    // The pattern changes under the player: stop rather than let the old
-    // audio run on beside the new display.
-    final ReferencePlaybackController controller = context
-        .read<ReferencePlaybackController>();
-    if (controller.isPlayingId(TextToMorseView.playId)) controller.stop();
+    _stopPlayback();
     setState(() {
       _codebook = book;
       _recompute(_text.text);
     });
+  }
+
+  void _stopPlayback() {
+    final controller = context.read<ReferencePlaybackController>();
+    if (controller.isPlayingId(TextToMorseView.playId)) controller.stop();
   }
 
   /// Distinct characters of [text] that have no Morse code, in order of first

@@ -204,8 +204,7 @@ class _LibrarySheetState extends State<_LibrarySheet> {
     setState(() => _error = null);
     try {
       final stillUsed = await widget.training.deleteAudioMaterial(m.id);
-      // Keep the open recording for other selections. The next workbench
-      // prunes it if nothing refers to it.
+      // Keep the open recording available for further selections.
       final open = m.file == widget.controller.file;
       if (!stillUsed && !open && m.file != RecordingLibrary.workingFile) {
         await widget.controller.library.delete(m.file);

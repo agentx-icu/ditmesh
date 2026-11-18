@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh_chat/ditmesh_chat.dart';
 import 'package:ditmesh_chat/src/identity/identity_record.dart';
+import 'package:ditmesh_chat/src/util/posix_permissions.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
 
@@ -16,6 +18,7 @@ void main() {
   late IdentityPaths paths;
   late MemorySecureStore secure;
   late FakeChatEngine engine;
+  late _FlakyPreferences preferences;
   final crypto = FakeProfileCrypto();
 
   PasswordVerifier verifier() => PasswordVerifier(secure, iterations: 10);
@@ -25,12 +28,14 @@ void main() {
     engine: engine,
     crypto: crypto,
     verifier: verifier(),
+    store: preferences,
   );
 
   setUp(() async {
     tempRoot = await Directory.systemTemp.createTemp('ditmesh_recovery_');
     paths = IdentityPaths(p.join(tempRoot.path, 'identity'));
     secure = MemorySecureStore();
+    preferences = _FlakyPreferences();
     engine = FakeChatEngine();
   });
 
@@ -66,6 +71,199 @@ void main() {
     }
     return stage;
   }
+
+  Future<Directory> interruptAfterSecondRename({
+    required IdentityRecord incoming,
+    required Map<String, Object> savedPreferences,
+    bool committed = false,
+  }) async {
+    final stage = await tempRoot.createTemp(IdentityPaths.importStagePrefix);
+    final old = await IdentityRecord.read(paths.identityFile);
+    await File(p.join(stage.path, 'restore.json')).writeAsString(
+      jsonEncode({
+        'version': 1,
+        'hadRoot': true,
+        'oldToxId': old?.toxId,
+        'toxId': incoming.toxId,
+        'encrypted': incoming.hasPassword,
+        'preferences': {'values': savedPreferences, 'unreadable': <String>[]},
+      }),
+    );
+    await Directory(paths.root).rename(IdentityPaths.previousInStage(stage));
+    await paths.ensureDirectories();
+    await File(paths.profileFile).writeAsBytes(
+      FakeProfileCrypto.plainProfile(incoming.toxId.substring(0, 64), 'After'),
+    );
+    await incoming.write(paths.identityFile);
+    if (committed) {
+      await File(p.join(stage.path, 'committed')).create();
+    }
+    return stage;
+  }
+
+  test(
+    'uncommitted restore rolls back files and scoped keys on cold start',
+    () async {
+      final original = newService();
+      await original.create(displayName: 'Before', password: 'old');
+      await original.dispose();
+      // The legacy profile uses its existing secure-store verifier.
+      final bytes = await File(paths.profileFile).readAsBytes();
+      await File(paths.profileFile).writeAsBytes(crypto.decrypt(bytes, 'old'));
+      final suffix = kSelfToxId.substring(0, 16);
+      final peerSuffix = kPeerToxId.substring(0, 16);
+      final stage = await interruptAfterSecondRename(
+        incoming: const IdentityRecord(toxId: kSelfToxId, displayName: 'After'),
+        savedPreferences: {
+          'groups_list_$suffix': ['before'],
+          'name_$suffix': 'Before',
+          'flag_$suffix': true,
+          'count_$suffix': 12,
+          'dismissed_friend_applications': ['legacy'],
+        },
+      );
+      await preferences.setStringList('groups_list_$suffix', ['incoming']);
+      await preferences.setString('added_$suffix', 'partial restore');
+      await preferences.setString('other_$peerSuffix', 'other identity');
+      await preferences.setString('bootstrap_node_mode', 'external change');
+
+      final restarted = newService();
+      expect(await restarted.inspect(), IdentityState.locked);
+      expect(restarted.current, isNull);
+      expect(await verifier().verify(kSelfToxId, 'old'), isTrue);
+      expect((await restarted.unlock('old')).displayName, 'Before');
+      expect(preferences.getStringList('groups_list_$suffix'), ['before']);
+      expect(preferences.getString('name_$suffix'), 'Before');
+      expect(preferences.getBool('flag_$suffix'), isTrue);
+      expect(preferences.getInt('count_$suffix'), 12);
+      expect(preferences.getStringList('dismissed_friend_applications'), [
+        'legacy',
+      ]);
+      expect(preferences.getString('added_$suffix'), isNull);
+      expect(preferences.getString('other_$peerSuffix'), 'other identity');
+      expect(preferences.getString('bootstrap_node_mode'), 'external change');
+      expect(stage.existsSync(), isFalse);
+      await restarted.dispose();
+    },
+  );
+
+  test(
+    'a rollback failure blocks access and retries the same journal',
+    () async {
+      final original = newService();
+      await original.create(displayName: 'Before');
+      await original.dispose();
+      final key = 'groups_list_${kSelfToxId.substring(0, 16)}';
+      final stage = await interruptAfterSecondRename(
+        incoming: const IdentityRecord(toxId: kPeerToxId, displayName: 'After'),
+        savedPreferences: {
+          key: ['before'],
+        },
+      );
+
+      final restarted = newService();
+      preferences.failWrites = true;
+      await expectLater(
+        restarted.inspect(),
+        throwsCode('identity_recovery_pending'),
+      );
+      await expectLater(
+        restarted.open(),
+        throwsCode('identity_recovery_pending'),
+      );
+      await expectLater(
+        restarted.unlock('unused'),
+        throwsCode('identity_recovery_pending'),
+      );
+      await expectLater(
+        restarted.connect(),
+        throwsCode('identity_recovery_pending'),
+      );
+      expect(restarted.current, isNull);
+      expect(paths.profileExists, isTrue);
+      expect(stage.existsSync(), isTrue);
+
+      preferences.failWrites = false;
+      expect((await restarted.open()).displayName, 'Before');
+      expect(preferences.getStringList(key), ['before']);
+      expect(stage.existsSync(), isFalse);
+      await restarted.dispose();
+    },
+  );
+
+  test(
+    'a committed same-ID restore finishes verifier cleanup on cold start',
+    () async {
+      final original = newService();
+      await original.create(displayName: 'Before', password: 'old');
+      await original.dispose();
+      final key = 'groups_list_${kSelfToxId.substring(0, 16)}';
+      final stage = await interruptAfterSecondRename(
+        incoming: const IdentityRecord(toxId: kSelfToxId, displayName: 'After'),
+        savedPreferences: {
+          key: ['before'],
+        },
+        committed: true,
+      );
+      await preferences.setStringList(key, ['after']);
+
+      final restarted = newService();
+      expect(await restarted.inspect(), IdentityState.ready);
+      expect((await restarted.open()).displayName, 'After');
+      expect(preferences.getStringList(key), ['after']);
+      expect(await verifier().hasPassword(kSelfToxId), isFalse);
+      expect(stage.existsSync(), isFalse);
+      await restarted.dispose();
+    },
+  );
+
+  test(
+    'committed cleanup failure allows reopening and preserves a newer verifier',
+    () async {
+      final original = newService();
+      await original.create(displayName: 'Before', password: 'old');
+      await original.dispose();
+      final stage = await interruptAfterSecondRename(
+        incoming: const IdentityRecord(toxId: kSelfToxId, displayName: 'After'),
+        savedPreferences: const {},
+        committed: true,
+      );
+      final undeletable = Directory(
+        p.join(IdentityPaths.previousInStage(stage), 'undeletable'),
+      );
+      await undeletable.create();
+      await File(p.join(undeletable.path, 'file')).writeAsString('old');
+      PosixPermissions.set(undeletable.path, 0x140); // Owner read and execute.
+      addTearDown(() {
+        if (undeletable.existsSync()) {
+          PosixPermissions.set(undeletable.path, PosixPermissions.privateDirectory);
+        }
+      });
+
+      final restarted = newService();
+      expect(await restarted.inspect(), IdentityState.ready);
+      expect((await restarted.open()).displayName, 'After');
+      expect(stage.existsSync(), isTrue);
+      final backup = await restarted.exportBackup();
+      await expectLater(
+        restarted.importBackup(backup),
+        throwsCode('identity_recovery_pending'),
+      );
+      expect(restarted.current?.displayName, 'After');
+      await restarted.changePassword(newPassword: 'after');
+      await restarted.dispose();
+
+      final next = newService();
+      addTearDown(next.dispose);
+      expect(await next.inspect(), IdentityState.locked);
+      expect(await verifier().verify(kSelfToxId, 'after'), isTrue);
+      expect((await next.unlock('after')).displayName, 'After');
+      PosixPermissions.set(undeletable.path, PosixPermissions.privateDirectory);
+      expect(await next.inspect(), IdentityState.ready);
+      expect(stage.existsSync(), isFalse);
+    },
+    skip: Platform.isWindows || Platform.environment['USER'] == 'root',
+  );
 
   test('the previous identity comes back on inspect and opens', () async {
     final first = newService();
@@ -305,6 +503,16 @@ void main() {
 
 /// A secure store whose deletes can be made to fail (a transient keychain
 /// error), to interrupt recovery between its steps.
+class _FlakyPreferences extends MemoryKeyValueStore {
+  bool failWrites = false;
+
+  @override
+  Future<void> setStringList(String key, List<String> value) async {
+    if (failWrites) throw StateError('Preference write failed');
+    await super.setStringList(key, value);
+  }
+}
+
 class _FlakySecureStore extends MemorySecureStore {
   bool failDelete = false;
 
