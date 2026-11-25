@@ -27,11 +27,12 @@ import 'conversation_bubble.dart';
 import 'conversation_menu.dart';
 import 'search/message_bookmarks.dart';
 import 'conversation_timeline.dart';
-import 'message_input.dart';
+import 'conversation_composer.dart';
 import 'local_message_sends.dart';
 import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
 import 'conversation_playback_preferences.dart';
+import 'first_contact_card.dart';
 
 part 'conversation_screen_menu.dart';
 
@@ -422,34 +423,22 @@ class _ConversationScreenState extends State<ConversationScreen>
             children: [
               if (conference) const ConferenceNote(),
               Expanded(child: _buildList(settings)),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: box.maxHeight * 0.75),
-                child: SingleChildScrollView(
-                  child: ChangeNotifierProvider<MorsePlaybackSettings>.value(
-                    value: settings,
-                    child: MessageInput(
-                      key: ValueKey<String>('input_$_id'),
-                      service: _service,
-                      conversationId: _id,
-                      playback: _playback,
-                      initialDraft: _draft(),
-                      onSent: (_) => _showLatest(),
-                    ),
-                  ),
-                ),
+              ConversationComposer(
+                service: _service,
+                conversationId: _id,
+                playback: _playback,
+                settings: settings,
+                maxHeight: box.maxHeight * .75,
+                onSent: (_) => _showLatest(),
+                guidance: widget.target.isSelf && _messages.isNotEmpty
+                    ? FirstContactCard(service: _service)
+                    : null,
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _draft() {
-    for (final Conversation c in _service.conversations) {
-      if (c.id == _id) return c.draft;
-    }
-    return '';
   }
 
   Widget _buildList(MorsePlaybackSettings settings) {

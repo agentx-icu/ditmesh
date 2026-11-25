@@ -3888,4 +3888,19 @@ class SKo extends S {
 
   @override
   String get legalDocumentUnavailable => '이 문서를 불러올 수 없습니다.';
+
+  @override
+  String get firstChatNextTitle => '친구와 실제 교신을 시작할까요?';
+
+  @override
+  String get firstChatChooseFriend => '친구 선택';
+
+  @override
+  String get firstChatExchangeTitle => '4. CQ 보내고 듣고 답하기';
+
+  @override
+  String get firstChatExchangeBody => '친구에게 CQ를 전송하세요. 친구가 듣고 전건으로 답하도록 요청하세요. 답장을 재생하고 메시지 플레이어에서 원래 리듬과 내 속도를 비교하세요.';
+
+  @override
+  String get firstChatReceiptBody => '대기 중은 기기에 저장됨, 전송됨은 전송 계층에서 수락됨을 뜻합니다. 전달됨에는 상대의 수신 확인이 필요합니다. 그룹 확인은 최소 한 명의 수신이며 모두가 들었다는 뜻은 아닙니다.';
 }

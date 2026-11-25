@@ -3,19 +3,14 @@ name: Analyze
 on:
   workflow_call:
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 permissions:
   contents: read
 
 concurrency:
-  # Supersede an in-flight run when a PR is pushed again. Scoped to
-  # pull_request so a push-to-main run is never aborted midway.
+  # The caller owns automatic events; keep this reusable run separately scoped.
   group: analyze-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
   analyze:

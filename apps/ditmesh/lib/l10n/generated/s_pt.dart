@@ -3907,4 +3907,19 @@ class SPt extends S {
 
   @override
   String get legalDocumentUnavailable => 'Não foi possível carregar este documento.';
+
+  @override
+  String get firstChatNextTitle => 'Pronto para um contato real?';
+
+  @override
+  String get firstChatChooseFriend => 'Escolher um amigo';
+
+  @override
+  String get firstChatExchangeTitle => '4. Enviar CQ, ouvir e responder';
+
+  @override
+  String get firstChatExchangeBody => 'Transmita CQ a um amigo. Peça que ouça e manipule uma resposta. Ouça a resposta e compare o ritmo original com sua velocidade no reprodutor da mensagem.';
+
+  @override
+  String get firstChatReceiptBody => 'Na fila significa salvo neste dispositivo; enviado, aceito pelo transporte; entregue exige confirmação do destinatário. Em grupos confirma ao menos um membro, não que todos tenham ouvido.';
 }

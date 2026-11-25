@@ -3945,4 +3945,19 @@ class SRu extends S {
 
   @override
   String get legalDocumentUnavailable => 'Не удалось загрузить этот документ.';
+
+  @override
+  String get firstChatNextTitle => 'Готовы к настоящему контакту?';
+
+  @override
+  String get firstChatChooseFriend => 'Выбрать друга';
+
+  @override
+  String get firstChatExchangeTitle => '4. Передать CQ, прослушать, ответить';
+
+  @override
+  String get firstChatExchangeBody => 'Передайте другу CQ. Попросите его прослушать и передать ответ ключом. Прослушайте ответ и сравните исходный ритм со своей скоростью в проигрывателе сообщения.';
+
+  @override
+  String get firstChatReceiptBody => 'В очереди означает сохранение на устройстве; отправлено — принятие транспортом; доставлено требует подтверждения получателя. В группе оно подтверждает хотя бы одного участника, а не то, что все прослушали.';
 }

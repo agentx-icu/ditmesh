@@ -3907,4 +3907,19 @@ class SDe extends S {
 
   @override
   String get legalDocumentUnavailable => 'Dieses Dokument konnte nicht geladen werden.';
+
+  @override
+  String get firstChatNextTitle => 'Bereit für einen echten Kontakt?';
+
+  @override
+  String get firstChatChooseFriend => 'Freund auswählen';
+
+  @override
+  String get firstChatExchangeTitle => '4. CQ senden, hören, antworten';
+
+  @override
+  String get firstChatExchangeBody => 'Taste CQ an einen Freund. Bitte ihn, es anzuhören und eine Antwort zu tasten. Höre seine Antwort und vergleiche im Nachrichtenplayer den Originalrhythmus mit deinem eigenen Tempo.';
+
+  @override
+  String get firstChatReceiptBody => 'In der Warteschlange bedeutet lokal gespeichert; gesendet bedeutet vom Transport angenommen; zugestellt erfordert eine Empfangsbestätigung. In Gruppen bestätigt sie mindestens ein Mitglied, nicht dass alle zugehört haben.';
 }

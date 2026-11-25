@@ -30,6 +30,7 @@ on:
       - "packages/**"
   pull_request:
     branches: [main, master]
+    types: [opened, reopened, labeled, unlabeled, synchronize, ready_for_review, converted_to_draft]
     paths:
       - ".github/workflows/**"
       - "tool/**"
@@ -49,8 +50,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Isolate irrelevant label events so they cannot cancel valid PR checks.
+  group: ${{ github.workflow }}-${{ github.ref }}${{ contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) && !contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name) && format('-ignored-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
 defaults:
   run:
@@ -73,6 +75,8 @@ env:
 
 jobs:
   quality:
+    if: >-
+      !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)
     name: Analysis and unit tests
     uses: ./.github/workflows/analyze.yml
 
@@ -80,34 +84,22 @@ jobs:
   # 1. Native library per target
   # ---------------------------------------------------------------------------
   native:
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     name: native ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target: linux-x86_64
-            runner: ubuntu-24.04
-            timeout: 45
-          - target: windows-x64
-            runner: windows-2022
-            timeout: 75
-            vcpkg_triplet: x64-windows
-            msvc_arch: amd64
-          - target: macos-x86_64
-            runner: macos-15-intel
-            timeout: 45
-          - target: macos-arm64
-            runner: macos-15
-            timeout: 45
-          - target: android
-            runner: ubuntu-24.04
-            timeout: 75
-          - target: ios
-            runner: macos-15
-            timeout: 75
-
+        # Ordinary PRs retain the real Linux native/API regression path.
+        include: >-
+          ${{ fromJSON(
+            (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))) &&
+            '[{"target":"linux-x86_64","runner":"ubuntu-24.04","timeout":45},{"target":"windows-x64","runner":"windows-2022","timeout":75,"vcpkg_triplet":"x64-windows","msvc_arch":"amd64"},{"target":"macos-x86_64","runner":"macos-15-intel","timeout":45},{"target":"macos-arm64","runner":"macos-15","timeout":45},{"target":"android","runner":"ubuntu-24.04","timeout":75},{"target":"ios","runner":"macos-15","timeout":75}]' ||
+            '[{"target":"linux-x86_64","runner":"ubuntu-24.04","timeout":45}]'
+          ) }}
     steps:
       - name: Configure Git line endings (Windows)
         if: runner.os == 'Windows'
@@ -262,7 +254,7 @@ jobs:
           name: native-symbols-${{ matrix.target }}
           path: build/native-symbols/${{ matrix.target }}
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
       # Gate the BYTES that will be uploaded (a cache hit never ran CMake).
       - name: Assert artifact carries no Tim2Tox test hooks
@@ -277,7 +269,7 @@ jobs:
           name: tim2tox-ffi-${{ matrix.target }}
           path: build/native/${{ matrix.target }}
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
   # ---------------------------------------------------------------------------
   # 2. Desktop app builds consuming the artifact (release, real backend)
@@ -306,6 +298,8 @@ jobs:
           name: tim2tox-ffi-linux-x86_64
           path: build/native/linux-x86_64
       - name: Download exact native symbols
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         uses: actions/download-artifact@v5
         with:
           name: native-symbols-linux-x86_64
@@ -332,13 +326,15 @@ jobs:
           name: real-peer-logs-linux-x86_64
           path: ${{ runner.temp }}/ditmesh_real_peers_*/**/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Build Linux app (release, real Tox backend)
         run: |
           flutter config --enable-linux-desktop
           cd apps/ditmesh
           flutter build linux --release --dart-define=DITMESH_FAKE_BACKEND=false --split-debug-info="$GITHUB_WORKSPACE/build/dart-symbols/linux-x86_64"
       - name: Preserve and pair owned app symbols
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         run: python3 tool/ci/release_symbols.py prepare --target linux
       - name: Verify the bundle ships libtim2tox_ffi.so
         run: |
@@ -349,38 +345,48 @@ jobs:
           readelf -d "$so" | grep -E 'RUNPATH|RPATH' || true
           bash tool/ci/assert_no_test_hooks.sh "$so"
       - name: Upload Linux bundle
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         uses: actions/upload-artifact@v4
         with:
           name: ditmesh-linux-x86_64-release
           path: apps/ditmesh/build/linux/x64/release/bundle
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       # Packed on the build runner: upload-artifact drops file modes (and
       # symlinks), so only finished packages leave the machine.
       - name: Package (.deb, .rpm, .tar.gz)
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         run: bash tool/ci/package_artifacts.sh --target linux
       - name: Pair symbols with actual final packages
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         run: python3 tool/ci/release_symbols.py packages --target linux
       - name: Smoke installed Linux DEB in clean Ubuntu
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         timeout-minutes: 18
         run: python3 tool/ci/linux_installed_smoke.py --app ditmesh --architecture x86_64 --package-dir dist/linux --evidence-dir build/evidence/linux-installed
       - name: Upload Linux installer evidence
-        if: always()
+        if: ${{ always() && (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))) }}
         uses: actions/upload-artifact@v4
         with:
           name: linux-installer-evidence
           path: build/evidence/linux-installed
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload packages
+        if: >-
+          github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))
         uses: actions/upload-artifact@v4
         with:
           name: release-linux
           path: dist/linux/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload owned app symbols and final pairing evidence
-        if: always()
+        if: ${{ always() && (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full')))) }}
         uses: actions/upload-artifact@v4
         with:
           name: app-symbols-linux-x86_64
@@ -388,10 +394,13 @@ jobs:
             build/release-symbols/linux-x86_64
             build/dart-symbols/linux-x86_64*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
 
   app-windows:
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full'))))
     name: flutter build windows (x64, release)
     needs: native
     runs-on: windows-2022
@@ -450,7 +459,7 @@ jobs:
           name: ditmesh-windows-x64-release
           path: apps/ditmesh/build/windows/x64/runner/Release
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       # CPack's WIX generator needs WiX v3 (candle/light) on PATH. Same search
       # as toxee: preinstalled image paths, else Chocolatey, else the release zip.
       - name: Put WiX v3 on PATH
@@ -509,7 +518,7 @@ jobs:
           name: windows-installer-evidence
           path: ${{ runner.temp }}/ditmesh-msi-evidence
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload Windows path and manifest evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -519,14 +528,14 @@ jobs:
             build/evidence/windows-path
             build/evidence-windows-runner.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: release-windows
           path: dist/windows/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload owned app symbols and final pairing evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -536,10 +545,13 @@ jobs:
             build/release-symbols/windows-x64
             build/dart-symbols/windows-x64*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
 
   app-macos:
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full'))))
     name: flutter build macos (${{ matrix.arch }}, release)
     needs: native
     runs-on: ${{ matrix.runner }}
@@ -599,7 +611,7 @@ jobs:
           name: real-peer-logs-macos-${{ matrix.arch }}
           path: ${{ runner.temp }}/ditmesh_real_peers_*/**/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Build macOS app (release, real Tox backend)
         run: |
           bash tool/ci/clean_apple_plugin_cache.sh macos
@@ -629,7 +641,7 @@ jobs:
           name: ditmesh-macos-${{ matrix.arch }}-release
           path: apps/ditmesh/build/macos/Build/Products/Release/*.app
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Package (.pkg, .zip)
         run: bash tool/ci/package_artifacts.sh --target macos --arch "${{ matrix.arch }}"
       - name: Pair symbols with actual final packages
@@ -640,7 +652,7 @@ jobs:
           name: release-macos-${{ matrix.arch }}
           path: dist/macos/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
       - name: Upload owned app symbols and final pairing evidence
         if: always()
@@ -651,7 +663,7 @@ jobs:
             build/release-symbols/macos-${{ matrix.arch }}
             build/dart-symbols/macos-${{ matrix.arch }}*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
   # ---------------------------------------------------------------------------
   # 3. Mobile app builds consuming the artifact (release, real backend)
@@ -659,6 +671,9 @@ jobs:
 
 
   app-android:
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full'))))
     name: flutter build apk + appbundle (release)
     needs: native
     runs-on: ubuntu-24.04
@@ -793,7 +808,7 @@ jobs:
           name: release-android
           path: dist/android/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload owned app symbols and final pairing evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -803,10 +818,13 @@ jobs:
             build/release-symbols/android
             build/dart-symbols/android-*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
 
   app-ios:
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:build", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:build') || contains(github.event.pull_request.labels.*.name, 'ci:full'))))
     name: flutter build ios (release, unsigned)
     needs: native
     # Xcode 26 / iOS 26 SDK: device_info_plus 13.2 calls
@@ -866,7 +884,7 @@ jobs:
           name: release-ios
           path: dist/ios/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
       - name: Archive iOS candidate without signing or account access
         run: bash tool/build_ios_store.sh --unsigned-archive --output build/ios/store-readiness/ci
@@ -880,7 +898,7 @@ jobs:
           name: ios-store-readiness-archive
           path: build/ios/ditmesh-ios-archive.tar.gz
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
       - name: Upload owned app symbols and final pairing evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -892,7 +910,7 @@ jobs:
             build/release-symbols/ios-archive
             build/ios/store-readiness/ci/dart-symbols
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
 
 
   # ---------------------------------------------------------------------------
@@ -933,3 +951,12 @@ jobs:
             gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
               --title "DitMesh $GITHUB_REF_NAME" --generate-notes -R "$GITHUB_REPOSITORY"
           fi
+      - name: Attach release manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/release.json"
+          python3 tool/release_manifest.py build --repository "$GITHUB_REPOSITORY" --input "$RUNNER_TEMP/release.json" --output "$RUNNER_TEMP/release-manifest.json"
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/release-manifest.json" --clobber --repo "$GITHUB_REPOSITORY"
