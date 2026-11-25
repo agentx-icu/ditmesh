@@ -7238,31 +7238,31 @@ abstract class S {
   /// **'Could not load this document.'**
   String get legalDocumentUnavailable;
 
-  /// No description provided for @firstChatNextTitle.
+  /// Title of the next-step card shown after sending a self-practice message
   ///
   /// In en, this message translates to:
   /// **'Ready for a real contact?'**
   String get firstChatNextTitle;
 
-  /// No description provided for @firstChatChooseFriend.
+  /// Button on the self-practice next-step card that opens existing contacts
   ///
   /// In en, this message translates to:
   /// **'Choose a friend'**
   String get firstChatChooseFriend;
 
-  /// No description provided for @firstChatExchangeTitle.
+  /// Title of the first-chat guide step explaining a two-way Morse exchange
   ///
   /// In en, this message translates to:
   /// **'4. Send CQ, listen, reply'**
   String get firstChatExchangeTitle;
 
-  /// No description provided for @firstChatExchangeBody.
+  /// Instructions for the first-chat guide's send, listen and reply step
   ///
   /// In en, this message translates to:
   /// **'Key CQ to a friend. Ask them to play it, then key a reply. Play their reply and compare the original rhythm with your own speed in the message player.'**
   String get firstChatExchangeBody;
 
-  /// No description provided for @firstChatReceiptBody.
+  /// First-chat guide explanation of local queue, transport send and peer receipt states
   ///
   /// In en, this message translates to:
   /// **'Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.'**
