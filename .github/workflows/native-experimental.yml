@@ -5,10 +5,15 @@ name: Experimental ARM native builds
 on:
   workflow_dispatch:
   pull_request:
-    types: [labeled, synchronize]
+    types: [opened, reopened, labeled, unlabeled, synchronize, ready_for_review, converted_to_draft]
 
 permissions:
   contents: read
+
+concurrency:
+  # Isolate irrelevant label events so they cannot cancel valid PR checks.
+  group: ${{ github.workflow }}-${{ github.ref }}${{ contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) && !contains(fromJSON('["ci:arm", "ci:full"]'), github.event.label.name) && format('-ignored-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
 defaults:
   run:
@@ -21,7 +26,9 @@ env:
 jobs:
   experimental:
     name: experimental native ${{ matrix.target }}
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'ci:arm')
+    if: >-
+      (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || contains(fromJSON('["ci:arm", "ci:full"]'), github.event.label.name)) &&
+      (github.event_name == 'workflow_dispatch' || (!github.event.pull_request.draft && (contains(github.event.pull_request.labels.*.name, 'ci:arm') || contains(github.event.pull_request.labels.*.name, 'ci:full'))))
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -168,4 +175,4 @@ jobs:
           name: tim2tox-ffi-${{ matrix.target }}
           path: build/native/${{ matrix.target }}
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && '14' || github.event_name == 'workflow_dispatch' && '14' || '3' }}
