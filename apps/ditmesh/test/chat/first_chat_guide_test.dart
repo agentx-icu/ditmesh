@@ -8,6 +8,8 @@ import 'package:ditmesh/i18n/key_value_store.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
+import 'package:ditmesh/ui/chat/conversation_timeline.dart';
+import 'package:ditmesh/ui/chat/message_bubble.dart';
 import 'package:ditmesh/ui/chat/message_input.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/pages/chat_page.dart';
@@ -235,6 +237,20 @@ void main() {
       h.wrap(screen(), textScaler: const TextScaler.linear(3)),
     );
     await tester.pumpAndSettle();
+    final timeline = find.byType(ConversationTimeline);
+    expect(tester.getSize(timeline).height, greaterThanOrEqualTo(48));
+    final play = find.descendant(
+      of: find.byType(MessageBubble),
+      matching: find.byTooltip(s.chatPlay),
+    );
+    await tester.ensureVisible(play);
+    await tester.pumpAndSettle();
+    expect(play.hitTestable(), findsOneWidget);
+    await tester.tap(play);
+    await tester.pump();
+    expect(h.playback.playingId, isNotNull);
+    h.playback.stop();
+    await tester.pump();
     final next = find.byKey(const ValueKey('first-contact-next'));
     await tester.ensureVisible(next);
     await tester.pumpAndSettle();

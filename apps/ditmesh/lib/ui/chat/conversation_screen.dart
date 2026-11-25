@@ -422,13 +422,6 @@ class _ConversationScreenState extends State<ConversationScreen>
           builder: (context, box) => Column(
             children: [
               if (conference) const ConferenceNote(),
-              if (widget.target.isSelf && _messages.isNotEmpty)
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: box.maxHeight * .24),
-                  child: SingleChildScrollView(
-                    child: FirstContactCard(service: _service),
-                  ),
-                ),
               Expanded(child: _buildList(settings)),
               ConversationComposer(
                 service: _service,
@@ -437,6 +430,9 @@ class _ConversationScreenState extends State<ConversationScreen>
                 settings: settings,
                 maxHeight: box.maxHeight * .75,
                 onSent: (_) => _showLatest(),
+                guidance: widget.target.isSelf && _messages.isNotEmpty
+                    ? FirstContactCard(service: _service)
+                    : null,
               ),
             ],
           ),

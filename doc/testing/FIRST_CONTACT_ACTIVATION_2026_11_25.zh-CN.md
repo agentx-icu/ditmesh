@@ -15,4 +15,6 @@
 
 跨平台检查：共享 widget 已验证布局/字体缩放及原生可访问按钮，五平台共用本次 Dart 路径。未改变协议、权限、后台模式或原生插件。实体手机键盘/触控、跨 NAT/蜂窝、锁屏接收和同签名渠道升级仍需设备/渠道证据。三对搭档任务和空白本地记录见 `FIRST_CONTACT_TRIAL.zh-CN.md`，未声称或联系真实参与者。
 
-另行使用同 revision 的既有 macOS 原生库运行双端测试；只有记录真实结果与制品身份后才算该项完成。该测试不能证明物理设备或公网表现。
+原生双端检查已完成，退出码0。运行 `python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library /Users/bin.gao/.codex/worktrees/ditmesh-full-audit/ditmesh/build/native/macos-arm64/libtim2tox_ffi.dylib --timeout 780`，实际验证私聊、重复原始节奏、NGC 群消息、加密身份重启、持久待发、在线/DHT失联/离开后的重入，以及拒绝加入后的槽位安全。两个独立进程均完成并成功退出。证据目录：`/var/folders/cz/1y3n3_k12g5d1jmk7m425kr00000gn/T/ditmesh_real_peers_56gp1v6c`；FFI SHA-256：`9599f8666cbefa14651a26ed436fcbea543bd05d2998ae126a29a9a560731891`。复用了同 Tim2Tox revision 检出中的既有原生库，未在本工作区重新编译；传输为本机原生 UDP，不证明物理设备或公网跨 NAT。
+
+独立 Codex 复审复现窄屏问题：引导单占24%、编辑器占75%时，320×568、3倍字体的历史只剩5.12像素。现将引导移入编辑器既有的限高滚动区域，保留历史原有25%空间。回归在修复前失败，修复后实际检查可用历史高度、启动自聊消息播放，再进入联系人。最终67项定向测试和分析再次通过。

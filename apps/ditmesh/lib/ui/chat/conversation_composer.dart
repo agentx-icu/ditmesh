@@ -17,6 +17,7 @@ class ConversationComposer extends StatelessWidget {
     required this.settings,
     required this.maxHeight,
     required this.onSent,
+    this.guidance,
   });
 
   final ChatService service;
@@ -25,6 +26,7 @@ class ConversationComposer extends StatelessWidget {
   final MorsePlaybackSettings settings;
   final double maxHeight;
   final ValueChanged<ChatMessage> onSent;
+  final Widget? guidance;
 
   String get _draft {
     for (final conversation in service.conversations) {
@@ -37,16 +39,22 @@ class ConversationComposer extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: BoxConstraints(maxHeight: maxHeight),
     child: SingleChildScrollView(
-      child: ChangeNotifierProvider<MorsePlaybackSettings>.value(
-        value: settings,
-        child: MessageInput(
-          key: ValueKey<String>('input_$conversationId'),
-          service: service,
-          conversationId: conversationId,
-          playback: playback,
-          initialDraft: _draft,
-          onSent: onSent,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          guidance ?? const SizedBox.shrink(),
+          ChangeNotifierProvider<MorsePlaybackSettings>.value(
+            value: settings,
+            child: MessageInput(
+              key: ValueKey<String>('input_$conversationId'),
+              service: service,
+              conversationId: conversationId,
+              playback: playback,
+              initialDraft: _draft,
+              onSent: onSent,
+            ),
+          ),
+        ],
       ),
     ),
   );
