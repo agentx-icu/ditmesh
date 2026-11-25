@@ -90,10 +90,10 @@ class _PaddleButtonsState extends State<PaddleButtons>
       return KeyEventResult.ignored;
     }
     if (event is KeyDownEvent) {
-      paddle.keyboardDown = true;
+      paddle.keys.add(event.physicalKey);
       _sync(paddle, paddle == _dit);
     } else if (event is KeyUpEvent) {
-      paddle.keyboardDown = false;
+      paddle.keys.remove(event.physicalKey);
       _sync(paddle, paddle == _dit);
     }
     return KeyEventResult.handled;
@@ -104,8 +104,8 @@ class _PaddleButtonsState extends State<PaddleButtons>
       return;
     }
     for (final paddle in <_PaddleState>[_dit, _dah]) {
-      if (paddle.keyboardDown) {
-        paddle.keyboardDown = false;
+      if (paddle.keys.isNotEmpty) {
+        paddle.keys.clear();
         _sync(paddle, paddle == _dit);
       }
     }
@@ -140,9 +140,8 @@ class _PaddleButtonsState extends State<PaddleButtons>
     if (state == AppLifecycleState.resumed) return;
     for (final paddle in [_dit, _dah]) {
       if (!paddle.isDown) continue;
-      paddle
-        ..keyboardDown = false
-        ..pointers.clear();
+      paddle.keys.clear();
+      paddle.pointers.clear();
       _sync(paddle, paddle == _dit);
     }
   }
@@ -215,10 +214,10 @@ class _PaddleButtonsState extends State<PaddleButtons>
 
 class _PaddleState {
   final Set<int> pointers = <int>{};
-  bool keyboardDown = false;
+  final Set<PhysicalKeyboardKey> keys = {};
   bool reported = false;
 
-  bool get isDown => pointers.isNotEmpty || keyboardDown;
+  bool get isDown => pointers.isNotEmpty || keys.isNotEmpty;
 }
 
 class _Paddle extends StatelessWidget {

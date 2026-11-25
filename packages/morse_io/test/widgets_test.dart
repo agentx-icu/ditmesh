@@ -89,6 +89,32 @@ void main() {
       expect(key.log, <(bool, int)>[(true, 0), (false, 0)]);
     });
 
+    testWidgets('straight key stays down until both bound keys are up', (
+      tester,
+    ) async {
+      final input = _FakeStraightKey();
+      await tester.pumpWidget(
+        _host(
+          StraightKeyButton(
+            input: input,
+            clock: FakeClock(),
+            autofocus: true,
+            binding: KeyboardKeyBinding(
+              straight: {LogicalKeyboardKey.keyA, LogicalKeyboardKey.keyB},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyA);
+      final afterFirstRelease = [...input.log];
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyB);
+      expect(afterFirstRelease, [(true, 0)]);
+      expect(input.log, [(true, 0), (false, 0)]);
+    });
+
     testWidgets('losing focus while the space bar is held releases the key', (
       tester,
     ) async {
@@ -273,6 +299,32 @@ void main() {
         'dit up @0',
         'dah up @0',
       ]);
+    });
+
+    testWidgets('dit paddle stays down until both bound keys are up', (
+      tester,
+    ) async {
+      final input = _FakePaddles();
+      await tester.pumpWidget(
+        _host(
+          PaddleButtons(
+            input: input,
+            clock: FakeClock(),
+            autofocus: true,
+            binding: KeyboardKeyBinding(
+              dit: {LogicalKeyboardKey.keyA, LogicalKeyboardKey.keyB},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyA);
+      final afterFirstRelease = [...input.log];
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyB);
+      expect(afterFirstRelease, ['dit down @0']);
+      expect(input.log, ['dit down @0', 'dit up @0']);
     });
 
     testWidgets('losing focus releases keyboard-held paddles', (tester) async {

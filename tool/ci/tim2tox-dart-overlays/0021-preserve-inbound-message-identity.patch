@@ -1,0 +1,250 @@
+--- a/lib/models/chat_message.dart
++++ b/lib/models/chat_message.dart
+@@ -179,6 +179,29 @@
+   final aliasB = toxGroupMessageAliasOf(b);
+   if (aliasB == null) return null;
+   return aliasA == aliasB;
++}
++
++final _nativeCallbackId = RegExp(r'^msg_\d+_\d+_\d+$');
++final _pollCallbackId = RegExp(r'^\d+_\d+_');
++
++bool isNativeCallbackMessageId(String? id) =>
++    id != null && _nativeCallbackId.hasMatch(id);
++
++/// Content can only reconcile callbacks when their known sources differ.
++/// Once one row has absorbed both sources, a later equal message must use a
++/// different row. Legacy rows with unknown ids keep the timing fallback.
++bool canMergeInboundContentCopies(ChatMessage a, ChatMessage b) {
++  if (chatMessagesShareGroupIdentity(a, b) != null) return false;
++  return (_callbackSources(a) & _callbackSources(b)) == 0;
++}
++
++int _callbackSources(ChatMessage row) {
++  var sources = 0;
++  for (final id in [row.msgID, ...row.altMsgIds]) {
++    if (isNativeCallbackMessageId(id)) sources |= 1;
++    if (id != null && _pollCallbackId.hasMatch(id)) sources |= 2;
++  }
++  return sources;
+ }
+ 
+ /// Sorts [messages] in place by timestamp, STABLY: rows with equal timestamps
+--- a/lib/service/ffi_chat_service.dart
++++ b/lib/service/ffi_chat_service.dart
+@@ -7831,11 +7831,36 @@
+         textMentionsSelf(text)) {
+       _unreadMentionGroups.add(_unreadKey(gid));
+     }
++    final timestamp = epochMs ?? DateTime.now().millisecondsSinceEpoch;
++    final sequence = _msgIDSequence++;
++    final msgID = '${timestamp}_${sequence}_${from}_$gid';
++    // The primary id is receiver-local (every peer mints its own), so the
++    // cross-peer alias is what lets a receipt from another member resolve to
++    // THIS row. Absent for routes with no Tox_Group_Message_Id.
++    final alias = pseudoMsgId == null
++        ? null
++        : groupMessageAlias(
++            groupId: gid,
++            senderPk: from,
++            pseudoMsgId: pseudoMsgId,
++          );
++    final msg = enrichGroupExtension(ChatMessage(
++      text: text,
++      fromUserId: from,
++      isSelf: from == _selfId,
++      timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp),
++      groupId: gid,
++      msgID: msgID,
++      contentKind: contentKind,
++      sourceInstanceId: sourceInstanceId,
++      altMsgIds: [if (alias != null) alias],
++    ));
+     // Deduplicate: same message can be delivered twice (conference + group callback in C++)
+-    final duplicate = _findRecentGroupHistoryMessage(
+-        gid, from, text, contentKind,
+-        pseudoMsgId: pseudoMsgId);
++    final duplicate = _findRecentGroupHistoryMessage(gid, msg);
+     if (duplicate != null) {
++      if (alias == null || toxGroupMessageAliasOf(duplicate) != alias) {
++        _absorbInboundCopy(gid, duplicate, msg);
++      }
+       // THE PRODUCT'S NORMAL PATH LANDS HERE. In hybrid mode the native
+       // advanced listener persists the row first (MessageConverter has no
+       // cross-peer alias to give it), and this polled copy — the only one that
+@@ -7913,30 +7938,6 @@
+       unawaited(
+           _persistKnownGroups()); // This will call _syncKnownGroupsToNative()
+     }
+-    final timestamp = epochMs ?? DateTime.now().millisecondsSinceEpoch;
+-    final sequence = _msgIDSequence++;
+-    final msgID = '${timestamp}_${sequence}_${from}_$gid';
+-    // The primary id is receiver-local (every peer mints its own), so the
+-    // cross-peer alias is what lets a receipt from another member resolve to
+-    // THIS row. Absent for routes with no Tox_Group_Message_Id.
+-    final alias = pseudoMsgId == null
+-        ? null
+-        : groupMessageAlias(
+-            groupId: gid,
+-            senderPk: from,
+-            pseudoMsgId: pseudoMsgId,
+-          );
+-    final msg = enrichGroupExtension(ChatMessage(
+-      text: text,
+-      fromUserId: from,
+-      isSelf: from == _selfId,
+-      timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp),
+-      groupId: gid,
+-      msgID: msgID,
+-      contentKind: contentKind,
+-      sourceInstanceId: sourceInstanceId,
+-      altMsgIds: [if (alias != null) alias],
+-    ));
+     _lastByPeer[gid] = msg; // reuse for group last message
+     _appendHistory(gid, msg);
+     final emitted = _emitInboundMessage(
+@@ -8235,29 +8236,6 @@
+     }
+ 
+     final now = DateTime.now();
+-    const dedupWindow = Duration(seconds: 2);
+-    final duplicate = _messageHistoryPersistence.getHistory(normalizedFrom).any(
+-        (message) =>
+-            !message.isSelf &&
+-            message.fromUserId == normalizedFrom &&
+-            message.text == text &&
+-            message.contentKind == contentKind &&
+-            message.timestamp.difference(now).abs() <= dedupWindow);
+-    if (duplicate) {
+-      // The hook (SDK-callback path) won the ingest race for this text and
+-      // it NEVER sends receipts — receipt duty stays here on the poll path,
+-      // which always delivers exactly once. The hash echo needs only the
+-      // text, so no row/id coordination with the hook's copy is required.
+-      if (normalizedFrom != _selfId && !_isReactionMessage(text)) {
+-        unawaited(
+-          _sendReceipt(
+-              normalizedFrom, 'dup:$text'.hashCode.toString(), 'received',
+-              inboundText: text),
+-        );
+-      }
+-      return true;
+-    }
+-
+     final msgID =
+         '${now.millisecondsSinceEpoch}_${_msgIDSequence++}_$normalizedFrom';
+     final msg = ChatMessage(
+@@ -8269,6 +8247,26 @@
+       contentKind: contentKind,
+       sourceInstanceId: sourceInstanceId,
+     );
++    const dedupWindow = Duration(seconds: 2);
++    for (final row in _messageHistoryPersistence.getHistory(normalizedFrom)) {
++      if (row.isSelf ||
++          row.fromUserId != normalizedFrom ||
++          row.text != text ||
++          row.contentKind != contentKind ||
++          row.timestamp.difference(now).abs() > dedupWindow ||
++          !canMergeInboundContentCopies(row, msg)) {
++        continue;
++      }
++      // The advanced callback already persisted this copy. Claim the polling
++      // identity and let this path send the receipt for it.
++      _absorbInboundCopy(normalizedFrom, row, msg);
++      if (!msg.isSelf && !_isReactionMessage(text)) {
++        unawaited(_sendReceipt(normalizedFrom, msgID, 'received',
++            inboundText: text));
++      }
++      return true;
++    }
++
+     _lastByPeer[normalizedFrom] = msg;
+     if (_activePeerId != normalizedFrom && !msg.isSelf) {
+       _unreadByPeer.update(
+@@ -8470,42 +8468,29 @@
+     return true;
+   }
+ 
+-  ChatMessage? _findRecentGroupHistoryMessage(
+-    String gid,
+-    String from,
+-    String text,
+-    ChatMessageContentKind contentKind, {
+-    int? pseudoMsgId,
+-  }) {
+-    final nowMs = DateTime.now().millisecondsSinceEpoch;
+-    const windowMs = 5000;
++  ChatMessage? _findRecentGroupHistoryMessage(String gid, ChatMessage input) {
++    const window = Duration(seconds: 5);
+     final list = _messageHistoryPersistence.getCachedList(gid);
+     if (list == null || list.isEmpty) return null;
+-    // GH-4: exact identity first. The advanced listener's copy carries the
+-    // same `gmid:` alias (MessageConverter), whatever its timing.
+-    final alias = pseudoMsgId == null
+-        ? null
+-        : groupMessageAlias(
+-            groupId: gid, senderPk: from, pseudoMsgId: pseudoMsgId);
++
++    final alias = toxGroupMessageAliasOf(input);
+     if (alias != null) {
+-      for (var i = list.length - 1; i >= 0; i--) {
+-        final m = list[i];
+-        // Inbound only: our own row carries the same alias as its echo.
+-        if (!m.isSelf && (m.msgID == alias || m.altMsgIds.contains(alias))) {
+-          return m;
++      for (final row in list.reversed) {
++        if (!row.isSelf && (row.msgID == alias || row.altMsgIds.contains(alias))) {
++          return row;
+         }
+       }
+     }
+-    for (var i = list.length - 1; i >= 0 && i >= list.length - 20; i--) {
+-      final m = list[i];
+-      // A row with a DIFFERENT alias is a different message (a member sending
+-      // the same "ok" twice); content+time only when identity is unknown.
+-      if (alias != null && toxGroupMessageAliasOf(m) != null) continue;
+-      if (m.fromUserId == from &&
+-          m.text == text &&
+-          m.contentKind == contentKind &&
+-          (m.timestamp.millisecondsSinceEpoch - nowMs).abs() < windowMs) {
+-        return m;
++    final firstCandidate = list.length > 20 ? list.length - 20 : 0;
++    for (var i = firstCandidate; i < list.length; i++) {
++      final row = list[i];
++      if (row.isSelf == input.isSelf &&
++          row.fromUserId == input.fromUserId &&
++          row.text == input.text &&
++          row.contentKind == input.contentKind &&
++          row.timestamp.difference(input.timestamp).abs() < window &&
++          canMergeInboundContentCopies(row, input)) {
++        return row;
+       }
+     }
+     return null;
+@@ -10943,6 +10928,16 @@
+       }
+     }
+     return wireMsgID;
++  }
++
++  void _absorbInboundCopy(
++      String conversation, ChatMessage row, ChatMessage input) {
++    unawaited(_messageHistoryPersistence
++        .absorbDuplicateIds(conversation, row, input)
++        .catchError((Object error, StackTrace stack) {
++      _logger?.logError(
++          'Failed to persist message callback identity', error, stack);
++    }));
+   }
+ 
+   // Handle received receipt (async helper)
+--- a/lib/utils/message_history_persistence.dart
++++ b/lib/utils/message_history_persistence.dart
+@@ -3410,7 +3410,7 @@
+       // messages: a member sending "ok" twice within the window.
+       final contentMatch = list.indexWhere((msg) =>
+           !(msg.msgID?.startsWith('dmr:') ?? false) &&
+-          chatMessagesShareGroupIdentity(msg, message) == null &&
++          canMergeInboundContentCopies(msg, message) &&
+           msg.text == message.text &&
+           msg.fromUserId == message.fromUserId &&
+           msg.contentKind == message.contentKind &&

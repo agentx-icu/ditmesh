@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:morse_dsp/morse_dsp.dart';
@@ -30,7 +31,9 @@ class WorkbenchWaveform extends StatefulWidget {
 class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
   final _startField = TextEditingController();
   final _endField = TextEditingController();
-  bool? _draggingStart;
+  bool _startEdited = false;
+  bool _endEdited = false;
+  int? _dragAnchor;
 
   WorkbenchController get _c => widget.controller;
 
@@ -47,22 +50,44 @@ class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
     if (!identical(oldWidget.controller, _c)) {
       oldWidget.controller.removeListener(_sync);
       _c.addListener(_sync);
+      _startEdited = false;
+      _endEdited = false;
+      _dragAnchor = null;
+      _sync();
     }
   }
 
+  String _displayTime(int frame) =>
+      (_c.positionOf(frame).inMilliseconds / 1000).toStringAsFixed(2);
+
   void _sync() {
-    String secs(int frame) =>
-        (_c.positionOf(frame).inMilliseconds / 1000).toStringAsFixed(2);
-    final a = secs(_c.start);
-    final b = secs(_c.end);
-    if (_startField.text != a) _startField.text = a;
-    if (_endField.text != b) _endField.text = b;
+    final a = _displayTime(_c.start);
+    final b = _displayTime(_c.end);
+    if (!_startEdited && _startField.text != a) _startField.text = a;
+    if (!_endEdited && _endField.text != b) _endField.text = b;
   }
 
-  int _frameAtSeconds(String text) {
-    final info = _c.info!;
-    final v = double.tryParse(text.replaceAll(',', '.')) ?? 0;
-    return info.frameAt(Duration(microseconds: (v * 1e6).round()));
+  int? _frameAtSeconds(String text) {
+    final info = _c.info;
+    final value = double.tryParse(text.replaceAll(',', '.'));
+    if (info == null || value == null) return null;
+    final seconds = value.clamp(0, info.frameCount / info.sampleRate);
+    return (seconds * info.sampleRate).round();
+  }
+
+  void _commitTime(String text, {required bool start}) {
+    if (start) {
+      if (!_startEdited) return;
+      _startEdited = false;
+    } else {
+      if (!_endEdited) return;
+      _endEdited = false;
+    }
+    final frame = _frameAtSeconds(text);
+    if (frame != null) {
+      _c.setSelection(start ? frame : _c.start, start ? _c.end : frame);
+    }
+    _sync();
   }
 
   int _frameAtX(double x, double width) {
@@ -93,19 +118,23 @@ class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
             final width = box.maxWidth;
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
+              dragStartBehavior: DragStartBehavior.down,
               onHorizontalDragStart: (d) {
                 final f = _frameAtX(d.localPosition.dx, width);
-                _draggingStart = (f - _c.start).abs() <= (f - _c.end).abs();
+                final start = _c.start;
+                final end = _c.end;
+                _dragAnchor = (f - start).abs() <= (f - end).abs()
+                    ? end
+                    : start;
               },
               onHorizontalDragUpdate: (d) {
+                final anchor = _dragAnchor;
+                if (anchor == null) return;
                 final f = _frameAtX(d.localPosition.dx, width);
-                if (_draggingStart ?? true) {
-                  _c.setSelection(f, _c.end);
-                } else {
-                  _c.setSelection(_c.start, f);
-                }
+                _c.setSelection(anchor, f);
               },
-              onHorizontalDragEnd: (_) => _draggingStart = null,
+              onHorizontalDragEnd: (_) => _dragAnchor = null,
+              onHorizontalDragCancel: () => _dragAnchor = null,
               child: ExcludeSemantics(
                 child: CustomPaint(
                   key: const ValueKey('workbench-waveform'),
@@ -131,15 +160,13 @@ class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
           children: <Widget>[
             _timeField(
               s.workbenchStart,
-              _startField,
-              (t) => _c.setSelection(_frameAtSeconds(t), _c.end),
               const ValueKey('workbench-start'),
+              start: true,
             ),
             _timeField(
               s.workbenchEnd,
-              _endField,
-              (t) => _c.setSelection(_c.start, _frameAtSeconds(t)),
               const ValueKey('workbench-end'),
+              start: false,
             ),
             TextButton(
               onPressed: () => _c.setSelection(0, info.frameCount),
@@ -151,27 +178,35 @@ class _WorkbenchWaveformState extends State<WorkbenchWaveform> {
     );
   }
 
-  Widget _timeField(
-    String label,
-    TextEditingController controller,
-    ValueChanged<String> onCommit,
-    Key key,
-  ) => SizedBox(
-    width: 132,
-    child: TextField(
-      key: key,
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-      decoration: InputDecoration(
-        label: FieldLabel(label),
-        border: const OutlineInputBorder(),
-        isDense: true,
+  Widget _timeField(String label, Key key, {required bool start}) {
+    final controller = start ? _startField : _endField;
+    return SizedBox(
+      width: 132,
+      child: TextField(
+        key: key,
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+        ],
+        decoration: InputDecoration(
+          label: FieldLabel(label),
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        onChanged: (text) {
+          final edited = text != _displayTime(start ? _c.start : _c.end);
+          if (start) {
+            _startEdited = edited;
+          } else {
+            _endEdited = edited;
+          }
+        },
+        onSubmitted: (text) => _commitTime(text, start: start),
+        onTapOutside: (_) => _commitTime(controller.text, start: start),
       ),
-      onSubmitted: onCommit,
-      onTapOutside: (_) => onCommit(controller.text),
-    ),
-  );
+    );
+  }
 }
 
 class _WavePainter extends CustomPainter {

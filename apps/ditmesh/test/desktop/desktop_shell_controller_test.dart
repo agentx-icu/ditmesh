@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -65,15 +66,257 @@ _harness({
 
 Future<void> _drain() => Future<void>.delayed(Duration.zero);
 
+final class _RetryWindow extends FakeWindowApi {
+  bool failNextDestroy = true;
+
+  @override
+  Future<void> destroy() async {
+    if (failNextDestroy) {
+      failNextDestroy = false;
+      throw StateError('native close failed');
+    }
+    await super.destroy();
+  }
+}
+
+final class _PendingIconTray extends FakeTrayApi {
+  final requested = Completer<void>();
+  final ready = Completer<void>();
+
+  @override
+  Future<void> setIcon(String assetPath, {bool isTemplate = false}) async {
+    requested.complete();
+    await ready.future;
+    await super.setIcon(assetPath, isTemplate: isTemplate);
+  }
+}
+
 void main() {
+  test(
+    'a late Linux tray with no working menu must not hide the window',
+    () async {
+      var host = false;
+      final tray = FakeTrayApi(unsupported: {'setMenu'});
+      final h = _harness(tray: tray, trayHostAvailable: () async => host);
+      addTearDown(h.controller.dispose);
+      await h.controller.initialize();
+      expect(h.window.visible, isTrue);
+      host = true;
+      await h.controller.hideToTray();
+      expect(
+        h.window.visible,
+        isTrue,
+        reason:
+            'Linux AppIndicator has no primary click callback; a failed menu provides no way back',
+      );
+      expect(h.controller.isTrayAvailable, isFalse);
+      tray.unsupported.remove('setMenu');
+      await h.controller.hideToTray();
+      expect(h.controller.isTrayAvailable, isTrue);
+      expect(h.window.visible, isFalse);
+      await h.controller.showWindow();
+    },
+  );
+
+  test(
+    'losing the Linux tray menu restores an already hidden window',
+    () async {
+      final tray = FakeTrayApi();
+      final h = _harness(tray: tray);
+      addTearDown(h.controller.dispose);
+      await h.controller.initialize();
+      await h.controller.hideToTray();
+      expect(h.window.visible, isFalse);
+      tray.unsupported.add('setMenu');
+      h.controller.setUnreadCount(1);
+      await h.controller.flushTrayUpdates();
+      expect(h.controller.isTrayAvailable, isFalse);
+      expect(h.window.visible, isTrue);
+    },
+  );
+
+  test('Windows retains primary-click access when a tray menu fails', () async {
+    final tray = FakeTrayApi(unsupported: {'setMenu'});
+    final h = _harness(platform: TargetPlatform.windows, tray: tray);
+    addTearDown(h.controller.dispose);
+    await h.controller.initialize();
+    await h.controller.hideToTray();
+    expect(h.controller.isTrayAvailable, isTrue);
+    expect(h.window.visible, isFalse);
+    tray.simulateClick();
+    await _drain();
+    expect(h.window.visible, isTrue);
+  });
+
+  test('a late host probe cannot register a tray after disposal', () async {
+    var first = true;
+    final probe = Completer<bool>();
+    final h = _harness(
+      trayHostAvailable: () async {
+        if (first) {
+          first = false;
+          return false;
+        }
+        return probe.future;
+      },
+    );
+    await h.controller.initialize();
+    final hiding = h.controller.hideToTray();
+    await pumpEventQueue();
+    h.controller.dispose();
+    probe.complete(true);
+    await hiding;
+    expect(
+      h.tray.handler,
+      isNull,
+      reason: 'disposing clears the native callback owner',
+    );
+    expect(h.tray.iconAsset, isNull);
+  });
+
+  test(
+    'disposing during icon registration cleans up the late native icon',
+    () async {
+      var host = false;
+      final tray = _PendingIconTray();
+      final h = _harness(tray: tray, trayHostAvailable: () async => host);
+      await h.controller.initialize();
+      host = true;
+      final hiding = h.controller.hideToTray();
+      await tray.requested.future;
+      h.controller.dispose();
+      tray.ready.complete();
+      await hiding;
+      expect(tray.handler, isNull);
+      expect(tray.destroyed, isTrue);
+      expect(h.window.visible, isTrue);
+    },
+  );
+
+  test(
+    'quitting during a late host probe cannot register or hide afterwards',
+    () async {
+      final probe = Completer<bool>();
+      var first = true;
+      final h = _harness(
+        trayHostAvailable: () async {
+          if (first) {
+            first = false;
+            return false;
+          }
+          return probe.future;
+        },
+      );
+      addTearDown(h.controller.dispose);
+      await h.controller.initialize();
+      final hiding = h.controller.hideToTray();
+      await pumpEventQueue();
+      final quitting = h.controller.quit();
+      await pumpEventQueue();
+      probe.complete(true);
+      await Future.wait([hiding, quitting]);
+      expect(h.tray.iconAsset, isNull);
+      expect(h.window.calls, isNot(contains('hide')));
+      expect(h.window.destroyed, isTrue);
+    },
+  );
+
+  test(
+    'disposing during initial host probing completes without notifying',
+    () async {
+      final probe = Completer<bool>();
+      final requested = Completer<void>();
+      final h = _harness(
+        trayHostAvailable: () {
+          requested.complete();
+          return probe.future;
+        },
+      );
+      final initializing = h.controller.initialize();
+      await requested.future;
+      h.controller.dispose();
+      probe.complete(true);
+      await initializing;
+      expect(h.tray.handler, isNull);
+      expect(h.tray.iconAsset, isNull);
+    },
+  );
+
+  test('closing can use a tray host that appeared after startup', () async {
+    var hostAvailable = false;
+    final h = _harness(trayHostAvailable: () async => hostAvailable);
+    addTearDown(h.controller.dispose);
+    await h.controller.initialize();
+    expect(h.controller.isTrayAvailable, isFalse);
+
+    hostAvailable = true;
+    await h.controller.handleCloseRequested();
+
+    expect(h.controller.isTrayAvailable, isTrue);
+    expect(h.window.visible, isFalse);
+    expect(h.window.destroyed, isFalse);
+    h.tray.simulateClick();
+    await _drain();
+    expect(h.window.visible, isTrue);
+  });
+  test(
+    'native quit failure restores the tray and allows another quit',
+    () async {
+      final h = _harness(window: _RetryWindow());
+      addTearDown(h.controller.dispose);
+      await h.controller.initialize();
+      await h.controller.hideToTray();
+
+      await h.controller.quit();
+      expect(h.window.destroyed, isFalse);
+      expect(h.controller.isTrayAvailable, isTrue);
+      expect(h.tray.calls.where((call) => call == 'setIcon'), hasLength(2));
+      expect(h.log.single, contains('destroy window failed'));
+
+      h.tray.simulateClick();
+      await _drain();
+      expect(h.controller.isWindowVisible, isTrue);
+
+      await h.controller.quit();
+      expect(h.window.destroyed, isTrue);
+    },
+  );
+  testWidgets('losing the tray host while hidden brings back the window', (
+    tester,
+  ) async {
+    var hostAvailable = true;
+    final h = _harness(trayHostAvailable: () async => hostAvailable);
+    await h.controller.initialize();
+    addTearDown(h.controller.dispose);
+    try {
+      await h.controller.handleCloseRequested();
+      expect(h.window.visible, isFalse);
+
+      hostAvailable = false;
+      await tester.pump(const Duration(seconds: 5));
+      expect(h.window.visible, isTrue);
+      expect(h.controller.isTrayAvailable, isFalse);
+      expect(h.window.destroyed, isFalse);
+
+      hostAvailable = true;
+      await h.controller.handleCloseRequested();
+      expect(h.controller.isTrayAvailable, isTrue);
+      expect(h.window.visible, isFalse);
+      await h.controller.showWindow();
+    } finally {
+      // Cancel the hidden-window probe even if an assertion fails.
+      await h.controller.showWindow();
+    }
+  });
+
   test('an omitted desktop log sink stays silent', () {
     final output = <String?>[];
     final previous = debugPrint;
     debugPrint = (message, {wrapWidth}) => output.add(message);
     addTearDown(() => debugPrint = previous);
-    DesktopShellConfig(store: InMemoryKeyValueStore()).logger(
-      'PRIVATE_DESKTOP_MARKER',
-    );
+    DesktopShellConfig(
+      store: InMemoryKeyValueStore(),
+    ).logger('PRIVATE_DESKTOP_MARKER');
     expect(output, isEmpty);
   });
   test('showing a minimized window restores it before focus', () async {
@@ -82,7 +325,10 @@ void main() {
     h.window.minimized = true;
     await h.controller.showWindow();
     expect(h.window.minimized, isFalse);
-    expect(h.window.calls.indexOf('restore'), lessThan(h.window.calls.lastIndexOf('focus')));
+    expect(
+      h.window.calls.indexOf('restore'),
+      lessThan(h.window.calls.lastIndexOf('focus')),
+    );
   });
   test('missing tray host makes close exit instead of hiding', () async {
     final h = _harness(trayHostAvailable: () async => false);

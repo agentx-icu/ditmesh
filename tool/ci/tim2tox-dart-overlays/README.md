@@ -98,3 +98,10 @@ retry, and migration of old queue keys.
 returns the full Tox address. Raw profile import preserves that address and
 accepts both plain and password-protected profiles.
 `native_encryption_test.dart` checks both against the native library.
+
+`0021-preserve-inbound-message-identity.patch` reconciles inbound content only
+across different callback sources. A row absorbs the other callback's ID so a
+later, independent equal message remains a new row. Plain messages, ACTIONs and
+legacy conference messages use this rule; exact group wire IDs still deduplicate.
+`inbound_message_identity_test.dart` covers polling, repeated content and
+cross-source copies. Based on the Tim2Tox #38 fix without unrelated changes.

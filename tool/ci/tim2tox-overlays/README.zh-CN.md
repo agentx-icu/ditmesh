@@ -27,3 +27,9 @@ SDK/消息监听器，也不重放聊天监听器。因此探测实例的连接�
 `0004-extract-profile-address.patch` 从档案读取完整 Tox 地址，读取时无需打开
 在线会话。既有公钥 ABI 保持兼容。原生加密测试导入明文和密码保护的档案，并
 核对完整地址。
+
+`0005-isolate-friendship-sessions.patch` 在原生 SDK 会话结束时清除待处理好友申请、
+黑名单和好友资料缓存，同时保留监听器注册。它定向回移 Tim2Tox #37 的相关修复。
+Linux/macOS 同架构构建还会用相同 FFI/SDK 源码链接独立回归程序，验证
+`init(A) -> 申请 -> uninit -> init(B)` 后 B 的申请为空。程序不进入制品目录，
+发行库仍保持 `TIM2TOX_ENABLE_TEST_HOOKS=OFF`；交叉构建不执行目标架构程序。

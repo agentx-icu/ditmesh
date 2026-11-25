@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'package:morse_dsp/testing.dart';
+import 'package:ditmesh/ui/listen/listen_controller.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morse_io/morse_io.dart';
-import 'package:ditmesh/ui/listen/listen_controller.dart';
 import 'package:ditmesh/ui/listen/record_pcm_source.dart';
 import 'package:record/record.dart';
 
@@ -16,6 +17,7 @@ final class _FakeRecorder implements AudioRecorder {
       StreamController<RecordState>.broadcast();
   StreamController<Uint8List>? pcm;
   Object? startError;
+  Completer<void>? stopGate;
   Object? listError;
   List<InputDevice> devices = const <InputDevice>[];
   int stopCalls = 0;
@@ -45,6 +47,7 @@ final class _FakeRecorder implements AudioRecorder {
   @override
   Future<String?> stop() async {
     stopCalls++;
+    await stopGate?.future;
     await pcm?.close();
     pcm = null;
     return null;
@@ -136,6 +139,56 @@ void main() {
       await source.stop();
       expect(session.restores, 1, reason: 'restored once per capture');
     });
+
+    test(
+      'an audio interruption stops capture and keeps the transcript',
+      () async {
+        final controller = ListenController(source: source);
+        addTearDown(controller.dispose);
+        await controller.start();
+        expect(controller.status, ListenStatus.listening);
+        recorder.states.add(RecordState.record);
+        final pcm = SyntheticMorse().renderText('SOS');
+        for (final chunk in SyntheticMorse.toByteChunks(pcm, 960)) {
+          recorder.pcm!.add(chunk);
+        }
+        await pumpEventQueue();
+        expect(controller.text.trim(), 'SOS');
+        recorder.states.add(RecordState.pause);
+        await pumpEventQueue();
+
+        expect(controller.status, ListenStatus.idle);
+        expect(controller.text.trim(), 'SOS');
+        expect(recorder.stopCalls, 1);
+        expect(session.restores, 1);
+        expect(recorder.states.hasListener, isFalse);
+
+        await controller.start();
+        expect(controller.status, ListenStatus.listening);
+        expect(controller.text.trim(), 'SOS');
+      },
+    );
+
+    test(
+      'an interruption releases the microphone before signalling idle',
+      () async {
+        recorder.stopGate = Completer<void>();
+        final controller = ListenController(source: source);
+        addTearDown(controller.dispose);
+        await controller.start();
+        recorder.states.add(RecordState.record);
+        recorder.states.add(RecordState.pause);
+        await pumpEventQueue();
+        expect(recorder.stopCalls, 1);
+        expect(controller.status, ListenStatus.listening);
+        expect(session.restores, 0);
+
+        recorder.stopGate!.complete();
+        await pumpEventQueue();
+        expect(controller.status, ListenStatus.idle);
+        expect(session.restores, 1);
+      },
+    );
 
     test(
       'an explicit stop restores once and the end is not double-counted',

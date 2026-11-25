@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import mmap
+import plistlib
 from pathlib import Path, PurePosixPath
 import re
 import struct
@@ -91,20 +92,107 @@ def architectures(data, format_name):
     return {CPUS[format_name][machine]}
 
 
-def verify(data, format_name, arch, label):
+def ios_minimum(app):
+    """The final device app, rather than build flags, owns its supported OS."""
+    info = plistlib.loads((Path(app) / 'Info.plist').read_bytes())
+    if not isinstance(info, dict):
+        raise ValueError('Invalid iOS Info.plist dictionary')
+    value = info.get('MinimumOSVersion')
+    if not isinstance(value, str) or not re.fullmatch(r'[0-9]+(?:\.[0-9]+){0,2}', value):
+        raise ValueError('Invalid or missing iOS MinimumOSVersion')
+    parts = tuple(map(int, value.split('.')))
+    minimum = parts + (0,) * (3 - len(parts))
+    if minimum[0] < 1:
+        raise ValueError('Invalid iOS MinimumOSVersion')
+    return minimum
+
+
+def ios_binary_minima(data):
+    """Read the device platform and minimum OS from every validated Mach-O slice."""
+    magic = bytes(data[:4])
+    endian = '<' if magic in {bytes.fromhex(v) for v in (
+        'cffaedfe', 'bebafeca', 'bfbafeca')} else '>'
+    if magic in {bytes.fromhex(v) for v in ('cafebabe', 'bebafeca', 'cafebabf', 'bfbafeca')}:
+        count = struct.unpack_from(endian + 'I', data, 4)[0]
+        wide = magic in {bytes.fromhex('cafebabf'), bytes.fromhex('bfbafeca')}
+        minima = []
+        for index in range(count):
+            entry = struct.unpack_from(endian + ('IIQQII' if wide else 'IIIII'),
+                                       data, 8 + index * (32 if wide else 20))
+            _, _, offset, size = entry[:4]
+            sliced = memoryview(data)[offset:offset + size]
+            try:
+                minima.extend(ios_binary_minima(sliced))
+            finally:
+                sliced.release()
+        return minima
+    if magic not in {bytes.fromhex('feedfacf'), bytes.fromhex('cffaedfe')}:
+        raise ValueError('Expected an arm64 iOS device Mach-O')
+    count, size = struct.unpack_from(endian + 'II', data, 16)
+    end, position = 32 + size, 32
+    if end > len(data) or count > size // 8:
+        raise ValueError('Truncated iOS Mach-O load commands')
+    minima = []
+    for _ in range(count):
+        if position + 8 > end:
+            raise ValueError('Truncated iOS Mach-O load command')
+        command, length = struct.unpack_from(endian + 'II', data, position)
+        if length < 8 or length % 4 or position + length > end:
+            raise ValueError('Invalid iOS Mach-O load command bounds')
+        if command == 0x32:  # LC_BUILD_VERSION
+            if length < 24:
+                raise ValueError('Truncated iOS build-version load command')
+            platform, minimum, _, tools = struct.unpack_from(endian + 'IIII', data, position + 8)
+            if platform != 2:
+                raise ValueError('Mach-O is not an iOS device binary')
+            if 24 + tools * 8 > length:
+                raise ValueError('Truncated iOS build-version tools')
+        elif command == 0x25:  # LC_VERSION_MIN_IPHONEOS (arm64 legacy device)
+            if length < 16:
+                raise ValueError('Truncated iOS minimum-version load command')
+            minimum = struct.unpack_from(endian + 'I', data, position + 8)[0]
+        elif command in (0x24, 0x2f, 0x30):  # macOS, tvOS, watchOS legacy
+            raise ValueError('Mach-O is not an iOS device binary')
+        else:
+            position += length
+            continue
+        minima.append((minimum >> 16, (minimum >> 8) & 255, minimum & 255))
+        position += length
+    if position != end:
+        raise ValueError('Invalid iOS Mach-O load command size')
+    if len(minima) != 1 or minima[0][0] < 1:
+        raise ValueError('Expected exactly one iOS minimum-OS declaration per slice')
+    return minima
+
+
+def verify(data, format_name, arch, label, *, minimum_ios=None):
     try:
         if native_format(data) != format_name:
             raise ValueError(f'Expected {format_name} format')
         actual = architectures(data, format_name)
         if arch not in actual:
             raise ValueError(f'architecture {sorted(actual)} cannot run as {arch}')
+        if minimum_ios is not None:
+            if format_name != 'macho' or arch != 'arm64' or actual != {'arm64'}:
+                raise ValueError('Expected only arm64 iOS device slices')
+            required = max(ios_binary_minima(data))
+            if required > minimum_ios:
+                required_text = '.'.join(map(str, required))
+                declared_text = '.'.join(map(str, minimum_ios))
+                raise ValueError(f'Mach-O requires iOS {required_text}, app declares {declared_text}')
         return {'path': label, 'format': format_name, 'architectures': sorted(actual)}
     except (ValueError, IndexError, struct.error) as error:
         raise ValueError(f'{label}: {error}') from error
 
 
-def check_tree(directory, format_name, arch, entry=None, flutter_windows=False):
+def check_tree(directory, format_name, arch, entry=None, flutter_windows=False, *, ios_app=False):
     root = Path(directory).resolve()
+    # An iOS bundle has Info.plist at its root. Detect it even when a local
+    # caller omits --ios-app; macOS keeps its plist under Contents instead.
+    ios_app = ios_app or (format_name == 'macho' and (root / 'Info.plist').is_file())
+    if ios_app and (format_name != 'macho' or arch != 'arm64'):
+        raise ValueError('iOS app checking requires Mach-O arm64')
+    minimum_ios = ios_minimum(root) if ios_app else None
     if flutter_windows and (format_name != 'pe' or not (root / 'data/app.so').is_file()):
         raise ValueError('Flutter Windows release requires data/app.so AOT snapshot')
     if entry:
@@ -137,7 +225,7 @@ def check_tree(directory, format_name, arch, entry=None, flutter_windows=False):
                 # not a PE plugin. Never exempt arbitrary foreign libraries.
                 # flutter/flutter 3.41.9: base/build.dart; targets/windows.dart.
                 expected_format = 'elf' if flutter_windows and relative == 'data/app.so' else format_name
-                result.append(verify(data, expected_format, arch, relative))
+                result.append(verify(data, expected_format, arch, relative, minimum_ios=minimum_ios))
     if not result:
         raise ValueError('No native runtime binaries found')
     return result
@@ -274,17 +362,20 @@ def main():
     parser.add_argument('--format', choices=('elf', 'pe', 'macho', 'android'), required=True)
     parser.add_argument('--entry', help='required main executable relative to payload root')
     parser.add_argument('--flutter-windows-aot', action='store_true')
+    parser.add_argument('--ios-app', action='store_true', help='Validate device platform and app minimum OS')
     parser.add_argument('--arch', choices=('x86_64', 'arm64', 'arm', 'x86'))
     parser.add_argument('--require-windows-crt', action='store_true')
     parser.add_argument('--require-windows-manifest', action='store_true')
     parser.add_argument('--expected-zip', type=Path, help='Compare installed Windows files against the final ZIP')
     args = parser.parse_args()
+    if args.ios_app and args.format != 'macho':
+        parser.error('--ios-app requires --format macho')
     if args.flutter_windows_aot and args.format != 'pe':
         parser.error('--flutter-windows-aot requires --format pe')
     if args.format != 'android' and not args.arch:
         parser.error('--arch is required for a native directory')
     result = check_android(args.path) if args.format == 'android' else check_tree(
-        args.path, args.format, args.arch, args.entry, args.flutter_windows_aot)
+        args.path, args.format, args.arch, args.entry, args.flutter_windows_aot, ios_app=args.ios_app)
     if args.require_windows_crt:
         if args.format != 'pe':
             parser.error('--require-windows-crt requires --format pe')

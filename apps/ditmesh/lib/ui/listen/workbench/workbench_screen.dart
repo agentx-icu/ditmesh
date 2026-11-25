@@ -407,7 +407,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
         ),
         Text(s.workbenchBackupNote, style: theme.textTheme.bodySmall),
         const SizedBox(height: 12),
-        WorkbenchWaveform(controller: c),
+        WorkbenchWaveform(key: ObjectKey(c.reader), controller: c),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
