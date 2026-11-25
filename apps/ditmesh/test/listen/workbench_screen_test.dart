@@ -8,6 +8,8 @@ import 'package:ditmesh/training/audio_material_store.dart';
 import 'package:ditmesh/training/training_doc_store.dart';
 import 'package:ditmesh/ui/listen/workbench/recording_files.dart';
 import 'package:ditmesh/ui/listen/workbench/workbench_screen.dart';
+import 'package:ditmesh/ui/listen/workbench/workbench_controller.dart';
+import 'package:ditmesh/ui/listen/workbench/workbench_waveform.dart';
 import 'package:path/path.dart' as p;
 
 import '../learn/helpers/l10n.dart';
@@ -72,6 +74,106 @@ void main() {
     );
     return (t, picker, player);
   }
+
+  Future<WorkbenchController> importForSelection(WidgetTester tester) async {
+    await pumpScreen(tester);
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    final view = find.byType(WorkbenchWaveform);
+    await waitForWorkbench(tester, view);
+    return tester.widget<WorkbenchWaveform>(view).controller;
+  }
+
+  testWidgets('dragging across the selection retains the opposite endpoint', (
+    tester,
+  ) async {
+    final c = await importForSelection(tester);
+    final total = c.info!.frameCount;
+    final anchor = total ~/ 2;
+    c.setSelection(total ~/ 4, anchor);
+    await tester.pump();
+    final bounds = tester.getRect(
+      find.byKey(const ValueKey('workbench-waveform')),
+    );
+    Offset point(double fraction) =>
+        Offset(bounds.left + bounds.width * fraction, bounds.center.dy);
+    final drag = await tester.startGesture(point(.25));
+    await drag.moveTo(point(.31));
+    await drag.moveTo(point(.65));
+    await drag.moveTo(point(.80));
+    await drag.up();
+    await tester.pump();
+
+    expect(c.start, anchor);
+    expect(c.end, closeTo(total * .8, 1));
+  });
+
+  testWidgets('playback notifications preserve a pending time edit', (
+    tester,
+  ) async {
+    final c = await importForSelection(tester);
+    final end = find.byKey(const ValueKey('workbench-end'));
+    await tester.enterText(end, '1.23');
+    c.setLoop(true);
+    await tester.pump();
+
+    expect(tester.widget<TextField>(end).controller!.text, '1.23');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(c.end, 9840);
+  });
+
+  testWidgets('leaving an unchanged time field keeps the exact frame', (
+    tester,
+  ) async {
+    final c = await importForSelection(tester);
+    final start = find.byKey(const ValueKey('workbench-start'));
+    c.setSelection(1001, c.end);
+    await tester.pump();
+    await tester.tap(start);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('workbench-waveform')));
+    await tester.pump();
+
+    expect(c.start, 1001);
+  });
+
+  testWidgets('invalid time input restores the previous value', (tester) async {
+    final c = await importForSelection(tester);
+    final start = find.byKey(const ValueKey('workbench-start'));
+    c.setSelection(1001, c.end);
+    await tester.pump();
+    final previous = tester.widget<TextField>(start).controller!.text;
+    await tester.enterText(start, '1,,2');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+
+    expect(tester.widget<TextField>(start).controller!.text, previous);
+    expect(c.start, 1001);
+  });
+
+  testWidgets('replacing the recording discards its pending time edit', (
+    tester,
+  ) async {
+    final (_, picker, _) = await pumpScreen(tester);
+    await tester.tap(find.byKey(const ValueKey('workbench-import-empty')));
+    final end = find.byKey(const ValueKey('workbench-end'));
+    await waitForWorkbench(tester, end);
+    final pending = Completer<void>();
+    picker.holdPick = pending;
+    await tester.tap(find.byKey(const ValueKey('workbench-import')));
+    await tester.enterText(end, '1.23');
+    picker.next = PickedRecording(name: 'next.wav', bytes: cwWav('E'));
+    pending.complete();
+    await waitForWorkbench(tester, find.text('next.wav'));
+
+    final c = tester
+        .widget<WorkbenchWaveform>(find.byType(WorkbenchWaveform))
+        .controller;
+    final seconds = (c.positionOf(c.end).inMilliseconds / 1000).toStringAsFixed(
+      2,
+    );
+    expect(tester.widget<TextField>(end).controller!.text, seconds);
+  });
 
   testWidgets('import, decode, then copy it myself records activity only', (
     tester,

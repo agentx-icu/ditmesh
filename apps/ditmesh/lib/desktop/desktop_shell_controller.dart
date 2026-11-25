@@ -8,8 +8,11 @@ import '../l10n/generated/s.dart';
 import 'desktop_platform.dart';
 import 'screen_api.dart';
 import 'tray_api.dart';
+import 'tray_host_watch.dart';
 import 'window_api.dart';
 import 'window_bounds.dart';
+
+part 'desktop_shell_tray.dart';
 
 /// Keys of the tray context-menu rows (see [DesktopShellController.trayMenu]).
 abstract final class TrayMenuKeys {
@@ -71,8 +74,16 @@ class DesktopShellController extends ChangeNotifier
   int _unreadCount = 0;
   Timer? _persistTimer;
   Future<void> _trayQueue = Future<void>.value();
+  int _trayGeneration = 0;
   bool _trayGapWarned = false;
   final Set<Future<void> Function()> _beforeQuit = {};
+  late final _trayHostWatch = TrayHostWatch(
+    isAvailable: () async => _trayAvailable && await _hasTrayHost(),
+    onLost: () async {
+      _trayAvailable = false;
+      await _tolerate('show window', showWindow);
+    },
+  );
 
   void addBeforeQuitListener(Future<void> Function() listener) =>
       _beforeQuit.add(listener);
@@ -185,38 +196,7 @@ class DesktopShellController extends ChangeNotifier
     _windowVisible = true;
     _active = true;
     await _initTray();
-    notifyListeners();
-  }
-
-  Future<void> _initTray() async {
-    final icon = TrayIconAssets.forPlatform(config.effectivePlatform);
-    if (icon == null) return;
-    try {
-      if (!await _hasTrayHost()) return;
-      _tray.setEventHandler(this);
-      await _tray.setIcon(icon, isTemplate: config.isMacOS);
-      _trayAvailable = true;
-    } catch (e) {
-      // A tray-less session (headless Linux, no SNI host) throws on the first
-      // call. Disable the tray entirely: close-to-tray then falls back to a
-      // real quit so the user can never lose the window.
-      _trayAvailable = false;
-      _tray.setEventHandler(null);
-      config.logger(
-        '[DesktopShell] tray unavailable, continuing without it: $e',
-      );
-      return;
-    }
-    await _applyTrayState();
-  }
-
-  Future<bool> _hasTrayHost() async {
-    try {
-      return await config.trayHostAvailable?.call() ?? true;
-    } on Object catch (error) {
-      config.logger('[DesktopShell] tray host unavailable: $error');
-      return false;
-    }
+    if (_active) notifyListeners();
   }
 
   Future<List<Rect>> _workAreas() async {
@@ -241,24 +221,6 @@ class DesktopShellController extends ChangeNotifier
     _enqueueTray(_applyTrayState);
   }
 
-  Future<void> _applyTrayState() async {
-    if (!_trayAvailable) return;
-    await _tolerate('setToolTip', () => _tray.setToolTip(trayTooltip));
-    if (config.isMacOS) {
-      await _tolerate(
-        'setTitle',
-        () => _tray.setTitle(_unreadCount > 0 ? trayBadge : ''),
-      );
-    }
-    await _tolerate('setMenu', () => _tray.setMenu(trayMenu));
-  }
-
-  /// Tray updates are several async plugin calls; callers fire them without
-  /// awaiting, so serialise them to keep an older state from landing last.
-  void _enqueueTray(Future<void> Function() op) {
-    _trayQueue = _trayQueue.then((_) => op());
-  }
-
   /// Completes when every queued tray update has been applied (tests).
   Future<void> flushTrayUpdates() => _trayQueue;
 
@@ -266,17 +228,31 @@ class DesktopShellController extends ChangeNotifier
     if (!_active) return;
     if (await _window.isMinimized()) await _window.restore();
     await _window.show();
-    await _window.focus();
+    if (!_active) return;
     _setWindowVisible(true);
+    await _window.focus();
   }
 
   /// Hides the window; the tray is the only way back, so this is refused
   /// when the tray is unavailable.
   Future<void> hideToTray() async {
-    if (!_active || !_trayAvailable || !await _hasTrayHost()) return;
+    await _hideToTray();
+  }
+
+  Future<bool> _hideToTray() async {
+    if (!_active || _closing) return false;
+    if (_trayAvailable) {
+      if (!await _hasTrayHost()) return false;
+    } else if (config.trayHostAvailable != null) {
+      await _initTray();
+    }
+    if (!_trayAvailable || _closing || !_active) return false;
     await persistWindowState();
+    if (_closing || !_active) return false;
     await _window.hide();
+    if (!_active) return false;
     _setWindowVisible(false);
+    return true;
   }
 
   Future<void> toggleWindow() async {
@@ -290,6 +266,8 @@ class DesktopShellController extends ChangeNotifier
   }
 
   void _setWindowVisible(bool visible) {
+    if (visible) _trayHostWatch.stop();
+    if (!visible) _watchHiddenTray();
     if (_windowVisible == visible) return;
     _windowVisible = visible;
     notifyListeners();
@@ -383,6 +361,8 @@ class DesktopShellController extends ChangeNotifier
   Future<void> quit() async {
     if (!_active || _closing) return;
     _closing = true;
+    _trayGeneration++;
+    _trayHostWatch.stop();
     _persistTimer?.cancel();
     await _pendingPreferences;
     await persistWindowState();
@@ -392,6 +372,7 @@ class DesktopShellController extends ChangeNotifier
       }
     } catch (e) {
       _closing = false;
+      if (!_windowVisible) _watchHiddenTray();
       config.logger('[DesktopShell] could not save session before quit: $e');
       return;
     }
@@ -400,8 +381,22 @@ class DesktopShellController extends ChangeNotifier
     } catch (e) {
       config.logger('[DesktopShell] onBeforeQuit failed: $e');
     }
+    await _trayQueue;
     await _tolerate('destroy tray', _tray.destroy);
-    await _window.destroy();
+    try {
+      await _window.destroy();
+    } on Object catch (error) {
+      config.logger('[DesktopShell] destroy window failed: $error');
+      if (_trayAvailable) {
+        _trayAvailable = false;
+        await _initTray(restoringAfterQuit: true);
+      }
+      if (!_trayAvailable && !_windowVisible) {
+        await _tolerate('show window', showWindow);
+      }
+      _closing = false;
+      if (!_windowVisible) _watchHiddenTray();
+    }
   }
 
   @override
@@ -413,10 +408,7 @@ class DesktopShellController extends ChangeNotifier
   /// exit path.
   Future<void> handleCloseRequested() async {
     if (!_active || _closing) return;
-    if (_closeToTray && _trayAvailable && await _hasTrayHost()) {
-      await hideToTray();
-      return;
-    }
+    if (_closeToTray && await _hideToTray()) return;
     await quit();
   }
 
@@ -449,8 +441,11 @@ class DesktopShellController extends ChangeNotifier
 
   @override
   void dispose() {
+    _trayGeneration++;
     _persistTimer?.cancel();
+    _trayHostWatch.stop();
     if (_active) {
+      _active = false;
       _window.setEventHandler(null);
       _tray.setEventHandler(null);
     }

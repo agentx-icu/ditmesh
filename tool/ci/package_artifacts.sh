@@ -211,7 +211,7 @@ package_ios() {
   [[ -d "$app" ]] || ci_die "iOS app not found: $app"
   require_ffi "$app/Frameworks/tim2tox_ffi.framework/tim2tox_ffi" ios
   check_apple_metadata "$app/Info.plist"
-  python3 "$SCRIPT_DIR/native_payload.py" "$app" --format macho --arch arm64 --entry Runner
+  python3 "$SCRIPT_DIR/native_payload.py" "$app" --format macho --arch arm64 --entry Runner --ios-app
   # Unsigned: sideload tools (AltStore, Sideloadly) or a re-sign step sign it.
   payload="$DIST_DIR/.ipa/Payload"
   mkdir -p "$payload"

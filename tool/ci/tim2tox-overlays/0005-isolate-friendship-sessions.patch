@@ -1,0 +1,122 @@
+--- a/source/V2TIMFriendshipManagerImpl.cpp
++++ b/source/V2TIMFriendshipManagerImpl.cpp
+@@ -1309,6 +1309,18 @@
+     }
+     if (callback) callback->OnSuccess();
+ }
++void V2TIMFriendshipManagerImpl::ResetSessionState() {
++    {
++        std::lock_guard<std::mutex> lock(application_mutex_);
++        pending_applications_.Clear();
++    }
++    {
++        std::lock_guard<std::mutex> lock(mutex_);
++        blacklist_.clear();
++        friend_info_db_.clear();
++    }
++}
++
+ void V2TIMFriendshipManagerImpl::AddToBlackList(const V2TIMStringVector& userIDList, V2TIMValueCallback<V2TIMFriendOperationResultVector>* callback) {
+     // CRITICAL: Copy userIDList immediately to avoid lifetime issues
+     std::vector<std::string> user_id_strings;  // Store C-strings safely
+--- a/source/V2TIMFriendshipManagerImpl.h
++++ b/source/V2TIMFriendshipManagerImpl.h
+@@ -40,6 +40,7 @@
+     void RefuseFriendApplication(const V2TIMFriendApplication& application, V2TIMValueCallback<V2TIMFriendOperationResult>* callback) override;
+     void DeleteFriendApplication(const V2TIMFriendApplication& application, V2TIMCallback* callback) override;
+     void SetFriendApplicationRead(V2TIMCallback* callback) override;
++    void ResetSessionState();
+ 
+     // --- Blacklist Management ---
+     void AddToBlackList(const V2TIMStringVector& userIDList, V2TIMValueCallback<V2TIMFriendOperationResultVector>* callback) override;
+--- a/source/V2TIMManagerImpl.cpp
++++ b/source/V2TIMManagerImpl.cpp
+@@ -2354,6 +2354,8 @@
+     ResetGroupSessionState();
+     // Sent/received invites address this profile's friend numbers.
+     if (signaling_manager_) signaling_manager_->ResetSessionState();
++    // Keep listener registrations, but never reuse the previous identity's data.
++    if (friendship_manager_) friendship_manager_->ResetSessionState();
+     // The session is over: whatever it posted and Dart has not handled yet is
+     // now recognisably stale (Dart compares the stamp with
+     // tim2tox_ffi_get_session_epoch), and what it could not post at all
+--- a/ffi/CMakeLists.txt
++++ b/ffi/CMakeLists.txt
+@@ -376,3 +376,20 @@
+         endif()
+     endif()
+ endif()
++
++# DitMesh's host-native regression executable uses the same FFI sources and
++# static SDK as the library without exporting test-only entry points.
++option(TIM2TOX_DITMESH_SESSION_REGRESSION "Build the DitMesh session isolation regression" OFF)
++if(TIM2TOX_DITMESH_SESSION_REGRESSION)
++    get_target_property(_ditmesh_ffi_sources tim2tox_ffi SOURCES)
++    add_executable(ditmesh_friendship_session_test
++        ${_ditmesh_ffi_sources}
++        ../test/DitMeshFriendshipSessionTest.cpp)
++    target_include_directories(ditmesh_friendship_session_test PRIVATE
++        ${CMAKE_CURRENT_SOURCE_DIR}
++        $<TARGET_PROPERTY:tim2tox_ffi,INCLUDE_DIRECTORIES>)
++    target_compile_definitions(ditmesh_friendship_session_test PRIVATE
++        $<TARGET_PROPERTY:tim2tox_ffi,COMPILE_DEFINITIONS>)
++    target_link_libraries(ditmesh_friendship_session_test PRIVATE
++        $<TARGET_PROPERTY:tim2tox_ffi,LINK_LIBRARIES>)
++endif()
+--- /dev/null
++++ b/test/DitMeshFriendshipSessionTest.cpp
+@@ -0,0 +1,54 @@
++// Exercise the real default SDK manager reused by identity replacement.
++#include <cstdlib>
++#include <iostream>
++
++#include "V2TIMFriendshipManagerImpl.h"
++#include "V2TIMManager.h"
++#include "tim2tox_ffi.h"
++
++struct ReadApplications final : V2TIMValueCallback<V2TIMFriendApplicationResult> {
++    size_t size = 0;
++    void OnSuccess(const V2TIMFriendApplicationResult& result) override {
++        size = result.applicationList.Size();
++    }
++    void OnError(int, const V2TIMString&) override { std::abort(); }
++};
++
++struct ApplicationsListener final : V2TIMFriendshipListener {
++    int calls = 0;
++    void OnFriendApplicationListAdded(const V2TIMFriendApplicationVector&) override {
++        ++calls;
++    }
++};
++
++int main(int argc, char** argv) {
++    if (argc != 3) return 2;
++    if (tim2tox_ffi_init_with_path(argv[1]) != 1) return 3;
++    auto* friendship = static_cast<V2TIMFriendshipManagerImpl*>(
++        V2TIMManager::GetInstance()->GetFriendshipManager());
++    ApplicationsListener listener;
++    friendship->AddFriendListener(&listener);
++    V2TIMFriendApplication application;
++    application.userID = "2222222222222222222222222222222222222222222222222222222222222222";
++    application.addWording = "account A private request";
++    V2TIMFriendApplicationVector applications;
++    applications.PushBack(application);
++    friendship->NotifyFriendApplicationListAdded(applications);
++    ReadApplications before;
++    friendship->GetFriendApplicationList(&before);
++    tim2tox_ffi_uninit();
++
++    if (tim2tox_ffi_init_with_path(argv[2]) != 1) return 4;
++    auto* next = static_cast<V2TIMFriendshipManagerImpl*>(
++        V2TIMManager::GetInstance()->GetFriendshipManager());
++    ReadApplications after;
++    next->GetFriendApplicationList(&after);
++    // Session cleanup must preserve the Dart listener registration.
++    next->NotifyFriendApplicationListAdded(applications);
++    next->RemoveFriendListener(&listener);
++    std::cout << "Account A pending=" << before.size
++              << "; account B pending=" << after.size
++              << "; listener calls=" << listener.calls << std::endl;
++    tim2tox_ffi_uninit();
++    return before.size == 1 && after.size == 0 && listener.calls == 2 ? 0 : 1;
++}

@@ -139,7 +139,7 @@ def inspect_app(repo, app, output):
             or info.get("CFBundleVersion") != expected_build):
         raise ValueError("Archive/export version does not match apps/ditmesh/pubspec.yaml")
     native = run([sys.executable, str(repo / "tool/ci/native_payload.py"), str(app),
-                  "--format", "macho", "--arch", "arm64", "--entry", entry],
+                  "--format", "macho", "--arch", "arm64", "--entry", entry, "--ios-app"],
                  capture_output=True, text=True)
     (output / "native-inventory.json").write_text(json.dumps(json.loads(native.stdout), indent=2) + "\n")
     run([sys.executable, str(repo / "tool/ci/apple_release_preflight.py"), "--app", str(app),

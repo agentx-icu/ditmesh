@@ -5383,8 +5383,23 @@
     "description": "Error loading a bundled legal document"
   },
   "firstChatNextTitle": "Ready for a real contact?",
+  "@firstChatNextTitle": {
+    "description": "Title of the next-step card shown after sending a self-practice message"
+  },
   "firstChatChooseFriend": "Choose a friend",
+  "@firstChatChooseFriend": {
+    "description": "Button on the self-practice next-step card that opens existing contacts"
+  },
   "firstChatExchangeTitle": "4. Send CQ, listen, reply",
+  "@firstChatExchangeTitle": {
+    "description": "Title of the first-chat guide step explaining a two-way Morse exchange"
+  },
   "firstChatExchangeBody": "Key CQ to a friend. Ask them to play it, then key a reply. Play their reply and compare the original rhythm with your own speed in the message player.",
-  "firstChatReceiptBody": "Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened."
+  "@firstChatExchangeBody": {
+    "description": "Instructions for the first-chat guide's send, listen and reply step"
+  },
+  "firstChatReceiptBody": "Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.",
+  "@firstChatReceiptBody": {
+    "description": "First-chat guide explanation of local queue, transport send and peer receipt states"
+  }
 }

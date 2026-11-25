@@ -493,10 +493,15 @@ prepare_cmake_build_dir() {
 configure_and_build() {
   # $1 build dir, $2 log label, rest = extra cmake args (prepended before
   # configure_args). Logs go next to the build dir so failures are inspectable.
-  local build_dir="$1" label="$2"; shift 2
+  local build_dir="$1" label="$2" session_regression=OFF; shift 2
+  case "$TARGET/$HOST_OS/$HOST_ARCH" in
+    linux-x86_64/linux/x86_64|linux-aarch64/linux/aarch64|macos-arm64/macos/aarch64|macos-x86_64/macos/x86_64)
+      session_regression=ON ;;
+  esac
   prepare_cmake_build_dir "$build_dir"
   ci_log "[$label] configuring tim2tox ($NATIVE_BUILD_TYPE)"
   cmake -S "$TIM2TOX_DIR" -B "$build_dir" "$@" "${configure_args[@]}" \
+    -DTIM2TOX_DITMESH_SESSION_REGRESSION="$session_regression" \
     >"$build_dir/cmake-configure.log" 2>&1 || {
       tail -40 "$build_dir/cmake-configure.log" >&2
       ci_die "[$label] cmake configure failed (log: $build_dir/cmake-configure.log)"
@@ -507,6 +512,23 @@ configure_and_build() {
       tail -40 "$build_dir/cmake-build.log" >&2
       ci_die "[$label] cmake build failed (log: $build_dir/cmake-build.log)"
     }
+  if [[ "$session_regression" == ON ]]; then
+    ci_log "[$label] checking friendship isolation across real native sessions"
+    cmake --build "$build_dir" --config "$NATIVE_BUILD_TYPE" \
+      --target ditmesh_friendship_session_test --parallel "$(ci_cpu_count)" \
+      >"$build_dir/session-regression-build.log" 2>&1 || {
+        tail -40 "$build_dir/session-regression-build.log" >&2
+        ci_die "[$label] session regression build failed"
+      }
+    local session_test session_profiles
+    session_test="$(find_built "$build_dir" ditmesh_friendship_session_test)"
+    session_profiles="$(mktemp -d)"
+    "$session_test" "$session_profiles/a" "$session_profiles/b" \
+      >"$build_dir/session-regression.log" 2>&1 || {
+        tail -40 "$build_dir/session-regression.log" >&2
+        ci_die "[$label] previous identity's friendship state survived teardown"
+      }
+  fi
 }
 
 find_built() {

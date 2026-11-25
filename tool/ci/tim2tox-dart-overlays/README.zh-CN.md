@@ -77,3 +77,9 @@ DitMesh 显示为失败）。送达证据仍优先于失败。
 `0020-extract-profile-address.patch` 绑定返回完整 Tox 地址的原生资料读取函数。
 直接导入资料时保留完整地址，支持未加密和密码保护的资料。
 `native_encryption_test.dart` 使用原生库验证这两种格式。
+
+`0021-preserve-inbound-message-identity.patch` 仅在不同回调来源之间按内容合并，
+并保存另一路回调的 ID，使随后独立发送的相同消息仍保留为新行。普通私聊、
+ACTION 和旧会议消息使用此规则；相同群组 wire ID 仍去重。
+`inbound_message_identity_test.dart` 覆盖真实轮询、重复内容和跨来源副本。
+定向回移 Tim2Tox #38，不包含无关功能改动。

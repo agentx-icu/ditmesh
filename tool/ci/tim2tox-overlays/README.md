@@ -43,3 +43,12 @@ DHT network probe is separate and explicitly enabled with
 profile without opening a live session. It leaves the existing public-key
 ABI intact. The native encryption suite imports both plaintext and
 password-protected raw profiles and compares their full addresses.
+
+`0005-isolate-friendship-sessions.patch` clears pending friend applications,
+blacklist and friend-info caches when a native SDK session ends, while retaining
+listener registrations. This backports the relevant Tim2Tox #37 fix. The
+host-native Linux/macOS builder also links an isolated regression executable
+from the same FFI/SDK sources and verifies `init(A) -> request -> uninit ->
+init(B)` leaves B with no applications. The executable is never staged, and
+shipping libraries keep `TIM2TOX_ENABLE_TEST_HOOKS=OFF`. Cross-built targets do
+not run a host-incompatible executable.

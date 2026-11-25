@@ -69,12 +69,12 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
     with WidgetsBindingObserver {
   final FocusNode _focus = FocusNode(debugLabel: 'StraightKeyButton');
   final Set<int> _pointers = <int>{};
-  bool _keyboardDown = false;
+  final Set<PhysicalKeyboardKey> _keys = {};
   bool _semanticDown = false;
   Timer? _semanticTimer;
   bool _reportedDown = false;
 
-  bool get _isDown => _pointers.isNotEmpty || _keyboardDown || _semanticDown;
+  bool get _isDown => _pointers.isNotEmpty || _keys.isNotEmpty || _semanticDown;
 
   void _sync() {
     // A pointer that went down on this widget keeps its hit-test path after
@@ -112,7 +112,7 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed || !_isDown) return;
-    _keyboardDown = false;
+    _keys.clear();
     _pointers.clear();
     _sync();
   }
@@ -129,10 +129,10 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
       return KeyEventResult.ignored;
     }
     if (event is KeyDownEvent) {
-      _keyboardDown = true;
+      _keys.add(event.physicalKey);
       _sync();
     } else if (event is KeyUpEvent) {
-      _keyboardDown = false;
+      _keys.remove(event.physicalKey);
       _sync();
     }
     // KeyRepeatEvent: swallow so the OS does not treat it as typing.
@@ -140,8 +140,8 @@ class _StraightKeyButtonState extends State<StraightKeyButton>
   }
 
   void _onFocusChange(bool focused) {
-    if (!focused && _keyboardDown) {
-      _keyboardDown = false;
+    if (!focused && _keys.isNotEmpty) {
+      _keys.clear();
       _sync();
     }
   }
