@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,6 +34,7 @@ jobs:
 
   deploy:
     needs: build
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
       pages: write
