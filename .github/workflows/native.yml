@@ -933,3 +933,12 @@ jobs:
             gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
               --title "DitMesh $GITHUB_REF_NAME" --generate-notes -R "$GITHUB_REPOSITORY"
           fi
+      - name: Attach release manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/release.json"
+          python3 tool/release_manifest.py build --repository "$GITHUB_REPOSITORY" --input "$RUNNER_TEMP/release.json" --output "$RUNNER_TEMP/release-manifest.json"
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/release-manifest.json" --clobber --repo "$GITHUB_REPOSITORY"
