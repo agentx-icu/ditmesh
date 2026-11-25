@@ -3907,4 +3907,19 @@ class SFr extends S {
 
   @override
   String get legalDocumentUnavailable => 'Impossible de charger ce document.';
+
+  @override
+  String get firstChatNextTitle => 'Prêt pour un vrai contact ?';
+
+  @override
+  String get firstChatChooseFriend => 'Choisir un ami';
+
+  @override
+  String get firstChatExchangeTitle => '4. Envoyer CQ, écouter, répondre';
+
+  @override
+  String get firstChatExchangeBody => 'Manipulez CQ pour un ami. Demandez-lui de l’écouter puis de manipuler une réponse. Écoutez sa réponse et comparez le rythme original à votre vitesse dans le lecteur.';
+
+  @override
+  String get firstChatReceiptBody => 'En attente signifie enregistré sur cet appareil ; envoyé signifie accepté par le transport ; livré exige un accusé du destinataire. En groupe, il confirme au moins un membre, pas que tous ont écouté.';
 }

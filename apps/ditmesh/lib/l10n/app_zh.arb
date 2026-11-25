@@ -1200,5 +1200,10 @@
   "thirdPartyShareText": "消息和资料通过 Tox 直接发送给目标联系人或群组。对等节点可以看到你的 IP 地址，公开引导节点可以看到连接。自动节点列表使用 nodes.tox.chat。主动在地图中打开位置或选择云文件提供方时，相应服务会处理你选择分享的信息。\n\nAndroid 版使用 Google ML Kit 在设备上扫描二维码。Google 会收到应用版本、设备信息和扫描性能等诊断及使用指标。摄像头图像和解码后的二维码内容均在本机处理，不会发送给 Google。",
   "permissionListText": "麦克风：在本机解码摩斯音频。\n摄像头：扫描 Tox ID 二维码。\n定位：仅在前台用于网格定位、主动发送位置或可选的附近发现。\n通知：提供本地消息提醒。\nApple 设备的局域网权限：连接局域网节点。\n文件选择和分享：导入或导出所选文件。",
   "technicalSupportText": "连接问题\n请先检查网络，再到网络设置检查引导节点。消息送达时，通信双方都需要可用的 Tox 连接。\n\n麦克风\n如果无法开始收听，请在系统设置中检查 DitMesh 的麦克风权限，并确认麦克风可用。如果解码不稳定，请将声源靠近麦克风。\n\n报告问题\n请记下设备型号、操作系统、应用版本和复现步骤。请勿在公开报告中附上私密消息、身份文件、口令或备份。",
-  "legalDocumentUnavailable": "无法加载此文档。"
+  "legalDocumentUnavailable": "无法加载此文档。",
+  "firstChatNextTitle": "准备好与好友通联了吗？",
+  "firstChatChooseFriend": "选择好友",
+  "firstChatExchangeTitle": "4. 发出 CQ，收听并回复",
+  "firstChatExchangeBody": "向好友拍发 CQ，请对方播放后拍发回复。播放收到的回复，在消息播放器中比较原始节奏与自己的速度。",
+  "firstChatReceiptBody": "已排队表示保存在本机，已发送表示传输层接受，已送达需要对端回执。群回执只确认至少一名成员收到，不代表所有人都已收听。"
 }

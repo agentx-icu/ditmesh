@@ -7,6 +7,7 @@ import 'package:ditmesh/di/app_preferences.dart';
 import 'package:ditmesh/i18n/key_value_store.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:ditmesh/ui/chat/conversation_screen.dart';
+import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/chat/message_input.dart';
 import 'package:ditmesh/ui/contacts/contacts_page.dart';
 import 'package:ditmesh/ui/pages/chat_page.dart';
@@ -162,6 +163,86 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('first-chat-guide-friend')));
     await tester.pumpAndSettle();
     expect(find.byType(ContactsPage), findsOneWidget);
+  });
+
+  for (final size in [kPhone, kDesktop]) {
+    testWidgets('self practice opens a selected friend at $size', (
+      tester,
+    ) async {
+      final identity = StubIdentityService();
+      final service = FakeChatService(identity: identity);
+      final h = await pumpChat(
+        tester,
+        (_) => ConversationScreen(
+          target: ConversationTarget.self(
+            id: service.selfConversationId!,
+            title: 'Me',
+          ),
+        ),
+        size: size,
+        harness: ChatHarness(service: service),
+      );
+      h.addAnn(online: true, withMessage: false);
+      expect(find.byKey(const ValueKey('first-contact-next')), findsNothing);
+      await keyIn(tester, 'CQ');
+      await tester.tap(find.byTooltip(s.chatSend));
+      await tester.pumpAndSettle();
+      final next = find.byKey(const ValueKey('first-contact-next'));
+      expect(next, findsOneWidget);
+      await tester.ensureVisible(next);
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+      expect(find.byType(ContactsPage), findsOneWidget);
+      await tester.tap(find.byKey(ValueKey('friend_$kPeerKey')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ContactsPage), findsNothing);
+      expect(
+        tester
+            .widget<ConversationScreen>(find.byType(ConversationScreen))
+            .target
+            .id,
+        'c2c_$kPeerKey',
+      );
+      expect(await service.loadHistory('c2c_$kPeerKey'), isEmpty);
+      final draft = find.descendant(
+        of: find.byType(MessageInput),
+        matching: find.byType(TextField),
+      );
+      expect(tester.widget<TextField>(draft).readOnly, isTrue);
+      expect(tester.widget<TextField>(draft).controller!.text, isEmpty);
+    });
+  }
+
+  testWidgets('next contact stays reachable on a short phone at 3x text', (
+    tester,
+  ) async {
+    final identity = StubIdentityService();
+    final service = FakeChatService(identity: identity);
+    await service.sendText(service.selfConversationId!, 'CQ');
+    Widget screen() => ConversationScreen(
+      target: ConversationTarget.self(
+        id: service.selfConversationId!,
+        title: 'Me',
+      ),
+    );
+    final h = await pumpChat(
+      tester,
+      (_) => screen(),
+      size: const Size(320, 568),
+      harness: ChatHarness(service: service),
+    );
+    await tester.pumpWidget(
+      h.wrap(screen(), textScaler: const TextScaler.linear(3)),
+    );
+    await tester.pumpAndSettle();
+    final next = find.byKey(const ValueKey('first-contact-next'));
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+    expect(find.byType(ContactsPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(service.friends, isEmpty);
   });
 
   testWidgets('existing friendships suppress first-run card', (tester) async {
