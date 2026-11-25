@@ -22,10 +22,12 @@ NATIVE_MANAGER_FIXTURE = (
 
 
 class ReleaseValidationTests(unittest.TestCase):
-    def copy_native_group_sources(self, source):
+    def copy_native_overlay_sources(self, source):
         upstream = TOOLS.parents[1] / "third_party" / "tim2tox"
         for relative in ("source/V2TIMGroupManagerImpl.cpp", "ffi/dart_compat_group.cpp",
-                         "ffi/tim2tox_ffi.cpp", "ffi/tim2tox_ffi.h"):
+                         "ffi/tim2tox_ffi.cpp", "ffi/tim2tox_ffi.h", "ffi/CMakeLists.txt",
+                         "source/V2TIMFriendshipManagerImpl.cpp",
+                         "source/V2TIMFriendshipManagerImpl.h", "source/V2TIMManagerImpl.cpp"):
             destination = source / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(upstream / relative, destination)
@@ -160,14 +162,13 @@ class ReleaseValidationTests(unittest.TestCase):
         shutil.copytree(TOOLS / "tim2tox-overlays", scripts / "tim2tox-overlays")
         ffi = self.root / "third_party" / "tim2tox" / "ffi"
         ffi.mkdir(parents=True)
-        (ffi / "CMakeLists.txt").write_text("# Unused fixture\n")
         toxcore = ffi.parent / "third_party" / "c-toxcore"
         toxcore.mkdir(parents=True)
         (toxcore / "CMakeLists.txt").write_text("# Unused fixture\n")
         source = ffi.parent / "source"
         source.mkdir()
         (source / "ToxManager.cpp").write_text(NATIVE_MANAGER_FIXTURE)
-        self.copy_native_group_sources(ffi.parent)
+        self.copy_native_overlay_sources(ffi.parent)
         flutter = self.root / "flutter"
         headers = flutter / "bin" / "cache" / "dart-sdk" / "include"
         headers.mkdir(parents=True)
@@ -206,7 +207,7 @@ class ReleaseValidationTests(unittest.TestCase):
         manager.parent.mkdir(parents=True)
         original = NATIVE_MANAGER_FIXTURE
         manager.write_text(original)
-        self.copy_native_group_sources(source)
+        self.copy_native_overlay_sources(source)
         (source / ".git").write_text("gitdir: /unused/upstream\n")
         destination = self.root / "staged"
 
@@ -250,7 +251,7 @@ class ReleaseValidationTests(unittest.TestCase):
         manager = source / "source" / "ToxManager.cpp"
         manager.parent.mkdir(parents=True)
         manager.write_text(NATIVE_MANAGER_FIXTURE)
-        self.copy_native_group_sources(source)
+        self.copy_native_overlay_sources(source)
         original = (source / "ffi" / "tim2tox_ffi.cpp").read_bytes()
         destination = self.root / "staged"
         staged = subprocess.run(
