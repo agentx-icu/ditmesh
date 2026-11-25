@@ -51,6 +51,14 @@ def build_manifest(release, repository):
     if not isinstance(release, dict) or not isinstance(release.get("assets"), list):
         raise ValueError("release must be an object with an asset list")
     _, version = _identity(repository, release.get("tag_name"))
+    release_url = release.get("html_url")
+    draft_token = None
+    draft_url = rf"https://github\.com/{re.escape(repository)}/releases/tag/untagged-[A-Za-z0-9-]+"
+    if release.get("draft") is True and isinstance(release_url, str) and re.fullmatch(draft_url, release_url):
+        # GitHub exposes a temporary untagged UI URL even when a draft has a tag.
+        # Record its eventual canonical URL without claiming it is published.
+        draft_token = release_url.rsplit("/", 1)[1]
+        release_url = f"https://github.com/{repository}/releases/tag/{release['tag_name']}"
     assets = []
     for asset in release.get("assets", []):
         if not isinstance(asset, dict):
@@ -61,12 +69,15 @@ def build_manifest(release, repository):
         digest = asset.get("digest") or ""
         if not isinstance(digest, str):
             raise ValueError("asset digest must be a string or null")
-        assets.append({"name": name, "url": asset.get("browser_download_url"), "size": asset.get("size"),
+        asset_url = asset.get("browser_download_url")
+        if draft_token and asset_url == f"https://github.com/{repository}/releases/download/{draft_token}/{name}":
+            asset_url = f"https://github.com/{repository}/releases/download/{release['tag_name']}/{name}"
+        assets.append({"name": name, "url": asset_url, "size": asset.get("size"),
                        "sha256": digest.removeprefix("sha256:") if digest.startswith("sha256:") else None,
                        "platform": _platform(name) if isinstance(name, str) else None,
                        "signature_status": "unsigned" if isinstance(name, str) and "-unsigned." in name else "not_verified"})
     manifest = {"schema_version": 1, "repository": repository, "tag": release["tag_name"], "version": version,
-                "release_url": release.get("html_url"), "published_at": release.get("published_at"),
+                "release_url": release_url, "published_at": release.get("published_at"),
                 "draft": release.get("draft", False), "prerelease": release.get("prerelease", False),
                 "assets": sorted(assets, key=lambda a: a["name"] or "")}
     validate_manifest(manifest)
@@ -210,7 +221,7 @@ def synchronize(root, manifest, write=False):
     src = re.sub(r'(<span\b[^>]*data-file="[^"]+"[^>]*>)([^<]+)', lambda m: m[1] + current_asset(m[2])["name"], src)
     url_pattern = r'https://github\.com/' + re.escape(manifest["repository"]) + r'/releases/(download|tag)/[^/"<>\s]+(?:/([^"<>\s]+))?'
     src = re.sub(url_pattern, lambda m: current_asset(m[2])["url"] if m[1] == "download" else manifest["release_url"], src)
-    src = re.sub(r'(<(?:span|b)\b[^>]*\bdata-version(?:="[^"]*")?[^>]*>)[^<]+', lambda m: m[1] + manifest["tag"], src)
+    src = re.sub(r'(<(?:span|b|small)\b[^>]*\bdata-version(?:="[^"]*")?[^>]*>)[^<]+', lambda m: m[1] + manifest["tag"], src)
     src = re.sub(r'(<span\b[^>]*\bdata-release-date(?:="[^"]*")?[^>]*>)[^<]+', lambda m: m[1] + manifest["published_at"][:10], src)
     src = re.sub(r'("softwareVersion"\s*:\s*")[^"]+', lambda m: m[1] + version, src)
     if app == "morsecq":
@@ -235,7 +246,7 @@ def synchronize(root, manifest, write=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("build", "sync", "check"))
+    parser.add_argument("command", choices=("build", "fetch", "sync", "check"))
     parser.add_argument("--repository", default=DEFAULT_REPOSITORY)
     parser.add_argument("--input", type=Path, help="REST release JSON for build; release manifest for sync/check")
     parser.add_argument("--output", type=Path, default=Path(MANIFEST_NAME))
@@ -243,10 +254,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
     args.root = args.root.resolve()
     try:
-        if args.command == "build":
-            if args.input is None:
-                parser.error("build requires --input with GitHub REST release JSON")
-            result = build_manifest(json.loads(args.input.read_text(encoding="utf-8")), args.repository)
+        if args.command in ("build", "fetch"):
+            if args.command == "build":
+                if args.input is None:
+                    parser.error("build requires --input with GitHub REST release JSON")
+                result = build_manifest(json.loads(args.input.read_text(encoding="utf-8")), args.repository)
+            else:
+                result = latest_manifest(args.repository)
             args.output.write_text(_dump(result), encoding="utf-8")
             print(f"Wrote {args.output}: {result['tag']}, {len(result['assets'])} assets; signatures are not attested")
         else:

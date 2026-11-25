@@ -61,6 +61,22 @@ class ManifestTests(unittest.TestCase):
         candidate["assets"].append({"name": "release-manifest.json"})
         self.assertEqual(len(build_manifest(candidate, "agentx-icu/toxee")["assets"]), 1)
 
+    def test_real_github_draft_url_is_normalized_without_claiming_publication(self):
+        candidate = release()
+        candidate.update(draft=True, published_at=None,
+                         html_url="https://github.com/agentx-icu/toxee/releases/tag/untagged-08ac23b51ef506ac0164")
+        candidate["assets"][0]["browser_download_url"] = candidate["assets"][0]["browser_download_url"].replace(
+            "/download/v2.3.4/", "/download/untagged-08ac23b51ef506ac0164/")
+        manifest = build_manifest(candidate, "agentx-icu/toxee")
+        self.assertTrue(manifest["draft"])
+        self.assertIsNone(manifest["published_at"])
+        self.assertEqual(manifest["release_url"], "https://github.com/agentx-icu/toxee/releases/tag/v2.3.4")
+        self.assertIn("/download/v2.3.4/", manifest["assets"][0]["url"])
+        candidate["assets"][0]["browser_download_url"] = candidate["assets"][0]["browser_download_url"].replace(
+            "untagged-08ac23b51ef506ac0164", "untagged-unrelated")
+        with self.assertRaises(ValueError):
+            build_manifest(candidate, "agentx-icu/toxee")
+
     def test_draft_or_prerelease_cannot_change_stable_site(self):
         for key in ["draft", "prerelease"]:
             candidate = release()
@@ -79,6 +95,8 @@ class ManifestTests(unittest.TestCase):
                 suffix = "Windows-AMD64.msi" if app == "toxee" else "windows-x64.msi"
                 old = f"{app}-1.0.0-{suffix}"
                 source.write_text(f'''<b data-version>v1.0.0</b><span data-release-date>2026-01-01</span>
+<small class="hero-dl-sub" data-version>v1.0.0</small>
+<small id="heroDlSub"><span lang="en"><span data-version>v1.0.0</span> · free</span><span lang="zh"><span data-version>v1.0.0</span> · 免费</span></small>
 <script type="application/ld+json">{{"softwareVersion": "1.0.0"}}</script>
 <a class="pkg" data-asset="{suffix}" href="https://github.com/agentx-icu/{app}/releases/download/v1.0.0/{old}"><span class="pf">{old}</span><span class="ps">1 MB</span></a>
 <span data-file="{suffix}">{old}</span>
@@ -94,6 +112,9 @@ class ManifestTests(unittest.TestCase):
                 self.assertIn("2026-11-25", text)
                 self.assertIn("2.4 MB", text)
                 self.assertNotIn(old, text)
+                self.assertNotIn("v1.0.0", text)
+                self.assertIn("· free", text)
+                self.assertIn("· 免费", text)
                 self.assertIn('"softwareVersion": "2.3.4"', text)
                 self.assertEqual(json.loads((root / "release-manifest.json").read_text()), manifest)
                 before = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
