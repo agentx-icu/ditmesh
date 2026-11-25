@@ -3888,6 +3888,21 @@ class SZh extends S {
 
   @override
   String get legalDocumentUnavailable => '无法加载此文档。';
+
+  @override
+  String get firstChatNextTitle => '准备好与好友通联了吗？';
+
+  @override
+  String get firstChatChooseFriend => '选择好友';
+
+  @override
+  String get firstChatExchangeTitle => '4. 发出 CQ，收听并回复';
+
+  @override
+  String get firstChatExchangeBody => '向好友拍发 CQ，请对方播放后拍发回复。播放收到的回复，在消息播放器中比较原始节奏与自己的速度。';
+
+  @override
+  String get firstChatReceiptBody => '已排队表示保存在本机，已发送表示传输层接受，已送达需要对端回执。群回执只确认至少一名成员收到，不代表所有人都已收听。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7774,4 +7789,19 @@ class SZhHant extends SZh {
 
   @override
   String get legalDocumentUnavailable => '無法載入此文件。';
+
+  @override
+  String get firstChatNextTitle => '準備好與好友通聯了嗎？';
+
+  @override
+  String get firstChatChooseFriend => '選擇好友';
+
+  @override
+  String get firstChatExchangeTitle => '4. 發出 CQ，收聽並回覆';
+
+  @override
+  String get firstChatExchangeBody => '向好友拍發 CQ，請對方播放後拍發回覆。播放收到的回覆，在訊息播放器中比較原始節奏與自己的速度。';
+
+  @override
+  String get firstChatReceiptBody => '已排隊表示儲存在本機，已傳送表示傳輸層接受，已送達需要對端回執。群組回執只確認至少一名成員收到，不代表所有人都已收聽。';
 }

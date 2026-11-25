@@ -7237,6 +7237,36 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Could not load this document.'**
   String get legalDocumentUnavailable;
+
+  /// No description provided for @firstChatNextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for a real contact?'**
+  String get firstChatNextTitle;
+
+  /// No description provided for @firstChatChooseFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a friend'**
+  String get firstChatChooseFriend;
+
+  /// No description provided for @firstChatExchangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Send CQ, listen, reply'**
+  String get firstChatExchangeTitle;
+
+  /// No description provided for @firstChatExchangeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Key CQ to a friend. Ask them to play it, then key a reply. Play their reply and compare the original rhythm with your own speed in the message player.'**
+  String get firstChatExchangeBody;
+
+  /// No description provided for @firstChatReceiptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.'**
+  String get firstChatReceiptBody;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

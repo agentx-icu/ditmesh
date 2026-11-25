@@ -133,6 +133,13 @@ Future<void> showFirstChatGuide(
             ),
             const SizedBox(height: 8),
             Text(context.s.firstChatOnline),
+            const SizedBox(height: 16),
+            _Step(
+              title: context.s.firstChatExchangeTitle,
+              body: context.s.firstChatExchangeBody,
+              icon: Icons.swap_horiz,
+            ),
+            Text(context.s.firstChatReceiptBody),
           ],
         ),
       ),

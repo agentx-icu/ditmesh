@@ -1187,5 +1187,10 @@
   "thirdPartyShareText": "訊息和個人資料透過 Tox 直接傳給指定的聯絡人或群組。對等節點可看到你的 IP 位址，公開引導節點可看到連線。自動節點清單使用 nodes.tox.chat。在地圖中開啟位置或選擇雲端檔案服務時，該服務會處理你選擇分享的資訊。\n\nAndroid 版使用 Google ML Kit 在裝置上掃描 QR 碼。Google 會收到應用程式版本、裝置資訊和掃描效能等診斷及使用指標。相機影像和解碼後的 QR 碼內容均在裝置上處理，不會傳送給 Google。",
   "permissionListText": "麥克風：在本機解碼摩斯音訊。\n相機：掃描 Tox ID QR 碼。\n定位：僅在前景用於網格定位、主動傳送位置或選用的附近探索。\n通知：提供本機訊息提醒。\nApple 裝置的區域網路權限：連線至區域網路節點。\n檔案選擇與分享：匯入或匯出所選檔案。",
   "technicalSupportText": "連線問題\n請先檢查網路，再到網路設定檢查引導節點。訊息送達時，通訊雙方都需要可用的 Tox 連線。\n\n麥克風\n如果無法開始收聽，請在系統設定中檢查 DitMesh 的麥克風權限，並確認麥克風可用。如果解碼不穩定，請將聲源靠近麥克風。\n\n回報問題\n請記下裝置型號、作業系統、應用程式版本和重現步驟。請勿在公開回報中附上私人訊息、身分檔案、通行密語或備份。",
-  "legalDocumentUnavailable": "無法載入此文件。"
+  "legalDocumentUnavailable": "無法載入此文件。",
+  "firstChatNextTitle": "準備好與好友通聯了嗎？",
+  "firstChatChooseFriend": "選擇好友",
+  "firstChatExchangeTitle": "4. 發出 CQ，收聽並回覆",
+  "firstChatExchangeBody": "向好友拍發 CQ，請對方播放後拍發回覆。播放收到的回覆，在訊息播放器中比較原始節奏與自己的速度。",
+  "firstChatReceiptBody": "已排隊表示儲存在本機，已傳送表示傳輸層接受，已送達需要對端回執。群組回執只確認至少一名成員收到，不代表所有人都已收聽。"
 }

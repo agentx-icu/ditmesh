@@ -3907,4 +3907,19 @@ class SEs extends S {
 
   @override
   String get legalDocumentUnavailable => 'No se pudo cargar este documento.';
+
+  @override
+  String get firstChatNextTitle => '¿Listo para un contacto real?';
+
+  @override
+  String get firstChatChooseFriend => 'Elegir un amigo';
+
+  @override
+  String get firstChatExchangeTitle => '4. Enviar CQ, escuchar y responder';
+
+  @override
+  String get firstChatExchangeBody => 'Transmite CQ a un amigo. Pídele que lo escuche y transmita una respuesta. Escucha su respuesta y compara el ritmo original con tu propia velocidad en el reproductor.';
+
+  @override
+  String get firstChatReceiptBody => 'En cola significa guardado en este dispositivo; enviado, aceptado por el transporte; entregado requiere un acuse del destinatario. En grupos confirma al menos un miembro, no que todos hayan escuchado.';
 }

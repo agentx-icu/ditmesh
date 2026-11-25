@@ -5381,5 +5381,10 @@
   "legalDocumentUnavailable": "Could not load this document.",
   "@legalDocumentUnavailable": {
     "description": "Error loading a bundled legal document"
-  }
+  },
+  "firstChatNextTitle": "Ready for a real contact?",
+  "firstChatChooseFriend": "Choose a friend",
+  "firstChatExchangeTitle": "4. Send CQ, listen, reply",
+  "firstChatExchangeBody": "Key CQ to a friend. Ask them to play it, then key a reply. Play their reply and compare the original rhythm with your own speed in the message player.",
+  "firstChatReceiptBody": "Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened."
 }

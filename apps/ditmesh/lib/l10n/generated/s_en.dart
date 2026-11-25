@@ -3907,4 +3907,19 @@ class SEn extends S {
 
   @override
   String get legalDocumentUnavailable => 'Could not load this document.';
+
+  @override
+  String get firstChatNextTitle => 'Ready for a real contact?';
+
+  @override
+  String get firstChatChooseFriend => 'Choose a friend';
+
+  @override
+  String get firstChatExchangeTitle => '4. Send CQ, listen, reply';
+
+  @override
+  String get firstChatExchangeBody => 'Key CQ to a friend. Ask them to play it, then key a reply. Play their reply and compare the original rhythm with your own speed in the message player.';
+
+  @override
+  String get firstChatReceiptBody => 'Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.';
 }

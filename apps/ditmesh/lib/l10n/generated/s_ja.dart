@@ -3888,4 +3888,19 @@ class SJa extends S {
 
   @override
   String get legalDocumentUnavailable => 'この文書を読み込めませんでした。';
+
+  @override
+  String get firstChatNextTitle => '友達との交信を始めますか？';
+
+  @override
+  String get firstChatChooseFriend => '友達を選ぶ';
+
+  @override
+  String get firstChatExchangeTitle => '4. CQ を送り、聞いて返信';
+
+  @override
+  String get firstChatExchangeBody => '友達に CQ を打って送り、再生してから打鍵で返信してもらいましょう。返信を再生し、メッセージプレーヤーで元のリズムと自分の速度を比べます。';
+
+  @override
+  String get firstChatReceiptBody => '待機中は端末への保存、送信済みは通信層による受理、配信済みは相手の受信確認を意味します。グループの確認は少なくとも一人の受信を示し、全員が聞いたことは意味しません。';
 }

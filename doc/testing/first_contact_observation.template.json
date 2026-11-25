@@ -1,0 +1,97 @@
+{
+  "pair_code": null,
+  "date_utc": null,
+  "consent_to_observe": false,
+  "consent_to_export_redacted": false,
+  "devices": {
+    "A": {
+      "platform": null,
+      "version_build": null,
+      "artifact_sha256": null,
+      "distribution_channel": null,
+      "network_category": null
+    },
+    "B": {
+      "platform": null,
+      "version_build": null,
+      "artifact_sha256": null,
+      "distribution_channel": null,
+      "network_category": null
+    }
+  },
+  "scenarios": {
+    "self_practice": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "add_friend": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "cq_reply": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "original_rhythm": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "cross_network": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "disconnect_reconnect": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "lock_resume": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "restart": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    },
+    "same_channel_upgrade": {
+      "status": "not_run",
+      "observed": null,
+      "help_needed": null,
+      "first_sent_utc": null,
+      "receipt_utc": null,
+      "reply_received_utc": null
+    }
+  },
+  "next_observation": null
+}
