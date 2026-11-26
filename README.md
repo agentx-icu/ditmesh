@@ -6,9 +6,25 @@
 
 For offline Morse learning and practice, use [MorseCQ](https://github.com/agentx-icu/morsecq).
 
-![DitMesh desktop and mobile product design concept](doc/designs/product-2026-10-08/product-concept.png)
+[Install and start chatting](#install-and-start-chatting) · [Build from source](#build-and-run) · [Documentation](doc/README.md)
 
-*Product design concept.*
+## Install and start chatting
+
+Choose an asset for your operating system and CPU. Check the release notes for included features and signing details, and use `SHA256SUMS` to verify the download. [GitHub Releases](https://github.com/agentx-icu/ditmesh/releases).
+
+| Platform | Asset to look for |
+|---|---|
+| macOS 13 or later | `arm64` for Apple silicon and `x86_64` for Intel, in PKG or ZIP format |
+| Windows | x64 MSI installer or ZIP bundle |
+| Linux | x86_64 DEB for Debian-based systems, RPM for RPM-based systems, or a `.tar.gz` bundle |
+| Android | APK for direct installation. AAB is for distribution through a store. |
+| iPhone and iPad | The GitHub release provides an unsigned IPA that requires signing and provisioning before installation. |
+
+1. On the welcome screen, select **Create identity** or **Restore from backup**. For a new identity, enter a display name and optionally set an identity password. Follow the backup prompt and keep the file somewhere separate from the device.
+2. In **Chat**, open **Your first Morse chat** and select **Try in my self chat**. Key `CQ` (`-.-. --.-`), preview the draft, and send it to yourself. The chat help button reopens the guide.
+3. Open **Chat → Contacts**, then scan your friend's QR code or enter their Tox ID. Once the request is accepted, keep both apps running and connected while you send and play back your first message.
+
+If chat stays offline, open **Network and bootstrap** from **Me** or from the welcome/unlock screen and test the selected node. The node guide covers automatic and manual selection, local-network permissions and queued messages. [Bootstrap nodes and LAN hosting](doc/operations/NETWORK.md).
 
 ## Features
 
@@ -25,6 +41,7 @@ The main destinations are **Chat / Groups / Reference / Me** on phones, tablets 
 - **Reference and key setup:** alphabet, prosigns, Q-codes, translator, Chinese telegraph-code interpretation and configurable device key bindings.
 - **Radio tools:** thirteen offline calculators next to the key: Maidenhead locator with heading and distance, IARU band plan with wire-antenna lengths, power and dB with S-meter equivalents, SWR, feedline loss, L-network matching, LC resonance / attenuator / pad arithmetic, link budget with radio horizon, CW speed timing, RST, sunrise and grey line, the NCDXF beacon schedule and a UTC clock.
 - **Network configuration:** official node catalogue, node reachability tests, automatic/manual selection and desktop LAN hosting; network settings also work before unlocking an identity. [Node and LAN guide](doc/operations/NETWORK.md).
+- **Location and People nearby.** Opt-in location sharing, grid locator autofill and discovery with compatible Toxee or DitMesh clients. The location guide explains which data goes to conversation recipients or public discovery groups. [Location and People nearby](doc/reference/LOCATION_AND_NEARBY.md).
 - **Appearance and languages:** ten interface locales and four styles, Minimal White, Brass Handbook, Night Radio and Fresh Cartoon, with light, dark or system brightness.
 - **Desktop integration:** responsive panes, window persistence, tray, unread badge and notification routing.
 
@@ -38,49 +55,45 @@ Tap an outgoing status icon for details. Queued means stored on this device; sen
 
 ## Screenshots
 
-<table><tr>
-<td><img src="doc/screenshots/macos/en/conversation.png" alt="DitMesh direct Morse conversation on macOS"></td>
-<td><img src="doc/screenshots/macos/en/group_conversation.png" alt="DitMesh group Morse conversation on macOS"></td>
-</tr></table>
+<table>
+<tr><th>Direct chat · phone layout</th><th>Group conversation · macOS</th></tr>
+<tr>
+<td valign="top"><img src="doc/screenshots/compact/en/conversation.png" width="300" alt="Phone conversation with the Morse key and draft controls below the messages"></td>
+<td valign="top"><img src="doc/screenshots/macos/en/group_conversation.png" width="720" alt="macOS group list beside the open group conversation and Morse key"></td>
+</tr>
+</table>
 
-[Capture gallery and platform coverage](doc/screenshots/README.md) · [Capture languages/styles](tool/screenshots/README.md) · [Product design](doc/designs/product-2026-10-08/README.md) · [App icon](doc/designs/icon-2026-10-08/README.md)
+On a phone, open a conversation to start keying. A wide desktop window keeps the list beside the open conversation. A short press on the straight key makes a dot and a longer press makes a dash. Use **Preview draft** to listen before sending and **Delete** to correct the last input. Tap the status icon on a sent message to open **Delivery details**. The conversations shown use demo data.
 
-Screenshots show demo conversations.
+[Platform screenshot gallery](doc/screenshots/README.md) · [Capture instructions](tool/screenshots/README.md) · [Product design](doc/designs/product-2026-10-08/README.md) · [App icon](doc/designs/icon-2026-10-08/README.md)
 
 ## Build and run
 
-Pinned toolchain: **Flutter 3.41.9 / Dart 3.11.5**. Android, iOS, macOS **13.0 or later** (Intel/ARM), Linux and Windows are supported; browser chat is not supported by the native Tox transport.
+The project pins **Flutter 3.41.9 / Dart 3.11.5**. The commands below build and launch the real Tox backend on macOS with Xcode, CocoaPods and CMake installed. The native build selects the current Mac's CPU architecture. Find the Linux, Windows, Android and iOS commands in the [build guide](doc/operations/BUILD_AND_DEPLOY.md#local-builds).
 
 ```bash
 git clone --recurse-submodules https://github.com/agentx-icu/ditmesh.git
 cd ditmesh
 dart run tool/bootstrap_deps.dart
-dart pub get
-bash tool/ci/build_tim2tox.sh --target macos-arm64
+dart pub get --enforce-lockfile
+bash tool/ci/build_tim2tox.sh --target macos
 cd apps/ditmesh
 flutter run -d macos
 ```
 
-See [build and packaging](doc/operations/BUILD_AND_DEPLOY.md), [release requirements](doc/release/APP_STORE.md), [application responsibilities](doc/APP_SPLIT.md) and the [test pyramid](doc/testing/TEST_PYRAMID.md). All documents are listed in the [documentation index](doc/README.md).
-
-The [store readiness matrix](doc/release/STORE_READINESS.md) lists actual distribution paths, signing preflight and owner blockers. CI/build success does not establish store submission approval.
+For UI development with an in-memory backend, see the [app developer guide](apps/ditmesh/README.md#run). For packaging and signing, see the [distribution and store-readiness matrix](doc/release/STORE_READINESS.md). The real Tox backend requires a native Flutter app on one of the five supported platforms.
 
 ## Development checks
 
-Run dependency resolution at the workspace root, not inside a package:
+After bootstrapping and resolving dependencies at the repository root, run these checks from the root.
 
 ```bash
-dart run tool/check_complexity.dart
-dart run tool/import_guard.dart
-dart run tool/ui_literal_guard.dart
-dart analyze --fatal-infos tool
-for dir in packages/* apps/*; do
-  [ -f "$dir/pubspec.yaml" ] || continue
-  flutter analyze "$dir"
-  [ -d "$dir/test" ] || continue
-  (cd "$dir" && flutter test --exclude-tags=needs-native)
-done
+bash tool/test_pyramid.sh --level gates
+bash tool/test_pyramid.sh --level unit
+bash tool/test_pyramid.sh --level widget
 ```
+
+These levels cover analysis, source guards, and tests that do not require the native library. See the [test guide](doc/testing/TEST_PYRAMID.md) for device E2E and real Tox peer tests.
 
 ## Privacy, support and licence
 

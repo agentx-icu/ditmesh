@@ -2,7 +2,7 @@
 
 # Bootstrap nodes and LAN hosting
 
-Open network settings from **Me**, or from the welcome/unlock screen before opening an identity. Node configuration is shared by this installation and does not require registration. Changing identity preserves it.
+Open **Network and bootstrap** from **Me**, or from the welcome/unlock screen before opening an identity. Changing identities preserves the installation's node configuration.
 
 ## Choose a mode
 
@@ -43,6 +43,8 @@ Stop hosting before closing a node that other devices are using. The settings se
 ## Network recovery
 
 Android/iOS path changes and application resume trigger guarded reconnection. Bursts are debounced, repeated kicks are rate-limited, and work stops when the session or selected mode changes. Both peers must be reachable for chat delivery; offline messages stay in DitMesh's durable local queue.
+
+The app's overall connection indicator tracks Tox DHT connectivity. If a synced Tox group (NGC) still has a confirmed peer connection during a DHT outage, it can send group text and drain its text queue over that connection. Legacy conferences, unknown group types and groups without a confirmed connection wait in the queue while DHT is offline. [Group transport overlay](../../tool/ci/tim2tox-dart-overlays/README.md).
 
 The Chat pending-message list lets you inspect queued and failed history rows, cancel a queued send, or retry a failed send. Status details follow local connectivity and peer presence. A sent check means the local transport accepted the message; a delivered check requires the actual peer receipt. Group delivery confirms at least one member. Neither receipt proves reading or listening.
 

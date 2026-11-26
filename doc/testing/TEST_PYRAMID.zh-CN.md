@@ -2,7 +2,7 @@
 
 # 测试
 
-在仓库根目录运行：
+初始化并解析工作区依赖后，从仓库根目录执行。端到端测试的设备 ID 可用 `flutter devices` 查看。见[工作区准备](../operations/BUILD_AND_DEPLOY.zh-CN.md)。
 
 ```bash
 bash tool/test_pyramid.sh --level gates
@@ -17,17 +17,32 @@ bash tool/test_pyramid.sh --level e2e --device macos
 | 单元 | 电码引擎、音频 I/O、聊天契约、队列及传输服务 | `packages/*/test` |
 | 控件与服务集成 | 启动、身份、单聊和群聊、网络设置、参考、无线电工具、通知、桌面服务及外观 | `apps/ditmesh/test` |
 | 原生集成 | 加密资料、备份恢复、持久化、局域网节点及隔离探测 | `packages/ditmesh_chat/test` |
-| 平台端到端 | 实际启动、插件初始化、导航、无线电工具计算、真实触摸与实体键盘事件拍发、建群、外观、删除身份、持久化及中英文 13 个场景 | `apps/ditmesh/integration_test` |
+| 平台端到端 | 实际启动、插件初始化、导航、隐私和定位界面、无线电工具计算、真实触摸与实体键盘事件拍发、建群、外观、删除身份、持久化及中英文 13 个场景 | `apps/ditmesh/integration_test` |
 
-E2E 工作流通过 PR 的 `ci:e2e` 标签或手动执行，在 macOS、Linux、Windows、Android 模拟器（API 34，x86_64）和 iPhone 模拟器上运行全部假后端集成测试；`tool/ci/run_integration_tests.sh <device>` 可在任意设备上运行同一组测试，每个文件单独启动一次应用。界面走查使用 `DITMESH_FAKE_BACKEND=true` 与预置会话；持久化测试通过临时文件及键，重新打开真实应用支持目录存储和平台安全存储。手动真实后端探针 `integration_test/device_matrix_test.dart` 不在其中；手动运行方法见 `doc/VALIDATION.zh-CN.md` §“模拟器 / 仿真器证据”。
+## 平台端到端测试与设备探针
 
-必需的 Linux 和两种 macOS 原生任务运行：
+E2E 工作流使用内存后端，覆盖 macOS、Linux、Windows、Android 模拟器（API 34，x86_64）和 iPhone 模拟器。可通过 PR 的 `ci:e2e` 标签或手动触发，手动触发时也可选 `windows_only`。本地运行同一组界面测试时执行 `bash tool/ci/run_integration_tests.sh <device-id>`，每个文件单独启动一次应用。界面走查使用预置会话。持久化测试在真实应用支持目录和平台安全存储中使用临时文件及键。定位隐私界面测试使用可控的权限和位置数据。见 [E2E 工作流](../../.github/workflows/e2e.yml)。
+
+真实环境探针需要单独启用。运行真实网络探针前先暂存对应原生库。Flutter 集成测试的安装和卸载可能影响现有应用数据，请使用独立的测试设备或模拟器。
+
+| `apps/ditmesh/integration_test/` 中的探针 | 运行方式 |
+|---|---|
+| `network_device_test.dart` | 在对应 `flutter test` 命令中加 `--dart-define=DITMESH_NETWORK_DEVICE_TEST=true`。用临时身份检查原生冷启动和重启后的网络连接。 |
+| `location_device_test.dart` | 在对应 `flutter test` 命令中加 `--dart-define=DITMESH_LOCATION_DEVICE_TEST=true`。检查真实系统权限和定位提供方，报告不记录坐标。见[定位探针与互通记录](NEARBY_INTEROP.zh-CN.md)。 |
+| `device_matrix_test.dart` | 手动运行的真实后端探针，观察生命周期、连接和消息事件。见[模拟器与仿真器证据](../VALIDATION.zh-CN.md#模拟器--仿真器证据2026-10-10)。 |
+
+## 原生节点集成测试
+
+必需的 Linux 和 macOS 原生任务在暂存原生库后运行双进程测试。在 macOS 上可从仓库根目录使用本机架构的原生库运行同一测试。
 
 ```bash
-python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py \
+  --library "build/native/macos-$(uname -m)/libtim2tox_ffi.dylib"
 ```
 
-两个原生进程交换本地 UDP 消息、重启加密资料、恰好投递一次离线消息并重新入群。带原生标签的测试还覆盖局域网托管、节点探测、取消和当前聊天实例保留。可通过 `DITMESH_PUBLIC_DHT_SMOKE=true` 启用公网 DHT 启动检查。
+在 Linux x86_64 上，给 `--library` 传入 `build/native/linux-x86_64/libtim2tox_ffi.so`。两个原生进程交换本地 UDP 消息，重启加密身份会话，验证离线消息恰好投递一次并重新入群。双节点测试也会在 Dart 层 DHT 状态设为离线时交换群消息。带原生标签的测试还覆盖局域网托管、节点探测、取消和当前聊天实例保留。运行原生冒烟测试时设置 `DITMESH_PUBLIC_DHT_SMOKE=true` 可加入公网 DHT 启动检查。
+
+## 视觉与布局覆盖
 
 视觉工作流渲染 34 个配置、68 张 PNG，覆盖十种语言、四种风格、浅深色及手机/桌面布局。捕获命令见[截图指南](../../tool/screenshots/README.zh-CN.md)。
 

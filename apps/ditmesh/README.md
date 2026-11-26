@@ -21,39 +21,43 @@ the Chat / Groups / Reference / Me destinations.
 | Path | Contents |
 |---|---|
 | `lib/main.dart`, `lib/di/` | Start-up, settings store, backend selection (`DITMESH_FAKE_BACKEND`), `AppScope` / `AppServices` |
-| `lib/startup/` | Native-library check, identity gate, unlock and failure screens |
+| `lib/startup/` | Privacy consent, native-library check, identity gate, unlock and failure screens |
 | `lib/ui/` | Screens: `chat/`, `groups/`, `contacts/`, `reference/`, `account/` (Me, backups), `network/`, `appearance/`, `listen/`, `learn/`, `tools/`, `shell/` |
 | `lib/keying/`, `lib/training/` | Keyer profiles and device bindings; practice sessions and per-identity training stores |
+| `lib/nearby/`, `lib/ui/nearby/` | Location permissions, location sharing and nearby discovery ([guide](../../doc/reference/LOCATION_AND_NEARBY.md)) |
 | `lib/notifications/`, `lib/lifecycle/` | OS notifications, badge, background budget and reconnection ([guide](lib/notifications/README.md)) |
 | `lib/desktop/` | Window, tray and shortcuts on macOS, Windows and Linux ([guide](lib/desktop/README.md)) |
 | `lib/l10n/`, `lib/i18n/` | ARB files for ten languages and locale resolution ([guide](lib/l10n/README.md)) |
 | `test/` | Widget and service tests, including `test/layout/` (layout crawler) |
-| `integration_test/` | Platform E2E and screenshot capture; `device_matrix_test.dart` is a manual real-backend probe |
+| `integration_test/` | Platform E2E, screenshot capture and opt-in device probes ([test guide](../../doc/testing/TEST_PYRAMID.md)) |
 
 ## Run
 
-From the repository root, after the bootstrap described in the
-[root README](../../README.md#build-and-run):
+Bootstrap and resolve dependencies at the repository root before running the app. [Build and run](../../README.md#build-and-run).
+
+### Real Tox backend
+
+Stage the Tim2Tox library for your target first. From the repository root, the example below uses macOS. For other targets, select a device ID from `flutter devices`. [Native build commands](../../doc/operations/BUILD_AND_DEPLOY.md#local-builds).
 
 ```bash
-dart pub get                                   # workspace root only
+(cd apps/ditmesh && flutter run -d macos)
+```
+
+### UI-only development
+
+Set `DITMESH_ALLOW_MISSING_FFI=1` for the native packaging step and `DITMESH_FAKE_BACKEND=true` for Dart. The in-memory backend starts with no identity and an empty chat list. The screenshot harness seeds demo conversations separately. [Capture guide](../../tool/screenshots/README.md).
+
+```bash
+(cd apps/ditmesh && DITMESH_ALLOW_MISSING_FFI=1 \
+  flutter run -d macos --dart-define=DITMESH_FAKE_BACKEND=true)
+```
+
+### App checks
+
+```bash
 flutter analyze apps/ditmesh
 (cd apps/ditmesh && flutter test --exclude-tags=needs-native)
-(cd apps/ditmesh && flutter run -d macos)      # or linux / windows / a device
+bash tool/test_pyramid.sh --level e2e --device macos
 ```
 
-`flutter run` needs the native Tim2Tox library for the current target (see
-[build and packaging](../../doc/operations/BUILD_AND_DEPLOY.md)). For UI work
-without it, use the in-memory fake backend (it starts with no identity and
-empty chat; the screenshot harness in `tool/screenshots/` seeds demo
-conversations). The macOS Podfile refuses a missing library unless
-`DITMESH_ALLOW_MISSING_FFI=1` is set:
-
-```bash
-(cd apps/ditmesh && DITMESH_ALLOW_MISSING_FFI=1 flutter run -d macos --dart-define=DITMESH_FAKE_BACKEND=true)
-```
-
-The fake backend exists for tests and demos only; a production build with a
-missing or failing native backend shows the failure instead of starting a demo
-session. Contributor rules are in [`CLAUDE.md`](../../CLAUDE.md) and the
-[maintenance guide](../../doc/HANDOVER.md).
+Run the checks from the repository root. The E2E command opens a real app window with the fake backend. The maintenance and testing guides cover workspace-wide checks and the real-peer transport suite. [Maintenance guide](../../doc/HANDOVER.md) · [Test guide](../../doc/testing/TEST_PYRAMID.md).

@@ -2,6 +2,15 @@
 
 # DitMesh documentation
 
+| If you want to | Start here |
+|---|---|
+| Install DitMesh and send a first Morse message | [Quick start](../README.md#install-and-start-chatting) |
+| Fix an offline chat or use a LAN node | [Network guide](operations/NETWORK.md) |
+| Build a native app or diagnose a missing library | [Build and troubleshooting](operations/BUILD_AND_DEPLOY.md) |
+| Develop the UI without Tim2Tox | [App developer guide](../apps/ditmesh/README.md#ui-only-development) |
+| Run a test on a device or with real Tox peers | [Test guide](testing/TEST_PYRAMID.md) |
+| Prepare an installer or a store submission | [Signing and distribution matrix](release/STORE_READINESS.md) |
+
 ## Using and operating DitMesh
 
 - [Application responsibilities](APP_SPLIT.md) — DitMesh chat versus the MorseCQ trainer
@@ -17,6 +26,7 @@
 - [Test pyramid](testing/TEST_PYRAMID.md)
 - [Current persistence inventory](testing/PERSISTENCE_AUDIT.md)
 - [Cross-platform audit and fixes](testing/CROSS_PLATFORM_AUDIT.md)
+- [Native location and nearby interoperability with Toxee](testing/NEARBY_INTEROP.md)
 - [Verification evidence and open findings](VALIDATION.md)
 - [Maintenance guide](HANDOVER.md)
 
@@ -32,7 +42,6 @@
 ## Protocols
 
 - [Implemented original keyed-rhythm protocol](rfcs/2026-10-09-keyed-rhythm.md)
-- [Earlier message-annotation proposal](rfcs/2026-09-30-tim2tox-message-annotation.md) (superseded, kept for history)
 
 ## Design and screenshots
 
