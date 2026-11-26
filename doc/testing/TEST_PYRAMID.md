@@ -2,7 +2,7 @@
 
 # Testing
 
-Run from the repository root:
+Bootstrap and resolve the workspace dependencies, then run the checks from the repository root. Use `flutter devices` to find a device ID for E2E. [Workspace setup](../operations/BUILD_AND_DEPLOY.md).
 
 ```bash
 bash tool/test_pyramid.sh --level gates
@@ -17,17 +17,32 @@ bash tool/test_pyramid.sh --level e2e --device macos
 | Unit | Morse engines, audio I/O, chat contracts, queues and transport services | `packages/*/test` |
 | Widget and service integration | Startup, identities, direct/group chat, network settings, reference, radio tools, notifications, desktop shell and appearance | `apps/ditmesh/test` |
 | Native integration | Encrypted profiles, backup restore, persistence, LAN nodes and isolated probes | `packages/ditmesh_chat/test` |
-| Platform E2E | Actual startup, plugin initialization, navigation, radio-tool calculations, keying by real touch and hardware-keyboard events, group creation, appearance, identity deletion, persistence and 13 scenes in English/Chinese | `apps/ditmesh/integration_test` |
+| Platform E2E | Actual startup, plugin initialization, navigation, privacy and location UI, radio-tool calculations, keying by real touch and hardware-keyboard events, group creation, appearance, identity deletion, persistence and 13 scenes in English/Chinese | `apps/ditmesh/integration_test` |
 
-The E2E workflow runs every fake-backend integration test on macOS, Linux and Windows, an Android emulator (API 34, x86_64) and an iPhone simulator when enabled by the `ci:e2e` PR label or manual dispatch; `tool/ci/run_integration_tests.sh <device>` runs the same set on any device, one app launch per file. UI walks use `DITMESH_FAKE_BACKEND=true` and seeded conversations. The persistence test reopens real application-support stores and platform secure storage using disposable files and keys. The manual real-backend probe `integration_test/device_matrix_test.dart` is excluded; see `doc/VALIDATION.md` §"Simulator / emulator evidence" for how to run it by hand.
+## Platform E2E and device probes
 
-Required Linux and both macOS native jobs run:
+The E2E workflow runs the fake-backend suite on macOS, Linux, Windows, an Android emulator (API 34, x86_64), and an iPhone simulator. It runs on demand with the `ci:e2e` PR label or manual dispatch, which also has a `windows_only` option. Run the same UI suite locally with `bash tool/ci/run_integration_tests.sh <device-id>`, one app launch per file. The UI walks seed conversations. The persistence test uses disposable files and keys in the real application-support directory and platform secure storage. The location privacy UI test supplies controlled permission and position values to exercise the screens. [E2E workflow](../../.github/workflows/e2e.yml).
+
+The real-environment probes are opt-in. Stage the matching native library before a real-network run. Use a clean test device or simulator for Flutter integration tests because test install/uninstall can affect existing app data.
+
+| Probe in `apps/ditmesh/integration_test/` | How to run |
+|---|---|
+| `network_device_test.dart` | Add `--dart-define=DITMESH_NETWORK_DEVICE_TEST=true` to its `flutter test` command. It opens a temporary identity and checks real native cold-start and restart connectivity. |
+| `location_device_test.dart` | Add `--dart-define=DITMESH_LOCATION_DEVICE_TEST=true` to its `flutter test` command. It checks the actual OS permission and location provider without recording coordinates. [Location probe and interoperability evidence](NEARBY_INTEROP.md). |
+| `device_matrix_test.dart` | Manual real-backend probe for lifecycle, connection and message events. [Simulator and emulator evidence](../VALIDATION.md#simulator--emulator-evidence-2026-10-10). |
+
+## Native peer integration
+
+The required Linux and macOS jobs run a two-process harness after staging the native library. From the repository root on macOS, run the same harness with the local library for your Mac.
 
 ```bash
-python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py \
+  --library "build/native/macos-$(uname -m)/libtim2tox_ffi.dylib"
 ```
 
-Two native processes exchange local UDP messages, restart encrypted profiles, drain queued messages exactly once and rejoin groups. Tagged native tests also cover LAN hosting, node probes, cancellation and preservation of the active chat instance. Public DHT startup can be enabled with `DITMESH_PUBLIC_DHT_SMOKE=true`.
+On Linux x86_64, pass `build/native/linux-x86_64/libtim2tox_ffi.so` as `--library`. Two native processes exchange local UDP messages, restart encrypted profiles, drain queued messages exactly once and rejoin groups. The real-peer test also exchanges group messages while the Dart DHT status is set to offline. Tagged native tests cover LAN hosting, node probes, cancellation and preservation of the active chat instance. Set `DITMESH_PUBLIC_DHT_SMOKE=true` when running the native smoke test to include public DHT startup.
+
+## Visual and layout coverage
 
 The visual workflow renders 34 profiles / 68 PNGs across ten languages, four styles, light/dark and phone/desktop layouts. Capture commands are in the [screenshot guide](../../tool/screenshots/README.md).
 

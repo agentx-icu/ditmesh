@@ -2,7 +2,7 @@
 
 # 跨平台审计与修复 — 2026-10-22
 
-接手会话 `2040fe6b-e1a5-4700-b27d-83749f68844b`，从 DitMesh `879d1d5` 的现有 `agentx/xplat-checklist-audit` worktree 继续。目标为 Android、iOS/iPadOS、macOS、Windows、Linux；工具链 Flutter 3.41.9 / Dart 3.11.5，Mac arm64，Xcode 26.4.1。
+本次审计从 DitMesh 提交 `879d1d5` 开始。目标为 Android、iOS/iPadOS、macOS、Windows、Linux；工具链 Flutter 3.41.9 / Dart 3.11.5，Mac arm64，Xcode 26.4.1。
 
 本报告区分源码判断、单元/widget 测试和真实设备行为。`verified` 只表示证据列明确列出的范围；`needs device` 仍需实机或对应系统；`to do` 是尚未完成的工作；`not applicable` 有具体不适用原因。历史证据保留在 [VALIDATION.zh-CN.md](../VALIDATION.zh-CN.md)，不改写旧版本的验证记录。下表保留标准 ID、英文状态和代码/检查名称，便于与英文报告及技能交叉检索。
 

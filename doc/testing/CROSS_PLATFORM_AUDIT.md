@@ -2,7 +2,7 @@
 
 # Cross-platform audit and fixes — 2026-10-22
 
-Continuation of session `2040fe6b-e1a5-4700-b27d-83749f68844b`, starting from DitMesh `879d1d5` in the existing `agentx/xplat-checklist-audit` worktree. Targets: Android, iOS/iPadOS, macOS, Windows and Linux. Toolchain: Flutter 3.41.9 / Dart 3.11.5; macOS arm64, Xcode 26.4.1.
+This audit started at DitMesh commit `879d1d5`. Targets: Android, iOS/iPadOS, macOS, Windows and Linux. Toolchain: Flutter 3.41.9 / Dart 3.11.5; macOS arm64, Xcode 26.4.1.
 
 This is a source audit plus explicitly named local tests. A **verified** row states the bounded scope actually exercised; it never certifies every OS/device combination. Earlier runs remain in [VALIDATION.md](../VALIDATION.md), with their original revision and limitations.
 

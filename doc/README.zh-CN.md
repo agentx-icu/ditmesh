@@ -2,6 +2,15 @@
 
 # DitMesh 文档
 
+| 任务 | 入口 |
+|---|---|
+| 安装 DitMesh，发送第一条电码消息 | [快速入门](../README.zh-CN.md#安装并开始聊天) |
+| 排查聊天离线或使用局域网节点 | [网络指南](operations/NETWORK.zh-CN.md) |
+| 构建原生应用或排查缺少原生库 | [构建与故障排查](operations/BUILD_AND_DEPLOY.zh-CN.md) |
+| 使用内存后端开发界面 | [应用开发指南](../apps/ditmesh/README.zh-CN.md#仅开发界面) |
+| 执行设备测试或真实 Tox 节点测试 | [测试指南](testing/TEST_PYRAMID.zh-CN.md) |
+| 准备安装包或应用商店提交 | [签名与分发矩阵](release/STORE_READINESS.zh-CN.md) |
+
 ## 使用与运维
 
 - [应用职责](APP_SPLIT.zh-CN.md)——DitMesh 聊天与 MorseCQ 训练器的分工
@@ -17,6 +26,7 @@
 - [测试金字塔](testing/TEST_PYRAMID.zh-CN.md)
 - [当前持久化清单](testing/PERSISTENCE_AUDIT.zh-CN.md)
 - [跨平台检查与修复](testing/CROSS_PLATFORM_AUDIT.zh-CN.md)
+- [与 Toxee 的原生位置消息和附近发现互通](testing/NEARBY_INTEROP.zh-CN.md)
 - [验证证据与未解决的发现项](VALIDATION.zh-CN.md)
 - [维护指南](HANDOVER.zh-CN.md)
 
@@ -32,7 +42,6 @@
 ## 协议
 
 - [已实现的原始拍发节奏协议](rfcs/2026-10-09-keyed-rhythm.zh-CN.md)
-- [早期的消息注解提案](rfcs/2026-09-30-tim2tox-message-annotation.zh-CN.md)（已被取代，保留作历史记录）
 
 ## 设计与截图
 

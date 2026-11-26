@@ -290,10 +290,12 @@ TIM2TOX_FFI_LIB=/absolute/path/to/libtim2tox_ffi.dylib \
 
 其他 `needs-native` 文件覆盖静态加密、冷启动、身份归属、加密备份与群组备份、引导、探测隔离以及
 `native_two_peer_test.dart`。Tim2Tox 每个进程只有一个默认实例，所以双对端互发要在两个进程里跑。
-必需的 Linux 与 macOS CI 任务使用的协调脚本：
+必需的 Linux 和 macOS CI 任务也使用这个协调脚本。构建原生库后，从仓库根目录运行。
+以下示例使用 macOS arm64 产物，其他平台请传入对应目标的库。
 
 ```bash
-python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py \
+  --library "$PWD/build/native/macos-arm64/libtim2tox_ffi.dylib"
 ```
 
 它覆盖带精确节奏的私聊与群组消息、真实送达回执、加密档案重启、持久队列恰好一次发送以及群组重新加入。

@@ -361,11 +361,14 @@ TIM2TOX_FFI_LIB=/absolute/path/to/libtim2tox_ffi.dylib \
 Other `needs-native` files cover encryption at rest, cold start, identity
 ownership, encrypted and group backups, bootstrap, probe isolation and
 `native_two_peer_test.dart`. Tim2Tox has one default instance per process,
-so a two-peer exchange runs in two processes. The coordinator used by the
-required Linux and macOS CI jobs:
+so a two-peer exchange runs in two processes. The required Linux and macOS CI
+jobs use the same coordinator. Run it from the repository root after building
+the native library. This example uses the macOS arm64 artifact. On another
+platform, pass the library built for that target.
 
 ```bash
-python3 packages/ditmesh_chat/test/helpers/run_real_peers.py --library <built-FFI-library>
+python3 packages/ditmesh_chat/test/helpers/run_real_peers.py \
+  --library "$PWD/build/native/macos-arm64/libtim2tox_ffi.dylib"
 ```
 
 It covers direct and group messages with exact recorded timing, actual

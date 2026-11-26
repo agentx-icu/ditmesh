@@ -22,7 +22,7 @@ Start with the [README](../README.md), [network guide](operations/NETWORK.md), [
 
 ## Before submitting a change
 
-Run strict analysis, package/application tests and source guards (`bash tool/test_pyramid.sh --level gates`, `--level unit` and `--level widget`, or the loop in the [README](../README.md#development-checks)). Keep Morse-only composing, direct/group delivery, encrypted backup restoration and queued sending covered when changing chat behavior. Network tests cover saved node selection, node probes, LAN hosting, reconnection and disposal. Appearance checks cover ten languages, four styles and phone/desktop layouts. User-facing documents are maintained as English + zh-CN pairs.
+Run strict analysis, package and app tests, and source guards with the `gates`, `unit` and `widget` levels of `tool/test_pyramid.sh`. Keep Morse-only composing, direct and group delivery, encrypted backup restoration and queued sending covered when changing chat behavior. Network tests cover saved node selection, node probes, LAN hosting, reconnection and disposal. Appearance checks cover ten languages, four styles and phone and desktop layouts. Maintain user-facing documents in English and Simplified Chinese. [Development checks](../README.md#development-checks).
 
 ## CI workflows
 

@@ -2,12 +2,12 @@
 
 # Build, CI and packaging
 
-Use Flutter 3.41.9 / Dart 3.11.5 and a recursive checkout. Resolve only at the workspace root.
+Use Flutter 3.41.9 / Dart 3.11.5. From the repository root, initialise the submodules and resolve the workspace dependencies against the committed lockfile.
 
 ```bash
 git submodule update --init --recursive
 dart run tool/bootstrap_deps.dart
-dart pub get
+dart pub get --enforce-lockfile
 ```
 
 The bootstrap pins/patches the Dart compatibility SDK, applies the repository overlay that removes Tencent's native IM plugin and writes ignored dependency overrides. Tim2Tox links c-toxcore and pinned static libsodium on Linux, macOS, Android and iOS; Windows uses vcpkg's libsodium and pthreads, captured as DLLs next to `tim2tox_ffi.dll` and bundled with it. ToxAV is disabled.
@@ -16,29 +16,32 @@ It also stages the pinned Tim2Tox Dart package into ignored `third_party/tim2tox
 
 macOS application packages require **13.0 or later** on Intel and ARM. This satisfies the bundled Objective-C framework. The packager checks the application minimum against every actual embedded Mach-O architecture before generating ZIP/PKG; a dependency requiring a newer system blocks packaging. The transport library may support a lower system version without lowering the application requirement.
 
-## Local target commands
+## Local builds
 
-```bash
-# Run on a compatible target host/toolchain:
-bash tool/ci/build_tim2tox.sh --target macos-arm64
-# Other targets: macos-x86_64, linux-x86_64, windows-x64,
-# android-arm64, android-armv7, android-x86_64, ios-device, ios-simulator
+Build and stage Tim2Tox from the repository root using the row for your destination.
 
-# Stage mobile libraries using the helpers:
-bash tool/build_android_ffi.sh
-bash tool/build_ios_ffi.sh
+| Destination | Host tools | Native build command |
+|---|---|---|
+| macOS (Apple silicon or Intel) | Xcode, CocoaPods, CMake | `bash tool/ci/build_tim2tox.sh --target macos` |
+| Linux x86_64 | C/C++ toolchain, CMake, Ninja or Make, pkg-config and Flutter Linux desktop dependencies | `bash tool/ci/build_tim2tox.sh --target linux-x86_64` |
+| Windows x64 | MSVC C++ toolchain, CMake, vcpkg packages and `VCPKG_ROOT`, Git Bash in the configured MSVC environment | `bash tool/ci/build_tim2tox.sh --target windows-x64` |
+| Android | Android SDK and NDK `28.2.13676358`, JDK 17 | `ABIS=arm64-v8a,armeabi-v7a,x86_64 bash tool/build_android_ffi.sh` |
+| iOS / iPadOS device or simulator | macOS, Xcode 26 with the iOS 26 SDK, CocoaPods, CMake | `bash tool/build_ios_ffi.sh` |
 
-cd apps/ditmesh
-flutter build macos --release
-# On the corresponding host:
-flutter build linux --release
-flutter build windows --release
-flutter build apk --release
-flutter build appbundle --release
-flutter build ios --release --no-codesign
-```
+Use `bash tool/ci/build_tim2tox.sh --help` for native-build prerequisites and switches. Choose `macos-arm64` or `macos-x86_64` to build an explicit library architecture. Android uses a single `android` target with `--android-abis`. The wrapper passes the `ABIS` list. For iOS, the wrapper creates an XCFramework from the `ios-device` and `ios-simulator` targets. Select `--device-only` or `--simulator-only` if you need just that slice.
 
-Consult `--help` for the script's target spelling/options before a new host build. Desktop runner integration finds libraries in `build/native/`; Android stages jniLibs and iOS stages an XCFramework. Stage the required native libraries before building the application.
+Then enter `apps/ditmesh` and run only the Flutter command for your destination. For interactive development, use `flutter devices` and `flutter run -d <device-id>` with the matching library already staged. A physical iOS device also requires development signing.
+
+| Destination | Command in `apps/ditmesh` |
+|---|---|
+| macOS | `flutter build macos --release` |
+| Linux | `flutter build linux --release` |
+| Windows | `flutter build windows --release` |
+| Android APK | `flutter build apk --release` |
+| Android App Bundle | `flutter build appbundle --release` |
+| iOS | `flutter build ios --release --no-codesign` |
+
+Native outputs are under `build/native/<target>/` at the repository root. The native build also stages the macOS library in `apps/ditmesh/macos/Frameworks/`. Android reads `apps/ditmesh/android/app/src/main/jniLibs/` and iOS reads `apps/ditmesh/ios/Frameworks/tim2tox_ffi.xcframework`. Linux and Windows use the matching target directory when building the app.
 
 After staging the native libraries, use `flutter build apk --release -PstoreRelease`
 or `flutter build appbundle --release -PstoreRelease` for store builds. Provide
@@ -57,7 +60,7 @@ bash tool/ci/package_artifacts.sh --target macos
 # linux, windows, android and ios run on their respective build hosts.
 ```
 
-`./build_all.sh --platform macos --mode release --package` orchestrates native and application builds and writes `dist/macos/ditmesh-<version>-macos-arm64.{pkg,zip}` (`<version>` from `apps/ditmesh/pubspec.yaml`). Output packages are written to `dist/`.
+`./build_all.sh --platform macos --mode release --package` combines bootstrap, native and app builds, and packaging. It writes `dist/macos/ditmesh-<version>-macos-<arch>.{pkg,zip}`, using the version from `apps/ditmesh/pubspec.yaml` and the Mac's architecture. Each platform writes its packages under `dist/`.
 
 ## CI and release
 
@@ -75,8 +78,18 @@ Packaging now checks actual PE/ELF/Mach-O architecture across the app, engine an
 
 Configure Apple distribution certificates and provisioning for iOS, Developer ID signing and notarization for macOS, and a release/upload keystore for Android. Store credentials in CI secrets or local signing configuration. See [release requirements](../release/APP_STORE.md) and [Flutter iOS deployment](https://docs.flutter.dev/deployment/ios).
 
-## Reproducibility and diagnostics
+## Troubleshooting
 
-Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries. For UI development with seeded conversations, use `DITMESH_FAKE_BACKEND=true` and the missing-FFI option documented by the build scripts.
+| Symptom | Check |
+|---|---|
+| The workspace cannot resolve `tim2tox_dart` or the compatibility SDK | Run `dart run tool/bootstrap_deps.dart --offline-check-only` from the root. If the staged inputs are missing or stale, rerun bootstrap followed by `dart pub get --enforce-lockfile`. |
+| Build or startup reports missing Tim2Tox | Stage the native library for the exact destination and CPU before running Flutter. For Android, include the device ABI. For iOS, check that the XCFramework contains the device or simulator slice you selected. |
+| The app launches but stays offline | Test the selected node in the app. The network guide covers public-node failures, UDP limits and local-network permissions. [Bootstrap nodes and LAN hosting](NETWORK.md). |
+
+For a UI-only run, see the app developer guide. The screenshot harness supplies its own demo data. [App developer guide](../../apps/ditmesh/README.md#run) · [Capture guide](../../tool/screenshots/README.md).
+
+## Reproducibility
+
+Record the source revision, Tim2Tox SHA, pinned Flutter/Dart versions and architecture with build results. `assert_no_test_hooks.sh` checks release FFI binaries.
 
 Native builds apply the [source overlays](../../tool/ci/tim2tox-overlays/README.md) (group persistence, member connection status, isolated node probes) to a copied source tree. The pinned upstream checkout remains clean. Required Linux and both macOS jobs exercise real local UDP peers; a separate public-DHT smoke probe is opt-in. Refresh the reviewed bundled bootstrap node list against [official Tox node status](https://nodes.tox.chat/) before releases.
