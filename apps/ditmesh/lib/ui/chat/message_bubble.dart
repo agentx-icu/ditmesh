@@ -107,13 +107,21 @@ class MessageBubble extends StatelessWidget {
         ? scheme.onPrimaryContainer
         : scheme.onSurface;
     final String pattern = PlaybackTimeline.patternFor(message.text);
+    final double gutter = conversationSidePadding(context);
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(mine ? 48 : 12, 4, mine ? 12 : 48, 4),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          mine ? 48 : gutter,
+          4,
+          mine ? gutter : 48,
+          4,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: kConversationBubbleMaxWidth,
+          ),
           child: Material(
             color: background,
             borderRadius: BorderRadius.only(

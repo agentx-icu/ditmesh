@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,9 +8,12 @@ import 'package:ditmesh/ui/chat/conversation_screen.dart';
 import 'package:ditmesh/ui/chat/conversation_target.dart';
 import 'package:ditmesh/ui/chat/conversation_timeline.dart';
 import 'package:ditmesh/ui/chat/input_mode.dart';
+import 'package:ditmesh/ui/chat/keying_input.dart';
+import 'package:ditmesh/ui/chat/message_bubble.dart';
 import 'package:ditmesh/ui/chat/morse_playback_controller.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
+import '../layout/layout_profiles.dart';
 import 'test_support.dart';
 
 ConversationTarget _ann() => ConversationTarget(
@@ -27,6 +32,191 @@ Future<void> _keyDit(WidgetTester tester, ChatHarness h) async {
 }
 
 void main() {
+  testWidgets('wide conversation uses 24 dp gutters and caps each bubble', (
+    tester,
+  ) async {
+    await pumpChat(tester, (h) {
+      h.addAnn(online: true, withMessage: false);
+      h.service.receiveMessage(_ann().id, 'CQ CQ DE ANN ' * 6);
+      return ConversationScreen(target: _ann(), embedded: true);
+    }, size: const Size(1920, 1080));
+    await keyIn(tester, 'TNX DE ME ' * 6);
+    await tester.tap(find.byTooltip(s.chatSend));
+    await tester.pumpAndSettle();
+
+    Rect bubble({required bool mine}) => tester.getRect(
+      find
+          .descendant(
+            of: find.byWidgetPredicate(
+              (widget) =>
+                  widget is MessageBubble && widget.message.isMine == mine,
+            ),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+
+    final Rect timeline = tester.getRect(find.byType(ConversationTimeline));
+    final Rect incoming = bubble(mine: false);
+    final Rect outgoing = bubble(mine: true);
+    expect(timeline.width, 1920);
+    expect(incoming.left - timeline.left, 24);
+    expect(timeline.right - outgoing.right, 24);
+    expect(incoming.width, 520);
+    expect(outgoing.width, 520);
+    expect(tester.getRect(find.byType(KeyingInput)).left, 24);
+  });
+
+  for (final group in [false, true]) {
+    testWidgets(
+      'short wide ${group ? 'group' : 'direct'} chat docks both columns',
+      (tester) async {
+        applyProfile(
+          tester,
+          const LayoutProfile(
+            'keyed-landscape',
+            Size(640, 360),
+            textScale: 1.5,
+            padding: FakeViewPadding(left: 47, right: 47, bottom: 21),
+          ),
+        );
+        final h = ChatHarness();
+        addTearDown(h.dispose);
+        h.settings.inputMode = InputMode.paddles;
+        final ConversationTarget target;
+        if (group) {
+          final net = h.service.addFakeGroup(
+            const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+          );
+          target = ConversationTarget.fromGroup(net);
+          h.service.receiveMessage(target.id, 'CQ CQ DE NET');
+        } else {
+          h.addAnn();
+          target = _ann();
+        }
+        await tester.pumpWidget(h.wrap(ConversationScreen(target: target)));
+        await tester.pumpAndSettle();
+        await keyIn(tester, 'CQ CQ DE BG2AN ' * 4);
+
+        final Rect pad = tester.getRect(find.byType(PaddleButtons));
+        final Rect draft = tester.getRect(find.byType(TextField));
+        expect(pad.right, lessThanOrEqualTo(draft.left));
+        expect(pad.top, lessThan(draft.bottom));
+        expect(pad.bottom, greaterThan(draft.top));
+        expect(find.byTooltip(s.chatSend).hitTestable(), findsOneWidget);
+        expect(
+          find.byTooltip(s.chatPreviewDraft).hitTestable(),
+          findsOneWidget,
+        );
+        expect(
+          tester.getSize(find.byType(ConversationTimeline)).height,
+          greaterThanOrEqualTo(100),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('localized Delete is one line with its full semantic name', (
+    tester,
+  ) async {
+    applyProfile(
+      tester,
+      const LayoutProfile(
+        'keyed-portrait',
+        Size(320, 568),
+        textScale: 2,
+        padding: FakeViewPadding(top: 24, bottom: 48),
+      ),
+    );
+    final h = ChatHarness()..addAnn();
+    addTearDown(h.dispose);
+    await tester.pumpWidget(
+      h.wrap(
+        Builder(
+          builder: (context) => Localizations.override(
+            context: context,
+            locale: const Locale('de'),
+            child: ConversationScreen(target: _ann()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await keyIn(tester, 'CQ');
+    final strings = S.of(tester.element(find.byType(ConversationScreen)));
+    final delete = find.byTooltip(strings.chatDeleteLast);
+    final label = find.descendant(
+      of: delete,
+      matching: find.text(strings.actionDelete),
+    );
+    final icon = find.descendant(
+      of: delete,
+      matching: find.byIcon(Icons.backspace_outlined),
+    );
+    expect(label, findsOneWidget);
+    expect(tester.widget<Text>(label).softWrap, isFalse);
+    expect(tester.getRect(icon).right, lessThan(tester.getRect(label).left));
+    expect(
+      tester.getRect(icon).center.dy,
+      closeTo(tester.getRect(label).center.dy, 1),
+    );
+    final node = find.bySemanticsLabel(strings.chatDeleteLast);
+    expect(node, findsOneWidget);
+    expect(
+      tester
+          .getSemantics(node)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.tap),
+      isTrue,
+    );
+    await tester.tap(delete);
+    await tester.pump();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'C',
+    );
+    final Finder send = find.byTooltip(strings.chatSend);
+    expect(
+      send.hitTestable(),
+      findsOneWidget,
+      reason: 'Send sits at ${tester.getRect(send)} in the 320×568 viewport',
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('resizing while keying retains the draft and recorded mark', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn(withMessage: false);
+      return ConversationScreen(target: _ann());
+    });
+    await _keyDit(tester, h);
+    h.clock.advance(const Duration(milliseconds: 210));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'E',
+    );
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    h.clock.advance(const Duration(milliseconds: 30));
+    tester.view.physicalSize = const Size(640, 360);
+    await tester.pump();
+    h.clock.advance(const Duration(milliseconds: 53));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    await tester.tap(find.byTooltip(s.chatSend));
+    await tester.pumpAndSettle();
+
+    final ChatMessage sent = (await h.service.loadHistory(_ann().id)).single;
+    expect(sent.text, 'EE');
+    expect(sent.recording?.durationsMs.last, 83);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('sending cancels a preview queued behind hand keying', (
     tester,
   ) async {

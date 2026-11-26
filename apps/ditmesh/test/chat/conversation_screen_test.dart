@@ -64,7 +64,16 @@ void main() {
     expect(find.text(s.chatNoMessages), findsOneWidget);
     expect(find.text(s.connectionOffline), findsOneWidget);
 
-    await _send(tester, 'CQ');
+    expect(find.text(s.chatModeStraightKey), findsOneWidget);
+    expect(find.text(s.chatModePaddles), findsOneWidget);
+    await keyIn(tester, 'CQ');
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('draft-offline-queue-hint')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip(s.chatSend));
+    await tester.pumpAndSettle();
     expect(find.byType(MessageBubble), findsOneWidget);
     expect(find.byIcon(Icons.schedule), findsOneWidget);
     expect(find.byIcon(Icons.check), findsNothing);
@@ -200,7 +209,8 @@ void main() {
     await tester.tap(find.byTooltip(s.chatModeStraightKey));
     await tester.pumpAndSettle();
     expect(find.text('KEY'), findsOneWidget);
-    expect(find.text(s.chatKeyHint), findsOneWidget);
+    expect(find.text(s.chatKeyTouchHint), findsOneWidget);
+    expect(find.byTooltip(s.chatKeyHint), findsOneWidget);
     await tester.tap(find.byTooltip(s.chatModePaddles));
     await tester.pumpAndSettle();
     expect(find.text('DIT'), findsOneWidget);

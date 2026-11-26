@@ -78,6 +78,32 @@ void main() {
     expect(n.body, en.notificationFriendRequestFrom('B' * 8));
   });
 
+  test('private message previews retain navigation without exposing names', () {
+    final prefs = NotificationPrefs(showText: false, showPattern: false);
+    addTearDown(prefs.dispose);
+    final value = composer(prefs);
+    final row = ChatMessage(
+      id: 'hidden',
+      conversationId: 'group_tox_1',
+      senderId: 'B' * 64,
+      senderName: 'Alice',
+      text: 'PRIVATE CQ',
+      timestamp: DateTime(2026),
+      status: MessageStatus.received,
+      isMine: false,
+    );
+    final request = value.message(
+      message: row,
+      title: 'Weekend CW',
+      isGroup: true,
+      lines: List.filled(2, value.inboxLine(row, isGroup: true)),
+    );
+    expect(request.title, isNot(contains('Weekend CW')));
+    expect(request.body, en.notificationNewMessage);
+    expect(request.lines, everyElement(en.notificationNewMessage));
+    expect(request.payload, contains(row.conversationId));
+  });
+
   test('Linux bodies are escaped for markup-capable servers', () {
     expect(
       FlutterLocalNotificationsApi.escapeLinuxBodyMarkup(

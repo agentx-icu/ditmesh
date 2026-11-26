@@ -5,17 +5,23 @@ import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../common/field_label.dart';
-import '../responsive.dart';
+import '../account/account_widgets.dart';
 import 'morse_pattern_text.dart';
 import 'reference_playback_controller.dart';
 
 /// Text → Morse: the pattern updates as the user types, can be played with
 /// the current mark highlighted, and copied to the clipboard.
 class TextToMorseView extends StatefulWidget {
-  const TextToMorseView({super.key, this.twoPane = false, this.initialText});
+  const TextToMorseView({
+    super.key,
+    this.twoPane = false,
+    this.initialText,
+    this.compactSettings,
+  });
 
   final bool twoPane;
   final String? initialText;
+  final Widget? compactSettings;
 
   /// Playback id used with the shared [ReferencePlaybackController].
   static const String playId = 'translator:text';
@@ -154,6 +160,13 @@ class _TextToMorseViewState extends State<TextToMorseView> {
       ),
     );
 
+    final patternView = SingleChildScrollView(
+      child: MorsePatternText(
+        hasPattern ? _pattern : s.referenceEmptyOutput,
+        activeMark: active,
+        style: theme.textTheme.headlineSmall,
+      ),
+    );
     final Widget output = Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
@@ -185,15 +198,13 @@ class _TextToMorseViewState extends State<TextToMorseView> {
             ],
           ),
           const SizedBox(height: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              child: MorsePatternText(
-                hasPattern ? _pattern : s.referenceEmptyOutput,
-                activeMark: active,
-                style: theme.textTheme.headlineSmall,
-              ),
+          if (widget.twoPane)
+            Expanded(child: patternView)
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 60, maxHeight: 176),
+              child: patternView,
             ),
-          ),
           if (_anyCoded) ...<Widget>[
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -249,13 +260,18 @@ class _TextToMorseViewState extends State<TextToMorseView> {
         ],
       );
     }
-    return MinHeightScrollView(
-      minHeight: 360,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Column(
-        children: <Widget>[
-          input,
-          const Divider(height: 1),
-          Expanded(child: output),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Card(margin: EdgeInsets.zero, child: input),
+          const SizedBox(height: 12),
+          Card(margin: EdgeInsets.zero, child: output),
+          if (widget.compactSettings case final settings?) ...[
+            const SizedBox(height: 12),
+            AccountPanel(children: [settings]),
+          ],
         ],
       ),
     );

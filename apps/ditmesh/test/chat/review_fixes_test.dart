@@ -42,8 +42,8 @@ ChatHarness _seeded() {
 
 Future<void> _jumpToNeedle(WidgetTester tester) async {
   await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(s.chatSearchMessages));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(s.chatSearchMessages));
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextField).first, 'needle');
   await tester.pump(const Duration(milliseconds: 400));
@@ -204,6 +204,11 @@ void main() {
     );
     await tester.pump();
     expect(service.calls, hasLength(1));
+    expect(
+      find.text(s.chatSearchConversationScope('River Net')),
+      findsOneWidget,
+    );
+    expect(find.text(s.chatSearchAnyone), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'new');
     await tester.pump();
     // The first scan is cancelled as soon as the query changes.
@@ -253,6 +258,11 @@ void main() {
 final class _GatedSearch implements ChatService {
   final List<(MessageSearchQuery, Completer<MessageSearchPage>)> calls = [];
   final List<MessageSearchCancel?> cancels = [];
+
+  @override
+  List<Conversation> get conversations => const [
+    Conversation(id: 'c', kind: ConversationKind.c2c, title: 'River Net'),
+  ];
 
   @override
   Set<String> get blockedPeers => const {};

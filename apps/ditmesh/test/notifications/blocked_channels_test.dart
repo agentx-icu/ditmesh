@@ -102,6 +102,7 @@ void main() {
     await tester.pump();
     expect(find.text(en.accountNotificationsBlocked), findsOneWidget);
     expect(find.text(en.accountNotificationsBlockedSubtitle), findsOneWidget);
+    expect(find.text(en.accountNotificationsAllow), findsNothing);
     // The in-app switch keeps reflecting the user's own preference.
     expect(
       tester.widget<SwitchListTile>(find.byType(SwitchListTile).first).value,

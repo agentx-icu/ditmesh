@@ -84,20 +84,26 @@ void main() {
     expect(diag.snapshot().peer, PeerAvailability.notApplicable);
   });
 
-  test('pending count comes from the whole outbox, not a loaded page', () async {
-    for (var i = 0; i < 60; i++) {
-      now = now.add(const Duration(seconds: 1));
-      await chat.sendText(c2c, 'CQ $i');
-    }
-    // A screen would load the latest 50; the outbox still has all 60.
-    expect((await chat.loadHistory(c2c)).length, 50);
-    final snap = diag.snapshot(conversationId: c2c);
-    expect(snap.pending, isNotNull);
-    expect(snap.pending!.count, 60);
-    expect(snap.pending!.oldest, DateTime.utc(2026, 10, 4, 9, 0, 1));
-    expect(diag.snapshot().pending!.count, 60);
-    expect(diag.snapshot(conversationId: 'c2c_${'B' * 64}').pending!.count, 0);
-  });
+  test(
+    'pending count comes from the whole outbox, not a loaded page',
+    () async {
+      for (var i = 0; i < 60; i++) {
+        now = now.add(const Duration(seconds: 1));
+        await chat.sendText(c2c, 'CQ $i');
+      }
+      // A screen would load the latest 50; the outbox still has all 60.
+      expect((await chat.loadHistory(c2c)).length, 50);
+      final snap = diag.snapshot(conversationId: c2c);
+      expect(snap.pending, isNotNull);
+      expect(snap.pending!.count, 60);
+      expect(snap.pending!.oldest, DateTime.utc(2026, 10, 4, 9, 0, 1));
+      expect(diag.snapshot().pending!.count, 60);
+      expect(
+        diag.snapshot(conversationId: 'c2c_${'B' * 64}').pending!.count,
+        0,
+      );
+    },
+  );
 
   test('a service without the outbox capability reports unknown', () async {
     final plain = _PlainChat(chat);
@@ -185,24 +191,27 @@ void main() {
     expect(identity.connectCalls, 0);
   });
 
-  test('return from a suspension re-reads state without claiming the gap', () async {
-    await status(ConnectionStatus.online);
-    final left = now = now.add(const Duration(minutes: 1));
-    hints.add(LifecycleHint.background);
-    await pumpEventQueue();
-    now = now.add(const Duration(minutes: 10));
-    hints.add(LifecycleHint.mayBeDisconnected);
-    await pumpEventQueue();
-    // The node is still reported online when we come back.
-    final back = now = now.add(const Duration(minutes: 20));
-    hints.add(LifecycleHint.foreground);
-    await pumpEventQueue();
-    final snap = diag.snapshot();
-    expect(snap.status, ConnectionStatus.online);
-    expect(snap.statusSince, back);
-    expect(snap.statusSinceKind, StatusSinceKind.resumed);
-    expect(snap.lastOnlineAt, left, reason: 'last moment actually observed');
-  });
+  test(
+    'return from a suspension re-reads state without claiming the gap',
+    () async {
+      await status(ConnectionStatus.online);
+      final left = now = now.add(const Duration(minutes: 1));
+      hints.add(LifecycleHint.background);
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 10));
+      hints.add(LifecycleHint.mayBeDisconnected);
+      await pumpEventQueue();
+      // The node is still reported online when we come back.
+      final back = now = now.add(const Duration(minutes: 20));
+      hints.add(LifecycleHint.foreground);
+      await pumpEventQueue();
+      final snap = diag.snapshot();
+      expect(snap.status, ConnectionStatus.online);
+      expect(snap.statusSince, back);
+      expect(snap.statusSinceKind, StatusSinceKind.resumed);
+      expect(snap.lastOnlineAt, left, reason: 'last moment actually observed');
+    },
+  );
 
   test('a short background period keeps the observation', () async {
     await status(ConnectionStatus.online);
@@ -240,19 +249,31 @@ void main() {
     await status(ConnectionStatus.connecting);
     final snap = diag.snapshot();
     expect(snap.identityKey, 'C' * 64);
-    expect(snap.lastOnlineAt, isNull, reason: 'the old identity\'s observation');
+    expect(
+      snap.lastOnlineAt,
+      isNull,
+      reason: 'the old identity\'s observation',
+    );
   });
 
-  test('group conversations scope the outbox and leave the peer unknown', () async {
-    final g = chat.addFakeGroup(const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group));
-    chat.setGroupConnected(g.id, false);
-    await status(ConnectionStatus.online);
-    await chat.sendText('group_tox_1', 'CQ NET');
-    await chat.sendText(c2c, 'CQ');
-    expect(diag.snapshot(conversationId: 'group_tox_1').pending!.count, 1);
-    expect(diag.snapshot(conversationId: 'group_tox_1').peer, PeerAvailability.unknown);
-    expect(diag.snapshot().pending!.count, 2);
-  });
+  test(
+    'group conversations scope the outbox and leave the peer unknown',
+    () async {
+      final g = chat.addFakeGroup(
+        const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+      );
+      chat.setGroupConnected(g.id, false);
+      await status(ConnectionStatus.online);
+      await chat.sendText('group_tox_1', 'CQ NET');
+      await chat.sendText(c2c, 'CQ');
+      expect(diag.snapshot(conversationId: 'group_tox_1').pending!.count, 1);
+      expect(
+        diag.snapshot(conversationId: 'group_tox_1').peer,
+        PeerAvailability.unknown,
+      );
+      expect(diag.snapshot().pending!.count, 2);
+    },
+  );
 }
 
 /// A [ChatService] that does not implement [OutboxInspector].
@@ -261,6 +282,10 @@ final class _PlainChat implements ChatService {
 
   final FakeChatService _inner;
 
+  @override
+  List<Friend> get friends => _inner.friends;
+  @override
+  List<Conversation> get conversations => _inner.conversations;
   @override
   Stream<List<Friend>> get friendChanges => _inner.friendChanges;
   @override

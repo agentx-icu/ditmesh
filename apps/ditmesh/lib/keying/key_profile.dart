@@ -222,9 +222,14 @@ final class KeyProfile {
 
 /// Readable names of [keys] (the keyboard's own labels, not translated),
 /// sorted, for hints and the setup page.
-String keyLabels(Iterable<LogicalKeyboardKey> keys) {
+String keyLabels(
+  Iterable<LogicalKeyboardKey> keys, {
+  String? Function(LogicalKeyboardKey)? localize,
+}) {
   final names = [
-    for (final k in keys) k.keyLabel.trim().isEmpty ? k.debugName ?? '?' : k.keyLabel,
+    for (final k in keys)
+      localize?.call(k) ??
+          (k.keyLabel.trim().isEmpty ? k.debugName ?? '?' : k.keyLabel),
   ]..sort();
   return names.join(' · ');
 }

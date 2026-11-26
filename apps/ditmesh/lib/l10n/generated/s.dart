@@ -287,7 +287,7 @@ abstract class S {
   /// ChatException code peer_offline
   ///
   /// In en, this message translates to:
-  /// **'This contact is offline. Tox has no server, so the message waits until they come back.'**
+  /// **'This contact is offline. The queued message waits until the contact is reachable.'**
   String get errorPeerOffline;
 
   /// ChatException code invalid_tox_id
@@ -587,13 +587,13 @@ abstract class S {
   /// Welcome page: introductory paragraph about the serverless Tox identity
   ///
   /// In en, this message translates to:
-  /// **'DitMesh uses the Tox peer-to-peer network. There is no server and no account to sign up for: your identity is a key pair stored only here.'**
+  /// **'DitMesh uses the peer-to-peer Tox network. No account registration is required. Your identity is a pair of keys stored on this device.'**
   String get accountWelcomeIntro;
 
   /// Welcome page: bullet point — no server or sign-up, peers talk directly
   ///
   /// In en, this message translates to:
-  /// **'No server, no phone number, no e-mail. Peers talk to each other directly, in Morse.'**
+  /// **'No central messaging server, phone number, or email is required. Operators communicate directly using Morse code.'**
   String get accountWelcomePointNoServer;
 
   /// Welcome page: bullet point — training progress is stored with the identity
@@ -653,7 +653,7 @@ abstract class S {
   /// Backup wizard: explanation that a lost device means a lost identity without a backup
   ///
   /// In en, this message translates to:
-  /// **'Your identity exists only on this device. If it is lost, reset or stolen, there is no way to recover it: your contacts will not recognise a new identity and your training progress is gone.'**
+  /// **'If this device loses its data and you have no usable backup, you cannot recover this identity. Keep the backup file and its passphrase.'**
   String get accountBackupBody;
 
   /// Backup wizard: what the backup file contains and where to keep it
@@ -680,6 +680,12 @@ abstract class S {
   /// **'Notifications'**
   String get accountSectionNotifications;
 
+  /// Label in the notification settings card that shows the operating system permission state.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device manages notification permissions.'**
+  String get accountNotificationsSystemManaged;
+
   /// Me page: switch for all notifications
   ///
   /// In en, this message translates to:
@@ -701,7 +707,7 @@ abstract class S {
   /// Me page: subtitle of the message-content switch
   ///
   /// In en, this message translates to:
-  /// **'Text and Morse in banners and on the lock screen. Off: only that a message arrived.'**
+  /// **'When off, message alerts hide conversation names, senders, text and Morse. System settings control lock-screen previews.'**
   String get accountNotificationsContentSubtitle;
 
   /// Me page: button asking the OS for notification permission
@@ -725,7 +731,7 @@ abstract class S {
   /// Me page: explains that the OS drops message notifications until the channel is turned on again in system settings
   ///
   /// In en, this message translates to:
-  /// **'Message notifications for DitMesh are turned off in the system settings. Turn them on there to get banners again.'**
+  /// **'On Android, go to Settings → Apps → DitMesh → Notifications and turn on message notifications.'**
   String get accountNotificationsBlockedSubtitle;
 
   /// Me page: snack bar when the OS denied notification permission
@@ -749,14 +755,20 @@ abstract class S {
   /// Snackbar / status line after the backup file was saved
   ///
   /// In en, this message translates to:
-  /// **'Backup saved'**
+  /// **'Backup saved. Look for the .mcqbackup file in the location you selected.'**
   String get accountBackupSaved;
 
   /// Snackbar when the user cancelled saving the backup
   ///
   /// In en, this message translates to:
-  /// **'Backup was not saved'**
+  /// **'This save was cancelled. You can export again.'**
   String get accountBackupNotSaved;
+
+  /// Mobile backup handoff feedback when the operating system share sheet returned successfully. The app cannot confirm persistence.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened the system share sheet. Look for the .mcqbackup file in the folder or receiving app you selected.'**
+  String get accountBackupShareReturned;
 
   /// Snackbar prefix when writing the backup failed; followed by ': ' and the error message
   ///
@@ -767,7 +779,7 @@ abstract class S {
   /// Backup wizard: checkbox the user must tick to confirm they understand the risk
   ///
   /// In en, this message translates to:
-  /// **'I understand that without this backup my identity cannot be recovered.'**
+  /// **'I understand that if this device loses its data and I have no backup, I cannot recover my identity.'**
   String get accountBackupAcknowledge;
 
   /// Backup wizard: button that leaves the wizard and opens the app
@@ -1376,6 +1388,12 @@ abstract class S {
   /// **'Tox ID (76 hex characters)'**
   String get chatToxIdLabel;
 
+  /// Full public key shown when reviewing a friend request. This contains 64 hexadecimal digits.
+  ///
+  /// In en, this message translates to:
+  /// **'Requester public key (64 hex characters)'**
+  String get chatRequestPublicKey;
+
   /// Add friend sheet: error for a malformed Tox ID
   ///
   /// In en, this message translates to:
@@ -1429,6 +1447,12 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Camera scanning is unavailable on this platform. Paste a Tox ID.'**
   String get chatScanQrDesktopHint;
+
+  /// Fallback instructions after the camera did not start in the Add Friend QR scanner.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera is unavailable. Paste the full Tox ID or try scanning again.'**
+  String get chatScanQrManualHint;
 
   /// QR scan page: app bar title
   ///
@@ -3599,7 +3623,7 @@ abstract class S {
   /// Listen screen: label above the decoded text
   ///
   /// In en, this message translates to:
-  /// **'Decoded'**
+  /// **'Live decoding'**
   String get listenDecoded;
 
   /// Listen screen: placeholder while listening but nothing decoded yet
@@ -3653,7 +3677,7 @@ abstract class S {
   /// Listen screen: auto-tune has locked onto a tone
   ///
   /// In en, this message translates to:
-  /// **'Locked'**
+  /// **'Tone locked'**
   String get listenToneLocked;
 
   /// Listen screen: auto-tune is still searching for a tone
@@ -4313,7 +4337,7 @@ abstract class S {
   /// Message search sender filter: everyone
   ///
   /// In en, this message translates to:
-  /// **'Anyone'**
+  /// **'All senders'**
   String get chatSearchAnyone;
 
   /// Message search sender filter / result sender: the local user
@@ -4892,6 +4916,18 @@ abstract class S {
   /// **'Connection diagnostics'**
   String get diagTitle;
 
+  /// Scope heading on connection diagnostics for the full current identity.
+  ///
+  /// In en, this message translates to:
+  /// **'All conversations for this identity'**
+  String get diagScopeIdentity;
+
+  /// Scope heading on connection diagnostics for only the open conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Current conversation only'**
+  String get diagScopeConversation;
+
   /// Me page: subtitle of the Connection diagnostics entry
   ///
   /// In en, this message translates to:
@@ -5051,7 +5087,7 @@ abstract class S {
   /// Diagnostics: reconnect button
   ///
   /// In en, this message translates to:
-  /// **'Reconnect'**
+  /// **'Reconnect this device'**
   String get diagReconnect;
 
   /// Diagnostics: reconnect in progress
@@ -5081,7 +5117,7 @@ abstract class S {
   /// Diagnostics: P2P and mobile background explanation
   ///
   /// In en, this message translates to:
-  /// **'DitMesh has no server. Your device talks to your contacts directly over the Tox peer-to-peer network, so both of you must be online at the same time for a message to arrive. Phones pause apps in the background: DitMesh cannot stay connected there and reconnects when you return.'**
+  /// **'Devices exchange messages directly over Tox without a central messaging server. Public bootstrap nodes help your device join the network. Both parties must be online for delivery. A phone may suspend the app in the background. DitMesh reconnects when you return.'**
   String get diagAboutBody;
 
   /// Diagnostics: expandable technical details
@@ -5285,7 +5321,7 @@ abstract class S {
   /// Backup: stop using the identity on the old device after moving
   ///
   /// In en, this message translates to:
-  /// **'Moving to a new device? After restoring there, stop using this identity here: two devices with one identity can send the same message twice.'**
+  /// **'Moving devices? Close DitMesh with this identity on the old device before selecting Confirm restore or Replace and restore on the new device. Restore will try to connect.'**
   String get backupXMigrationNote;
 
   /// Backup error: data kept changing
@@ -5351,7 +5387,7 @@ abstract class S {
   /// Restore preview: unsent messages not included
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 unsent message on the old device is not in this backup.} other{{count} unsent messages on the old device are not in this backup.}}'**
+  /// **'{count, plural, one{One message was queued when this backup was created. It is not included.} other{{count} messages were queued when this backup was created. They are not included.}}'**
   String restoreXPendingExcluded(int count);
 
   /// Restore: identity password field for an encrypted profile
@@ -5375,7 +5411,7 @@ abstract class S {
   /// Restore: confirm replacement dialog body
   ///
   /// In en, this message translates to:
-  /// **'Any identity and data on this device are replaced by the backup. Stop using the identity on the old device before connecting here.'**
+  /// **'The backup replaces the identity and data on this device. Close DitMesh with this identity on the old device before selecting Replace and restore. This device will try to connect after restoring.'**
   String get restoreXConfirmBody;
 
   /// Restore: confirm button
@@ -5411,13 +5447,13 @@ abstract class S {
   /// Restore report: unsent messages await review
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 unsent message is waiting for your review in Chat.} other{{count} unsent messages are waiting for your review in Chat.}}'**
+  /// **'The backup brought back {count} unsent messages. Open the review below to check them.'**
   String restoreXReportPendingReview(int count);
 
   /// Restore report: unsent messages not brought over
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 unsent message from the old device was not brought over.} other{{count} unsent messages from the old device were not brought over.}}'**
+  /// **'{count, plural, one{One message was queued when this backup was created and was not included. Check the old device before sending it again.} other{{count} messages were queued when this backup was created and were not included. Check the old device before sending them again.}}'**
   String restoreXReportPendingNotResumed(int count);
 
   /// Restore: queued group invitations not resent
@@ -5429,7 +5465,7 @@ abstract class S {
   /// Restore report: stop using the old device
   ///
   /// In en, this message translates to:
-  /// **'Stop using this identity on the old device.'**
+  /// **'If DitMesh is still using this identity on the old device, close it now.'**
   String get restoreXReportStopOld;
 
   /// Restore report: close button
@@ -5453,7 +5489,7 @@ abstract class S {
   /// Restored unsent messages: explanation
   ///
   /// In en, this message translates to:
-  /// **'These were waiting to be sent on your previous device. DitMesh never sends them automatically; key one again if it still matters.'**
+  /// **'These messages were queued on the old device when the backup was made. The copies here are for review and will not be sent automatically. Check whether the old device sent them before keying them again.'**
   String get pendingReviewBody;
 
   /// Restored unsent message: when it was queued
@@ -5483,13 +5519,13 @@ abstract class S {
   /// First-run backup wizard: what the encrypted backup contains
   ///
   /// In en, this message translates to:
-  /// **'The backup file is encrypted as a whole with a passphrase you choose, and holds your identity key and training progress. Keep the file and the passphrase somewhere safe, outside this device.'**
+  /// **'The whole file is encrypted with a passphrase you choose. Your identity is always included. Training and other data are included when you select them. Keep the file and passphrase somewhere safe outside this device.'**
   String get backupXWizardInside;
 
   /// Me page: subtitle of the export backup entry (encrypted complete backup)
   ///
   /// In en, this message translates to:
-  /// **'An encrypted file with your identity, chats and progress, to keep or to move to another device'**
+  /// **'Encrypt your identity backup and choose whether to include chats and training progress.'**
   String get backupXMeSubtitle;
 
   /// Key setup page title; also the Me entry
@@ -5507,7 +5543,7 @@ abstract class S {
   /// Key setup: introduction
   ///
   /// In en, this message translates to:
-  /// **'Choose which keys key Morse. Keyboard-emulating USB key and paddle adapters work like a keyboard: set their keys here. The app cannot tell which device sent a key, so a profile is a set of bindings.'**
+  /// **'Bind any device that sends system keyboard events, including keyboard-style USB or Bluetooth adapters. DitMesh receives the same key events from each device; a profile stores those bindings.'**
   String get keysIntro;
 
   /// Key setup: built-in default profile
@@ -5537,7 +5573,7 @@ abstract class S {
   /// Key setup: what is not supported
   ///
   /// In en, this message translates to:
-  /// **'MIDI, serial and Bluetooth keyers, adapter firmware settings and transmitter control are not supported. Tested adapters are listed in the documentation.'**
+  /// **'DitMesh does not connect directly to dedicated Bluetooth keyer protocols, MIDI or serial ports. Firmware configuration and transmitter control are unsupported. See the documentation for tested adapters.'**
   String get keysLimitations;
 
   /// Key profile editor title
@@ -6005,7 +6041,7 @@ abstract class S {
   /// Terms gate intro
   ///
   /// In en, this message translates to:
-  /// **'DitMesh chat connects you directly with other people, without a server. Before you start, please agree to these rules:'**
+  /// **'DitMesh sends messages directly over Tox without a central messaging server. Before starting, agree to these rules:'**
   String get termsGateIntro;
 
   /// Terms gate rule: zero tolerance
@@ -6017,7 +6053,7 @@ abstract class S {
   /// Terms gate rule: only accepted contacts
   ///
   /// In en, this message translates to:
-  /// **'Only people you accept can message you; groups are joined by invitation or group ID.'**
+  /// **'Direct messages are for accepted contacts. When you join a group, you can receive messages from its members, including people outside your contacts.'**
   String get termsGateRuleContacts;
 
   /// Terms gate rule: blocking
@@ -6125,7 +6161,7 @@ abstract class S {
   /// Tox bootstrap network settings: Description
   ///
   /// In en, this message translates to:
-  /// **'Choose the public nodes used to join the Tox network.'**
+  /// **'Public bootstrap nodes help this device join the Tox network. Choose the nodes to use here.'**
   String get bootstrapDescription;
 
   /// Tox bootstrap network settings: ModeAuto
@@ -6479,7 +6515,7 @@ abstract class S {
   /// Chat interface: firstChatListenBody.
   ///
   /// In en, this message translates to:
-  /// **'Before sending, use Preview to hear the draft and Backspace to remove a mistake. After sending, tap Play on your message. Self-chat messages stay on this device.'**
+  /// **'Before sending, use the small triangle for Preview draft and Delete beside the draft to fix mistakes. After sending, play the message itself. Messages to yourself stay on this device.'**
   String get firstChatListenBody;
 
   /// Chat interface: firstChatFriendTitle.
@@ -6935,7 +6971,7 @@ abstract class S {
   /// Location and nearby discovery: nearbyPrivacyBody.
   ///
   /// In en, this message translates to:
-  /// **'DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground.'**
+  /// **'DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground. After you leave the Nearby screen, sharing may continue for up to 5 minutes while the app stays in the foreground. Turn off “Visible to people nearby” to stop sharing.'**
   String get nearbyPrivacyBody;
 
   /// Location and nearby discovery: nearbyPrivacyAccept.
@@ -7267,6 +7303,402 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.'**
   String get firstChatReceiptBody;
+
+  /// Permanent deletion warning for the locally restored copies.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Dismiss 1 restored message?} other{Dismiss {count} restored messages?}} This permanently removes the local copies awaiting review.'**
+  String pendingReviewDismissAllBody(int count);
+
+  /// Confirmation after a restored local message was dismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored message dismissed.'**
+  String get pendingReviewDismissed;
+
+  /// Undo a single local restored-message dismissal.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get pendingReviewUndo;
+
+  /// Storage failure while changing locally restored messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change. The message list was kept.'**
+  String get pendingReviewSaveError;
+
+  /// Label for the identity currently on this device in the restore comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Current identity on this device'**
+  String get restoreXCurrentIdentity;
+
+  /// Fallback when the name and fingerprint of a locked identity cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked. Name and fingerprint are unavailable.'**
+  String get restoreXLockedIdentity;
+
+  /// Restore comparison when no current local identity exists.
+  ///
+  /// In en, this message translates to:
+  /// **'No identity on this device.'**
+  String get restoreXNoCurrentIdentity;
+
+  /// Label for the incoming identity from the backup selected for restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity in this backup'**
+  String get restoreXBackupIdentity;
+
+  /// Explains which password opens the encrypted backup before an optional identity password is requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the passphrase you set when creating this backup.'**
+  String get restoreXPassphraseHelp;
+
+  /// Heading for unsent messages restored for manual review.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored messages for review'**
+  String get restoreXPendingReviewTitle;
+
+  /// Heading on an invitation that could not be accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept the invitation'**
+  String get groupInviteAcceptanceFailed;
+
+  /// Retry the previous acceptance on the same group invitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry acceptance'**
+  String get groupInviteRetryAccept;
+
+  /// Explains where a direct message stays if submitted while the contact is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Once submitted, this message will wait on this device until your contact is online.'**
+  String get chatDraftOfflineQueue;
+
+  /// Acknowledgement after the message was queued on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued on this device.'**
+  String get chatDraftQueued;
+
+  /// Touch instruction beside the straight key on mobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the key on the screen'**
+  String get chatKeyTouchHint;
+
+  /// Touch instruction beside dit and dah paddles on mobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold either paddle on the screen'**
+  String get chatPaddleTouchHint;
+
+  /// Localized keyboard Space key in the built-in profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Space'**
+  String get keysSpace;
+
+  /// Localized left Control key in the built-in profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Left Ctrl'**
+  String get keysLeftControl;
+
+  /// Localized right Control key in the built-in profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Right Ctrl'**
+  String get keysRightControl;
+
+  /// Reassures the user after a conflicting capture key was rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous binding is unchanged.'**
+  String get keysBindingUnchanged;
+
+  /// Visible mobile action that scrolls from category selection to the backup passphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Set backup passphrase'**
+  String get backupXGoToPassphrase;
+
+  /// Encrypted restore confirmation title when the device has no existing identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup?'**
+  String get restoreXFirstConfirmTitle;
+
+  /// Encrypted restore confirmation for a device without an existing identity, including the old device warning.
+  ///
+  /// In en, this message translates to:
+  /// **'This restores the identity and data listed in the backup. Close DitMesh with this identity on the old device before selecting Confirm restore. This device will try to connect after restoring.'**
+  String get restoreXFirstConfirmBody;
+
+  /// Confirms restoration on a device without an existing identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm restore'**
+  String get restoreXFirstConfirm;
+
+  /// Labels the original message timestamp in delivery details. This is not a delivery or receipt time.
+  ///
+  /// In en, this message translates to:
+  /// **'Message time'**
+  String get deliveryMessageTime;
+
+  /// Identifies the conversation that supplied a chat copy exercise without exposing the answer.
+  ///
+  /// In en, this message translates to:
+  /// **'From conversation: {name}'**
+  String chatPracticeFromConversation(String name);
+
+  /// Refreshes the group member list and presence information.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh members'**
+  String get chatRefreshMembers;
+
+  /// Outbox notice above messages whose transmission has already started.
+  ///
+  /// In en, this message translates to:
+  /// **'This send can no longer be cancelled.'**
+  String get pendingSendingUncancellable;
+
+  /// First recommended actions when this device is online but the contact is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the contact to come online, or view the queued messages.'**
+  String get diagWaitForPeer;
+
+  /// Explains the local scope of the reconnect action in contact connection diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'This reconnects only this device and cannot bring the contact online.'**
+  String get diagReconnectOwnNote;
+
+  /// Shown on the add-contact form after the system has denied QR camera access.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access was denied. Allow camera access for DitMesh in system settings, then scan again, or paste the full Tox ID.'**
+  String get chatScanQrPermissionHelp;
+
+  /// Shown when accepting a group invitation fails because the local connection was lost.
+  ///
+  /// In en, this message translates to:
+  /// **'This device lost its Tox connection. Wait until it reconnects, then retry accepting the invitation.'**
+  String get groupInviteReconnectHint;
+
+  /// Action on the restore report that opens the list of restored unsent copies.
+  ///
+  /// In en, this message translates to:
+  /// **'Review {count} unsent messages'**
+  String restoreXReviewAction(int count);
+
+  /// Shown on the location settings page when the application Location switch is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the Location switch on this page to use your current location.'**
+  String get locationEnableHere;
+
+  /// Names the current conversation as the only search scope. The name can be a contact or group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in the conversation with {name}'**
+  String chatSearchConversationScope(String name);
+
+  /// Confirmation of a successful desktop backup. Name is the actual file name returned by the save dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved: {name}'**
+  String accountBackupSavedNamed(String name);
+
+  /// Copies the actual desktop backup path to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy saved location'**
+  String get accountBackupCopyLocation;
+
+  /// Notification settings status displayed after the system confirms permission.
+  ///
+  /// In en, this message translates to:
+  /// **'System notifications allowed'**
+  String get accountNotificationsPermitted;
+
+  /// Confirmation before deleting a named saved audio clip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String workbenchDeleteClipTitle(String name);
+
+  /// Clip deletion confirmation when this also releases the last saved reference to the audio file.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the saved range and note and deletes the local recording in DitMesh. The original imported file stays where you chose it.'**
+  String get workbenchDeleteClipAndFile;
+
+  /// Clip deletion confirmation when the saved audio file is kept or absent.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the saved range and note. This action keeps any recording files.'**
+  String get workbenchDeleteClipOnly;
+
+  /// Successful deletion of both a clip and its managed audio.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip and local recording deleted.'**
+  String get workbenchRemovedClipAndFile;
+
+  /// Successful deletion of a clip while audio is left in place or absent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip deleted. No recording file was deleted.'**
+  String get workbenchRemovedClip;
+
+  /// Partial outcome after deleting metadata but failing to remove the local audio file.
+  ///
+  /// In en, this message translates to:
+  /// **'The clip was deleted. DitMesh could not delete the local recording.'**
+  String get workbenchRemovedClipFileError;
+
+  /// Confirmation before recording an independent friend application rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject this friend request?'**
+  String get chatRejectRequestTitle;
+
+  /// Explains the persistent sender-wide effect and where to reverse it.
+  ///
+  /// In en, this message translates to:
+  /// **'DitMesh will hide this request and future requests from this person. You can allow requests again under Contacts → Rejected requests.'**
+  String get chatRejectRequestBody;
+
+  /// Feedback after saving the local rejected-sender rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected. Manage future requests in Contacts → Rejected requests.'**
+  String get chatRequestRejected;
+
+  /// Contacts entry and screen for independent friend request filtering.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected requests'**
+  String get chatRejectedRequests;
+
+  /// Explains the scope of the local rejected request list and separate contact blocking.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests from these public keys are hidden on this device. Allowing new requests does not remove a contact block.'**
+  String get chatRejectedRequestsHelp;
+
+  /// Empty local rejected request filter list.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no rejected senders here.'**
+  String get chatRejectedRequestsEmpty;
+
+  /// Action removes this public key from the independent request filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow new requests'**
+  String get chatAllowFutureRequests;
+
+  /// Success after allowing new friend requests without modifying the contact block.
+  ///
+  /// In en, this message translates to:
+  /// **'Request filtering removed. Any separate contact block still applies.'**
+  String get chatFutureRequestsAllowed;
+
+  /// Blocking confirmation shown for a pending applicant who is not a friend.
+  ///
+  /// In en, this message translates to:
+  /// **'This rejects the pending request and blocks future direct messages, friend requests and group invitations from this person on this device. They will not be notified.'**
+  String get moderationBlockRequestBody;
+
+  /// Feedback when mobile system sharing was dismissed for the current export.
+  ///
+  /// In en, this message translates to:
+  /// **'System sharing was dismissed. You can share the backup again.'**
+  String get accountBackupShareClosed;
+
+  /// Short action on a nearby participant card for hiding that ephemeral session.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this session'**
+  String get nearbyHideSession;
+
+  /// Confirms local hiding of the current ephemeral nearby session only.
+  ///
+  /// In en, this message translates to:
+  /// **'This nearby session is hidden. A new session from this person may appear again.'**
+  String get nearbySessionHidden;
+
+  /// Opens the existing destination with no restored text sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Open original chat'**
+  String get pendingReviewOpenConversation;
+
+  /// Recovery guidance for a restored direct message without a destination.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat is unavailable. Restore or add the contact before keying the message again.'**
+  String get pendingReviewMissingContact;
+
+  /// Recovery guidance for a restored group message without a destination.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is unavailable. Rejoin it before keying the message again.'**
+  String get pendingReviewMissingGroup;
+
+  /// Removes only the local copy in the restored review list.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore this copy'**
+  String get pendingReviewIgnoreCopy;
+
+  /// Reports copies affected by the current shared undo action.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{One restored copy ignored.} other{{count} restored copies ignored.}}'**
+  String pendingReviewDismissedCount(int count);
+
+  /// Confirmation for finalizing a local group practice session.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish this practice?'**
+  String get groupPracticeCompleteTitle;
+
+  /// Explains kept progress and that finishing freezes rounds and scores.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the results for {done} of {total} rounds on this device. Unfinished rounds remain incomplete, and rounds and scores become read-only.'**
+  String groupPracticeCompleteBody(int done, int total);
+
+  /// Status on the read-only local practice summary once finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice ended. The saved rounds and scores are read-only.'**
+  String get groupPracticeEnded;
+
+  /// Error before relinking when the WAV is too short for at least one saved range.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording is {actual} long. Saved clips need at least {minimum}. Choose a longer WAV to restore the original ranges.'**
+  String workbenchRelinkTooShort(String actual, String minimum);
+
+  /// Next step in failed message delivery details, linking to the canonical outbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the outbox to retry this message.'**
+  String get deliveryFailedNext;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

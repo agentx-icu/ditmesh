@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:morse_trainer/morse_trainer.dart' show UnsupportedDataVersion;
-import 'package:morse_dsp/morse_dsp.dart';
 import 'package:morse_io/morse_io.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:path/path.dart' as p;
@@ -13,6 +12,7 @@ import '../../../training/audio_material_store.dart';
 import '../../../training/guest_profile.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_controller_host.dart';
+import '../../account/account_widgets.dart';
 import '../../common/app_bar_title.dart';
 import '../../learn/learning_unavailable.dart';
 import 'recording_files.dart';
@@ -20,6 +20,8 @@ import 'workbench_controller.dart';
 import 'workbench_decode_panel.dart';
 import 'workbench_library_sheet.dart';
 import 'workbench_waveform.dart';
+
+part 'workbench_recording_view.dart';
 
 /// Creates an owned player for a workbench opened on the root navigator.
 /// Without an injected factory the workbench uses the native player.
@@ -83,6 +85,7 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
   bool _visible = true;
   bool _picking = false;
   bool _saving = false;
+  Future<List<(AudioMaterial, bool)>>? _clips;
   bool get _mediaBusy => _picking || _saving || (_c?.busy ?? false);
   Object? _unavailableError;
 
@@ -151,7 +154,10 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
     // A recovered or partially readable index can omit existing recordings.
     // Opening the workbench must leave their WAV files available to recover.
     if (mounted && identical(_c, controller)) {
-      setState(() => _training = training);
+      setState(() {
+        _training = training;
+        _updateClips();
+      });
     }
   }
 
@@ -261,7 +267,10 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
           createdAt: training.now(),
         ),
       );
-      if (mounted) _showError(s.workbenchSaved);
+      if (mounted) {
+        setState(_updateClips);
+        _showError(s.workbenchSaved);
+      }
     } on Object {
       if (mounted) _showError(s.workbenchSaveFailed);
     } finally {
@@ -279,7 +288,27 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
       training: training,
       picker: widget.picker,
       onFailure: () => _showFailure(c),
+      onChanged: () {
+        if (mounted) setState(_updateClips);
+      },
     );
+  }
+
+  void _updateClips() {
+    final training = _training;
+    final c = _c;
+    if (training == null || c == null) return;
+    _clips = _listRecentClips(training, c.library)..ignore();
+  }
+
+  Future<List<(AudioMaterial, bool)>> _listRecentClips(
+    TrainingController training,
+    RecordingLibrary library,
+  ) async {
+    final clips = await training.loadAudioMaterials();
+    return [
+      for (final clip in clips.take(3)) (clip, await library.exists(clip.file)),
+    ];
   }
 
   @override
@@ -331,113 +360,67 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
               )
             : c == null
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 820),
-                    child: c.info == null ? _empty(context, c) : _loaded(c),
+            : AccountPageBody(
+                maxWidth: 820,
+                aside: [
+                  if (_training != null)
+                    AccountPanel(
+                      children: [
+                        Text(
+                          s.workbenchLibrary,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        FutureBuilder<List<(AudioMaterial, bool)>>(
+                          future: _clips,
+                          builder: (context, snapshot) {
+                            final recent = snapshot.data;
+                            if (snapshot.hasError) {
+                              return Text(s.workbenchErrorIo);
+                            }
+                            if (recent == null) return const SizedBox.shrink();
+                            if (recent.isEmpty) {
+                              return Text(s.workbenchLibraryEmpty);
+                            }
+                            return Column(
+                              children: [
+                                for (final (clip, available) in recent)
+                                  ListTile(
+                                    key: ValueKey(
+                                      'workbench-preview-${clip.id}',
+                                    ),
+                                    leading: Icon(
+                                      available
+                                          ? Icons.headphones
+                                          : Icons.error_outline,
+                                    ),
+                                    title: Text(clip.title),
+                                    subtitle: Text(
+                                      available
+                                          ? formatClock(clip.end - clip.start)
+                                          : s.workbenchMissing,
+                                    ),
+                                    onTap: _mediaBusy ? null : _library,
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                        TextButton(
+                          onPressed: _mediaBusy ? null : _library,
+                          child: Text(s.workbenchLibrary),
+                        ),
+                      ],
+                    ),
+                ],
+                children: [
+                  AccountPanel(
+                    children: [
+                      if (c.info == null) _empty(context, c) else _loaded(c),
+                    ],
                   ),
-                ),
+                ],
               ),
       ),
-    );
-  }
-
-  Widget _empty(BuildContext context, WorkbenchController c) {
-    final s = context.s;
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Icon(
-          Icons.audio_file_outlined,
-          size: 56,
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(height: 12),
-        Text(s.workbenchEmpty, textAlign: TextAlign.center),
-        const SizedBox(height: 8),
-        Text(
-          s.workbenchFormats,
-          style: theme.textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          s.workbenchBackupNote,
-          style: theme.textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        if (c.busy)
-          const Center(child: CircularProgressIndicator())
-        else
-          FilledButton.icon(
-            key: const ValueKey('workbench-import-empty'),
-            onPressed: _mediaBusy ? null : _import,
-            icon: const Icon(Icons.file_open_outlined),
-            label: Text(s.workbenchImport),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _loaded(WorkbenchController c) {
-    final s = context.s;
-    final theme = Theme.of(context);
-    final info = c.info!;
-    final rate = (info.sampleRate / 1000).toStringAsFixed(
-      info.sampleRate % 1000 == 0 ? 0 : 1,
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Text(c.name ?? '', style: theme.textTheme.titleMedium),
-        Text(
-          s.workbenchInfo(
-            rate,
-            info.channels == 1 ? s.workbenchMono : s.workbenchStereo,
-            formatClock(info.duration),
-          ),
-          key: const ValueKey('workbench-info'),
-        ),
-        Text(s.workbenchBackupNote, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 12),
-        WorkbenchWaveform(key: ObjectKey(c.reader), controller: c),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[
-            FilledButton.tonalIcon(
-              key: const ValueKey('workbench-play'),
-              onPressed: () => unawaited(c.togglePlay()),
-              icon: Icon(c.playbackActive ? Icons.stop : Icons.play_arrow),
-              label: Text(c.playbackActive ? s.workbenchStop : s.workbenchPlay),
-            ),
-            FilterChip(
-              label: Text(s.workbenchLoop),
-              selected: c.loop,
-              onSelected: c.playbackActive ? null : c.setLoop,
-            ),
-            OutlinedButton.icon(
-              key: const ValueKey('workbench-save'),
-              onPressed: _training == null || _mediaBusy ? null : _save,
-              icon: const Icon(Icons.bookmark_add_outlined),
-              label: Text(s.workbenchSave),
-            ),
-          ],
-        ),
-        if (c.positionOf(c.end - c.start) > WorkbenchController.maxPlay)
-          Text(s.workbenchPlayLimit, style: theme.textTheme.bodySmall),
-        const Divider(height: 32),
-        WorkbenchDecodePanel(controller: c, training: _training),
-      ],
     );
   }
 }
@@ -446,17 +429,5 @@ class _WorkbenchScreenState extends State<WorkbenchScreen>
 String failureText(S s, WorkbenchController c) => switch (c.failure) {
   WorkbenchFailure.missingFile => s.workbenchErrorMissing,
   WorkbenchFailure.io || null => s.workbenchErrorIo,
-  WorkbenchFailure.format => switch (c.wavError) {
-    WavError.notRiff || WavError.notWave => s.workbenchErrorNotWav,
-    WavError.unsupportedFormat ||
-    WavError.unsupportedBitDepth => s.workbenchErrorFormat,
-    WavError.unsupportedChannels => s.workbenchErrorChannels,
-    WavError.unsupportedRate => s.workbenchErrorRate,
-    WavError.tooLarge => s.workbenchErrorTooLarge,
-    WavError.tooLong => s.workbenchErrorTooLong,
-    WavError.missingFmt ||
-    WavError.missingData ||
-    WavError.truncated ||
-    null => s.workbenchErrorDamaged,
-  },
+  WorkbenchFailure.format => workbenchWavError(s, c.wavError),
 };

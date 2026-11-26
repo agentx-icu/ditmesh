@@ -11,6 +11,13 @@ final class RecordingRollbackException implements Exception {
   const RecordingRollbackException();
 }
 
+final class RecordingTooShortException implements Exception {
+  const RecordingTooShortException(this.requiredLength, this.actualLength);
+
+  final Duration requiredLength;
+  final Duration actualLength;
+}
+
 /// A file the learner picked. Pickers give a file path when there is one;
 /// content providers without a path (Android documents, iCloud) give a
 /// byte stream ([read]), which is copied without loading it whole.
@@ -147,6 +154,7 @@ final class RecordingLibrary {
     PickedRecording picked, {
     String relativePath = workingFile,
     Future<void> Function()? beforeReplace,
+    Duration minimumDuration = Duration.zero,
   }) async {
     final declared = picked.size ?? picked.bytes?.length;
     if (declared != null && declared > WavPcmReader.maxBytes) {
@@ -172,7 +180,10 @@ final class RecordingLibrary {
       }
       final probe = await FileByteSource.open(staged);
       try {
-        await WavPcmReader.parse(probe);
+        final info = await WavPcmReader.parse(probe);
+        if (info.duration < minimumDuration) {
+          throw RecordingTooShortException(minimumDuration, info.duration);
+        }
       } finally {
         await probe.close();
       }

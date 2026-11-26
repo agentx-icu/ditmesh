@@ -96,53 +96,63 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(title)),
       body: AccountPageBody(
+        aside: [
+          AccountPanel(
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                s.accountPasswordScope,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
         children: [
-          if (widget.hasPassword) ...[
-            PasswordField(
-              controller: _current,
-              label: s.accountCurrentPassword,
-              errorText: _currentError,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 16),
-          ],
-          PasswordField(
-            controller: _next,
-            label: s.accountNewPassword,
-            errorText: _nextError,
-            showStrength: true,
-            autofocus: !widget.hasPassword,
-            textInputAction: TextInputAction.next,
-            onChanged: (_) => setState(() {}),
+          AccountPanel(
+            children: [
+              if (widget.hasPassword) ...[
+                PasswordField(
+                  controller: _current,
+                  label: s.accountCurrentPassword,
+                  errorText: _currentError,
+                  autofocus: true,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+              ],
+              PasswordField(
+                controller: _next,
+                label: s.accountNewPassword,
+                errorText: _nextError,
+                showStrength: true,
+                autofocus: !widget.hasPassword,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+              PasswordField(
+                controller: _confirm,
+                label: s.accountConfirmPassword,
+                errorText: _confirmError,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _apply(remove: false),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _busy ? null : () => _apply(remove: false),
+                child: Text(s.actionSave),
+              ),
+              if (widget.hasPassword) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _busy ? null : () => _apply(remove: true),
+                  child: Text(s.accountRemovePassword),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 16),
-          PasswordField(
-            controller: _confirm,
-            label: s.accountConfirmPassword,
-            errorText: _confirmError,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _apply(remove: false),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            s.accountPasswordScope,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _busy ? null : () => _apply(remove: false),
-            child: Text(s.actionSave),
-          ),
-          if (widget.hasPassword) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _busy ? null : () => _apply(remove: true),
-              child: Text(s.accountRemovePassword),
-            ),
-          ],
         ],
       ),
     );

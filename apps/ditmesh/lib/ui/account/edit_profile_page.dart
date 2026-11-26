@@ -8,6 +8,7 @@ import '../common/app_bar_title.dart';
 import '../common/field_label.dart';
 import '../common/close_owned_route.dart';
 import 'account_widgets.dart';
+import 'identity_card.dart';
 
 /// Display name and status message.
 class EditProfilePage extends StatefulWidget {
@@ -77,44 +78,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.accountEditProfile)),
       body: AccountPageBody(
+        aside: [IdentityCard(identity: widget.identity, showConnection: false)],
         children: [
-          Text(s.accountEditProfileBody, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _name,
-            autofocus: true,
-            maxLength: 64,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              label: FieldLabel(s.accountDisplayName),
-              errorText: _nameError,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _status,
-            maxLength: 128,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _save(),
-            decoration: InputDecoration(
-              label: FieldLabel(s.accountStatusMessage),
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
+          AccountPanel(
+            children: [
+              Text(s.accountEditProfileBody, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _name,
+                autofocus: true,
+                maxLength: 64,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  label: FieldLabel(s.accountDisplayName),
+                  errorText: _nameError,
+                  border: const OutlineInputBorder(),
+                ),
               ),
-            ),
-          ],
-          const SizedBox(height: 32),
-          FilledButton(
-            onPressed: _busy ? null : _save,
-            child: Text(s.actionSave),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _status,
+                maxLength: 128,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _save(),
+                decoration: InputDecoration(
+                  label: FieldLabel(s.accountStatusMessage),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _error!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: _busy ? null : _save,
+                child: Text(s.actionSave),
+              ),
+            ],
           ),
         ],
       ),

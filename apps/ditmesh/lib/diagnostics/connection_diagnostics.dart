@@ -42,6 +42,7 @@ final class ConnectionDiagnosticsSnapshot {
     required this.pending,
     required this.reconnect,
     this.errorCode,
+    this.conversationName,
   });
 
   /// Public key of the identity these observations belong to; null when no
@@ -56,6 +57,7 @@ final class ConnectionDiagnosticsSnapshot {
   /// when none was observed yet. Not a delivery time.
   final DateTime? lastOnlineAt;
   final PeerAvailability peer;
+  final String? conversationName;
 
   /// Durable outbox of the identity (or the selected conversation); null
   /// when the transport cannot report it right now.
@@ -214,6 +216,7 @@ class ConnectionDiagnostics extends ChangeNotifier {
         inspector.pendingOutbox(conversationId: conversationId),
       _ => null,
     };
+    final friend = _friendFor(conversationId);
     return ConnectionDiagnosticsSnapshot(
       identityKey: _key,
       observedAt: _now(),
@@ -221,14 +224,43 @@ class ConnectionDiagnostics extends ChangeNotifier {
       statusSince: _statusSince,
       statusSinceKind: _sinceKind,
       lastOnlineAt: _lastOnlineAt,
-      peer: _peerOf(conversationId),
+      peer: _peerOf(conversationId, friend),
+      conversationName: _conversationName(conversationId, friend),
       pending: pending,
       reconnect: _reconnect,
       errorCode: _reconnect == ReconnectState.failed ? _errorCode : null,
     );
   }
 
-  PeerAvailability _peerOf(String? conversationId) {
+  Friend? _friendFor(String? conversationId) {
+    if (_key == null ||
+        conversationId == null ||
+        !conversationId.startsWith('c2c_')) {
+      return null;
+    }
+    final key = conversationId.substring(4).toUpperCase();
+    return _chat.friends
+        .where((f) => f.publicKey.toUpperCase() == key)
+        .firstOrNull;
+  }
+
+  String? _conversationName(String? conversationId, Friend? friend) {
+    if (_key == null || conversationId == null) return null;
+    final name =
+        (friend?.displayName ??
+                _chat.conversations
+                    .where((c) => c.id == conversationId)
+                    .firstOrNull
+                    ?.title)
+            ?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    if (!conversationId.startsWith('c2c_')) return null;
+    final key = conversationId.substring(4);
+    if (key.length > 12) return '${key.substring(0, 12)}…';
+    return key.isEmpty ? null : key;
+  }
+
+  PeerAvailability _peerOf(String? conversationId, Friend? friend) {
     if (conversationId == null) return PeerAvailability.notApplicable;
     if (conversationId == _chat.selfConversationId) {
       return PeerAvailability.notApplicable;
@@ -240,10 +272,6 @@ class ConnectionDiagnostics extends ChangeNotifier {
     if (_status != ConnectionStatus.online || !_chat.hasSession) {
       return PeerAvailability.unknown;
     }
-    final peer = conversationId.substring(4).toUpperCase();
-    final friend = _chat.friends
-        .where((f) => f.publicKey.toUpperCase() == peer)
-        .firstOrNull;
     if (friend == null) return PeerAvailability.unknown;
     return friend.online ? PeerAvailability.online : PeerAvailability.offline;
   }

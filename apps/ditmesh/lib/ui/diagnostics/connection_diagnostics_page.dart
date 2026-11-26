@@ -6,6 +6,9 @@ import '../../diagnostics/connection_diagnostics.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/system_date_time.dart';
+import '../account/account_widgets.dart';
+import '../chat/chat_scope.dart';
+import '../chat/pending_messages_page.dart';
 import '../common/app_bar_title.dart';
 
 /// Connection diagnostics (F09): what the device observed about its own Tox
@@ -31,74 +34,98 @@ class ConnectionDiagnosticsPage extends StatelessWidget {
     final s = context.s;
     final diagnostics = context.watch<ConnectionDiagnostics>();
     final snap = diagnostics.snapshot(conversationId: conversationId);
+    final chat = maybeChatService(context);
     String time(DateTime at) => formatSystemDateTime(context, at);
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.diagTitle)),
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                _SummaryCard(snapshot: snap),
-                if (snap.identityKey != null) ...[
-                  _Fact(
-                    icon: _statusIcon(snap.status),
-                    label: s.diagLocalLabel,
-                    value: _statusLabel(s, snap.status),
-                    detail: _since(s, snap, time),
-                  ),
-                  _Fact(
-                    icon: Icons.history,
-                    label: s.diagLastOnlineLabel,
-                    value: snap.status == ConnectionStatus.online
-                        ? s.diagLastOnlineNow
-                        : snap.lastOnlineAt == null
-                        ? s.diagLastOnlineNone
-                        : time(snap.lastOnlineAt!),
-                    detail: s.diagLastOnlineHint,
-                  ),
-                  if (conversationId != null &&
-                      snap.peer != PeerAvailability.notApplicable)
-                    _Fact(
-                      icon: Icons.person_outline,
-                      label: s.diagPeerLabel,
-                      value: switch (snap.peer) {
-                        PeerAvailability.online => s.connectionOnline,
-                        PeerAvailability.offline => s.connectionOffline,
-                        _ => s.diagUnknown,
-                      },
-                      detail: snap.peer == PeerAvailability.unknown
-                          ? (conversationId!.startsWith('group_')
-                                ? s.diagPeerGroupHint
-                                : s.diagPeerUnknownHint)
-                          : null,
-                    ),
-                  _Fact(
-                    icon: Icons.outbox_outlined,
-                    label: s.diagPendingLabel,
-                    value: _pendingValue(s, snap.pending),
-                    detail: [
-                      if (snap.pending?.oldest case final DateTime oldest)
-                        s.diagPendingOldest(time(oldest)),
-                      s.diagPendingHint,
-                    ].join('\n'),
-                  ),
-                  _ReconnectSection(snapshot: snap),
-                ],
-                const Divider(height: 32),
-                ListTile(
-                  leading: const Icon(Icons.hub_outlined),
-                  title: Text(s.diagAboutTitle),
-                  subtitle: Text(s.diagAboutBody),
-                ),
-                if (snap.identityKey != null) _Details(snapshot: snap),
-              ],
-            ),
+      body: AccountPageBody(
+        maxWidth: 680,
+        aside: [
+          AccountPanel(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: Text(s.diagAboutTitle),
+                subtitle: Text(s.diagAboutBody),
+              ),
+              if (snap.identityKey != null) _Details(snapshot: snap),
+            ],
           ),
-        ),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              Text(
+                conversationId == null
+                    ? s.diagScopeIdentity
+                    : s.diagScopeConversation,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              if (snap.conversationName case final name?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              _SummaryCard(snapshot: snap),
+              if (snap.identityKey != null) ...[
+                _Fact(
+                  icon: _statusIcon(snap.status),
+                  label: s.diagLocalLabel,
+                  value: _statusLabel(s, snap.status),
+                  detail: _since(s, snap, time),
+                ),
+                _Fact(
+                  icon: Icons.history,
+                  label: s.diagLastOnlineLabel,
+                  value: snap.status == ConnectionStatus.online
+                      ? s.diagLastOnlineNow
+                      : snap.lastOnlineAt == null
+                      ? s.diagLastOnlineNone
+                      : time(snap.lastOnlineAt!),
+                  detail:
+                      snap.status != ConnectionStatus.online &&
+                          snap.lastOnlineAt != null
+                      ? s.diagLastOnlineHint
+                      : null,
+                ),
+                if (conversationId != null &&
+                    snap.peer != PeerAvailability.notApplicable)
+                  _Fact(
+                    icon: Icons.person_outline,
+                    label: s.diagPeerLabel,
+                    value: switch (snap.peer) {
+                      PeerAvailability.online => s.connectionOnline,
+                      PeerAvailability.offline => s.connectionOffline,
+                      _ => s.diagUnknown,
+                    },
+                    detail: snap.peer == PeerAvailability.unknown
+                        ? (conversationId!.startsWith('group_')
+                              ? s.diagPeerGroupHint
+                              : s.diagPeerUnknownHint)
+                        : null,
+                  ),
+                _Fact(
+                  icon: Icons.outbox_outlined,
+                  label: s.diagPendingLabel,
+                  value: _pendingValue(s, snap.pending),
+                  detail: [
+                    if (snap.pending?.oldest case final DateTime oldest)
+                      s.diagPendingOldest(time(oldest)),
+                    s.diagPendingHint,
+                  ].join('\n'),
+                ),
+                if (snap.waitingForPeer) Text(s.diagWaitForPeer),
+                if (!snap.waitingForPeer) _ReconnectSection(snapshot: snap),
+                if (chat != null)
+                  _OutboxAction(chat: chat, primary: snap.waitingForPeer),
+                if (snap.waitingForPeer) _ReconnectSection(snapshot: snap),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -234,6 +261,38 @@ class _Fact extends StatelessWidget {
   }
 }
 
+extension _PeerWaiting on ConnectionDiagnosticsSnapshot {
+  bool get waitingForPeer =>
+      status == ConnectionStatus.online && peer == PeerAvailability.offline;
+}
+
+class _OutboxAction extends StatelessWidget {
+  const _OutboxAction({required this.chat, required this.primary});
+
+  final ChatService chat;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    const key = ValueKey('diag-open-outbox');
+    const icon = Icon(Icons.outbox_outlined);
+    final label = Text(context.s.pendingMessagesTitle);
+    void open() => Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PendingMessagesPage(service: chat),
+      ),
+    );
+    return primary
+        ? FilledButton.icon(key: key, onPressed: open, icon: icon, label: label)
+        : OutlinedButton.icon(
+            key: key,
+            onPressed: open,
+            icon: icon,
+            label: label,
+          );
+  }
+}
+
 class _ReconnectSection extends StatelessWidget {
   const _ReconnectSection({required this.snapshot});
 
@@ -244,33 +303,47 @@ class _ReconnectSection extends StatelessWidget {
     final s = context.s;
     final running = snapshot.reconnect == ReconnectState.running;
     final code = snapshot.errorCode;
+    const key = ValueKey('diag-reconnect');
+    final icon = running
+        ? const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.refresh);
+    final label = Text(running ? s.diagReconnecting : s.diagReconnect);
+    final reconnect = running
+        ? null
+        : () => context.read<ConnectionDiagnostics>().reconnect();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          FilledButton.icon(
-            key: const ValueKey('diag-reconnect'),
-            // Disabled while running: taps cannot start a second attempt
-            // (the controller coalesces them too).
-            onPressed: running
-                ? null
-                : () => context.read<ConnectionDiagnostics>().reconnect(),
-            icon: running
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-            label: Text(running ? s.diagReconnecting : s.diagReconnect),
-          ),
+          if (snapshot.waitingForPeer)
+            OutlinedButton.icon(
+              key: key,
+              onPressed: reconnect,
+              icon: icon,
+              label: label,
+            )
+          else
+            FilledButton.icon(
+              key: key,
+              onPressed: reconnect,
+              icon: icon,
+              label: label,
+            ),
           const SizedBox(height: 8),
           if (code != null)
             Text(
               s.diagReconnectFailed(chatErrorMessage(s, code)),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-          Text(s.diagReconnectNote),
+          Text(
+            snapshot.waitingForPeer
+                ? s.diagReconnectOwnNote
+                : s.diagReconnectNote,
+          ),
         ],
       ),
     );

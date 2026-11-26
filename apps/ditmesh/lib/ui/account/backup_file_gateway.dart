@@ -6,28 +6,33 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path/path.dart' as p;
 
 import '../../i18n/current_strings.dart';
+
+typedef SavedBackup = ({bool completed, String? path});
+
+typedef PickedBackup = ({Uint8List bytes, String? name});
 
 /// Where backup bytes go and come from. Abstracted so widget tests never
 /// touch the native pickers and so the platform split (save dialog on
 /// desktop, share sheet on mobile) lives in exactly one place.
 abstract interface class BackupFileGateway {
-  /// Hands [bytes] to the user. Returns true when the file was saved/shared,
-  /// false when the user cancelled. Throws on I/O failure.
+  /// Hands [bytes] to the user and reports completion and the actual path if
+  /// the desktop picker returned one. Throws on I/O failure.
   ///
   /// [shareOrigin] is the global rect of the control that triggered the
   /// export. iPadOS presents the share sheet as a popover anchored to it;
   /// without one the popover floats in the middle of the screen, detached
   /// from the button. Ignored by the desktop save dialog.
-  Future<bool> saveBackup(
+  Future<SavedBackup> saveBackup(
     Uint8List bytes, {
     required String fileName,
     Rect? shareOrigin,
   });
 
   /// Lets the user pick a backup file; null when cancelled.
-  Future<Uint8List?> pickBackup();
+  Future<PickedBackup?> pickBackup();
 }
 
 /// Real implementation: `file_picker` save dialog on desktop, `share_plus`
@@ -44,12 +49,15 @@ final class PlatformBackupFileGateway implements BackupFileGateway {
           defaultTargetPlatform == TargetPlatform.iOS);
 
   @override
-  Future<bool> saveBackup(
+  Future<SavedBackup> saveBackup(
     Uint8List bytes, {
     required String fileName,
     Rect? shareOrigin,
   }) async {
-    if (_isMobile) return _shareOnMobile(bytes, fileName, shareOrigin);
+    if (_isMobile) {
+      final handedOff = await _shareOnMobile(bytes, fileName, shareOrigin);
+      return (completed: handedOff, path: null);
+    }
     final uri = await FilePicker.saveFile(
       fileName: fileName,
       bytes: bytes,
@@ -58,7 +66,15 @@ final class PlatformBackupFileGateway implements BackupFileGateway {
       // UI language through currentS().
       dialogTitle: currentS().accountBackupSaveDialogTitle,
     );
-    return uri != null;
+    final path = switch (uri?.scheme) {
+      'file' => uri!.toFilePath(),
+      '' => uri?.path,
+      _ => null,
+    };
+    return (
+      completed: uri != null,
+      path: path != null && p.isAbsolute(path) ? path : null,
+    );
   }
 
   Future<bool> _shareOnMobile(
@@ -87,7 +103,7 @@ final class PlatformBackupFileGateway implements BackupFileGateway {
   }
 
   @override
-  Future<Uint8List?> pickBackup() async {
+  Future<PickedBackup?> pickBackup() async {
     final file = await FilePicker.pickFile(
       dialogTitle: currentS().accountBackupChooseDialogTitle,
     );
@@ -106,7 +122,7 @@ final class PlatformBackupFileGateway implements BackupFileGateway {
       if (bytes.length + chunk.length > maxBackupBytes) throw tooLarge;
       bytes.add(chunk);
     }
-    return bytes.takeBytes();
+    return (bytes: bytes.takeBytes(), name: file.name);
   }
 
   /// Largest file [pickBackup] will read.
@@ -117,12 +133,16 @@ final class PlatformBackupFileGateway implements BackupFileGateway {
 final class FakeBackupFileGateway implements BackupFileGateway {
   FakeBackupFileGateway({
     this.saveResult = true,
+    this.savePath,
     this.pickResult,
+    this.pickName,
     this.pickError,
   });
 
   bool saveResult;
+  String? savePath;
   Uint8List? pickResult;
+  String? pickName;
 
   /// When set, [pickBackup] throws it (e.g. a file too large to be a backup).
   Object? pickError;
@@ -132,7 +152,7 @@ final class FakeBackupFileGateway implements BackupFileGateway {
   final List<Rect?> shareOrigins = [];
 
   @override
-  Future<bool> saveBackup(
+  Future<SavedBackup> saveBackup(
     Uint8List bytes, {
     required String fileName,
     Rect? shareOrigin,
@@ -142,13 +162,14 @@ final class FakeBackupFileGateway implements BackupFileGateway {
     saved.add(bytes);
     savedNames.add(fileName);
     shareOrigins.add(shareOrigin);
-    return saveResult;
+    return (completed: saveResult, path: saveResult ? savePath : null);
   }
 
   @override
-  Future<Uint8List?> pickBackup() async {
+  Future<PickedBackup?> pickBackup() async {
     final Object? error = pickError;
     if (error != null) throw error;
-    return pickResult;
+    final bytes = pickResult;
+    return bytes == null ? null : (bytes: bytes, name: pickName);
   }
 }

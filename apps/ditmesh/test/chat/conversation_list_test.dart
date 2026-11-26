@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/ui/chat/conversation_list.dart';
 import 'package:ditmesh/ui/chat/conversation_tile.dart';
+import 'package:ditmesh/ui/chat/morse_pattern_text.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import 'test_support.dart';
@@ -18,11 +19,21 @@ void main() {
     });
     expect(find.text('Ann'), findsOneWidget);
     expect(find.text('CQ CQ DE ANN'), findsOneWidget);
-    // Pattern for "CQ CQ DE ANN": words separated by " / ".
-    expect(
-      find.textContaining('-.-. --.- / -.-. --.- / -.. . / .- -. -.'),
-      findsOneWidget,
-    );
+    // The narrow list may show a prefix, but it must keep every shown
+    // character complete and preserve the full pattern for a wider row.
+    const pattern = '-.-. --.- / -.-. --.- / -.. . / .- -. -.';
+    final preview = find.byType(MorsePatternText);
+    expect(tester.widget<MorsePatternText>(preview).pattern, pattern);
+    final visible = tester
+        .widget<Text>(find.descendant(of: preview, matching: find.byType(Text)))
+        .data!;
+    if (visible.endsWith(' …')) {
+      final prefix = visible.substring(0, visible.length - 2);
+      expect(pattern, startsWith('$prefix '));
+      expect(prefix, isNot(endsWith('/')));
+    } else {
+      expect(visible, pattern);
+    }
     expect(find.text('1'), findsOneWidget); // unread badge
   });
 

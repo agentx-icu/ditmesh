@@ -116,7 +116,7 @@
   "@errorWrongPassword": {
     "description": "ChatException code wrong_password"
   },
-  "errorPeerOffline": "This contact is offline. Tox has no server, so the message waits until they come back.",
+  "errorPeerOffline": "This contact is offline. The queued message waits until the contact is reachable.",
   "@errorPeerOffline": {
     "description": "ChatException code peer_offline"
   },
@@ -405,11 +405,11 @@
   "@accountWelcomeTitle": {
     "description": "Welcome page (first launch): title explaining the identity is stored locally"
   },
-  "accountWelcomeIntro": "DitMesh uses the Tox peer-to-peer network. There is no server and no account to sign up for: your identity is a key pair stored only here.",
+  "accountWelcomeIntro": "DitMesh uses the peer-to-peer Tox network. No account registration is required. Your identity is a pair of keys stored on this device.",
   "@accountWelcomeIntro": {
     "description": "Welcome page: introductory paragraph about the serverless Tox identity"
   },
-  "accountWelcomePointNoServer": "No server, no phone number, no e-mail. Peers talk to each other directly, in Morse.",
+  "accountWelcomePointNoServer": "No central messaging server, phone number, or email is required. Operators communicate directly using Morse code.",
   "@accountWelcomePointNoServer": {
     "description": "Welcome page: bullet point — no server or sign-up, peers talk directly"
   },
@@ -449,7 +449,7 @@
   "@accountBackupTitle": {
     "description": "Backup wizard (after creating an identity): title urging the user to back up now"
   },
-  "accountBackupBody": "Your identity exists only on this device. If it is lost, reset or stolen, there is no way to recover it: your contacts will not recognise a new identity and your training progress is gone.",
+  "accountBackupBody": "If this device loses its data and you have no usable backup, you cannot recover this identity. Keep the backup file and its passphrase.",
   "@accountBackupBody": {
     "description": "Backup wizard: explanation that a lost device means a lost identity without a backup"
   },
@@ -469,6 +469,10 @@
   "@accountSectionNotifications": {
     "description": "Me page: section header for the notification settings"
   },
+  "accountNotificationsSystemManaged": "Your device manages notification permissions.",
+  "@accountNotificationsSystemManaged": {
+    "description": "Label in the notification settings card that shows the operating system permission state."
+  },
   "accountNotificationsEnable": "Show notifications",
   "@accountNotificationsEnable": {
     "description": "Me page: switch for all notifications"
@@ -481,7 +485,7 @@
   "@accountNotificationsContent": {
     "description": "Me page: switch for showing message text and Morse in notifications"
   },
-  "accountNotificationsContentSubtitle": "Text and Morse in banners and on the lock screen. Off: only that a message arrived.",
+  "accountNotificationsContentSubtitle": "When off, message alerts hide conversation names, senders, text and Morse. System settings control lock-screen previews.",
   "@accountNotificationsContentSubtitle": {
     "description": "Me page: subtitle of the message-content switch"
   },
@@ -497,7 +501,7 @@
   "@accountNotificationsBlocked": {
     "description": "Me page: status line when the user turned the message notification channel off in the Android system settings"
   },
-  "accountNotificationsBlockedSubtitle": "Message notifications for DitMesh are turned off in the system settings. Turn them on there to get banners again.",
+  "accountNotificationsBlockedSubtitle": "On Android, go to Settings → Apps → DitMesh → Notifications and turn on message notifications.",
   "@accountNotificationsBlockedSubtitle": {
     "description": "Me page: explains that the OS drops message notifications until the channel is turned on again in system settings"
   },
@@ -513,11 +517,15 @@
   "@accountBackupShareFile": {
     "description": "Backup wizard: button that shares the backup file via the system share sheet (mobile)"
   },
-  "accountBackupSaved": "Backup saved",
+  "accountBackupSaved": "Backup saved. Look for the .mcqbackup file in the location you selected.",
   "@accountBackupSaved": {
     "description": "Snackbar / status line after the backup file was saved"
   },
-  "accountBackupNotSaved": "Backup was not saved",
+  "accountBackupNotSaved": "This save was cancelled. You can export again.",
+  "accountBackupShareReturned": "Opened the system share sheet. Look for the .mcqbackup file in the folder or receiving app you selected.",
+  "@accountBackupShareReturned": {
+    "description": "Mobile backup handoff feedback when the operating system share sheet returned successfully. The app cannot confirm persistence."
+  },
   "@accountBackupNotSaved": {
     "description": "Snackbar when the user cancelled saving the backup"
   },
@@ -525,7 +533,7 @@
   "@accountBackupFailed": {
     "description": "Snackbar prefix when writing the backup failed; followed by ': ' and the error message"
   },
-  "accountBackupAcknowledge": "I understand that without this backup my identity cannot be recovered.",
+  "accountBackupAcknowledge": "I understand that if this device loses its data and I have no backup, I cannot recover my identity.",
   "@accountBackupAcknowledge": {
     "description": "Backup wizard: checkbox the user must tick to confirm they understand the risk"
   },
@@ -935,6 +943,10 @@
     "description": "Contacts screen: title of the sheet showing the user's own Tox ID and tooltip of its button"
   },
   "chatToxIdLabel": "Tox ID (76 hex characters)",
+  "chatRequestPublicKey": "Requester public key (64 hex characters)",
+  "@chatRequestPublicKey": {
+    "description": "Full public key shown when reviewing a friend request. This contains 64 hexadecimal digits."
+  },
   "@chatToxIdLabel": {
     "description": "Add friend sheet: label of the Tox ID field"
   },
@@ -971,6 +983,10 @@
     "description": "Add friend sheet: button that scans a Tox ID QR code with the camera"
   },
   "chatScanQrDesktopHint": "Camera scanning is unavailable on this platform. Paste a Tox ID.",
+  "chatScanQrManualHint": "The camera is unavailable. Paste the full Tox ID or try scanning again.",
+  "@chatScanQrManualHint": {
+    "description": "Fallback instructions after the camera did not start in the Add Friend QR scanner."
+  },
   "@chatScanQrDesktopHint": {
     "description": "Add friend sheet: alternative when camera scanning is unavailable on this platform"
   },
@@ -2456,7 +2472,7 @@
   "@listenSettings": {
     "description": "Listen settings sheet title and tooltip of its button"
   },
-  "listenDecoded": "Decoded",
+  "listenDecoded": "Live decoding",
   "@listenDecoded": {
     "description": "Listen screen: label above the decoded text"
   },
@@ -2492,7 +2508,7 @@
   "@listenTone": {
     "description": "Listen screen: title of the tone frequency control"
   },
-  "listenToneLocked": "Locked",
+  "listenToneLocked": "Tone locked",
   "@listenToneLocked": {
     "description": "Listen screen: auto-tune has locked onto a tone"
   },
@@ -3106,7 +3122,7 @@
   "@chatSearchHint": {
     "description": "Message search field hint"
   },
-  "chatSearchAnyone": "Anyone",
+  "chatSearchAnyone": "All senders",
   "@chatSearchAnyone": {
     "description": "Message search sender filter: everyone"
   },
@@ -3546,6 +3562,14 @@
     "description": "Backup export: continue without recordings (default)"
   },
   "diagTitle": "Connection diagnostics",
+  "diagScopeIdentity": "All conversations for this identity",
+  "@diagScopeIdentity": {
+    "description": "Scope heading on connection diagnostics for the full current identity."
+  },
+  "diagScopeConversation": "Current conversation only",
+  "@diagScopeConversation": {
+    "description": "Scope heading on connection diagnostics for only the open conversation."
+  },
   "@diagTitle": {
     "description": "Connection diagnostics page title; also the menu / Me entry that opens it"
   },
@@ -3678,7 +3702,7 @@
   "@diagPendingHint": {
     "description": "Diagnostics: queued messages are kept and never resent or discarded by diagnostics"
   },
-  "diagReconnect": "Reconnect",
+  "diagReconnect": "Reconnect this device",
   "@diagReconnect": {
     "description": "Diagnostics: reconnect button"
   },
@@ -3703,7 +3727,7 @@
   "@diagAboutTitle": {
     "description": "Diagnostics: heading of the P2P explanation"
   },
-  "diagAboutBody": "DitMesh has no server. Your device talks to your contacts directly over the Tox peer-to-peer network, so both of you must be online at the same time for a message to arrive. Phones pause apps in the background: DitMesh cannot stay connected there and reconnects when you return.",
+  "diagAboutBody": "Devices exchange messages directly over Tox without a central messaging server. Public bootstrap nodes help your device join the network. Both parties must be online for delivery. A phone may suspend the app in the background. DitMesh reconnects when you return.",
   "@diagAboutBody": {
     "description": "Diagnostics: P2P and mobile background explanation"
   },
@@ -3872,7 +3896,7 @@
   "@backupXExporting": {
     "description": "Backup: creating in progress"
   },
-  "backupXMigrationNote": "Moving to a new device? After restoring there, stop using this identity here: two devices with one identity can send the same message twice.",
+  "backupXMigrationNote": "Moving devices? Close DitMesh with this identity on the old device before selecting Confirm restore or Replace and restore on the new device. Restore will try to connect.",
   "@backupXMigrationNote": {
     "description": "Backup: stop using the identity on the old device after moving"
   },
@@ -3926,7 +3950,7 @@
       }
     }
   },
-  "restoreXPendingExcluded": "{count, plural, =1{1 unsent message on the old device is not in this backup.} other{{count} unsent messages on the old device are not in this backup.}}",
+  "restoreXPendingExcluded": "{count, plural, one{One message was queued when this backup was created. It is not included.} other{{count} messages were queued when this backup was created. They are not included.}}",
   "@restoreXPendingExcluded": {
     "description": "Restore preview: unsent messages not included",
     "placeholders": {
@@ -3947,7 +3971,7 @@
   "@restoreXConfirmTitle": {
     "description": "Restore: confirm replacement dialog title"
   },
-  "restoreXConfirmBody": "Any identity and data on this device are replaced by the backup. Stop using the identity on the old device before connecting here.",
+  "restoreXConfirmBody": "The backup replaces the identity and data on this device. Close DitMesh with this identity on the old device before selecting Replace and restore. This device will try to connect after restoring.",
   "@restoreXConfirmBody": {
     "description": "Restore: confirm replacement dialog body"
   },
@@ -3971,7 +3995,7 @@
   "@restoreXReportPrefsFailed": {
     "description": "Restore report: preferences failed to apply"
   },
-  "restoreXReportPendingReview": "{count, plural, =1{1 unsent message is waiting for your review in Chat.} other{{count} unsent messages are waiting for your review in Chat.}}",
+  "restoreXReportPendingReview": "The backup brought back {count} unsent messages. Open the review below to check them.",
   "@restoreXReportPendingReview": {
     "description": "Restore report: unsent messages await review",
     "placeholders": {
@@ -3980,7 +4004,7 @@
       }
     }
   },
-  "restoreXReportPendingNotResumed": "{count, plural, =1{1 unsent message from the old device was not brought over.} other{{count} unsent messages from the old device were not brought over.}}",
+  "restoreXReportPendingNotResumed": "{count, plural, one{One message was queued when this backup was created and was not included. Check the old device before sending it again.} other{{count} messages were queued when this backup was created and were not included. Check the old device before sending them again.}}",
   "@restoreXReportPendingNotResumed": {
     "description": "Restore report: unsent messages not brought over",
     "placeholders": {
@@ -3998,7 +4022,7 @@
       }
     }
   },
-  "restoreXReportStopOld": "Stop using this identity on the old device.",
+  "restoreXReportStopOld": "If DitMesh is still using this identity on the old device, close it now.",
   "@restoreXReportStopOld": {
     "description": "Restore report: stop using the old device"
   },
@@ -4019,7 +4043,7 @@
   "@pendingReviewTitle": {
     "description": "Restored unsent messages review page title"
   },
-  "pendingReviewBody": "These were waiting to be sent on your previous device. DitMesh never sends them automatically; key one again if it still matters.",
+  "pendingReviewBody": "These messages were queued on the old device when the backup was made. The copies here are for review and will not be sent automatically. Check whether the old device sent them before keying them again.",
   "@pendingReviewBody": {
     "description": "Restored unsent messages: explanation"
   },
@@ -4044,11 +4068,11 @@
   "@pendingReviewEmpty": {
     "description": "Restored unsent messages: nothing left"
   },
-  "backupXWizardInside": "The backup file is encrypted as a whole with a passphrase you choose, and holds your identity key and training progress. Keep the file and the passphrase somewhere safe, outside this device.",
+  "backupXWizardInside": "The whole file is encrypted with a passphrase you choose. Your identity is always included. Training and other data are included when you select them. Keep the file and passphrase somewhere safe outside this device.",
   "@backupXWizardInside": {
     "description": "First-run backup wizard: what the encrypted backup contains"
   },
-  "backupXMeSubtitle": "An encrypted file with your identity, chats and progress, to keep or to move to another device",
+  "backupXMeSubtitle": "Encrypt your identity backup and choose whether to include chats and training progress.",
   "@backupXMeSubtitle": {
     "description": "Me page: subtitle of the export backup entry (encrypted complete backup)"
   },
@@ -4060,7 +4084,7 @@
   "@keysMeSubtitle": {
     "description": "Me page: subtitle of the key setup entry"
   },
-  "keysIntro": "Choose which keys key Morse. Keyboard-emulating USB key and paddle adapters work like a keyboard: set their keys here. The app cannot tell which device sent a key, so a profile is a set of bindings.",
+  "keysIntro": "Bind any device that sends system keyboard events, including keyboard-style USB or Bluetooth adapters. DitMesh receives the same key events from each device; a profile stores those bindings.",
   "@keysIntro": {
     "description": "Key setup: introduction"
   },
@@ -4080,7 +4104,7 @@
   "@keysNewProfile": {
     "description": "Key setup: create a profile"
   },
-  "keysLimitations": "MIDI, serial and Bluetooth keyers, adapter firmware settings and transmitter control are not supported. Tested adapters are listed in the documentation.",
+  "keysLimitations": "DitMesh does not connect directly to dedicated Bluetooth keyer protocols, MIDI or serial ports. Firmware configuration and transmitter control are unsupported. See the documentation for tested adapters.",
   "@keysLimitations": {
     "description": "Key setup: what is not supported"
   },
@@ -4462,7 +4486,7 @@
   "@termsGateTitle": {
     "description": "Terms gate (before chat) title"
   },
-  "termsGateIntro": "DitMesh chat connects you directly with other people, without a server. Before you start, please agree to these rules:",
+  "termsGateIntro": "DitMesh sends messages directly over Tox without a central messaging server. Before starting, agree to these rules:",
   "@termsGateIntro": {
     "description": "Terms gate intro"
   },
@@ -4470,7 +4494,7 @@
   "@termsGateRuleZero": {
     "description": "Terms gate rule: zero tolerance"
   },
-  "termsGateRuleContacts": "Only people you accept can message you; groups are joined by invitation or group ID.",
+  "termsGateRuleContacts": "Direct messages are for accepted contacts. When you join a group, you can receive messages from its members, including people outside your contacts.",
   "@termsGateRuleContacts": {
     "description": "Terms gate rule: only accepted contacts"
   },
@@ -4542,7 +4566,7 @@
   "@bootstrapTitle": {
     "description": "Tox bootstrap network settings: Title"
   },
-  "bootstrapDescription": "Choose the public nodes used to join the Tox network.",
+  "bootstrapDescription": "Public bootstrap nodes help this device join the Tox network. Choose the nodes to use here.",
   "@bootstrapDescription": {
     "description": "Tox bootstrap network settings: Description"
   },
@@ -4790,7 +4814,7 @@
   "firstChatKeyBody": "Use the key to send CQ. A short press makes a dot and a longer press makes a dash. Your decoded draft stays read-only.",
   "firstChatSelf": "Try in my self chat",
   "firstChatListenTitle": "2. Listen and correct",
-  "firstChatListenBody": "Before sending, use Preview to hear the draft and Backspace to remove a mistake. After sending, tap Play on your message. Self-chat messages stay on this device.",
+  "firstChatListenBody": "Before sending, use the small triangle for Preview draft and Delete beside the draft to fix mistakes. After sending, play the message itself. Messages to yourself stay on this device.",
   "firstChatFriendTitle": "3. Chat with a friend",
   "firstChatFriendBody": "Open Contacts, add your friend by QR code or Tox ID, and wait for the friend request to be accepted.",
   "firstChatFriend": "Add a friend",
@@ -5148,7 +5172,7 @@
   "@nearbyPrivacyTitle": {
     "description": "Location and nearby discovery: nearbyPrivacyTitle."
   },
-  "nearbyPrivacyBody": "DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground.",
+  "nearbyPrivacyBody": "DitMesh shares your display name and approximate location (about 100 m) in public Tox groups for your area. Anyone who joins one of those groups can receive this information, regardless of their actual location. Your Tox ID is shared only when you explicitly send or answer a nearby request. Nearby works only while the app is in the foreground. After you leave the Nearby screen, sharing may continue for up to 5 minutes while the app stays in the foreground. Turn off “Visible to people nearby” to stop sharing.",
   "@nearbyPrivacyBody": {
     "description": "Location and nearby discovery: nearbyPrivacyBody."
   },
@@ -5401,5 +5425,226 @@
   "firstChatReceiptBody": "Queued means saved on this device; sent means accepted by the transport; delivered needs a peer receipt. A group receipt confirms at least one member, not that everyone has listened.",
   "@firstChatReceiptBody": {
     "description": "First-chat guide explanation of local queue, transport send and peer receipt states"
-  }
+  },
+  "pendingReviewDismissAllBody": "{count, plural, =1{Dismiss 1 restored message?} other{Dismiss {count} restored messages?}} This permanently removes the local copies awaiting review.",
+  "pendingReviewDismissed": "Restored message dismissed.",
+  "@pendingReviewDismissed": {
+    "description": "Confirmation after a restored local message was dismissed."
+  },
+  "pendingReviewUndo": "Undo",
+  "@pendingReviewUndo": {
+    "description": "Undo a single local restored-message dismissal."
+  },
+  "pendingReviewSaveError": "Could not save the change. The message list was kept.",
+  "@pendingReviewSaveError": {
+    "description": "Storage failure while changing locally restored messages."
+  },
+  "restoreXCurrentIdentity": "Current identity on this device",
+  "@restoreXCurrentIdentity": {
+    "description": "Label for the identity currently on this device in the restore comparison."
+  },
+  "restoreXLockedIdentity": "Locked. Name and fingerprint are unavailable.",
+  "@restoreXLockedIdentity": {
+    "description": "Fallback when the name and fingerprint of a locked identity cannot be read."
+  },
+  "restoreXNoCurrentIdentity": "No identity on this device.",
+  "@restoreXNoCurrentIdentity": {
+    "description": "Restore comparison when no current local identity exists."
+  },
+  "restoreXBackupIdentity": "Identity in this backup",
+  "@restoreXBackupIdentity": {
+    "description": "Label for the incoming identity from the backup selected for restore."
+  },
+  "restoreXPassphraseHelp": "Enter the passphrase you set when creating this backup.",
+  "@restoreXPassphraseHelp": {
+    "description": "Explains which password opens the encrypted backup before an optional identity password is requested."
+  },
+  "restoreXPendingReviewTitle": "Restored messages for review",
+  "@restoreXPendingReviewTitle": {
+    "description": "Heading for unsent messages restored for manual review."
+  },
+  "@pendingReviewDismissAllBody": {
+    "description": "Permanent deletion warning for the locally restored copies.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupInviteAcceptanceFailed": "Could not accept the invitation",
+  "@groupInviteAcceptanceFailed": {
+    "description": "Heading on an invitation that could not be accepted."
+  },
+  "groupInviteRetryAccept": "Retry acceptance",
+  "@groupInviteRetryAccept": {
+    "description": "Retry the previous acceptance on the same group invitation."
+  },
+  "chatDraftOfflineQueue": "Once submitted, this message will wait on this device until your contact is online.",
+  "@chatDraftOfflineQueue": {
+    "description": "Explains where a direct message stays if submitted while the contact is offline."
+  },
+  "chatDraftQueued": "Queued on this device.",
+  "@chatDraftQueued": {
+    "description": "Acknowledgement after the message was queued on the device."
+  },
+  "chatKeyTouchHint": "Hold the key on the screen",
+  "@chatKeyTouchHint": {
+    "description": "Touch instruction beside the straight key on mobile."
+  },
+  "chatPaddleTouchHint": "Hold either paddle on the screen",
+  "@chatPaddleTouchHint": {
+    "description": "Touch instruction beside dit and dah paddles on mobile."
+  },
+  "keysSpace": "Space",
+  "@keysSpace": {
+    "description": "Localized keyboard Space key in the built-in profile."
+  },
+  "keysLeftControl": "Left Ctrl",
+  "@keysLeftControl": {
+    "description": "Localized left Control key in the built-in profile."
+  },
+  "keysRightControl": "Right Ctrl",
+  "@keysRightControl": {
+    "description": "Localized right Control key in the built-in profile."
+  },
+  "keysBindingUnchanged": "The previous binding is unchanged.",
+  "@keysBindingUnchanged": {
+    "description": "Reassures the user after a conflicting capture key was rejected."
+  },
+  "backupXGoToPassphrase": "Set backup passphrase",
+  "@backupXGoToPassphrase": {
+    "description": "Visible mobile action that scrolls from category selection to the backup passphrase."
+  },
+  "restoreXFirstConfirmTitle": "Restore this backup?",
+  "@restoreXFirstConfirmTitle": {
+    "description": "Encrypted restore confirmation title when the device has no existing identity."
+  },
+  "restoreXFirstConfirmBody": "This restores the identity and data listed in the backup. Close DitMesh with this identity on the old device before selecting Confirm restore. This device will try to connect after restoring.",
+  "@restoreXFirstConfirmBody": {
+    "description": "Encrypted restore confirmation for a device without an existing identity, including the old device warning."
+  },
+  "restoreXFirstConfirm": "Confirm restore",
+  "@restoreXFirstConfirm": {
+    "description": "Confirms restoration on a device without an existing identity."
+  },
+  "deliveryMessageTime": "Message time",
+  "@deliveryMessageTime": {
+    "description": "Labels the original message timestamp in delivery details. This is not a delivery or receipt time."
+  },
+  "chatPracticeFromConversation": "From conversation: {name}",
+  "@chatPracticeFromConversation": {
+    "description": "Identifies the conversation that supplied a chat copy exercise without exposing the answer.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRefreshMembers": "Refresh members",
+  "@chatRefreshMembers": {
+    "description": "Refreshes the group member list and presence information."
+  },
+  "pendingSendingUncancellable": "This send can no longer be cancelled.",
+  "@pendingSendingUncancellable": {
+    "description": "Outbox notice above messages whose transmission has already started."
+  },
+  "diagWaitForPeer": "Wait for the contact to come online, or view the queued messages.",
+  "@diagWaitForPeer": {
+    "description": "First recommended actions when this device is online but the contact is offline."
+  },
+  "diagReconnectOwnNote": "This reconnects only this device and cannot bring the contact online.",
+  "@diagReconnectOwnNote": {
+    "description": "Explains the local scope of the reconnect action in contact connection diagnostics."
+  },
+  "chatScanQrPermissionHelp": "Camera access was denied. Allow camera access for DitMesh in system settings, then scan again, or paste the full Tox ID.",
+  "@chatScanQrPermissionHelp": {
+    "description": "Shown on the add-contact form after the system has denied QR camera access."
+  },
+  "groupInviteReconnectHint": "This device lost its Tox connection. Wait until it reconnects, then retry accepting the invitation.",
+  "@groupInviteReconnectHint": {
+    "description": "Shown when accepting a group invitation fails because the local connection was lost."
+  },
+  "restoreXReviewAction": "Review {count} unsent messages",
+  "@restoreXReviewAction": {
+    "description": "Action on the restore report that opens the list of restored unsent copies.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "locationEnableHere": "Turn on the Location switch on this page to use your current location.",
+  "@locationEnableHere": {
+    "description": "Shown on the location settings page when the application Location switch is off."
+  },
+  "chatSearchConversationScope": "Search in the conversation with {name}",
+  "@chatSearchConversationScope": {
+    "description": "Names the current conversation as the only search scope. The name can be a contact or group name.",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "accountBackupSavedNamed": "Backup saved: {name}",
+  "@accountBackupSavedNamed": {
+    "description": "Confirmation of a successful desktop backup. Name is the actual file name returned by the save dialog.",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "accountBackupCopyLocation": "Copy saved location",
+  "@accountBackupCopyLocation": {
+    "description": "Copies the actual desktop backup path to the clipboard."
+  },
+  "accountNotificationsPermitted": "System notifications allowed",
+  "@accountNotificationsPermitted": {
+    "description": "Notification settings status displayed after the system confirms permission."
+  },
+  "workbenchDeleteClipTitle": "Delete “{name}”?",
+  "@workbenchDeleteClipTitle": {"description": "Confirmation before deleting a named saved audio clip.", "placeholders": {"name": {"type": "String"}}},
+  "workbenchDeleteClipAndFile": "This removes the saved range and note and deletes the local recording in DitMesh. The original imported file stays where you chose it.",
+  "@workbenchDeleteClipAndFile": {"description": "Clip deletion confirmation when this also releases the last saved reference to the audio file."},
+  "workbenchDeleteClipOnly": "This removes the saved range and note. This action keeps any recording files.",
+  "@workbenchDeleteClipOnly": {"description": "Clip deletion confirmation when the saved audio file is kept or absent."},
+  "workbenchRemovedClipAndFile": "Clip and local recording deleted.",
+  "@workbenchRemovedClipAndFile": {"description": "Successful deletion of both a clip and its managed audio."},
+  "workbenchRemovedClip": "Clip deleted. No recording file was deleted.",
+  "@workbenchRemovedClip": {"description": "Successful deletion of a clip while audio is left in place or absent."},
+  "workbenchRemovedClipFileError": "The clip was deleted. DitMesh could not delete the local recording.",
+  "@workbenchRemovedClipFileError": {"description": "Partial outcome after deleting metadata but failing to remove the local audio file."},
+  "chatRejectRequestTitle": "Reject this friend request?",
+  "@chatRejectRequestTitle": {"description": "Confirmation before recording an independent friend application rejection."},
+  "chatRejectRequestBody": "DitMesh will hide this request and future requests from this person. You can allow requests again under Contacts → Rejected requests.",
+  "@chatRejectRequestBody": {"description": "Explains the persistent sender-wide effect and where to reverse it."},
+  "chatRequestRejected": "Request rejected. Manage future requests in Contacts → Rejected requests.",
+  "@chatRequestRejected": {"description": "Feedback after saving the local rejected-sender rule."},
+  "chatRejectedRequests": "Rejected requests",
+  "@chatRejectedRequests": {"description": "Contacts entry and screen for independent friend request filtering."},
+  "chatRejectedRequestsHelp": "Friend requests from these public keys are hidden on this device. Allowing new requests does not remove a contact block.",
+  "@chatRejectedRequestsHelp": {"description": "Explains the scope of the local rejected request list and separate contact blocking."},
+  "chatRejectedRequestsEmpty": "There are no rejected senders here.",
+  "@chatRejectedRequestsEmpty": {"description": "Empty local rejected request filter list."},
+  "chatAllowFutureRequests": "Allow new requests",
+  "@chatAllowFutureRequests": {"description": "Action removes this public key from the independent request filter."},
+  "chatFutureRequestsAllowed": "Request filtering removed. Any separate contact block still applies.",
+  "@chatFutureRequestsAllowed": {"description": "Success after allowing new friend requests without modifying the contact block."},
+  "moderationBlockRequestBody": "This rejects the pending request and blocks future direct messages, friend requests and group invitations from this person on this device. They will not be notified.",
+  "@moderationBlockRequestBody": {"description": "Blocking confirmation shown for a pending applicant who is not a friend."},
+  "accountBackupShareClosed": "System sharing was dismissed. You can share the backup again.",
+  "@accountBackupShareClosed": {"description": "Feedback when mobile system sharing was dismissed for the current export."},
+  "nearbyHideSession": "Hide this session",
+  "@nearbyHideSession": {"description": "Short action on a nearby participant card for hiding that ephemeral session."},
+  "nearbySessionHidden": "This nearby session is hidden. A new session from this person may appear again.",
+  "@nearbySessionHidden": {"description": "Confirms local hiding of the current ephemeral nearby session only."},
+  "pendingReviewOpenConversation": "Open original chat",
+  "@pendingReviewOpenConversation": {"description": "Opens the existing destination with no restored text sent."},
+  "pendingReviewMissingContact": "This chat is unavailable. Restore or add the contact before keying the message again.",
+  "@pendingReviewMissingContact": {"description": "Recovery guidance for a restored direct message without a destination."},
+  "pendingReviewMissingGroup": "This group is unavailable. Rejoin it before keying the message again.",
+  "@pendingReviewMissingGroup": {"description": "Recovery guidance for a restored group message without a destination."},
+  "pendingReviewIgnoreCopy": "Ignore this copy",
+  "@pendingReviewIgnoreCopy": {"description": "Removes only the local copy in the restored review list."},
+  "pendingReviewDismissedCount": "{count, plural, one{One restored copy ignored.} other{{count} restored copies ignored.}}",
+  "@pendingReviewDismissedCount": {"description": "Reports copies affected by the current shared undo action.", "placeholders": {"count": {"type": "int"}}},
+  "groupPracticeCompleteTitle": "Finish this practice?",
+  "@groupPracticeCompleteTitle": {"description": "Confirmation for finalizing a local group practice session."},
+  "groupPracticeCompleteBody": "Keep the results for {done} of {total} rounds on this device. Unfinished rounds remain incomplete, and rounds and scores become read-only.",
+  "@groupPracticeCompleteBody": {"description": "Explains kept progress and that finishing freezes rounds and scores.", "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "groupPracticeEnded": "Practice ended. The saved rounds and scores are read-only.",
+  "@groupPracticeEnded": {"description": "Status on the read-only local practice summary once finished."},
+  "workbenchRelinkTooShort": "This recording is {actual} long. Saved clips need at least {minimum}. Choose a longer WAV to restore the original ranges.",
+  "@workbenchRelinkTooShort": {"description": "Error before relinking when the WAV is too short for at least one saved range.", "placeholders": {"actual": {"type": "String"}, "minimum": {"type": "String"}}},
+  "deliveryFailedNext": "Open the outbox to retry this message.",
+  "@deliveryFailedNext": {"description": "Next step in failed message delivery details, linking to the canonical outbox."}
 }

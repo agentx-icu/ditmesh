@@ -81,7 +81,11 @@ void main() {
     }
   }
 
-  Future<void> pump(WidgetTester tester, IdentityService identity) async {
+  Future<void> pump(
+    WidgetTester tester,
+    IdentityService identity, {
+    TargetPlatform? platform,
+  }) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -89,7 +93,7 @@ void main() {
           Provider<BackupFileGateway>.value(value: gateway),
         ],
         child: MaterialApp(
-          theme: DitmeshTheme.light(),
+          theme: DitmeshTheme.light().copyWith(platform: platform),
           localizationsDelegates: S.localizationsDelegates,
           supportedLocales: S.supportedLocales,
           locale: const Locale('en'),
@@ -166,19 +170,30 @@ void main() {
       origin.center,
       tester.getCenter(find.byKey(const ValueKey('export'))),
     );
-    expect(find.text(s.accountBackupSaved), findsOneWidget);
+    expect(find.text(s.accountBackupShareReturned), findsOneWidget);
+    expect(s.accountBackupShareReturned, contains('.mcqbackup'));
+    expect(s.accountBackupShareReturned, contains('receiving app'));
     expect(result, BackupExportResult.saved);
   });
 
-  testWidgets('a cancelled save sheet is reported as not saved', (
-    tester,
-  ) async {
-    gateway.saveResult = false;
-    await pump(tester, _LegacyIdentity(dir.path, current: _ann));
-    await tapExport(tester);
-    expect(find.text(s.accountBackupNotSaved), findsOneWidget);
-    expect(result, BackupExportResult.cancelled);
-  });
+  for (final (platform, cancelledMessage) in [
+    (TargetPlatform.macOS, s.accountBackupNotSaved),
+    (TargetPlatform.iOS, s.accountBackupShareClosed),
+  ]) {
+    testWidgets('reports a cancelled backup on ${platform.name}', (
+      tester,
+    ) async {
+      gateway.saveResult = false;
+      await pump(
+        tester,
+        _LegacyIdentity(dir.path, current: _ann),
+        platform: platform,
+      );
+      await tapExport(tester);
+      expect(find.text(cancelledMessage), findsOneWidget);
+      expect(result, BackupExportResult.cancelled);
+    });
+  }
 
   testWidgets('an export or save failure is reported, not thrown', (
     tester,

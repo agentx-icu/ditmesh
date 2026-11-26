@@ -50,6 +50,7 @@ class Tim2ToxChatService
     with _MessageManagement, _NearbyCapability
     implements
         ChatService,
+        FriendRequestFilter,
         IdentityDataStore,
         OutboxInspector,
         NearbyTransportProvider {
@@ -250,6 +251,14 @@ class Tim2ToxChatService
       _friendsPart.reject(_requireService(), publicKey);
 
   @override
+  Future<List<String>> rejectedFriendRequestKeys() async =>
+      _friendsPart.rejectedKeys(_requireService());
+
+  @override
+  Future<void> allowFutureFriendRequests(String publicKey) =>
+      _friendsPart.allow(_requireService(), publicKey);
+
+  @override
   Future<void> removeFriend(String publicKey) =>
       _friendsPart.remove(_requireService(), publicKey);
 
@@ -312,7 +321,11 @@ class Tim2ToxChatService
   @override
   Future<void> deleteConversation(String conversationId) async {
     _conversationsPart.refuseSelf(conversationId);
-    await _conversationsPart.clear(_requireService(), conversationId, hide: true);
+    await _conversationsPart.clear(
+      _requireService(),
+      conversationId,
+      hide: true,
+    );
   }
 
   // ---- Messages -------------------------------------------------------------

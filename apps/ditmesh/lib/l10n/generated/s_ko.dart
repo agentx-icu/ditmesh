@@ -96,7 +96,7 @@ class SKo extends S {
   String get errorWrongPassword => '비밀번호가 올바르지 않습니다. 다시 시도하세요.';
 
   @override
-  String get errorPeerOffline => '이 연락처는 오프라인입니다. Tox에는 서버가 없으므로 상대방이 돌아올 때까지 메시지가 대기합니다.';
+  String get errorPeerOffline => '연락처가 오프라인입니다. 접속할 때까지 메시지가 이 기기에서 대기합니다.';
 
   @override
   String get errorInvalidToxId => '유효한 Tox ID가 아닙니다(16진수 문자 76개여야 합니다).';
@@ -293,10 +293,10 @@ class SKo extends S {
   String get accountWelcomeTitle => '신원 정보는 이 기기에 저장됩니다';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh는 Tox P2P 네트워크를 사용합니다. 서버도 계정 가입도 없습니다. 신원 정보는 이 기기에만 저장되는 키 쌍입니다.';
+  String get accountWelcomeIntro => 'DitMesh는 Tox 피어 투 피어 네트워크를 사용합니다. 가입 없이 기기에 저장된 키 쌍으로 신원을 만들 수 있습니다.';
 
   @override
-  String get accountWelcomePointNoServer => '서버, 전화번호, 이메일이 필요 없습니다. 운용자끼리 모스 부호로 직접 통신합니다.';
+  String get accountWelcomePointNoServer => '중앙 메시지 서버, 전화번호, 이메일이 필요하지 않습니다. 모스 부호로 직접 통신합니다.';
 
   @override
   String get accountWelcomePointTraining => '직선 키나 아이암빅 패들로 모스 부호를 입력해 개인 또는 그룹 채팅을 할 수 있습니다.';
@@ -326,7 +326,7 @@ class SKo extends S {
   String get accountBackupTitle => '지금 신원 정보를 백업하세요';
 
   @override
-  String get accountBackupBody => '신원 정보는 이 기기에만 있습니다. 기기를 잃어버리거나 초기화하거나 도난당하면 복구할 수 없습니다. 연락처는 새로운 신원 정보를 알아보지 못하고 학습 진도도 사라집니다.';
+  String get accountBackupBody => '이 기기의 데이터를 잃고 사용할 수 있는 백업이 없다면 이 신원을 복구할 수 없습니다. 백업 파일과 암호문을 보관하세요.';
 
   @override
   String get accountBackupWhatIsInside => '백업 파일에는 비밀번호로 암호화된 신원 키와 학습 진도가 들어 있습니다. 이 기기 밖의 안전한 곳에 보관하세요.';
@@ -341,6 +341,9 @@ class SKo extends S {
   String get accountSectionNotifications => '알림';
 
   @override
+  String get accountNotificationsSystemManaged => '알림 권한은 기기에서 관리합니다.';
+
+  @override
   String get accountNotificationsEnable => '알림 표시';
 
   @override
@@ -350,7 +353,7 @@ class SKo extends S {
   String get accountNotificationsContent => '메시지 내용 표시';
 
   @override
-  String get accountNotificationsContentSubtitle => '배너와 잠금 화면에 텍스트와 모스 부호를 표시합니다. 끄면 메시지가 왔다는 것만 알립니다.';
+  String get accountNotificationsContentSubtitle => '끄면 메시지 알림에 대화 이름, 발신자, 본문과 모스 부호가 표시되지 않습니다. 잠금 화면 미리보기는 시스템 설정에 따릅니다.';
 
   @override
   String get accountNotificationsAllow => '알림 허용';
@@ -362,7 +365,7 @@ class SKo extends S {
   String get accountNotificationsBlocked => '시스템 설정에서 차단됨';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'DitMesh의 메시지 알림이 시스템 설정에서 꺼져 있습니다. 시스템 설정에서 다시 켜 주세요.';
+  String get accountNotificationsBlockedSubtitle => 'Android에서 설정 → 앱 → DitMesh → 알림을 열고 메시지 알림을 켜세요.';
 
   @override
   String get accountNotificationsDenied => '시스템 설정에서 DitMesh 알림이 꺼져 있습니다.';
@@ -374,16 +377,19 @@ class SKo extends S {
   String get accountBackupShareFile => '백업 파일 공유';
 
   @override
-  String get accountBackupSaved => '백업이 저장되었습니다';
+  String get accountBackupSaved => '백업을 저장했습니다. 선택한 위치에서 .mcqbackup 파일을 찾으세요.';
 
   @override
-  String get accountBackupNotSaved => '백업이 저장되지 않았습니다';
+  String get accountBackupNotSaved => '이번 저장을 취소했습니다. 다시 내보낼 수 있습니다.';
+
+  @override
+  String get accountBackupShareReturned => '시스템 공유 화면을 열었습니다. 선택한 폴더나 공유 대상 앱에서 .mcqbackup 백업 파일을 확인하세요.';
 
   @override
   String get accountBackupFailed => '백업을 기록할 수 없습니다';
 
   @override
-  String get accountBackupAcknowledge => '이 백업이 없으면 신원 정보를 복구할 수 없음을 이해했습니다.';
+  String get accountBackupAcknowledge => '기기 데이터가 소실되고 백업이 없으면 신원을 복구할 수 없음을 이해합니다.';
 
   @override
   String get accountBackupContinue => 'DitMesh 시작';
@@ -691,6 +697,9 @@ class SKo extends S {
   String get chatToxIdLabel => 'Tox ID(16진수 문자 76개)';
 
   @override
+  String get chatRequestPublicKey => '요청자의 공개 키(16진수 64자)';
+
+  @override
   String get chatToxIdInvalid => 'Tox ID는 정확히 76개의 16진수 문자여야 합니다';
 
   @override
@@ -716,6 +725,9 @@ class SKo extends S {
 
   @override
   String get chatScanQrDesktopHint => '이 플랫폼에서는 카메라로 스캔할 수 없습니다. Tox ID를 붙여넣으세요.';
+
+  @override
+  String get chatScanQrManualHint => '카메라를 사용할 수 없습니다. 전체 Tox ID를 붙여넣거나 다시 스캔하세요.';
 
   @override
   String get chatScanQrTitle => 'Tox ID 스캔';
@@ -1815,7 +1827,7 @@ class SKo extends S {
   String get listenSettings => '듣기 설정';
 
   @override
-  String get listenDecoded => '해독 결과';
+  String get listenDecoded => '실시간 해독';
 
   @override
   String get listenEmptyHint => '마이크를 모스 부호 소리 쪽으로 향하게 하세요. 해독된 텍스트가 여기에 표시됩니다.';
@@ -1842,7 +1854,7 @@ class SKo extends S {
   String get listenTone => '음 주파수';
 
   @override
-  String get listenToneLocked => '주파수 고정';
+  String get listenToneLocked => '톤 잠김';
 
   @override
   String get listenToneSearching => '탐색 중';
@@ -2252,7 +2264,7 @@ class SKo extends S {
   String get chatSearchHint => '이 대화에서 검색';
 
   @override
-  String get chatSearchAnyone => '모두';
+  String get chatSearchAnyone => '모든 발신자';
 
   @override
   String get chatSearchMe => '나';
@@ -2559,6 +2571,12 @@ class SKo extends S {
   String get diagTitle => '연결 진단';
 
   @override
+  String get diagScopeIdentity => '이 신원의 모든 대화';
+
+  @override
+  String get diagScopeConversation => '현재 대화만';
+
+  @override
   String get diagOpenSubtitle => '메시지가 대기 중인 이유와 다시 연결하는 방법';
 
   @override
@@ -2652,7 +2670,7 @@ class SKo extends S {
   String get diagPendingHint => '대기 중인 메시지는 이 기기에 남아 있다가 상대에게 닿을 수 있을 때 자동으로 전송됩니다. 진단은 메시지를 삭제하거나 다시 보내지 않습니다.';
 
   @override
-  String get diagReconnect => '다시 연결';
+  String get diagReconnect => '이 기기 다시 연결';
 
   @override
   String get diagReconnecting => '다시 연결하는 중…';
@@ -2669,7 +2687,7 @@ class SKo extends S {
   String get diagAboutTitle => 'DitMesh의 연결 방식';
 
   @override
-  String get diagAboutBody => 'DitMesh에는 서버가 없습니다. 기기가 Tox P2P 네트워크로 연락처와 직접 통신하므로, 메시지가 도착하려면 양쪽이 동시에 온라인이어야 합니다. 휴대폰은 백그라운드 앱을 일시 중지하므로 그동안 DitMesh는 연결을 유지할 수 없고, 돌아오면 다시 연결합니다.';
+  String get diagAboutBody => '기기는 중앙 메시지 서버 없이 Tox로 메시지를 직접 주고받습니다. 공개 부트스트랩 노드가 네트워크 접속을 돕습니다. 전달에는 양쪽 모두 온라인이어야 합니다. 앱으로 돌아오면 다시 연결합니다.';
 
   @override
   String get diagDetailsTitle => '기술 세부 정보';
@@ -2793,7 +2811,7 @@ class SKo extends S {
   String get backupXExporting => '백업 만드는 중…';
 
   @override
-  String get backupXMigrationNote => '기기를 옮기시나요? 새 기기에서 복원한 뒤에는 이 기기에서 이 ID를 쓰지 마세요. 같은 ID를 쓰는 기기가 둘이면 같은 메시지가 두 번 전송될 수 있습니다.';
+  String get backupXMigrationNote => '기기를 교체할 때는 새 기기에서 복원을 확인하기 전에 이전 기기에서 이 신원을 사용하는 DitMesh를 종료하세요. 복원 후 새 기기가 연결을 시도합니다.';
 
   @override
   String get backupXBusy => '백업하는 동안 데이터가 계속 바뀌었습니다. 다시 시도하세요.';
@@ -2839,7 +2857,7 @@ class SKo extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '이전 기기의 보내지 않은 메시지 $count개는 이 백업에 없습니다.',
+      other: '이 백업을 만들 때 대기 중이던 메시지가 $count개 있었습니다. 이 백업에는 포함되지 않았습니다.',
     );
     return '$_temp0';
   }
@@ -2854,7 +2872,7 @@ class SKo extends S {
   String get restoreXConfirmTitle => '이 기기의 ID를 바꿀까요?';
 
   @override
-  String get restoreXConfirmBody => '이 기기의 ID와 데이터가 백업으로 바뀝니다. 여기서 연결하기 전에 이전 기기에서 이 ID 사용을 멈추세요.';
+  String get restoreXConfirmBody => '백업은 이 기기의 신원과 데이터를 덮어씁니다. ‘교체 및 복원’을 선택하기 전에 이전 기기에서 이 신원을 사용하는 DitMesh를 종료하세요. 복원 후 이 기기가 연결을 시도합니다.';
 
   @override
   String get restoreXConfirm => '바꾸고 복원';
@@ -2873,12 +2891,7 @@ class SKo extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '보내지 않은 메시지 $count개가 채팅에서 검토를 기다리고 있습니다.',
-    );
-    return '$_temp0';
+    return '백업에서 보류 메시지 $count개를 복원했습니다. 아래 검토 화면을 열어 확인하세요.';
   }
 
   @override
@@ -2886,7 +2899,7 @@ class SKo extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '이전 기기의 보내지 않은 메시지 $count개는 옮겨지지 않았습니다.',
+      other: '백업을 만들 때 대기 중이던 메시지 $count개가 포함되지 않았습니다. 다시 보내기 전에 이전 기기에서 확인하세요.',
     );
     return '$_temp0';
   }
@@ -2902,7 +2915,7 @@ class SKo extends S {
   }
 
   @override
-  String get restoreXReportStopOld => '이전 기기에서는 이 ID를 더 이상 쓰지 마세요.';
+  String get restoreXReportStopOld => '이전 기기의 DitMesh가 아직 이 신원을 사용 중이면 지금 종료하세요.';
 
   @override
   String get restoreXReportDone => '완료';
@@ -2921,7 +2934,7 @@ class SKo extends S {
   String get pendingReviewTitle => '보내지 않은 메시지';
 
   @override
-  String get pendingReviewBody => '이전 기기에서 전송을 기다리던 메시지입니다. DitMesh는 자동으로 보내지 않습니다. 아직 필요하면 다시 키잉하세요.';
+  String get pendingReviewBody => '백업할 당시 이 메시지는 이전 기기에서 전송 대기 중이었습니다. 복원한 사본은 확인용이며 자동으로 전송되지 않습니다. 다시 전송하기 전에 이전 기기에서 보냈는지 확인하세요.';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2938,10 +2951,10 @@ class SKo extends S {
   String get pendingReviewEmpty => '더 검토할 항목이 없습니다.';
 
   @override
-  String get backupXWizardInside => '백업 파일은 직접 정한 암호 문구로 통째로 암호화되며 ID 키와 연습 진도를 담습니다. 파일과 암호 문구를 이 기기 밖의 안전한 곳에 보관하세요.';
+  String get backupXWizardInside => '설정한 암호 문구로 전체 파일이 암호화됩니다. ID는 항상 포함됩니다. 훈련 및 기타 데이터는 선택한 항목만 내보냅니다. 기기 외부의 안전한 곳에 파일과 암호 문구를 보관하세요.';
 
   @override
-  String get backupXMeSubtitle => 'ID, 채팅, 진도를 담은 암호화 파일. 보관하거나 다른 기기로 옮길 때 사용';
+  String get backupXMeSubtitle => '신원을 암호화해 백업하고 대화 기록과 훈련 진행도를 선택하여 포함하세요.';
 
   @override
   String get keysTitle => '키와 외부 키어';
@@ -2950,7 +2963,7 @@ class SKo extends S {
   String get keysMeSubtitle => '키 할당, 패들, USB 키어 어댑터';
 
   @override
-  String get keysIntro => '모스를 키잉할 키를 고르세요. 키보드처럼 동작하는 USB 키·패들 어댑터는 키보드와 같으니 여기서 키를 지정하세요. 앱은 어떤 기기가 키를 보냈는지 알 수 없으므로 프로필은 키 할당 묶음입니다.';
+  String get keysIntro => '시스템 키보드 이벤트를 보내는 기기를 지정할 수 있습니다. 키보드처럼 작동하는 USB 또는 Bluetooth 어댑터도 포함됩니다. 프로필은 키 지정을 저장합니다.';
 
   @override
   String get keysStandardProfile => '기본';
@@ -2965,7 +2978,7 @@ class SKo extends S {
   String get keysNewProfile => '새 프로필';
 
   @override
-  String get keysLimitations => 'MIDI·시리얼·블루투스 키어, 어댑터 펌웨어 설정, 송신기 제어는 지원하지 않습니다. 검증된 어댑터는 문서에 있습니다.';
+  String get keysLimitations => '전용 Bluetooth 전건 프로토콜, MIDI 또는 직렬 포트에는 직접 연결하지 않습니다. 펌웨어나 송신기 설정도 지원하지 않습니다. 테스트한 어댑터는 문서에 있습니다.';
 
   @override
   String get keysEditTitle => '키 프로필';
@@ -3236,13 +3249,13 @@ class SKo extends S {
   String get termsGateTitle => '커뮤니티 가이드라인';
 
   @override
-  String get termsGateIntro => 'DitMesh 채팅은 서버 없이 다른 사람과 직접 연결됩니다. 시작하기 전에 다음 규칙에 동의해 주세요.';
+  String get termsGateIntro => 'DitMesh는 중앙 메시지 서버 없이 Tox로 메시지를 직접 보냅니다. 시작하기 전에 다음 규칙에 동의하세요.';
 
   @override
   String get termsGateRuleZero => '무관용: 괴롭힘, 혐오, 협박, 미성년자 관련 성적 콘텐츠, 스팸 및 모든 불법 행위를 금지합니다.';
 
   @override
-  String get termsGateRuleContacts => '내가 수락한 사람만 메시지를 보낼 수 있으며, 그룹은 초대나 그룹 ID로 참여합니다.';
+  String get termsGateRuleContacts => '개인 메시지는 수락한 연락처로부터 받습니다. 그룹에 참여하면 모든 구성원이 그곳에 보낸 메시지를 받습니다.';
 
   @override
   String get termsGateRuleBlock => '대화, 그룹 회원 목록, 친구 요청, 그룹 초대에서 누구든 차단할 수 있습니다.';
@@ -3296,7 +3309,7 @@ class SKo extends S {
   String get bootstrapTitle => '네트워크 및 부트스트랩';
 
   @override
-  String get bootstrapDescription => 'Tox 네트워크에 참여할 공개 노드를 선택합니다.';
+  String get bootstrapDescription => '공개 부트스트랩 노드는 기기가 Tox 네트워크에 접속하도록 돕습니다. 사용할 노드를 선택하세요.';
 
   @override
   String get bootstrapModeAuto => '자동';
@@ -3485,7 +3498,7 @@ class SKo extends S {
   String get firstChatListenTitle => '2. 듣고 수정하기';
 
   @override
-  String get firstChatListenBody => '보내기 전에 미리 듣기로 초안을 듣고 지우기로 실수를 수정하세요. 보낸 후 메시지의 재생을 누르세요. 나에게 보낸 메시지는 이 기기에 저장됩니다.';
+  String get firstChatListenBody => '보내기 전에 작은 삼각형으로 초안을 듣고 초안 옆의 ‘삭제’로 고치세요. 보낸 뒤에는 메시지를 재생하세요. 나에게 보낸 메시지는 이 기기에만 저장됩니다.';
 
   @override
   String get firstChatFriendTitle => '3. 친구와 채팅하기';
@@ -3725,7 +3738,7 @@ class SKo extends S {
   String get nearbyPrivacyTitle => '주변 사람';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh는 내 표시 이름과 대략적인 위치(약 100 m 단위)를 해당 지역의 공개 Tox 그룹에 공유합니다. 이 그룹에 참여하면 실제 위치와 관계없이 누구나 이 정보를 받을 수 있습니다. Tox ID는 주변 사람 요청을 직접 보내거나 답할 때만 공유됩니다. 이 기능은 앱이 포그라운드에 있을 때만 작동합니다.';
+  String get nearbyPrivacyBody => 'DitMesh는 내 표시 이름과 대략적인 위치(약 100 m 단위)를 해당 지역의 공개 Tox 그룹에 공유합니다. 이 그룹에 참여하면 실제 위치와 관계없이 누구나 이 정보를 받을 수 있습니다. Tox ID는 주변 사람 요청을 직접 보내거나 답할 때만 공유됩니다. 이 기능은 앱이 포그라운드에 있을 때만 작동합니다. 주변 사람 화면을 벗어난 후에도 앱이 포그라운드에 있으면 최대 5분간 공유가 계속될 수 있습니다. 주변 사람에게 표시하는 설정을 끄면 공유가 중단됩니다.';
 
   @override
   String get nearbyPrivacyAccept => '켜기';
@@ -3903,4 +3916,220 @@ class SKo extends S {
 
   @override
   String get firstChatReceiptBody => '대기 중은 기기에 저장됨, 전송됨은 전송 계층에서 수락됨을 뜻합니다. 전달됨에는 상대의 수신 확인이 필요합니다. 그룹 확인은 최소 한 명의 수신이며 모두가 들었다는 뜻은 아닙니다.';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return '복원된 메시지 $count개를 무시할까요? 검토 대기 중인 로컬 사본이 영구적으로 삭제됩니다.';
+  }
+
+  @override
+  String get pendingReviewDismissed => '복원된 메시지를 무시했습니다.';
+
+  @override
+  String get pendingReviewUndo => '실행 취소';
+
+  @override
+  String get pendingReviewSaveError => '변경 사항을 저장할 수 없습니다. 메시지 목록은 유지되었습니다.';
+
+  @override
+  String get restoreXCurrentIdentity => '이 기기의 현재 ID';
+
+  @override
+  String get restoreXLockedIdentity => '잠겨 있습니다. 이름과 지문을 확인할 수 없습니다.';
+
+  @override
+  String get restoreXNoCurrentIdentity => '이 기기에 ID가 없습니다.';
+
+  @override
+  String get restoreXBackupIdentity => '이 백업의 ID';
+
+  @override
+  String get restoreXPassphraseHelp => '이 백업을 만들 때 설정한 암호 문구를 입력하세요.';
+
+  @override
+  String get restoreXPendingReviewTitle => '검토할 복원된 메시지';
+
+  @override
+  String get groupInviteAcceptanceFailed => '초대를 수락할 수 없습니다';
+
+  @override
+  String get groupInviteRetryAccept => '수락 다시 시도';
+
+  @override
+  String get chatDraftOfflineQueue => '보내기를 누르면 연락처가 온라인이 될 때까지 이 기기에서 대기합니다.';
+
+  @override
+  String get chatDraftQueued => '이 기기의 전송 대기열에 추가했습니다.';
+
+  @override
+  String get chatKeyTouchHint => '화면의 키를 길게 누르세요';
+
+  @override
+  String get chatPaddleTouchHint => '화면의 패들을 길게 누르세요';
+
+  @override
+  String get keysSpace => '스페이스';
+
+  @override
+  String get keysLeftControl => '왼쪽 Ctrl';
+
+  @override
+  String get keysRightControl => '오른쪽 Ctrl';
+
+  @override
+  String get keysBindingUnchanged => '이전 키 할당은 변경되지 않았습니다.';
+
+  @override
+  String get backupXGoToPassphrase => '백업 암호 문구 설정';
+
+  @override
+  String get restoreXFirstConfirmTitle => '이 백업을 복원하시겠어요?';
+
+  @override
+  String get restoreXFirstConfirmBody => '백업에 나열된 신원과 데이터를 복원합니다. 복원을 확인하기 전에 이전 기기에서 이 신원을 사용하는 DitMesh를 종료하세요. 복원 후 이 기기가 연결을 시도합니다.';
+
+  @override
+  String get restoreXFirstConfirm => '복원 확인';
+
+  @override
+  String get deliveryMessageTime => '메시지 시간';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return '대화 출처: $name';
+  }
+
+  @override
+  String get chatRefreshMembers => '멤버 새로고침';
+
+  @override
+  String get pendingSendingUncancellable => '전송이 시작되면 취소할 수 없습니다.';
+
+  @override
+  String get diagWaitForPeer => '상대가 온라인이 될 때까지 기다리거나 대기 중인 메시지를 확인하세요.';
+
+  @override
+  String get diagReconnectOwnNote => '이 기기만 다시 연결합니다. 상대방의 연결에는 영향이 없습니다.';
+
+  @override
+  String get chatScanQrPermissionHelp => '카메라 접근이 거부되었습니다. 시스템 설정에서 DitMesh의 카메라 사용을 허용하거나 전체 Tox ID를 붙여 넣으세요.';
+
+  @override
+  String get groupInviteReconnectHint => '이 기기의 Tox 연결이 끊어졌습니다. 다시 연결된 다음 초대 수락을 재시도하세요.';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return '메시지 $count개 검토';
+  }
+
+  @override
+  String get locationEnableHere => '현재 위치를 사용하려면 이 페이지의 위치 스위치를 켜세요.';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return '$name 대화에서 검색';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return '백업을 저장했습니다: $name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => '저장 위치 복사';
+
+  @override
+  String get accountNotificationsPermitted => '시스템에서 알림 허용됨';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '‘$name’을(를) 삭제할까요?';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => '저장한 구간과 메모, DitMesh 안의 로컬 녹음이 삭제됩니다. 가져온 원본 파일은 그대로 남습니다.';
+
+  @override
+  String get workbenchDeleteClipOnly => '저장한 구간과 메모가 삭제됩니다. 녹음 파일은 그대로 남습니다.';
+
+  @override
+  String get workbenchRemovedClipAndFile => '클립과 로컬 녹음을 삭제했습니다.';
+
+  @override
+  String get workbenchRemovedClip => '클립을 삭제했습니다. 녹음 파일은 삭제하지 않았습니다.';
+
+  @override
+  String get workbenchRemovedClipFileError => '클립은 삭제했지만 DitMesh의 로컬 녹음은 삭제하지 못했습니다.';
+
+  @override
+  String get chatRejectRequestTitle => '이 친구 요청을 거절할까요?';
+
+  @override
+  String get chatRejectRequestBody => '이 요청과 이 사람의 이후 친구 요청이 숨겨집니다. ‘연락처 → 거절한 요청’에서 다시 허용할 수 있습니다.';
+
+  @override
+  String get chatRequestRejected => '요청을 거절했습니다. 이후 요청은 ‘연락처 → 거절한 요청’에서 관리할 수 있습니다.';
+
+  @override
+  String get chatRejectedRequests => '거절한 요청';
+
+  @override
+  String get chatRejectedRequestsHelp => '이 공개 키의 친구 요청은 이 기기에서 숨겨집니다. 새 요청을 허용해도 연락처 차단이 해제되지는 않습니다.';
+
+  @override
+  String get chatRejectedRequestsEmpty => '거절한 발신자가 없습니다.';
+
+  @override
+  String get chatAllowFutureRequests => '새 요청 허용';
+
+  @override
+  String get chatFutureRequestsAllowed => '요청 필터가 해제되었습니다. 별도로 차단했다면 차단은 유지됩니다.';
+
+  @override
+  String get moderationBlockRequestBody => '현재 요청을 거절하고 이 기기에서 이 사람의 이후 개인 메시지, 친구 요청과 그룹 초대를 차단합니다. 상대에게 알림을 보내지 않습니다.';
+
+  @override
+  String get accountBackupShareClosed => '시스템 공유를 닫았습니다. 백업을 다시 공유할 수 있습니다.';
+
+  @override
+  String get nearbyHideSession => '이 근처 세션 숨기기';
+
+  @override
+  String get nearbySessionHidden => '이번 근처 세션을 숨겼습니다. 이 사람이 새 세션을 시작하면 다시 나타날 수 있습니다.';
+
+  @override
+  String get pendingReviewOpenConversation => '원래 대화 열기';
+
+  @override
+  String get pendingReviewMissingContact => '이 대화는 지금 사용할 수 없습니다. 다시 보내기 전에 연락처를 복원하거나 추가하세요.';
+
+  @override
+  String get pendingReviewMissingGroup => '이 그룹은 지금 사용할 수 없습니다. 다시 보내기 전에 그룹에 다시 가입하세요.';
+
+  @override
+  String get pendingReviewIgnoreCopy => '이 사본 무시';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    return '복원된 사본 $count개를 무시했습니다.';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => '이 연습을 종료할까요?';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return '완료한 $done/$total 라운드의 결과가 이 기기에 남습니다. 미완료 라운드는 미완료로 유지되며 종료 후에는 변경할 수 없습니다.';
+  }
+
+  @override
+  String get groupPracticeEnded => '연습이 종료되었습니다. 저장한 라운드와 점수는 읽기 전용입니다.';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return '이 녹음의 길이는 $actual입니다. 저장된 클립에는 최소 $minimum이 필요합니다. 원래 구간을 복원하려면 더 긴 WAV를 선택하세요.';
+  }
+
+  @override
+  String get deliveryFailedNext => '발신함을 열어 이 메시지의 전송을 다시 시도하세요.';
 }

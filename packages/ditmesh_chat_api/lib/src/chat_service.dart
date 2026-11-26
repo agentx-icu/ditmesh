@@ -2,6 +2,14 @@ import 'message_search.dart';
 import 'models.dart';
 import 'keyed_recording.dart';
 
+/// Local controls for receiving future applications from rejected senders.
+abstract interface class FriendRequestFilter {
+  Future<List<String>> rejectedFriendRequestKeys();
+
+  /// Clears independent request filtering. A separate contact block remains.
+  Future<void> allowFutureFriendRequests(String publicKey);
+}
+
 /// Friends, conversations, C2C and group messaging.
 ///
 /// All lists are exposed as broadcast streams that replay the current value

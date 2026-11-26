@@ -295,6 +295,35 @@ class _KeyingInputState extends State<KeyingInput> {
       style: theme.textTheme.titleMedium,
       color: theme.colorScheme.primary,
     );
+    final s = context.s;
+    final showTouchHint =
+        theme.platform == TargetPlatform.iOS ||
+        theme.platform == TargetPlatform.android;
+    final keyboardHint = !_profile.isDefault
+        ? s.keysHintCustom(
+            keyLabels(
+              _profile.keysFor(
+                _mode == KeyingMode.straightKey
+                    ? KeyerMode.straight
+                    : _profile.keyerMode,
+              ),
+            ),
+          )
+        : _mode == KeyingMode.straightKey
+        ? s.chatKeyHint
+        : s.chatPaddleHint;
+    final hint = Text(
+      showTouchHint
+          ? (_mode == KeyingMode.straightKey
+                ? s.chatKeyTouchHint
+                : s.chatPaddleTouchHint)
+          : keyboardHint,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
       child: widget.showHint
@@ -304,26 +333,9 @@ class _KeyingInputState extends State<KeyingInput> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        !_profile.isDefault
-                            ? context.s.keysHintCustom(
-                                keyLabels(
-                                  _profile.keysFor(
-                                    _mode == KeyingMode.straightKey
-                                        ? KeyerMode.straight
-                                        : _profile.keyerMode,
-                                  ),
-                                ),
-                              )
-                            : _mode == KeyingMode.straightKey
-                            ? context.s.chatKeyHint
-                            : context.s.chatPaddleHint,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: showTouchHint
+                          ? Tooltip(message: keyboardHint, child: hint)
+                          : hint,
                     ),
                     pattern,
                   ],

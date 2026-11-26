@@ -3,6 +3,8 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
 import '../../i18n/system_date_time.dart';
+import '../chat/chat_scope.dart';
+import '../chat/restored_pending.dart';
 import '../common/app_bar_title.dart';
 import 'account_widgets.dart';
 import 'backup_labels.dart';
@@ -10,9 +12,14 @@ import 'backup_labels.dart';
 /// What an encrypted backup holds (F10), shown after the passphrase opened
 /// it and before anything is replaced.
 class BackupPreviewCard extends StatelessWidget {
-  const BackupPreviewCard({super.key, required this.preview});
+  const BackupPreviewCard({
+    super.key,
+    required this.preview,
+    this.confirming = false,
+  });
 
   final BackupPreview preview;
+  final bool confirming;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +45,11 @@ class BackupPreviewCard extends StatelessWidget {
           children: [
             Text(s.restoreXPreviewTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text(
-              '${preview.displayName} · ${key.length > 8 ? key.substring(0, 8) : key}',
-              style: theme.textTheme.titleSmall,
-            ),
+            if (!confirming)
+              Text(
+                '${preview.displayName} · ${key.length > 8 ? key.substring(0, 8) : key}',
+                style: theme.textTheme.titleSmall,
+              ),
             Text(s.restoreXCreated(created)),
             const SizedBox(height: 8),
             Text(s.restoreXIncluded, style: theme.textTheme.labelLarge),
@@ -65,7 +73,7 @@ class BackupPreviewCard extends StatelessWidget {
             ],
             if (preview.queuedInvites > 0)
               Text(s.restoreXReportInvites(preview.queuedInvites)),
-            if (preview.profileNeedsPassword) ...[
+            if (preview.profileNeedsPassword && !confirming) ...[
               const SizedBox(height: 8),
               Text(s.restoreXIdentityPasswordNote),
             ],
@@ -111,49 +119,74 @@ class RestoreReportPage extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: AccountPageBody(
-        children: [
-          Text(s.restoreXReportRestored, style: theme.textTheme.titleSmall),
-          for (final c in restored)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.check, color: theme.colorScheme.primary),
-              title: Text(backupCategoryLabel(s, c)),
-            ),
-          if (missing.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              s.restoreXReportNotIncluded,
-              style: theme.textTheme.titleSmall,
-            ),
-            for (final c in missing)
-              ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.remove),
-                title: Text(backupCategoryLabel(s, c)),
+        aside: [
+          AccountPanel(
+            children: [
+              if (missing.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  s.restoreXReportNotIncluded,
+                  style: theme.textTheme.titleSmall,
+                ),
+                for (final c in missing)
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.remove),
+                    title: Text(backupCategoryLabel(s, c)),
+                  ),
+              ],
+              if (preferencesFailed) Text(s.restoreXReportPrefsFailed),
+              if (report.pendingNotResumed > 0)
+                Text(
+                  s.restoreXReportPendingNotResumed(report.pendingNotResumed),
+                ),
+              if (report.queuedInvitesNotResumed > 0)
+                Text(s.restoreXReportInvites(report.queuedInvitesNotResumed)),
+              const SizedBox(height: 16),
+              Text(
+                s.restoreXReportStopOld,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
-          ],
-          if (preferencesFailed) Text(s.restoreXReportPrefsFailed),
+              const SizedBox(height: 24),
+              FilledButton(
+                key: const ValueKey('restore-x-done'),
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(s.restoreXReportDone),
+              ),
+            ],
+          ),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              Text(s.restoreXReportRestored, style: theme.textTheme.titleSmall),
+              for (final c in restored)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.check, color: theme.colorScheme.primary),
+                  title: Text(backupCategoryLabel(s, c)),
+                ),
+            ],
+          ),
           if (report.pendingForReview > 0)
-            Text(s.restoreXReportPendingReview(report.pendingForReview)),
-          if (report.pendingNotResumed > 0)
-            Text(s.restoreXReportPendingNotResumed(report.pendingNotResumed)),
-          if (report.queuedInvitesNotResumed > 0)
-            Text(s.restoreXReportInvites(report.queuedInvitesNotResumed)),
-          const SizedBox(height: 16),
-          Text(
-            s.restoreXReportStopOld,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
+            AccountPanel(
+              children: [
+                Text(
+                  s.restoreXPendingReviewTitle,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(s.restoreXReportPendingReview(report.pendingForReview)),
+                if (maybeIdentityService(context) != null) ...[
+                  const SizedBox(height: 8),
+                  const RestoredPendingBanner(reviewAction: true),
+                ],
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            key: const ValueKey('restore-x-done'),
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(s.restoreXReportDone),
-          ),
         ],
       ),
     );

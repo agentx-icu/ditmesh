@@ -34,7 +34,7 @@ part 'fake_chat_service_session.dart';
 /// Test hooks live in [FakeChatServiceTestHooks] (`fake_chat_service_hooks.dart`).
 final class FakeChatService
     with _FakeMessageManagement, _FakeBlocking
-    implements ChatService {
+    implements ChatService, FriendRequestFilter {
   FakeChatService({
     String? selfPublicKey,
     IdentityService? identity,
@@ -68,6 +68,7 @@ final class FakeChatService
   /// Conversations removed by [deleteConversation]: not listed again until
   /// the next message, even for a friend.
   final Set<String> _hidden = <String>{};
+  final Set<String> _rejectedRequestKeys = <String>{};
 
   /// Groups whose transport is down (`setGroupConnected`): sends stay pending.
   @override
@@ -203,8 +204,20 @@ final class FakeChatService
   Future<void> rejectFriendRequest(String publicKey) async {
     _requireSession();
     await _holdAnswer();
-    // Like the backend: rejecting an unknown request is a no-op.
-    _takeFriendRequest(publicKey);
+    final key = publicKey.toUpperCase();
+    if (_takeFriendRequest(key) != null) _rejectedRequestKeys.add(key);
+  }
+
+  @override
+  Future<List<String>> rejectedFriendRequestKeys() async {
+    _requireSession();
+    return _rejectedRequestKeys.toList().reversed.toList(growable: false);
+  }
+
+  @override
+  Future<void> allowFutureFriendRequests(String publicKey) async {
+    _requireSession();
+    _rejectedRequestKeys.remove(publicKey.toUpperCase());
   }
 
   @override

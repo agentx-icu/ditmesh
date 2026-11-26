@@ -38,14 +38,18 @@ class MessageInput extends StatefulWidget {
     required this.conversationId,
     required this.playback,
     this.initialDraft = '',
+    this.peerOffline = false,
     this.onSent,
+    this.paneHeight,
   });
 
   final ChatService service;
   final String conversationId;
   final MorsePlaybackController playback;
   final String initialDraft;
+  final bool peerOffline;
   final ValueChanged<ChatMessage>? onSent;
+  final double? paneHeight;
 
   @override
   State<MessageInput> createState() => _MessageInputState();
@@ -56,8 +60,8 @@ class _MessageInputState extends State<MessageInput>
     implements IdentityDataStore {
   static const Duration _draftDebounce = Duration(milliseconds: 400);
 
-  /// Below this window height the composer switches to its compact layout.
-  static const double compactHeight = 520;
+  /// Below this available height the composer reduces the height of the keys.
+  static const double compactHeight = 440;
 
   late final _DraftWriter _writer = _writerFor(
     widget.service,
@@ -325,6 +329,9 @@ class _MessageInputState extends State<MessageInput>
       // write supersedes the send's intent.
       unawaited(_persistDraft());
       widget.onSent?.call(sent);
+      if (sent.status == MessageStatus.pending) {
+        showSnack(context, context.s.chatDraftQueued);
+      }
     } else if (unchanged) {
       // This editor left during the send (route popped, pane collapsed) and
       // the sent text is still stored. An editor still sharing the text

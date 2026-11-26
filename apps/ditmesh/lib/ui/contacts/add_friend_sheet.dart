@@ -8,13 +8,16 @@ import 'package:provider/provider.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/nearby_controller.dart';
+import '../account/account_widgets.dart';
+import '../account/tox_id_qr_dialog.dart';
+import '../common/app_bar_title.dart';
 import '../nearby/nearby_page.dart';
 import '../common/close_owned_route.dart';
 import '../common/field_label.dart';
 import 'qr_scan_page.dart';
 import 'tox_id.dart';
 
-/// Bottom sheet to paste or scan a Tox ID and send an optional greeting.
+/// Page to paste or scan a Tox ID and send an optional greeting.
 /// Resolves to true when a request was sent.
 Future<bool> showAddFriendSheet(
   BuildContext context, {
@@ -22,23 +25,60 @@ Future<bool> showAddFriendSheet(
   String? ownToxId,
   bool? canScan,
 }) async {
-  final bool? sent = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: AddFriendForm(
-        service: service,
-        ownToxId: ownToxId,
-        canScan:
-            canScan ??
-            switch (defaultTargetPlatform) {
-              TargetPlatform.android ||
-              TargetPlatform.iOS ||
-              TargetPlatform.macOS => true,
-              _ => false,
-            },
+  final form = AddFriendForm(
+    service: service,
+    ownToxId: ownToxId,
+    canScan:
+        canScan ??
+        switch (defaultTargetPlatform) {
+          TargetPlatform.android ||
+          TargetPlatform.iOS ||
+          TargetPlatform.macOS => true,
+          _ => false,
+        },
+  );
+  final s = context.s;
+  final sent = await Navigator.of(context).push<bool>(
+    MaterialPageRoute<bool>(
+      builder: (pageContext) => Scaffold(
+        appBar: AppBar(title: AppBarTitle(s.chatAddFriend)),
+        body: AccountPageBody(
+          aside: [
+            if (ownToxId != null)
+              AccountPanel(
+                children: [
+                  Text(
+                    s.chatMyToxId,
+                    style: Theme.of(pageContext).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  SelectableText(groupToxId(ownToxId)),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            unawaited(showToxIdQrDialog(pageContext, ownToxId)),
+                        icon: const Icon(Icons.qr_code_2),
+                        label: Text(s.accountShowQr),
+                      ),
+                      TextButton.icon(
+                        onPressed: () =>
+                            unawaited(copyToClipboard(pageContext, ownToxId)),
+                        icon: const Icon(Icons.copy),
+                        label: Text(s.actionCopy),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+          ],
+          children: [
+            AccountPanel(children: [form]),
+          ],
+        ),
       ),
     ),
   );
@@ -74,6 +114,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
   String? _serverErrorCode;
   bool _busy = false;
   bool _scanning = false;
+  QrCameraIssue? _cameraIssue;
 
   @override
   void didChangeDependencies() {
@@ -97,8 +138,14 @@ class _AddFriendFormState extends State<AddFriendForm> {
     if (_busy || _scanning) return;
     _scanning = true;
     try {
-      final String? scanned = await QrScanPage.open(context);
-      if (scanned == null || !mounted) return;
+      QrCameraIssue? issue;
+      final String? scanned = await QrScanPage.open(
+        context,
+        onUnavailable: (value) => issue = value,
+      );
+      if (!mounted) return;
+      setState(() => _cameraIssue = scanned == null ? issue : null);
+      if (scanned == null) return;
       _id.text = scanned;
       _form.currentState?.validate();
     } finally {
@@ -171,7 +218,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
               TextFormField(
                 controller: _id,
                 autofocus: true,
-                maxLines: 2,
+                maxLines: 8,
                 minLines: 1,
                 autocorrect: false,
                 enableSuggestions: false,
@@ -197,22 +244,36 @@ class _AddFriendFormState extends State<AddFriendForm> {
                   }
                 },
               ),
-              if (widget.canScan)
+              if (!widget.canScan || _cameraIssue != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    switch (_cameraIssue) {
+                      QrCameraIssue.permissionDenied =>
+                        s.chatScanQrPermissionHelp,
+                      QrCameraIssue.unavailable => s.chatScanQrManualHint,
+                      QrCameraIssue.unsupported ||
+                      null => s.chatScanQrDesktopHint,
+                    },
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              if (widget.canScan && _cameraIssue != QrCameraIssue.unsupported)
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: _busy ? null : () => unawaited(_scan()),
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: Text(s.chatScanQr),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    s.chatScanQrDesktopHint,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    icon: Icon(
+                      _cameraIssue == QrCameraIssue.unavailable
+                          ? Icons.refresh
+                          : Icons.qr_code_scanner,
+                    ),
+                    label: Text(
+                      _cameraIssue == QrCameraIssue.unavailable
+                          ? s.actionRetry
+                          : s.chatScanQr,
                     ),
                   ),
                 ),

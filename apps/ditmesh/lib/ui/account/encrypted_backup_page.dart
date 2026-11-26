@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +19,14 @@ import 'backup_labels.dart';
 /// passphrase → one consistent, whole-file encrypted archive → save/share,
 /// with the platform's actual outcome. Pops with a [BackupExportResult].
 class EncryptedBackupPage extends StatefulWidget {
-  const EncryptedBackupPage({super.key});
+  const EncryptedBackupPage({
+    super.key,
+    this.showOutcomeSnackBar = true,
+    this.onSavedPath,
+  });
+
+  final bool showOutcomeSnackBar;
+  final ValueChanged<String>? onSavedPath;
 
   static const Key exportKey = ValueKey('backup-x-export');
 
@@ -32,6 +40,7 @@ class EncryptedBackupPage extends StatefulWidget {
 class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
   final _passphrase = TextEditingController();
   final _confirm = TextEditingController();
+  final _passphrasePanel = GlobalKey();
   late final Future<BackupInventory> _inventory;
   final Set<BackupCategory> _selected = {
     BackupCategory.training,
@@ -64,6 +73,7 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
   Future<void> _export(BuildContext anchor, BackupInventory inventory) async {
     if (_busy) return;
     final s = context.s;
+    final platform = Theme.of(context).platform;
     final pass = _passphrase.text;
     final error = pass.length < EncryptedBackupPage.minPassphrase
         ? s.backupXPassphraseTooShort
@@ -110,8 +120,16 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
         fileName: backupFileName(identity),
         shareOrigin: origin,
       );
-      result = saved ? BackupExportResult.saved : BackupExportResult.cancelled;
-      message = saved ? s.accountBackupSaved : s.accountBackupNotSaved;
+      if (saved.path case final path?) widget.onSavedPath?.call(path);
+      result = saved.completed
+          ? BackupExportResult.saved
+          : BackupExportResult.cancelled;
+      message = backupExportFeedback(
+        s,
+        platform,
+        result,
+        savedFileName: saved.path == null ? null : p.basename(saved.path!),
+      );
     } on Object catch (e) {
       result = BackupExportResult.failed;
       message = '${s.accountBackupFailed}: ${backupErrorMessage(s, e)}';
@@ -121,9 +139,11 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
       _busy = false;
       _outcome = message;
     });
-    ScaffoldMessenger.maybeOf(
-      context,
-    )?.showSnackBar(SnackBar(content: Text(message)));
+    if (widget.showOutcomeSnackBar) {
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text(message)));
+    }
     if (result == BackupExportResult.saved) closeOwnedRoute(route, result);
   }
 
@@ -174,93 +194,131 @@ class _EncryptedBackupPageState extends State<EncryptedBackupPage> {
     final mediaSize = inv.sizeOf(BackupCategory.media);
     return AccountPageBody(
       maxWidth: 640,
-      children: [
-        Text(s.backupXIntro, style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 8),
-        for (final c in BackupCategory.values)
-          if (c != BackupCategory.pendingMessages || inv.pendingMessages > 0)
-            CheckboxListTile(
-              key: ValueKey('backup-x-${c.name}'),
-              contentPadding: EdgeInsets.zero,
-              value:
-                  c == BackupCategory.identity ||
-                  (_selected.contains(c) && _available(c, inv)),
-              onChanged:
-                  c == BackupCategory.identity || !_available(c, inv) || _busy
-                  ? null
-                  : (v) => setState(
-                      () => v == true ? _selected.add(c) : _selected.remove(c),
-                    ),
-              title: Text(backupCategoryLabel(s, c)),
-              subtitle: Text(
-                [
-                  if (c == BackupCategory.identity) s.backupXRequired,
-                  if (c == BackupCategory.media &&
-                      mediaSize.bytes > BackupMedia.maxBytes)
-                    s.backupXMediaTooLarge(formatBackupSize(s, mediaSize.bytes))
-                  else if (c != BackupCategory.preferences)
-                    s.backupXSizeLine(
-                      inv.sizeOf(c).items,
-                      formatBackupSize(s, inv.sizeOf(c).bytes),
-                    ),
-                  if (backupCategoryHint(s, c) case final String hint) hint,
-                ].join('\n'),
+      aside: [
+        AccountPanel(
+          key: _passphrasePanel,
+          children: [
+            Text(s.backupXPassphrase, style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            PasswordField(
+              key: const ValueKey('backup-x-passphrase'),
+              controller: _passphrase,
+              label: s.backupXPassphrase,
+              showStrength: true,
+              errorText: _passphraseError,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 8),
+            PasswordField(
+              key: const ValueKey('backup-x-confirm'),
+              controller: _confirm,
+              label: s.backupXPassphraseConfirm,
+              textInputAction: TextInputAction.done,
+            ),
+            const SizedBox(height: 4),
+            Text(s.backupXPassphraseHint, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 16),
+            Text(
+              s.backupXMigrationNote,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
               ),
             ),
-        if (inv.queuedInvites > 0)
-          Text(s.backupXInvitesNote(inv.queuedInvites)),
-        if (inv.profileHasPassword) ...[
-          const SizedBox(height: 8),
-          Text(s.backupXIdentityPasswordNote),
-        ],
-        const SizedBox(height: 16),
-        Text(
-          s.backupXTotal(formatBackupSize(s, total)),
-          style: theme.textTheme.titleSmall,
+            const SizedBox(height: 16),
+            Builder(
+              builder: (button) => FilledButton.icon(
+                key: EncryptedBackupPage.exportKey,
+                onPressed: _busy ? null : () => _export(button, inv),
+                icon: _busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.lock_outline),
+                label: Text(_busy ? s.backupXExporting : s.backupXExport),
+              ),
+            ),
+            if (_outcome case final String text) ...[
+              const SizedBox(height: 8),
+              Text(text, key: const ValueKey('backup-x-outcome')),
+            ],
+          ],
         ),
-        const SizedBox(height: 16),
-        PasswordField(
-          key: const ValueKey('backup-x-passphrase'),
-          controller: _passphrase,
-          label: s.backupXPassphrase,
-          showStrength: true,
-          errorText: _passphraseError,
-          textInputAction: TextInputAction.next,
+      ],
+      children: [
+        AccountPanel(
+          children: [
+            Text(s.backupXIntro, style: theme.textTheme.bodyMedium),
+            if (MediaQuery.sizeOf(context).width < 840)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const ValueKey('backup-x-passphrase-jump'),
+                  onPressed: () {
+                    final panel = _passphrasePanel.currentContext;
+                    if (panel != null) {
+                      Scrollable.ensureVisible(
+                        panel,
+                        duration: const Duration(milliseconds: 250),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_downward),
+                  label: Text(s.backupXGoToPassphrase),
+                ),
+              ),
+            const SizedBox(height: 8),
+            for (final c in BackupCategory.values)
+              if (c != BackupCategory.pendingMessages ||
+                  inv.pendingMessages > 0)
+                CheckboxListTile(
+                  key: ValueKey('backup-x-${c.name}'),
+                  contentPadding: EdgeInsets.zero,
+                  value:
+                      c == BackupCategory.identity ||
+                      (_selected.contains(c) && _available(c, inv)),
+                  onChanged:
+                      c == BackupCategory.identity ||
+                          !_available(c, inv) ||
+                          _busy
+                      ? null
+                      : (v) => setState(
+                          () => v == true
+                              ? _selected.add(c)
+                              : _selected.remove(c),
+                        ),
+                  title: Text(backupCategoryLabel(s, c)),
+                  subtitle: Text(
+                    [
+                      if (c == BackupCategory.identity) s.backupXRequired,
+                      if (c == BackupCategory.media &&
+                          mediaSize.bytes > BackupMedia.maxBytes)
+                        s.backupXMediaTooLarge(
+                          formatBackupSize(s, mediaSize.bytes),
+                        )
+                      else if (c != BackupCategory.preferences)
+                        s.backupXSizeLine(
+                          inv.sizeOf(c).items,
+                          formatBackupSize(s, inv.sizeOf(c).bytes),
+                        ),
+                      if (backupCategoryHint(s, c) case final String hint) hint,
+                    ].join('\n'),
+                  ),
+                ),
+            if (inv.queuedInvites > 0)
+              Text(s.backupXInvitesNote(inv.queuedInvites)),
+            if (inv.profileHasPassword) ...[
+              const SizedBox(height: 8),
+              Text(s.backupXIdentityPasswordNote),
+            ],
+            const SizedBox(height: 16),
+            Text(
+              s.backupXTotal(formatBackupSize(s, total)),
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
-        const SizedBox(height: 8),
-        PasswordField(
-          key: const ValueKey('backup-x-confirm'),
-          controller: _confirm,
-          label: s.backupXPassphraseConfirm,
-          textInputAction: TextInputAction.done,
-        ),
-        const SizedBox(height: 4),
-        Text(s.backupXPassphraseHint, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 16),
-        Text(
-          s.backupXMigrationNote,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.error,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Builder(
-          builder: (button) => FilledButton.icon(
-            key: EncryptedBackupPage.exportKey,
-            onPressed: _busy ? null : () => _export(button, inv),
-            icon: _busy
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.lock_outline),
-            label: Text(_busy ? s.backupXExporting : s.backupXExport),
-          ),
-        ),
-        if (_outcome case final String text) ...[
-          const SizedBox(height: 8),
-          Text(text, key: const ValueKey('backup-x-outcome')),
-        ],
       ],
     );
   }

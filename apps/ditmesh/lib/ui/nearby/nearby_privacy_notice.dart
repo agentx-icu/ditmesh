@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
+import '../common/app_bar_title.dart';
 
 /// Names come from signed peers, whose identity and text are still untrusted.
 /// Keep wire records intact and apply the shared display policy at the UI.
@@ -14,22 +16,48 @@ String nearbyDisplayName(String raw, String fallback) {
 /// shared, with whom, and what is not (plan §4.5). Returns true when the user
 /// accepts.
 Future<bool> showNearbyPrivacyNotice(BuildContext context) async {
-  final l10n = context.s;
-  final accepted = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.nearbyPrivacyTitle),
-      content: SingleChildScrollView(child: Text(l10n.nearbyPrivacyBody)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text(l10n.nearbyPrivacyAccept),
-        ),
-      ],
+  final accepted = await Navigator.of(context).push<bool>(
+    MaterialPageRoute<bool>(
+      builder: (ctx) {
+        final l10n = ctx.s;
+        final theme = Theme.of(ctx);
+        return Scaffold(
+          appBar: AppBar(title: AppBarTitle(l10n.nearbyPrivacyTitle)),
+          body: AccountPageBody(
+            maxWidth: 620,
+            aside: [
+              AccountPanel(
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(l10n.actionCancel),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text(l10n.nearbyPrivacyAccept),
+                  ),
+                ],
+              ),
+            ],
+            children: [
+              AccountPanel(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.nearbyPrivacyBody,
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     ),
   );
   return accepted ?? false;

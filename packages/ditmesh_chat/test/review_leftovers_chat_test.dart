@@ -259,32 +259,29 @@ void main() {
     await friendSub.cancel();
   });
 
-  test(
-    'L18 a failed block cleanup still hides them from every view',
-    () async {
-      ffi.applications.add((userId: _other, wording: 'hi'));
-      invites = [
-        PendingGroupInvite(
-          id: 'inv_1',
-          inviterUserId: _other.toLowerCase(),
-          kind: 'group',
-          groupName: 'spam net',
-          receivedAt: DateTime(2026, 10, 8),
-        ),
-      ];
-      await bind();
-      expect(chat.friendRequests.map((r) => r.publicKey), [_other]);
-      expect(chat.groupInvites.map((i) => i.inviteId), ['inv_1']);
-      // A persistent read failure: the cleanup and the request refresh
-      // both fail.
-      ffi.failApplications = true;
-      await expectLater(chat.blockPeer(_other), throwsStateError);
-      expect(chat.blockedPeers, {_other});
-      expect(chat.friendRequests, isEmpty);
-      expect(chat.groupInvites, isEmpty);
-      ffi.failApplications = false;
-    },
-  );
+  test('L18 a failed block cleanup still hides them from every view', () async {
+    ffi.applications.add((userId: _other, wording: 'hi'));
+    invites = [
+      PendingGroupInvite(
+        id: 'inv_1',
+        inviterUserId: _other.toLowerCase(),
+        kind: 'group',
+        groupName: 'spam net',
+        receivedAt: DateTime(2026, 10, 8),
+      ),
+    ];
+    await bind();
+    expect(chat.friendRequests.map((r) => r.publicKey), [_other]);
+    expect(chat.groupInvites.map((i) => i.inviteId), ['inv_1']);
+    // A persistent read failure: the cleanup and the request refresh
+    // both fail.
+    ffi.failApplications = true;
+    await expectLater(chat.blockPeer(_other), throwsStateError);
+    expect(chat.blockedPeers, {_other});
+    expect(chat.friendRequests, isEmpty);
+    expect(chat.groupInvites, isEmpty);
+    ffi.failApplications = false;
+  });
 
   test(
     'L18 blocking a request only the store remembers still dismisses it',
@@ -299,10 +296,13 @@ void main() {
       await chat.blockPeer(_other);
       expect(chat.friendRequests, isEmpty);
       await chat.unblockPeer(_other);
-      // The same sender asks again: still dismissed.
+      // Lifting a block leaves the previous request dismissed. A newly
+      // received request is visible again unless the sender was rejected.
+      expect(chat.friendRequests, isEmpty);
+      expect(await chat.rejectedFriendRequestKeys(), isEmpty);
       ffi.applications.add((userId: _other, wording: 'hi again'));
       await ticks();
-      expect(chat.friendRequests, isEmpty);
+      expect(chat.friendRequests.single.message, 'hi again');
     },
   );
 

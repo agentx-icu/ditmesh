@@ -96,7 +96,7 @@ class SJa extends S {
   String get errorWrongPassword => 'パスワードが違います。もう一度お試しください。';
 
   @override
-  String get errorPeerOffline => 'この連絡先はオフラインです。Tox にサーバーはないため、相手が戻るまでメッセージは送信待ちになります。';
+  String get errorPeerOffline => '相手がオフラインです。接続可能になるまでこの端末で送信を待ちます。';
 
   @override
   String get errorInvalidToxId => '有効な Tox ID ではありません（76 桁の 16 進数が必要です）。';
@@ -293,10 +293,10 @@ class SJa extends S {
   String get accountWelcomeTitle => 'ID 情報はこのデバイスに保存されます';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh は Tox の P2P ネットワークを使用します。サーバーもアカウント登録も不要です。ID 情報は、このデバイスだけに保存される鍵のペアです。';
+  String get accountWelcomeIntro => 'DitMesh は Tox のピアツーピアネットワークを使います。登録は不要です。身元を表す鍵のペアはこの端末に保存されます。';
 
   @override
-  String get accountWelcomePointNoServer => 'サーバー、電話番号、メールアドレスは不要です。通信者同士がモールス符号で直接やり取りします。';
+  String get accountWelcomePointNoServer => '中央メッセージサーバー、電話番号、メールアドレスは不要です。モールス符号で直接通信します。';
 
   @override
   String get accountWelcomePointTraining => 'ストレートキーやアイアンビックパドルでモールス信号を打ち、個人やグループでチャットできます。';
@@ -326,7 +326,7 @@ class SJa extends S {
   String get accountBackupTitle => '今すぐ ID 情報をバックアップ';
 
   @override
-  String get accountBackupBody => 'ID 情報はこのデバイスにしか存在しません。デバイスの紛失、初期化、盗難があった場合は復元できません。新しい ID 情報では連絡先に本人だと認識されず、学習の進捗も失われます。';
+  String get accountBackupBody => '端末のデータが失われ、使えるバックアップがなければ、この ID は復元できません。バックアップファイルとパスフレーズを保管してください。';
 
   @override
   String get accountBackupWhatIsInside => 'バックアップファイルには、パスワードで暗号化された ID 鍵と学習の進捗が含まれます。このデバイス以外の安全な場所に保管してください。';
@@ -341,6 +341,9 @@ class SJa extends S {
   String get accountSectionNotifications => '通知';
 
   @override
+  String get accountNotificationsSystemManaged => '通知の権限は端末で管理されます。';
+
+  @override
   String get accountNotificationsEnable => '通知を表示';
 
   @override
@@ -350,7 +353,7 @@ class SJa extends S {
   String get accountNotificationsContent => 'メッセージの内容を表示';
 
   @override
-  String get accountNotificationsContentSubtitle => 'バナーとロック画面にテキストとモールスを表示します。オフにすると、メッセージが届いたことだけを知らせます。';
+  String get accountNotificationsContentSubtitle => 'オフにすると、メッセージ通知に会話名、送信者、本文、モールス符号を表示しません。ロック画面のプレビューはシステム設定に従います。';
 
   @override
   String get accountNotificationsAllow => '通知を許可';
@@ -362,7 +365,7 @@ class SJa extends S {
   String get accountNotificationsBlocked => 'システム設定でブロック中';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'DitMesh のメッセージ通知はシステム設定でオフになっています。システム設定で再度オンにしてください。';
+  String get accountNotificationsBlockedSubtitle => 'Android の「設定 → アプリ → DitMesh → 通知」でメッセージ通知をオンにしてください。';
 
   @override
   String get accountNotificationsDenied => 'DitMesh の通知はシステム設定でオフになっています。';
@@ -374,16 +377,19 @@ class SJa extends S {
   String get accountBackupShareFile => 'バックアップファイルを共有';
 
   @override
-  String get accountBackupSaved => 'バックアップを保存しました';
+  String get accountBackupSaved => 'バックアップを保存しました。選択した場所で.mcqbackup ファイルを確認してください。';
 
   @override
-  String get accountBackupNotSaved => 'バックアップは保存されませんでした';
+  String get accountBackupNotSaved => '今回の保存は取り消されました。再度エクスポートできます。';
+
+  @override
+  String get accountBackupShareReturned => 'システムの共有画面を開きました。選択したフォルダまたは共有先のアプリで .mcqbackup ファイルを確認してください。';
 
   @override
   String get accountBackupFailed => 'バックアップを書き込めませんでした';
 
   @override
-  String get accountBackupAcknowledge => 'このバックアップがなければ ID 情報を復元できないことを理解しました。';
+  String get accountBackupAcknowledge => '端末のデータを失い、バックアップがない場合は、ID を復元できないことを理解しました。';
 
   @override
   String get accountBackupContinue => 'DitMesh を始める';
@@ -691,6 +697,9 @@ class SJa extends S {
   String get chatToxIdLabel => 'Tox ID（76 桁の 16 進数）';
 
   @override
+  String get chatRequestPublicKey => '申請者の公開鍵（16 進数 64 桁）';
+
+  @override
   String get chatToxIdInvalid => 'Tox ID は 76 桁の 16 進数でなければなりません';
 
   @override
@@ -716,6 +725,9 @@ class SJa extends S {
 
   @override
   String get chatScanQrDesktopHint => 'このプラットフォームではカメラで読み取れません。Tox ID を貼り付けてください。';
+
+  @override
+  String get chatScanQrManualHint => 'カメラを使用できません。完全な Tox ID を貼り付けるか、再度スキャンしてください。';
 
   @override
   String get chatScanQrTitle => 'Tox ID をスキャン';
@@ -1815,7 +1827,7 @@ class SJa extends S {
   String get listenSettings => '受信設定';
 
   @override
-  String get listenDecoded => '解読結果';
+  String get listenDecoded => 'リアルタイム解読';
 
   @override
   String get listenEmptyHint => 'モールスの音にマイクを向けてください。解読したテキストがここに表示されます。';
@@ -1842,7 +1854,7 @@ class SJa extends S {
   String get listenTone => '音の周波数';
 
   @override
-  String get listenToneLocked => '周波数ロック中';
+  String get listenToneLocked => 'トーンをロックしました';
 
   @override
   String get listenToneSearching => '探索中';
@@ -2252,7 +2264,7 @@ class SJa extends S {
   String get chatSearchHint => 'この会話を検索';
 
   @override
-  String get chatSearchAnyone => '全員';
+  String get chatSearchAnyone => 'すべての送信者';
 
   @override
   String get chatSearchMe => '自分';
@@ -2559,6 +2571,12 @@ class SJa extends S {
   String get diagTitle => '接続の診断';
 
   @override
+  String get diagScopeIdentity => 'この ID のすべての会話';
+
+  @override
+  String get diagScopeConversation => 'この会話のみ';
+
+  @override
   String get diagOpenSubtitle => 'メッセージが待機している理由と再接続の方法';
 
   @override
@@ -2652,7 +2670,7 @@ class SJa extends S {
   String get diagPendingHint => '送信待ちのメッセージはこの端末に保存され、相手に届く状態になると自動で送信されます。診断で削除や再送をすることはありません。';
 
   @override
-  String get diagReconnect => '再接続';
+  String get diagReconnect => 'この端末を再接続';
 
   @override
   String get diagReconnecting => '再接続中…';
@@ -2669,7 +2687,7 @@ class SJa extends S {
   String get diagAboutTitle => 'DitMesh の接続のしくみ';
 
   @override
-  String get diagAboutBody => 'DitMesh にはサーバーがありません。端末は Tox のピアツーピアネットワークで連絡先と直接通信するため、メッセージが届くには双方が同時にオンラインである必要があります。スマートフォンはバックグラウンドのアプリを一時停止するので、その間 DitMesh は接続を保てず、戻ったときに再接続します。';
+  String get diagAboutBody => '端末同士が Tox で直接通信し、中央メッセージサーバーはありません。公開ブートストラップノードがネットワーク参加を助けます。配信には双方がオンラインである必要があります。アプリに戻ると再接続します。';
 
   @override
   String get diagDetailsTitle => '技術的な詳細';
@@ -2793,7 +2811,7 @@ class SJa extends S {
   String get backupXExporting => 'バックアップを作成中…';
 
   @override
-  String get backupXMigrationNote => '端末を移行しますか？向こうで復元したら、この端末ではこの ID を使わないでください。同じ ID の端末が 2 台あると、同じメッセージが二重に送られることがあります。';
+  String get backupXMigrationNote => '機種変更する場合は、新しい端末で復元を確定する前に、古い端末でこの ID を使っている DitMesh を終了してください。復元後に新しい端末が接続を試みます。';
 
   @override
   String get backupXBusy => 'バックアップ中にデータが変化し続けました。もう一度お試しください。';
@@ -2839,7 +2857,7 @@ class SJa extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '以前の端末にある未送信のメッセージ $count 件はこのバックアップに含まれていません。',
+      other: 'バックアップ作成時に送信待ちのメッセージが $count 件ありました。このバックアップには含まれません。',
     );
     return '$_temp0';
   }
@@ -2854,7 +2872,7 @@ class SJa extends S {
   String get restoreXConfirmTitle => 'この端末の ID を置き換えますか？';
 
   @override
-  String get restoreXConfirmBody => 'この端末の ID とデータはバックアップで置き換えられます。ここで接続する前に、以前の端末でこの ID を使うのをやめてください。';
+  String get restoreXConfirmBody => 'バックアップでこの端末の ID とデータを置き換えます。「置き換えて復元」を選ぶ前に、古い端末でこの ID を使っている DitMesh を終了してください。復元後、この端末が接続を試みます。';
 
   @override
   String get restoreXConfirm => '置き換えて復元';
@@ -2873,12 +2891,7 @@ class SJa extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '未送信のメッセージ $count 件がチャットで確認を待っています。',
-    );
-    return '$_temp0';
+    return 'バックアップから未送信メッセージを $count 件復元しました。下の確認画面を開いてください。';
   }
 
   @override
@@ -2886,7 +2899,7 @@ class SJa extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '以前の端末の未送信メッセージ $count 件は引き継がれていません。',
+      other: 'バックアップ作成時に送信待ちだった $count 件は含まれていません。再送信の前に古い端末で送信済みか確認してください。',
     );
     return '$_temp0';
   }
@@ -2902,7 +2915,7 @@ class SJa extends S {
   }
 
   @override
-  String get restoreXReportStopOld => '以前の端末ではこの ID を使わないでください。';
+  String get restoreXReportStopOld => '古い端末でこの ID の DitMesh がまだ動作している場合は、今すぐ終了してください。';
 
   @override
   String get restoreXReportDone => '完了';
@@ -2921,7 +2934,7 @@ class SJa extends S {
   String get pendingReviewTitle => '未送信のメッセージ';
 
   @override
-  String get pendingReviewBody => '以前の端末で送信を待っていたメッセージです。DitMesh が自動で送ることはありません。まだ必要なら打ち直してください。';
+  String get pendingReviewBody => 'バックアップを作成した時点で、これらのメッセージは旧端末の送信待ちでした。復元したコピーは確認用で、自動送信されません。再送する前に、旧端末で送信済みか確認してください。';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2938,10 +2951,10 @@ class SJa extends S {
   String get pendingReviewEmpty => '確認するものはもうありません。';
 
   @override
-  String get backupXWizardInside => 'バックアップファイルは自分で決めたパスフレーズでまるごと暗号化され、ID の鍵と練習の進捗を含みます。ファイルとパスフレーズは、この端末以外の安全な場所に保管してください。';
+  String get backupXWizardInside => '選んだパスフレーズでファイル全体を暗号化します。ID は常に含まれます。練習やその他のデータは選択したものを出力します。ファイルとパスフレーズは端末の外の安全な場所に保管してください。';
 
   @override
-  String get backupXMeSubtitle => 'ID・チャット・進捗をまとめた暗号化ファイル。保管用にも、別の端末への移行にも';
+  String get backupXMeSubtitle => 'ID のバックアップを暗号化し、会話履歴と練習の進捗を必要に応じて含めます。';
 
   @override
   String get keysTitle => 'キーと外部キーヤー';
@@ -2950,7 +2963,7 @@ class SJa extends S {
   String get keysMeSubtitle => 'キー割り当て・パドル・USB キーヤーアダプター';
 
   @override
-  String get keysIntro => 'モールスを打つキーを選びます。キーボードとして動作する USB 電鍵・パドルアダプターはキーボードと同じ扱いなので、ここでキーを設定してください。どの機器からのキー入力かはアプリには分からないため、プロファイルはキー割り当ての組み合わせです。';
+  String get keysIntro => 'OS にキー操作を送る機器を割り当てられます。キーボードとして動作する USB や Bluetooth アダプターも含みます。プロファイルにはキー割り当てが保存されます。';
 
   @override
   String get keysStandardProfile => '標準';
@@ -2965,7 +2978,7 @@ class SJa extends S {
   String get keysNewProfile => '新しいプロファイル';
 
   @override
-  String get keysLimitations => 'MIDI・シリアル・Bluetooth のキーヤー、アダプターのファームウェア設定、送信機の制御には対応していません。検証済みのアダプターはドキュメントに記載しています。';
+  String get keysLimitations => '専用の Bluetooth 電鍵プロトコル、MIDI、シリアルには直接接続できません。ファームウェア設定や送信機の制御も対象外です。動作確認済みのアダプターは文書を参照してください。';
 
   @override
   String get keysEditTitle => 'キープロファイル';
@@ -3236,13 +3249,13 @@ class SJa extends S {
   String get termsGateTitle => 'コミュニティガイドライン';
 
   @override
-  String get termsGateIntro => 'DitMesh のチャットはサーバーを介さず、相手と直接つながります。始める前に、次のルールに同意してください。';
+  String get termsGateIntro => 'DitMesh は中央メッセージサーバーを使わず、Tox で直接送信します。利用前に以下のルールに同意してください。';
 
   @override
   String get termsGateRuleZero => '一切容認しません：嫌がらせ、ヘイト、脅迫、未成年者が関わる性的コンテンツ、スパム、違法なもの。';
 
   @override
-  String get termsGateRuleContacts => 'メッセージを送れるのはあなたが承認した人だけです。グループには招待かグループ ID で参加します。';
+  String get termsGateRuleContacts => '個別のメッセージは承認済みの連絡先から届きます。参加したグループでは、全メンバーの投稿を受信できます。';
 
   @override
   String get termsGateRuleBlock => '会話、グループのメンバー一覧、友達リクエスト、グループへの招待から誰でもブロックできます。';
@@ -3296,7 +3309,7 @@ class SJa extends S {
   String get bootstrapTitle => 'ネットワークとブートストラップ';
 
   @override
-  String get bootstrapDescription => 'Tox ネットワークに参加するための公開ノードを選択します。';
+  String get bootstrapDescription => '公開ブートストラップノードが Tox への接続を助けます。使用するノードを選択してください。';
 
   @override
   String get bootstrapModeAuto => '自動';
@@ -3485,7 +3498,7 @@ class SJa extends S {
   String get firstChatListenTitle => '2. 聞いて修正する';
 
   @override
-  String get firstChatListenBody => '送信前に試聴で下書きを聞き、削除で誤りを直します。送信後はメッセージの再生を押します。自分宛てのメッセージは端末内に保存されます。';
+  String get firstChatListenBody => '送信前に小さい三角ボタンで下書きを試聴し、横にある「削除」で修正します。送信後はメッセージの再生ボタンを使います。自分宛てのメッセージはこの端末のみに保存されます。';
 
   @override
   String get firstChatFriendTitle => '3. 友達とチャットする';
@@ -3725,7 +3738,7 @@ class SJa extends S {
   String get nearbyPrivacyTitle => '近くの人';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh はあなたの表示名とおおよその位置（約 100 m 単位）を、そのエリアの公開 Tox グループで共有します。グループに参加した人は、実際の所在地にかかわらず、この情報を受け取れます。Tox ID は、自分で「近くの人」のリクエストを送信するか、応答したときだけ共有されます。この機能はアプリがフォアグラウンドにある間だけ動作します。';
+  String get nearbyPrivacyBody => 'DitMesh はあなたの表示名とおおよその位置（約 100 m 単位）を、そのエリアの公開 Tox グループで共有します。グループに参加した人は、実際の所在地にかかわらず、この情報を受け取れます。Tox ID は、自分で「近くの人」のリクエストを送信するか、応答したときだけ共有されます。この機能はアプリがフォアグラウンドにある間だけ動作します。 近くの人の画面を離れた後も、アプリが前面にある間は最長 5 分間共有が続くことがあります。共有を停止するには、近くの人への公開をオフにしてください。';
 
   @override
   String get nearbyPrivacyAccept => 'オンにする';
@@ -3903,4 +3916,220 @@ class SJa extends S {
 
   @override
   String get firstChatReceiptBody => '待機中は端末への保存、送信済みは通信層による受理、配信済みは相手の受信確認を意味します。グループの確認は少なくとも一人の受信を示し、全員が聞いたことは意味しません。';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return '復元した $count 件のメッセージを破棄しますか？確認待ちのローカルコピーが完全に削除されます。';
+  }
+
+  @override
+  String get pendingReviewDismissed => '復元したメッセージを破棄しました。';
+
+  @override
+  String get pendingReviewUndo => '元に戻す';
+
+  @override
+  String get pendingReviewSaveError => '変更を保存できませんでした。メッセージ一覧は保持されています。';
+
+  @override
+  String get restoreXCurrentIdentity => 'この端末の現在の ID';
+
+  @override
+  String get restoreXLockedIdentity => 'ロック中です。名前と指紋は取得できません。';
+
+  @override
+  String get restoreXNoCurrentIdentity => 'この端末には ID がありません。';
+
+  @override
+  String get restoreXBackupIdentity => 'バックアップ内の ID';
+
+  @override
+  String get restoreXPassphraseHelp => 'このバックアップの作成時に設定したパスフレーズを入力してください。';
+
+  @override
+  String get restoreXPendingReviewTitle => '確認待ちの復元済みメッセージ';
+
+  @override
+  String get groupInviteAcceptanceFailed => '招待を承認できませんでした';
+
+  @override
+  String get groupInviteRetryAccept => '承認を再試行';
+
+  @override
+  String get chatDraftOfflineQueue => '送信すると、連絡先がオンラインになるまでこの端末で待機します。';
+
+  @override
+  String get chatDraftQueued => 'この端末の送信待ちに追加しました。';
+
+  @override
+  String get chatKeyTouchHint => '画面上の電鍵を押し続ける';
+
+  @override
+  String get chatPaddleTouchHint => '画面上のパドルを押し続ける';
+
+  @override
+  String get keysSpace => 'スペース';
+
+  @override
+  String get keysLeftControl => '左 Ctrl';
+
+  @override
+  String get keysRightControl => '右 Ctrl';
+
+  @override
+  String get keysBindingUnchanged => '以前の割り当ては変わりません。';
+
+  @override
+  String get backupXGoToPassphrase => 'バックアップのパスフレーズを設定';
+
+  @override
+  String get restoreXFirstConfirmTitle => 'このバックアップを復元しますか？';
+
+  @override
+  String get restoreXFirstConfirmBody => 'バックアップ記載の ID とデータを復元します。確定する前に、古い端末でこの ID を使っている DitMesh を終了してください。復元後、この端末が接続を試みます。';
+
+  @override
+  String get restoreXFirstConfirm => '復元を確認';
+
+  @override
+  String get deliveryMessageTime => 'メッセージ時刻';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return '会話から：$name';
+  }
+
+  @override
+  String get chatRefreshMembers => 'メンバーを更新';
+
+  @override
+  String get pendingSendingUncancellable => '送信を開始すると取り消せません。';
+
+  @override
+  String get diagWaitForPeer => '相手がオンラインになるまで待つか、送信待ちのメッセージを確認してください。';
+
+  @override
+  String get diagReconnectOwnNote => 'この端末だけを再接続します。相手をオンラインにする操作ではありません。';
+
+  @override
+  String get chatScanQrPermissionHelp => 'カメラの使用が許可されていません。システム設定で DitMesh に許可するか、完全な Tox ID を貼り付けてください。';
+
+  @override
+  String get groupInviteReconnectHint => 'この端末の Tox 接続が切れました。再接続してから、招待の承認をお試しください。';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return '$count 件のメッセージを確認';
+  }
+
+  @override
+  String get locationEnableHere => '現在地を使うには、このページの位置情報スイッチをオンにしてください。';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return '$name との会話内を検索';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return 'バックアップを保存しました：$name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => '保存先をコピー';
+
+  @override
+  String get accountNotificationsPermitted => 'システムで通知を許可済み';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '「$name」を削除しますか？';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => '保存した範囲、メモ、DitMesh 内の録音を削除します。読み込み元のファイルは残ります。';
+
+  @override
+  String get workbenchDeleteClipOnly => '保存した範囲とメモを削除します。録音ファイルは残ります。';
+
+  @override
+  String get workbenchRemovedClipAndFile => 'クリップとローカル録音を削除しました。';
+
+  @override
+  String get workbenchRemovedClip => 'クリップを削除しました。録音ファイルは削除していません。';
+
+  @override
+  String get workbenchRemovedClipFileError => 'クリップは削除しましたが、DitMesh 内の録音を削除できませんでした。';
+
+  @override
+  String get chatRejectRequestTitle => 'この友達申請を断りますか？';
+
+  @override
+  String get chatRejectRequestBody => 'この申請と今後この人から届く申請を非表示にします。「連絡先 → 拒否した申請」で再び許可できます。';
+
+  @override
+  String get chatRequestRejected => '申請を断りました。「連絡先 → 拒否した申請」で今後の申請を管理できます。';
+
+  @override
+  String get chatRejectedRequests => '拒否した申請';
+
+  @override
+  String get chatRejectedRequestsHelp => 'この公開鍵からの友達申請はこの端末で非表示です。新しい申請を許可しても連絡先のブロックは解除されません。';
+
+  @override
+  String get chatRejectedRequestsEmpty => '拒否した相手はいません。';
+
+  @override
+  String get chatAllowFutureRequests => '新しい申請を許可';
+
+  @override
+  String get chatFutureRequestsAllowed => '申請フィルターを解除しました。別のブロックは有効なままです。';
+
+  @override
+  String get moderationBlockRequestBody => '現在の申請を断り、この端末で今後の個別メッセージ、友達申請、グループ招待をブロックします。相手には通知されません。';
+
+  @override
+  String get accountBackupShareClosed => 'システムの共有を閉じました。バックアップをもう一度共有できます。';
+
+  @override
+  String get nearbyHideSession => 'この近くのセッションを非表示';
+
+  @override
+  String get nearbySessionHidden => 'この近くのセッションを非表示にしました。相手の新しいセッションは再表示される場合があります。';
+
+  @override
+  String get pendingReviewOpenConversation => '元の会話を開く';
+
+  @override
+  String get pendingReviewMissingContact => 'この会話は現在利用できません。再送信する前に連絡先を復元するか追加してください。';
+
+  @override
+  String get pendingReviewMissingGroup => 'このグループは現在利用できません。再送信する前に参加し直してください。';
+
+  @override
+  String get pendingReviewIgnoreCopy => 'このコピーを無視';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    return '復元したコピーを $count 件無視しました。';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => 'この練習を終了しますか？';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return '全 $total ラウンド中 $done ラウンドの結果をこの端末に残します。未完了のラウンドはそのままにし、終了後は変更できません。';
+  }
+
+  @override
+  String get groupPracticeEnded => '練習は終了しました。保存したラウンドと結果は閲覧のみです。';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return '選択した録音の長さは $actual です。保存済みのクリップには少なくとも $minimum 必要です。元の範囲を復元できる長い WAV を選んでください。';
+  }
+
+  @override
+  String get deliveryFailedNext => '送信トレイを開くと、このメッセージを再試行できます。';
 }

@@ -98,14 +98,14 @@ void main() {
     expect(find.text(s.moderationBlockMemberBody), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, s.moderationBlock));
     await tester.pumpAndSettle();
-    Navigator.of(tester.element(find.byType(ConversationScreen))).pop();
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(h.service.blockedPeers, {_member});
     expect(find.text('SPAM SPAM'), findsNothing);
     expect(find.text('GM'), findsOneWidget);
 
-    // The sheet now offers Unblock for that member; unblocking brings the
+    // The members page now offers Unblock for that member; unblocking brings the
     // rows back in the open conversation.
     await showGroupMembersSheetForTest(tester, h, group);
     await tester.tap(find.byKey(const ValueKey('member-menu-$_member')));
@@ -114,8 +114,8 @@ void main() {
     await tester.tap(find.text(s.moderationUnblock));
     await tester.pumpAndSettle();
     expect(h.service.blockedPeers, isEmpty);
-    // Close the members sheet.
-    Navigator.of(tester.element(find.byType(ConversationScreen))).pop();
+    // Return to the open conversation.
+    await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('SPAM SPAM'), findsOneWidget, reason: 'restored');
   });

@@ -91,6 +91,29 @@ Future<bool?> _askIncludeRecordings(
 /// Outcome of [exportBackupWithFeedback].
 enum BackupExportResult { saved, cancelled, failed }
 
+bool backupUsesShare(TargetPlatform platform) =>
+    platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+
+/// On mobile a returned share operation proves only a handoff to the OS.
+String backupExportFeedback(
+  S s,
+  TargetPlatform platform,
+  BackupExportResult result, {
+  String? savedFileName,
+}) => switch (result) {
+  BackupExportResult.saved =>
+    backupUsesShare(platform)
+        ? s.accountBackupShareReturned
+        : savedFileName != null
+        ? s.accountBackupSavedNamed(savedFileName)
+        : s.accountBackupSaved,
+  BackupExportResult.cancelled =>
+    backupUsesShare(platform)
+        ? s.accountBackupShareClosed
+        : s.accountBackupNotSaved,
+  BackupExportResult.failed => s.accountBackupFailed,
+};
+
 /// Exports the current identity through the [BackupFileGateway] and reports
 /// the outcome with a snackbar: the complete encrypted flow
 /// ([EncryptedBackupPage]) when the backend supports it, else the legacy
@@ -103,12 +126,15 @@ enum BackupExportResult { saved, cancelled, failed }
 Future<BackupExportResult> exportBackupWithFeedback(
   BuildContext context, {
   BuildContext? anchor,
+  bool inlineFeedback = false,
+  ValueChanged<String>? onSavedPath,
 }) async {
   final shareOrigin = anchor == null ? null : shareOriginOf(anchor);
   final s = context.s;
+  final platform = Theme.of(context).platform;
   final identityService = context.read<IdentityService>();
   final gateway = context.read<BackupFileGateway>();
-  final messenger = ScaffoldMessenger.maybeOf(context);
+  final messenger = inlineFeedback ? null : ScaffoldMessenger.maybeOf(context);
   final identity = identityService.current;
   if (identity == null) {
     messenger?.showSnackBar(SnackBar(content: Text(s.accountMeNoIdentity)));
@@ -118,7 +144,12 @@ Future<BackupExportResult> exportBackupWithFeedback(
   // passphrase, whole-file encryption. The page reports its own outcome.
   if (identityService is EncryptedBackupService) {
     final result = await Navigator.of(context).push<BackupExportResult>(
-      MaterialPageRoute(builder: (_) => const EncryptedBackupPage()),
+      MaterialPageRoute(
+        builder: (_) => EncryptedBackupPage(
+          showOutcomeSnackBar: !inlineFeedback,
+          onSavedPath: onSavedPath,
+        ),
+      ),
     );
     return result ?? BackupExportResult.cancelled;
   }
@@ -133,12 +164,23 @@ Future<BackupExportResult> exportBackupWithFeedback(
       fileName: backupFileName(identity),
       shareOrigin: shareOrigin,
     );
+    if (saved.path case final path?) onSavedPath?.call(path);
+    final result = saved.completed
+        ? BackupExportResult.saved
+        : BackupExportResult.cancelled;
     messenger?.showSnackBar(
       SnackBar(
-        content: Text(saved ? s.accountBackupSaved : s.accountBackupNotSaved),
+        content: Text(
+          backupExportFeedback(
+            s,
+            platform,
+            result,
+            savedFileName: saved.path == null ? null : p.basename(saved.path!),
+          ),
+        ),
       ),
     );
-    return saved ? BackupExportResult.saved : BackupExportResult.cancelled;
+    return result;
   } on Object catch (e) {
     messenger?.showSnackBar(
       SnackBar(

@@ -32,7 +32,10 @@ Future<bool> showJoinGroupSheet(
 }
 
 class JoinGroupForm extends StatefulWidget {
-  const JoinGroupForm({super.key, required this.service});
+  const JoinGroupForm({super.key, required this.service, this.onJoined});
+
+  /// When embedded in the groups page, report success without popping it.
+  final VoidCallback? onJoined;
 
   final ChatService service;
 
@@ -67,7 +70,15 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
         normalizeToxId(_chatId.text),
         password: _password.text.isEmpty ? null : _password.text,
       );
-      closeOwnedRoute(route, true);
+      if (!mounted) return;
+      final onJoined = widget.onJoined;
+      if (onJoined == null) {
+        closeOwnedRoute(route, true);
+      } else {
+        _chatId.clear();
+        _password.clear();
+        onJoined();
+      }
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -80,55 +91,75 @@ class _JoinGroupFormState extends State<JoinGroupForm> {
     final ThemeData theme = Theme.of(context);
     final S s = context.s;
     final Object? error = _error;
+    final bool embedded = widget.onJoined != null;
+    final bool pinAction =
+        !embedded && MediaQuery.viewInsetsOf(context).bottom > 0;
+    final Widget joinAction = FilledButton.icon(
+      onPressed: _busy ? null : () => unawaited(_submit()),
+      icon: const Icon(Icons.login),
+      label: Text(s.chatJoin),
+    );
+    final form = Form(
+      key: _form,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(s.chatJoinGroup, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _chatId,
+            autofocus: !embedded,
+            minLines: 1,
+            // Let the form scroll instead of hiding either end of the ID.
+            maxLines: null,
+            autocorrect: false,
+            enableSuggestions: false,
+            style: const TextStyle(fontFamily: 'monospace'),
+            decoration: InputDecoration(
+              label: FieldLabel(s.chatChatIdLabel),
+              border: const OutlineInputBorder(),
+              errorText: error == null ? null : describeChatError(s, error),
+              errorMaxLines: 8,
+            ),
+            validator: (v) => validateChatIdInput(s, v),
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _password,
+            obscureText: true,
+            decoration: InputDecoration(
+              label: FieldLabel(s.chatPassword),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          if (!pinAction) ...[const SizedBox(height: 12), joinAction],
+        ],
+      ),
+    );
+    if (embedded) return form;
     return SafeArea(
       top: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Form(
-          key: _form,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(s.chatJoinGroup, style: theme.textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _chatId,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 2,
-                autocorrect: false,
-                enableSuggestions: false,
-                style: const TextStyle(fontFamily: 'monospace'),
-                decoration: InputDecoration(
-                  label: FieldLabel(s.chatChatIdLabel),
-                  border: const OutlineInputBorder(),
-                  errorText: error == null ? null : describeChatError(s, error),
-                ),
-                validator: (v) => validateChatIdInput(s, v),
-                onChanged: (_) {
-                  if (_error != null) setState(() => _error = null);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _password,
-                obscureText: true,
-                decoration: InputDecoration(
-                  label: FieldLabel(s.chatPassword),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: _busy ? null : () => unawaited(_submit()),
-                icon: const Icon(Icons.login),
-                label: Text(s.chatJoin),
-              ),
-            ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, pinAction ? 12 : 24),
+              child: form,
+            ),
           ),
-        ),
+          if (pinAction)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              child: joinAction,
+            ),
+        ],
       ),
     );
   }

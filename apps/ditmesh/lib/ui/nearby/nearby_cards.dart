@@ -55,15 +55,15 @@ class _NearbyPeerCardState extends State<NearbyPeerCard> {
             Wrap(
               spacing: 4,
               children: [
-                IconButton(
-                  tooltip: l10n.nearbyBlock,
-                  icon: const Icon(Icons.block),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.visibility_off_outlined),
+                  label: Text(l10n.nearbyHideSession),
                   onPressed: () {
                     nearby.block(peer);
                     ScaffoldMessenger.maybeOf(context)
                       ?..hideCurrentSnackBar()
                       ..showSnackBar(
-                        SnackBar(content: Text(l10n.nearbyBlocked)),
+                        SnackBar(content: Text(l10n.nearbySessionHidden)),
                       );
                   },
                 ),

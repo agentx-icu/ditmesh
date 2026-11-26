@@ -106,7 +106,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(RestoredPendingPage), findsOneWidget);
-    expect(find.text(s.pendingReviewBody), findsOneWidget);
+    expect(find.textContaining('when the backup was made'), findsOneWidget);
+    expect(
+      find.textContaining('Check whether the old device sent them'),
+      findsOneWidget,
+    );
     // Oldest first; a known conversation by its title, any other by the
     // start of its key.
     final rows = tester
@@ -122,6 +126,9 @@ void main() {
     expect(find.text('01234567…'), findsOneWidget);
     expect(find.text('GM OM'), findsOneWidget);
     expect(find.text('QRL?'), findsOneWidget);
+    expect(find.text(s.pendingReviewOpenConversation), findsNWidgets(2));
+    expect(find.text(s.pendingReviewMissingContact), findsOneWidget);
+    expect(find.text(s.pendingReviewIgnoreCopy), findsNWidgets(3));
     // There is deliberately no way to send from here.
     expect(find.byTooltip(s.chatSend), findsNothing);
 
@@ -138,6 +145,20 @@ void main() {
 
     await tester.tap(find.text(s.pendingReviewDismissAll));
     await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.textContaining('2 restored messages'), findsOneWidget);
+    expect(doc().existsSync(), isTrue);
+    await tester.tap(find.text(s.actionCancel));
+    await tester.pumpAndSettle();
+    expect(find.text('GM OM'), findsOneWidget);
+    expect(doc().existsSync(), isTrue);
+
+    await tester.tap(find.text(s.pendingReviewDismissAll));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('restored-pending-confirm-all')),
+    );
+    await tester.pumpAndSettle();
     expect(find.text(s.pendingReviewEmpty), findsOneWidget);
     expect(find.text(s.pendingReviewDismissAll), findsNothing);
     expect(doc().existsSync(), isFalse);
@@ -151,6 +172,40 @@ void main() {
       final history = await chat.loadHistory(c.id);
       expect(history.where((m) => m.isMine), isEmpty, reason: c.id);
     }
+  });
+
+  testWidgets('single dismiss can be undone and survives reopening', (
+    tester,
+  ) async {
+    seed([item('m1', 'c2c_ABC', 'HI')]);
+    await pumpBanner(tester);
+    await tester.tap(banner);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(s.pendingReviewDismiss));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('HI'), findsNothing);
+    await tester.tap(find.text('Undo'));
+    await tester.pump();
+    expect(find.text('HI'), findsOneWidget);
+    expect(doc().existsSync(), isTrue);
+    expect(RestoredPendingStore(doc()).read().single.text, 'HI');
+  });
+
+  testWidgets('a failed write keeps the visible and saved list', (
+    tester,
+  ) async {
+    seed([item('m1', 'c2c_ABC', 'HI'), item('m2', 'c2c_ABC', 'CQ')]);
+    final obstruction = Directory('${doc().path}.tmp')..createSync();
+    await pumpBanner(tester);
+    await tester.tap(banner);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(s.pendingReviewDismiss).first);
+    await tester.pump();
+    expect(find.text(s.pendingReviewSaveError), findsOneWidget);
+    expect(find.text('HI'), findsOneWidget);
+    expect(RestoredPendingStore(doc()).read(), hasLength(2));
+    obstruction.deleteSync();
   });
 
   testWidgets('a short conversation key is shown whole', (tester) async {

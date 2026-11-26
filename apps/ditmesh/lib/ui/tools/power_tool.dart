@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:radio_tools/radio_tools.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../common/field_label.dart';
 import 'tool_page.dart';
 
@@ -30,7 +31,10 @@ enum PowerUnit {
 /// Power in watts <-> dBm / dBW with the S-meter reading it would give, and
 /// decibels <-> power / voltage ratio.
 class PowerTool extends StatefulWidget {
-  const PowerTool({super.key});
+  const PowerTool({super.key, this.quick = false});
+
+  /// The tool directory shows just the power conversion.
+  final bool quick;
 
   static const Key valueKey = Key('power-value');
   static const Key dbKey = Key('power-db');
@@ -67,42 +71,52 @@ class _PowerToolState extends State<PowerTool> {
   Widget build(BuildContext context) {
     final s = context.s;
     final theme = Theme.of(context);
-    return ToolPage(
-      title: s.toolsPowerTitle,
-      children: <Widget>[
-        ToolSection(
-          title: s.toolsPowerSection,
-          children: <Widget>[
-            SegmentedButton<PowerUnit>(
-              segments: <ButtonSegment<PowerUnit>>[
-                for (final u in PowerUnit.values)
-                  ButtonSegment<PowerUnit>(value: u, label: Text(u.symbol)),
-              ],
-              selected: <PowerUnit>{_unit},
-              showSelectedIcon: false,
-              onSelectionChanged: (v) => setState(() => _unit = v.single),
+    final sections = <Widget>[
+      ToolSection(
+        title: s.toolsPowerSection,
+        children: <Widget>[
+          SegmentedButton<PowerUnit>(
+            segments: <ButtonSegment<PowerUnit>>[
+              for (final u in PowerUnit.values)
+                ButtonSegment<PowerUnit>(value: u, label: Text(u.symbol)),
+            ],
+            selected: <PowerUnit>{_unit},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() => _unit = v.single),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: PowerTool.valueKey,
+            controller: _value,
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: true,
+              decimal: true,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              key: PowerTool.valueKey,
-              controller: _value,
-              keyboardType: const TextInputType.numberWithOptions(
-                signed: true,
-                decimal: true,
-              ),
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                label: FieldLabel(s.toolsPowerValue),
-                hintText: '100',
-                errorText: _invalidPower ? s.toolsPowerInvalid : null,
-                border: const OutlineInputBorder(),
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              label: FieldLabel(s.toolsPowerValue),
+              hintText: '100',
+              errorText: _invalidPower ? s.toolsPowerInvalid : null,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ..._powerResults(s),
+          if (_dbm case final dbm? when widget.quick)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: () =>
+                    copyToClipboard(context, '${dbm.toStringAsFixed(2)} dBm'),
+                icon: const Icon(Icons.copy),
+                label: Text(s.actionCopy),
               ),
             ),
-            const SizedBox(height: 8),
-            ..._powerResults(s),
+          if (!widget.quick)
             Text(s.toolsPowerSMeterNote, style: theme.textTheme.bodySmall),
-          ],
-        ),
+        ],
+      ),
+      if (!widget.quick)
         ToolSection(
           title: s.toolsPowerRatioSection,
           children: <Widget>[
@@ -125,8 +139,10 @@ class _PowerToolState extends State<PowerTool> {
             Text(s.toolsPowerDbNote, style: theme.textTheme.bodySmall),
           ],
         ),
-      ],
-    );
+    ];
+    return widget.quick
+        ? sections.first
+        : ToolPage(title: s.toolsPowerTitle, children: sections);
   }
 
   List<Widget> _powerResults(S s) {
@@ -141,7 +157,7 @@ class _PowerToolState extends State<PowerTool> {
       ResultRow(
         label: s.toolsPowerLevel,
         value:
-            '${dbm.toStringAsFixed(1)} dBm · ${(dbm - 30).toStringAsFixed(1)} dBW',
+            '${dbm.toStringAsFixed(widget.quick ? 2 : 1)} dBm · ${(dbm - 30).toStringAsFixed(1)} dBW',
       ),
       ResultRow(
         label: s.toolsPowerSMeterHf,

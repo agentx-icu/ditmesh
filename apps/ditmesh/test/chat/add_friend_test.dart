@@ -268,7 +268,13 @@ void main() {
     await tester.pumpAndSettle();
     // Not inside the text field's suffix slot: a Tooltip there raised a
     // semantics assertion on every platform while the sheet dismissed.
-    expect(find.byType(Tooltip), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(AddFriendForm),
+        matching: find.byType(Tooltip),
+      ),
+      findsNothing,
+    );
     final scan = find.widgetWithText(TextButton, s.chatScanQr);
     expect(scan, findsOneWidget);
     expect(tester.widget<TextButton>(scan).onPressed, isNotNull);

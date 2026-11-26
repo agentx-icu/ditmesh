@@ -17,6 +17,12 @@ bool isMasterDetail(BuildContext context) =>
 /// Width of the list pane in master-detail mode.
 const double kMasterPaneWidth = 360;
 
+const double kConversationBubbleMaxWidth = 520;
+
+/// Keep wide chat content near the edges of its pane.
+double conversationSidePadding(BuildContext context) =>
+    isMasterDetail(context) ? 24 : 12;
+
 /// Touch-first platforms get swipe actions; desktop gets right-click menus.
 bool get isTouchPlatform =>
     defaultTargetPlatform == TargetPlatform.android ||

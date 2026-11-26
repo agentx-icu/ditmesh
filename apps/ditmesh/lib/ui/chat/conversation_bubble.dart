@@ -20,13 +20,12 @@ Widget conversationBubble(
   required bool isGroup,
   required bool revealed,
   required VoidCallback onReveal,
-  required String fallbackTitle,
+  required String conversationTitle,
   required ChatService service,
   required bool isSelf,
   bool bookmarked = false,
 }) {
   final m = message;
-  final title = m.senderName ?? fallbackTitle;
   // Send control only where the transport backs it; the note to self never
   // queues, so it has nothing to retry or cancel.
   final control = service.supportsSendControl && m.isMine && !isSelf;
@@ -85,7 +84,7 @@ Widget conversationBubble(
               message: m,
               settings: settings,
               playback: playback,
-              title: title,
+              title: conversationTitle,
             ),
           ),
   );

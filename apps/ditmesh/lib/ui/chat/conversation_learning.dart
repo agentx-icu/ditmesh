@@ -82,10 +82,13 @@ abstract final class ConversationLearning {
     try {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => ChatCopyScreen(
+          builder: (context) => ChatCopyScreen(
             controller: controller,
             playback: _playbackFactory(context),
             session: session,
+            sourceLabel: title.trim().isEmpty
+                ? null
+                : context.s.chatPracticeFromConversation(title),
           ),
         ),
       );
@@ -147,5 +150,4 @@ abstract final class ConversationLearning {
       return false;
     }
   }
-
 }

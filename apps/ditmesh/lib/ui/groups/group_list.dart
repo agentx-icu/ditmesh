@@ -18,11 +18,13 @@ class GroupList extends StatelessWidget {
     required this.service,
     required this.onOpen,
     this.selectedId,
+    this.footer,
   });
 
   final ChatService service;
   final ValueChanged<Group> onOpen;
   final String? selectedId;
+  final Widget? footer;
 
   Future<void> _leave(BuildContext context, Group g) async {
     final S s = context.s;
@@ -83,6 +85,7 @@ class GroupList extends StatelessWidget {
                 onTap: () => onOpen(g),
                 onAction: (a) => unawaited(_action(context, g, a)),
               ),
+            ?footer,
           ],
         );
       },

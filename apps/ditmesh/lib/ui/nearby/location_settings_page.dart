@@ -7,6 +7,7 @@ import 'package:radio_tools/radio_tools.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/location_source.dart';
 import '../../nearby/nearby_controller.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../tools/tool_page.dart';
 import 'nearby_page.dart';
@@ -44,85 +45,79 @@ class LocationSettingsPage extends StatelessWidget {
     final fix = controller.fix;
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.locationServices)),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SwitchListTile(
-                      key: const Key('settings_location_switch'),
-                      secondary: const Icon(Icons.location_on_outlined),
-                      title: Text(s.locationServices),
-                      subtitle: Text(s.locationServicesDesc),
-                      value: controller.locationEnabled,
-                      onChanged: controller.busy
-                          ? null
-                          : (value) =>
-                                controller.setLocationEnabled(value).ignore(),
-                    ),
-                    SwitchListTile(
-                      key: const Key('settings_nearby_visible_switch'),
-                      secondary: const Icon(Icons.people_outline),
-                      title: Text(s.nearbyVisible),
-                      subtitle: Text(s.nearbyVisibleDesc),
-                      value: controller.nearbyVisible,
-                      onChanged: controller.locationEnabled && !controller.busy
-                          ? (value) =>
-                                unawaited(_visible(context, controller, value))
-                          : null,
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.radar),
-                      title: Text(s.peopleNearby),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => NearbyPage.open(context),
-                    ),
-                    const Divider(),
-                    if (controller.locationEnabled)
-                      CurrentLocationButton(onFix: (_) {}),
-                    if (controller.issue case final issue?) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        locationIssueText(s, issue),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                      if (issue == LocationIssue.permissionDenied ||
-                          issue == LocationIssue.serviceDisabled ||
-                          issue == LocationIssue.unavailable)
-                        TextButton(
-                          onPressed: () =>
-                              controller.location.openSettings().ignore(),
-                          child: Text(s.locationSystemSettings),
-                        ),
-                    ],
-                    if (fix != null) ...[
-                      const SizedBox(height: 16),
-                      ResultRow(
-                        label: s.locationCurrent,
-                        value:
-                            '${fix.latitude.toStringAsFixed(6)}, ${fix.longitude.toStringAsFixed(6)}',
-                      ),
-                      ResultRow(
-                        label: s.toolsGridLocator,
-                        value: Maidenhead.fromPoint(
-                          GeoPoint(fix.latitude, fix.longitude),
-                          length: 8,
-                        ),
-                      ),
-                    ],
-                  ],
+      body: AccountPageBody(
+        maxWidth: 640,
+        aside: [
+          AccountPanel(
+            children: [
+              if (!controller.locationEnabled) Text(s.locationEnableHere),
+              if (controller.locationEnabled)
+                CurrentLocationButton(onFix: (_) {}),
+              if (controller.issue case final issue?) ...[
+                const SizedBox(height: 12),
+                Text(
+                  locationIssueText(s, issue),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
+                if (issue == LocationIssue.permissionDenied ||
+                    issue == LocationIssue.serviceDisabled ||
+                    issue == LocationIssue.unavailable)
+                  TextButton(
+                    onPressed: () =>
+                        controller.location.openSettings().ignore(),
+                    child: Text(s.locationSystemSettings),
+                  ),
+              ],
+              if (fix != null) ...[
+                const SizedBox(height: 16),
+                ResultRow(
+                  label: s.locationCurrent,
+                  value:
+                      '${fix.latitude.toStringAsFixed(6)}, ${fix.longitude.toStringAsFixed(6)}',
+                ),
+                ResultRow(
+                  label: s.toolsGridLocator,
+                  value: Maidenhead.fromPoint(
+                    GeoPoint(fix.latitude, fix.longitude),
+                    length: 8,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              SwitchListTile(
+                key: const Key('settings_location_switch'),
+                secondary: const Icon(Icons.location_on_outlined),
+                title: Text(s.locationServices),
+                subtitle: Text(s.locationServicesDesc),
+                value: controller.locationEnabled,
+                onChanged: controller.busy
+                    ? null
+                    : (value) => controller.setLocationEnabled(value).ignore(),
               ),
-            ),
-          ],
-        ),
+              SwitchListTile(
+                key: const Key('settings_nearby_visible_switch'),
+                secondary: const Icon(Icons.people_outline),
+                title: Text(s.nearbyVisible),
+                subtitle: Text(s.nearbyVisibleDesc),
+                value: controller.nearbyVisible,
+                onChanged: controller.locationEnabled && !controller.busy
+                    ? (value) => unawaited(_visible(context, controller, value))
+                    : null,
+              ),
+              ListTile(
+                leading: const Icon(Icons.radar),
+                title: Text(s.peopleNearby),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => NearbyPage.open(context),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

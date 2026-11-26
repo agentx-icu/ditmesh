@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/groups/create_group_sheet.dart';
@@ -111,43 +112,74 @@ void main() {
           },
         );
 
-        testWidgets(
-          'join validation form scrolls above keyboard: $dimensions',
-          (tester) async {
-            final ChatHarness harness = await _openSheet(
-              tester,
-              size: size,
-              locale: locale,
-              scale: scale,
-              create: false,
-            );
-            final double keyboard = size.width == 320 ? 280 : 320;
-            tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
-            await tester.enterText(find.byType(TextFormField).first, 'ABC');
-            await tester.pumpAndSettle();
-            expect(find.text(strings.chatChatIdInvalid), findsOneWidget);
-            expect(tester.takeException(), isNull);
-            final Finder submit = find.widgetWithText(
-              FilledButton,
-              strings.chatJoin,
-            );
-            await tester.ensureVisible(submit);
-            await tester.pumpAndSettle();
-            expect(submit.hitTestable(), findsOneWidget);
-            expect(
-              tester.getRect(submit).bottom,
-              lessThanOrEqualTo(size.height - keyboard),
-            );
+        testWidgets('join validation form scrolls above keyboard: $dimensions', (
+          tester,
+        ) async {
+          final ChatHarness harness = await _openSheet(
+            tester,
+            size: size,
+            locale: locale,
+            scale: scale,
+            create: false,
+          );
+          final double keyboard = size.width == 320 ? 280 : 320;
+          tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+          await tester.enterText(find.byType(TextFormField).first, 'ABC');
+          await tester.pumpAndSettle();
+          final Finder error = find.text(strings.chatChatIdInvalid);
+          await tester.ensureVisible(error);
+          await tester.pumpAndSettle();
+          expect(error.hitTestable(), findsOneWidget);
+          expect(
+            tester.renderObject<RenderParagraph>(error).didExceedMaxLines,
+            isFalse,
+          );
+          expect(tester.takeException(), isNull);
+          final Finder submit = find.widgetWithText(
+            FilledButton,
+            strings.chatJoin,
+          );
+          await tester.ensureVisible(submit);
+          await tester.pumpAndSettle();
+          expect(submit.hitTestable(), findsOneWidget);
+          expect(
+            tester.getRect(submit).bottom,
+            lessThanOrEqualTo(size.height - keyboard),
+          );
 
-            await tester.enterText(find.byType(TextFormField).first, 'C' * 64);
-            await tester.ensureVisible(submit);
-            await tester.pumpAndSettle();
-            await tester.tap(submit);
-            await tester.pumpAndSettle();
-            expect(harness.service.groups.single.chatId, 'C' * 64);
-            expect(find.byType(JoinGroupForm), findsNothing);
-          },
-        );
+          const id =
+              '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF';
+          final field = find.byType(TextFormField).first;
+          await tester.enterText(field, id);
+          await tester.ensureVisible(submit);
+          await tester.pumpAndSettle();
+          expect(submit.hitTestable(), findsOneWidget);
+          expect(
+            tester.getRect(submit).bottom,
+            lessThanOrEqualTo(size.height - keyboard),
+          );
+          final editable = find.descendant(
+            of: field,
+            matching: find.byType(EditableText),
+          );
+          final render = tester
+              .state<EditableTextState>(editable)
+              .renderEditable;
+          expect(
+            render.getLocalRectForCaret(const TextPosition(offset: 0)).top,
+            greaterThanOrEqualTo(0),
+          );
+          expect(
+            render
+                .getLocalRectForCaret(const TextPosition(offset: id.length))
+                .bottom,
+            lessThanOrEqualTo(render.size.height),
+          );
+          await tester.tap(submit);
+          await tester.pumpAndSettle();
+          expect(harness.service.groups.single.chatId, id);
+          expect(find.byType(JoinGroupForm), findsNothing);
+        });
       }
     }
   }

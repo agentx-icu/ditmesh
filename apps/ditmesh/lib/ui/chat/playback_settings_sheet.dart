@@ -12,12 +12,18 @@ Future<void> showPlaybackSettingsSheet(
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
-    builder: (_) => _PlaybackSettingsSheet(settings: settings),
+    builder: (_) => SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        child: PlaybackSettingsControls(settings: settings),
+      ),
+    ),
   );
 }
 
-class _PlaybackSettingsSheet extends StatelessWidget {
-  const _PlaybackSettingsSheet({required this.settings});
+/// Conversation playback controls shared by the inline defaults and sheet.
+class PlaybackSettingsControls extends StatelessWidget {
+  const PlaybackSettingsControls({super.key, required this.settings});
 
   final MorsePlaybackSettings settings;
 
@@ -26,58 +32,52 @@ class _PlaybackSettingsSheet extends StatelessWidget {
     final S s = context.s;
     return ListenableBuilder(
       listenable: settings,
-      builder: (context, _) => SafeArea(
-        // Scrolls on short landscape phones instead of overflowing.
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                s.chatPlaybackSettings,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.chatOriginalRhythm),
-                subtitle: Text(s.chatOriginalPreference),
-                value: settings.originalRhythm,
-                onChanged: (v) => settings.originalRhythm = v,
-              ),
-              _SliderRow(
-                label: s.chatCharacterSpeed,
-                value: settings.wpm,
-                min: MorsePlaybackSettings.minWpm,
-                max: MorsePlaybackSettings.maxWpm,
-                unit: s.chatWpm,
-                onChanged: (v) => settings.wpm = v.roundToDouble(),
-              ),
-              _SliderRow(
-                label: s.chatFarnsworthSpeed,
-                value: settings.farnsworthWpm,
-                min: MorsePlaybackSettings.minWpm,
-                max: settings.wpm,
-                unit: s.chatWpm,
-                onChanged: (v) => settings.farnsworthWpm = v.roundToDouble(),
-              ),
-              _SliderRow(
-                label: s.chatTone,
-                value: settings.toneHz,
-                min: MorsePlaybackSettings.minToneHz,
-                max: MorsePlaybackSettings.maxToneHz,
-                unit: s.chatHz,
-                onChanged: (v) => settings.toneHz = (v / 10).round() * 10,
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.chatAutoPlay),
-                value: settings.autoPlay,
-                onChanged: (v) => settings.autoPlay = v,
-              ),
-            ],
+      builder: (context, _) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            s.chatPlaybackSettings,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(s.chatOriginalRhythm),
+            subtitle: Text(s.chatOriginalPreference),
+            value: settings.originalRhythm,
+            onChanged: (v) => settings.originalRhythm = v,
+          ),
+          _SliderRow(
+            label: s.chatCharacterSpeed,
+            value: settings.wpm,
+            min: MorsePlaybackSettings.minWpm,
+            max: MorsePlaybackSettings.maxWpm,
+            unit: s.chatWpm,
+            onChanged: (v) => settings.wpm = v.roundToDouble(),
+          ),
+          _SliderRow(
+            label: s.chatFarnsworthSpeed,
+            value: settings.farnsworthWpm,
+            min: MorsePlaybackSettings.minWpm,
+            max: settings.wpm,
+            unit: s.chatWpm,
+            onChanged: (v) => settings.farnsworthWpm = v.roundToDouble(),
+          ),
+          _SliderRow(
+            label: s.chatTone,
+            value: settings.toneHz,
+            min: MorsePlaybackSettings.minToneHz,
+            max: MorsePlaybackSettings.maxToneHz,
+            unit: s.chatHz,
+            onChanged: (v) => settings.toneHz = (v / 10).round() * 10,
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(s.chatAutoPlay),
+            value: settings.autoPlay,
+            onChanged: (v) => settings.autoPlay = v,
+          ),
+        ],
       ),
     );
   }

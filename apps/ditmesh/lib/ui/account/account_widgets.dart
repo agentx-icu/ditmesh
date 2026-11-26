@@ -5,8 +5,8 @@ import '../../i18n/l10n_extension.dart';
 import '../common/field_label.dart';
 import 'password_strength.dart';
 
-/// Narrow, centred, scrollable column used by every onboarding page so phones
-/// get full width and desktop windows do not stretch forms to 1200 px.
+/// Scrollable page with one column on compact windows and an optional aside
+/// next to the primary content when both columns fit.
 ///
 /// A `SingleChildScrollView` + `Column`, not a `ListView`: these pages are
 /// short forms whose primary button may sit below the fold on a phone, and a
@@ -17,28 +17,67 @@ class AccountPageBody extends StatelessWidget {
     super.key,
     required this.children,
     this.maxWidth = 480,
+    this.aside = const [],
   });
 
   final List<Widget> children;
   final double maxWidth;
+  final List<Widget> aside;
 
   @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
+  Widget build(BuildContext context) => SafeArea(
+    child: LayoutBuilder(
+      builder: (context, bounds) {
+        final twoColumns = aside.isNotEmpty && bounds.maxWidth >= 840;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: twoColumns ? 1280 : maxWidth),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: twoColumns
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 5, child: _column(children)),
+                        const SizedBox(width: 16),
+                        Expanded(flex: 3, child: _column(aside)),
+                      ],
+                    )
+                  : _column([
+                      ...children,
+                      if (aside.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        ...aside,
+                      ],
+                    ]),
             ),
           ),
-        ),
+        );
+      },
+    ),
+  );
+
+  Widget _column(List<Widget> content) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: content);
+}
+
+class AccountPanel extends StatelessWidget {
+  const AccountPanel({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// Password field with a show/hide toggle and an optional strength hint.

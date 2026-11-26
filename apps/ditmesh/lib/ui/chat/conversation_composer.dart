@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
+import 'conversation_target.dart';
 import 'message_input.dart';
 import 'morse_playback_controller.dart';
 import 'morse_playback_settings.dart';
@@ -12,19 +13,22 @@ class ConversationComposer extends StatelessWidget {
   const ConversationComposer({
     super.key,
     required this.service,
-    required this.conversationId,
+    required this.target,
     required this.playback,
     required this.settings,
-    required this.maxHeight,
+    required this.paneHeight,
     required this.onSent,
     this.guidance,
   });
 
   final ChatService service;
-  final String conversationId;
+  final ConversationTarget target;
+  String get conversationId => target.id;
+  bool get _tracksPresence =>
+      target.kind == ConversationKind.c2c && !target.isSelf;
   final MorsePlaybackController playback;
   final MorsePlaybackSettings settings;
-  final double maxHeight;
+  final double paneHeight;
   final ValueChanged<ChatMessage> onSent;
   final Widget? guidance;
 
@@ -37,7 +41,7 @@ class ConversationComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-    constraints: BoxConstraints(maxHeight: maxHeight),
+    constraints: BoxConstraints(maxHeight: paneHeight * .75),
     child: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -45,13 +49,26 @@ class ConversationComposer extends StatelessWidget {
           guidance ?? const SizedBox.shrink(),
           ChangeNotifierProvider<MorsePlaybackSettings>.value(
             value: settings,
-            child: MessageInput(
-              key: ValueKey<String>('input_$conversationId'),
-              service: service,
-              conversationId: conversationId,
-              playback: playback,
-              initialDraft: _draft,
-              onSent: onSent,
+            child: StreamBuilder<List<Friend>>(
+              stream: _tracksPresence ? service.friendChanges : null,
+              initialData: _tracksPresence ? service.friends : null,
+              builder: (context, snapshot) => MessageInput(
+                key: ValueKey<String>('input_$conversationId'),
+                service: service,
+                conversationId: conversationId,
+                playback: playback,
+                initialDraft: _draft,
+                peerOffline:
+                    _tracksPresence &&
+                    (snapshot.data?.any(
+                          (friend) =>
+                              !friend.online &&
+                              friend.publicKey == target.peerId,
+                        ) ??
+                        false),
+                paneHeight: paneHeight,
+                onSent: onSent,
+              ),
             ),
           ),
         ],

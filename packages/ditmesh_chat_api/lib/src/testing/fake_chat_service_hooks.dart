@@ -81,6 +81,10 @@ extension FakeChatServiceTestHooks on FakeChatService {
   void failMessage(String messageId) =>
       _setStatus(messageId, MessageStatus.failed);
 
+  /// Simulates a peer receipt, as distinct from the local transport accepting a send.
+  void acknowledgeMessage(String messageId) =>
+      _setStatus(messageId, MessageStatus.delivered);
+
   /// The transport claimed one of our pending messages (it is now
   /// `sending`): cancelling it reports `stateChanged`.
   void claimMessage(String messageId) =>
@@ -141,9 +145,12 @@ extension FakeChatServiceTestHooks on FakeChatService {
     _groupChanges.add(groups);
   }
 
-  /// Dropped when [publicKey] is blocked.
+  /// Drops a request when its sender was blocked or rejected.
   void receiveFriendRequest(String publicKey, {String message = 'CQ CQ'}) {
-    if (_isBlocked(publicKey)) return;
+    if (_isBlocked(publicKey) ||
+        _rejectedRequestKeys.contains(publicKey.toUpperCase())) {
+      return;
+    }
     _friendRequests.add(
       FriendRequest(
         publicKey: publicKey,

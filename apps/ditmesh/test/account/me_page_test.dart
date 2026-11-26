@@ -52,10 +52,13 @@ void main() {
     await pumpApp(tester, identity: identity, backupFiles: files);
     await _openMe(tester);
 
+    await tapVisible(tester, find.byKey(const ValueKey('me-privacy-open')));
     await tapVisible(tester, find.byKey(const ValueKey('about-support')));
     expect(find.text(en.aboutSupport), findsOneWidget);
     expect(find.textContaining('Connection problems'), findsOneWidget);
     expect(find.byIcon(Icons.open_in_new), findsNothing);
+    await tester.pageBack();
+    await settle(tester);
     await tester.pageBack();
     await settle(tester);
 
@@ -68,6 +71,7 @@ void main() {
     final launcher = FakeUrlLauncher.install();
     await pumpApp(tester, identity: identity, backupFiles: files);
     await _openMe(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('me-privacy-open')));
 
     for (final (key, title, body) in [
       (
@@ -130,7 +134,7 @@ void main() {
     await completeEncryptedBackup(tester);
     expect(files.saved, hasLength(1));
     expect(isEncryptedBackup(files.saved.single), isTrue);
-    expect(find.text(en.accountBackupSaved), findsOneWidget);
+    expect(find.text(en.accountBackupShareReturned), findsOneWidget);
   });
 
   testWidgets('export backup anchors the iPad share popover to the tile', (

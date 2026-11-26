@@ -16,12 +16,22 @@ import 'reference_playback_controller.dart';
 /// Cards are at least 48 px on each side (they are ~100 px), so the grid is
 /// comfortable with a thumb as well as a mouse.
 class AlphabetGrid extends StatelessWidget {
-  const AlphabetGrid({super.key, required this.entries, this.hint});
+  const AlphabetGrid({
+    super.key,
+    required this.entries,
+    this.hint,
+    this.preview,
+    this.selected,
+    this.onSelect,
+  });
 
   final List<ReferenceEntry> entries;
 
   /// Optional line shown above the grid.
   final String? hint;
+  final Widget? preview;
+  final ReferenceEntry? selected;
+  final ValueChanged<ReferenceEntry>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +41,8 @@ class AlphabetGrid extends StatelessWidget {
       builder: (context, constraints) {
         final double gridWidth = math.max(0, constraints.maxWidth - 24);
         // Retain the usual density unless scaled text requires wider cards.
-        final int usualColumns = math.max(1, (gridWidth / 128).ceil());
+        final cardTarget = onSelect == null || gridWidth >= 460 ? 128 : 96;
+        final int usualColumns = math.max(1, (gridWidth / cardTarget).ceil());
         final int fittingColumns = math.max(
           1,
           ((gridWidth + 8) / (contentSize.width + 12 + 8)).floor(),
@@ -40,6 +51,11 @@ class AlphabetGrid extends StatelessWidget {
         final double cardWidth = (gridWidth - (columns - 1) * 8) / columns;
         return CustomScrollView(
           slivers: <Widget>[
+            if (preview != null)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                sliver: SliverToBoxAdapter(child: preview),
+              ),
             if (hint != null)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -65,8 +81,14 @@ class AlphabetGrid extends StatelessWidget {
                   ),
                 ),
                 itemCount: entries.length,
-                itemBuilder: (BuildContext context, int index) =>
-                    AlphabetCard(entry: entries[index]),
+                itemBuilder: (BuildContext context, int index) {
+                  final entry = entries[index];
+                  return AlphabetCard(
+                    entry: entry,
+                    selected: selected?.id == entry.id,
+                    onSelect: onSelect,
+                  );
+                },
               ),
             ),
           ],
@@ -119,9 +141,16 @@ Size _measureCardContent(BuildContext context, List<ReferenceEntry> entries) {
 
 /// One character card of the [AlphabetGrid].
 class AlphabetCard extends StatelessWidget {
-  const AlphabetCard({super.key, required this.entry});
+  const AlphabetCard({
+    super.key,
+    required this.entry,
+    this.selected = false,
+    this.onSelect,
+  });
 
   final ReferenceEntry entry;
+  final bool selected;
+  final ValueChanged<ReferenceEntry>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -137,15 +166,19 @@ class AlphabetCard extends StatelessWidget {
 
     return Semantics(
       button: true,
+      selected: selected,
       label:
           '${entry.label}, ${ReferenceMnemonics.spokenRhythm(entry.pattern, language: language)}',
       hint: context.s.referenceAlphabetHint,
       child: Card(
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
-        color: playing ? scheme.primaryContainer : null,
+        color: playing || selected ? scheme.primaryContainer : null,
         child: InkWell(
-          onTap: () => controller.toggle(entry.id, entry.playText),
+          onTap: () {
+            onSelect?.call(entry);
+            controller.toggle(entry.id, entry.playText);
+          },
           onLongPress: () => showReferenceMnemonic(context, entry),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),

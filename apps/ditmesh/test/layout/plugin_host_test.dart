@@ -164,19 +164,23 @@ void main() {
       settle: () => settleLayout(tester),
     );
     await paths.keyEditor();
-    expect(host.sinks, hasLength(1));
-    expect(host.sinks.single.prepareCalls, 1);
+    expect(host.sinks, hasLength(2));
+    final overview = host.sinks.first;
+    final editor = host.sinks.last;
+    expect(editor.prepareCalls, 1);
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
-    expect(host.sinks.single.isOn, isTrue);
+    expect(editor.isOn, isTrue);
+    expect(overview.isOn, isFalse);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump(const Duration(seconds: 1));
-    expect(host.sinks.single.isOn, isFalse);
+    expect(editor.isOn, isFalse);
     await paths.root();
-    expect(host.sinks.single.disposeCalls, 1);
+    expect(editor.disposeCalls, 1);
+    expect(overview.disposeCalls, 1);
     await paths.keyEditor();
-    expect(host.sinks, hasLength(2));
-    expect(host.sinks.last, isNot(same(host.sinks.first)));
+    expect(host.sinks, hasLength(4));
+    expect(host.sinks.last, isNot(same(editor)));
   });
 
   testWidgets('root-navigator recording accepts a WAV and plays on fake', (

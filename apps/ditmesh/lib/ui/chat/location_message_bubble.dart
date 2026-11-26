@@ -91,16 +91,19 @@ class LocationMessageBubble extends StatelessWidget {
     final material = MaterialLocalizations.of(context);
     final time =
         '${material.formatShortDate(local)} ${material.formatTimeOfDay(TimeOfDay.fromDateTime(local), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context))}';
+    final double gutter = conversationSidePadding(context);
     return Align(
       alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            message.isMine ? 48 : 12,
-            4,
-            message.isMine ? 12 : 48,
-            4,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          message.isMine ? 48 : gutter,
+          4,
+          message.isMine ? gutter : 48,
+          4,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: kConversationBubbleMaxWidth,
           ),
           child: Material(
             color: message.isMine

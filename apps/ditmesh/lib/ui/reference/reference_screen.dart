@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../common/fitting_hint.dart';
 import '../listen/listen_screen.dart';
 import '../responsive.dart';
 import '../tools/radio_tools_screen.dart';
+import 'morse_pattern_text.dart';
 import 'playback_settings_sheet.dart';
 import 'reference_catalog.dart';
 import 'reference_layout.dart';
@@ -55,6 +57,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
   final TextEditingController _search = TextEditingController();
   late ReferenceSection _selected = widget.initialSection;
   String _query = '';
+  ReferenceEntry? _alphabetSelection;
 
   bool get _ownsSettings => widget.settings == null;
 
@@ -216,7 +219,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
                             child: TabBarView(
                               children: <Widget>[
                                 for (final ReferenceSection section in sections)
-                                  ReferenceSectionView(section: section),
+                                  _sectionView(section),
                               ],
                             ),
                           ),
@@ -228,6 +231,22 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionView(
+    ReferenceSection section, {
+    bool separatePreview = false,
+  }) {
+    final entry = _alphabetSelection;
+    return ReferenceSectionView(
+      section: section,
+      alphabetPreview: !separatePreview && entry != null
+          ? _AlphabetPreview(entry: entry)
+          : null,
+      alphabetSelection: entry,
+      onSelectAlphabetEntry: (value) =>
+          setState(() => _alphabetSelection = value),
     );
   }
 
@@ -250,14 +269,46 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
             const VerticalDivider(width: 1),
             Expanded(
               child: ReadableBody(
-                maxWidth: 960,
+                maxWidth: 1280,
                 alignment: AlignmentDirectional.topStart,
                 child: Column(
                   children: <Widget>[
                     _searchField(context),
                     Expanded(
                       child: _query.isEmpty
-                          ? ReferenceSectionView(section: _selected)
+                          ? LayoutBuilder(
+                              builder: (context, constraints) {
+                                final entry = _alphabetSelection;
+                                if (_selected != ReferenceSection.alphabet ||
+                                    entry == null ||
+                                    constraints.maxWidth < 740) {
+                                  return _sectionView(_selected);
+                                }
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _sectionView(
+                                        _selected,
+                                        separatePreview: true,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 248,
+                                      child: SingleChildScrollView(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          0,
+                                          12,
+                                          16,
+                                          16,
+                                        ),
+                                        child: _AlphabetPreview(entry: entry),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            )
                           : ReferenceSearchResults(query: _query),
                     ),
                   ],
@@ -267,6 +318,44 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AlphabetPreview extends StatelessWidget {
+  const _AlphabetPreview({required this.entry});
+
+  final ReferenceEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<ReferencePlaybackController>();
+    final playing = controller.isPlayingId(entry.id);
+    final theme = Theme.of(context);
+    return AccountPanel(
+      key: const ValueKey('reference-alphabet-preview'),
+      children: [
+        Text(entry.label, style: theme.textTheme.headlineSmall),
+        MorsePatternText(
+          entry.pattern,
+          activeMark: controller.activeMarkFor(entry.id),
+          style: theme.textTheme.titleMedium,
+        ),
+        if (entry.mnemonic(Localizations.localeOf(context))
+            case final mnemonic?)
+          Text(mnemonic, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: FilledButton.icon(
+            onPressed: () => controller.toggle(entry.id, entry.playText),
+            icon: Icon(playing ? Icons.stop : Icons.play_arrow),
+            label: Text(
+              playing ? context.s.referenceStop : context.s.referencePlay,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

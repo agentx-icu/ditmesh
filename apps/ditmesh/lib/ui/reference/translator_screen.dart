@@ -3,6 +3,7 @@ import 'package:morse_io/morse_io.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../responsive.dart';
 import 'morse_to_text_view.dart';
@@ -133,6 +134,22 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                 final bool twoPane = referenceTwoPaneForWidth(
                   constraints.maxWidth,
                 );
+                final tool = switch (_mode) {
+                  TranslatorMode.textToMorse => TextToMorseView(
+                    twoPane: twoPane,
+                    initialText: widget.initialText,
+                    compactSettings: twoPane
+                        ? null
+                        : ReferencePlaybackSettingsSheet(settings: _settings),
+                  ),
+                  TranslatorMode.morseToText => MorseToTextView(
+                    twoPane: twoPane,
+                  ),
+                  TranslatorMode.key => TapToKeyView(
+                    clock: _clock,
+                    twoPane: twoPane,
+                  ),
+                };
                 return Column(
                   children: <Widget>[
                     Padding(
@@ -159,19 +176,41 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
                       ),
                     ),
                     Expanded(
-                      child: switch (_mode) {
-                        TranslatorMode.textToMorse => TextToMorseView(
-                          twoPane: twoPane,
-                          initialText: widget.initialText,
-                        ),
-                        TranslatorMode.morseToText => MorseToTextView(
-                          twoPane: twoPane,
-                        ),
-                        TranslatorMode.key => TapToKeyView(
-                          clock: _clock,
-                          twoPane: twoPane,
-                        ),
-                      },
+                      child: constraints.maxWidth < 1120
+                          ? tool
+                          : Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                24,
+                                12,
+                                24,
+                                16,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Card(
+                                      margin: EdgeInsets.zero,
+                                      clipBehavior: Clip.antiAlias,
+                                      child: tool,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  SizedBox(
+                                    width: 292,
+                                    child: SingleChildScrollView(
+                                      child: AccountPanel(
+                                        children: [
+                                          ReferencePlaybackSettingsSheet(
+                                            settings: _settings,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                     ),
                   ],
                 );

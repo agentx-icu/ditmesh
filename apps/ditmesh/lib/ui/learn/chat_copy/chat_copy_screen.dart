@@ -7,6 +7,7 @@ import 'package:morse_trainer/morse_trainer.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/chat_copy_session.dart';
 import '../../../training/training_controller.dart';
+import '../../account/account_widgets.dart';
 import '../../common/app_bar_title.dart';
 import '../drill_session_guard.dart';
 import '../learn_platform.dart';
@@ -27,11 +28,13 @@ class ChatCopyScreen extends StatefulWidget {
     required this.controller,
     required this.playback,
     required this.session,
+    this.sourceLabel,
   });
 
   final TrainingController controller;
   final LearnPlaybackFactory playback;
   final ChatCopySession session;
+  final String? sourceLabel;
 
   @override
   State<ChatCopyScreen> createState() => _ChatCopyScreenState();
@@ -169,20 +172,47 @@ class _ChatCopyScreenState extends State<ChatCopyScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final body = SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: switch (_phase) {
+    final body = AccountPageBody(
+      maxWidth: 720,
+      aside: [
+        AccountPanel(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.speed_outlined),
+              title: Text(s.learnCharacterSpeed),
+              subtitle: Text(
+                s.learnWpmValue(_session.timing.wpm.toStringAsFixed(0)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.graphic_eq),
+              title: Text(s.learnTone),
+              subtitle: Text(
+                s.learnHzValue(_session.toneHz.toStringAsFixed(0)),
+              ),
+            ),
+          ],
+        ),
+      ],
+      children: [
+        AccountPanel(
+          children: [
+            if (widget.sourceLabel case final label?)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            switch (_phase) {
               _Phase.confirm => _confirm(context),
               _Phase.answer => _answerView(context),
               _Phase.result => _result(context),
             },
-          ),
+          ],
         ),
-      ),
+      ],
     );
     // With sound off (or unavailable) the flash fallback is the question.
     final flash = _playback?.flash;

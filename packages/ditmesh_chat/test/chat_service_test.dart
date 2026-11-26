@@ -103,14 +103,17 @@ void main() {
     },
   );
 
-  test('the outbox is unknown while detached and read from the bound queue', () async {
-    expect(chat.pendingOutbox(), isNull);
-    await bind();
-    expect(chat.pendingOutbox(), PendingOutboxSummary.empty);
-    engine.bind(null);
-    await pumpEventQueue();
-    expect(chat.pendingOutbox(), isNull, reason: 'a detached identity');
-  });
+  test(
+    'the outbox is unknown while detached and read from the bound queue',
+    () async {
+      expect(chat.pendingOutbox(), isNull);
+      await bind();
+      expect(chat.pendingOutbox(), PendingOutboxSummary.empty);
+      engine.bind(null);
+      await pumpEventQueue();
+      expect(chat.pendingOutbox(), isNull, reason: 'a detached identity');
+    },
+  );
 
   test(
     'friends and requests are derived from the engine on each tick',
@@ -168,6 +171,31 @@ void main() {
       ..add((userId: 'a' * 64, wording: 'PLEASE ADD ME'));
     await Future<void>.delayed(const Duration(milliseconds: 120));
     expect(chat.friendRequests, isEmpty);
+  });
+
+  test('allowing a rejected sender and unblocking are independent', () async {
+    ffi.applications.add((userId: kPeerKey, wording: 'CQ?'));
+    await bind();
+    expect(chat.friendRequests, hasLength(1));
+    await chat.blockPeer(kPeerKey);
+    expect(chat.blockedPeers, contains(kPeerKey));
+    expect(chat.friendRequests, isEmpty);
+    expect(await chat.rejectedFriendRequestKeys(), isEmpty);
+    await chat.unblockPeer(kPeerKey);
+    ffi.applications
+      ..clear()
+      ..add((userId: kPeerKey, wording: 'please add me'));
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(chat.friendRequests, hasLength(1));
+    await chat.rejectFriendRequest(kPeerKey);
+    expect(chat.friendRequests, isEmpty);
+    expect(await chat.rejectedFriendRequestKeys(), [kPeerKey]);
+    await chat.allowFutureFriendRequests(kPeerKey);
+    ffi.applications
+      ..clear()
+      ..add((userId: kPeerKey, wording: 'renewed request'));
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(chat.friendRequests.single.message, 'renewed request');
   });
 
   test('remembered requests are capped; native ones always stay', () async {
@@ -344,29 +372,36 @@ void main() {
     await again.dispose();
   });
 
-  test('metadata failure after deletion reports that history was cleared', () async {
-    const id = 'c2c_$kPeerKey';
-    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
-    await bind();
-    engineService.ingestC2cText(peer: kPeerKey, text: 'Old CQ', isSelf: false);
-    await pumpEventQueue();
+  test(
+    'metadata failure after deletion reports that history was cleared',
+    () async {
+      const id = 'c2c_$kPeerKey';
+      ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+      await bind();
+      engineService.ingestC2cText(
+        peer: kPeerKey,
+        text: 'Old CQ',
+        isSelf: false,
+      );
+      await pumpEventQueue();
 
-    final blockedWrite = Completer<void>();
-    store
-      ..holdOnlyKeyContaining = 'ditmesh_hidden_conversations'
-      ..holdSetStringList = blockedWrite;
-    final result = expectLater(
-      chat.deleteConversation(id),
-      throwsCode('conversation_hide_failed'),
-    );
-    await store.heldStringList.future;
-    store.holdSetStringList = null;
-    blockedWrite.completeError(StateError('preferences write failed'));
-    await result;
+      final blockedWrite = Completer<void>();
+      store
+        ..holdOnlyKeyContaining = 'ditmesh_hidden_conversations'
+        ..holdSetStringList = blockedWrite;
+      final result = expectLater(
+        chat.deleteConversation(id),
+        throwsCode('conversation_hide_failed'),
+      );
+      await store.heldStringList.future;
+      store.holdSetStringList = null;
+      blockedWrite.completeError(StateError('preferences write failed'));
+      await result;
 
-    expect(await chat.loadHistory(id), isEmpty);
-    expect(_peers(chat).single.lastMessage, isNull);
-  });
+      expect(await chat.loadHistory(id), isEmpty);
+      expect(_peers(chat).single.lastMessage, isNull);
+    },
+  );
 
   test('clear and delete leave queued sends visible and cancellable', () async {
     const id = 'c2c_$kPeerKey';
@@ -424,10 +459,7 @@ void main() {
           text: 'Arrived during failure',
           isSelf: false,
         );
-        await expectLater(
-          clearing,
-          throwsA(isA<FileSystemException>()),
-        );
+        await expectLater(clearing, throwsA(isA<FileSystemException>()));
         await expectLater(
           chat.deleteConversation(id),
           throwsA(isA<FileSystemException>()),
@@ -499,7 +531,9 @@ void main() {
   test('a failed strict clear restores the already staged archive', () async {
     const id = 'c2c_$kPeerKey';
     await bind();
-    final directory = IdentityPaths('${tempRoot.path}/identity').historyDirectory;
+    final directory = IdentityPaths(
+      '${tempRoot.path}/identity',
+    ).historyDirectory;
     final archive = File('$directory/$kPeerKey.archive.jsonl');
     final archived = native.ChatMessage(
       text: 'Archived CQ',
@@ -513,7 +547,10 @@ void main() {
     // The archive is staged before the primary path is checked.
     final obstruction = await Directory('$directory/$kPeerKey.json').create();
     try {
-      await expectLater(chat.clearHistory(id), throwsA(isA<FileSystemException>()));
+      await expectLater(
+        chat.clearHistory(id),
+        throwsA(isA<FileSystemException>()),
+      );
       expect(await archive.readAsString(), content);
       expect((await chat.loadHistory(id)).single.text, 'Archived CQ');
     } finally {
@@ -523,37 +560,43 @@ void main() {
     expect(await archive.exists(), isFalse);
   });
 
-  test('cold start rolls back a pending clear and drops committed staging', () async {
-    final directory = IdentityPaths('${tempRoot.path}/identity').historyDirectory;
-    final message = native.ChatMessage(
-      text: 'Restore pending history',
-      fromUserId: kPeerKey,
-      isSelf: false,
-      timestamp: DateTime.utc(2026, 10, 4),
-      msgID: 'pending-clear-cq',
-    );
-    final content = jsonEncode({
-      'version': 2,
-      'conversationId': kPeerKey,
-      'messages': [message.toJson()],
-    });
-    final pending = await Directory(
-      '$directory/$kPeerKey.json.clear-pending.tmp',
-    ).create();
-    final discarded = await Directory(
-      '$directory/${'F' * 64}.json.clear-discarded.tmp',
-    ).create();
-    await File('${pending.path}/primary.tmp').writeAsString(content);
-    await File('${discarded.path}/primary.tmp').writeAsString(content);
+  test(
+    'cold start rolls back a pending clear and drops committed staging',
+    () async {
+      final directory = IdentityPaths(
+        '${tempRoot.path}/identity',
+      ).historyDirectory;
+      final message = native.ChatMessage(
+        text: 'Restore pending history',
+        fromUserId: kPeerKey,
+        isSelf: false,
+        timestamp: DateTime.utc(2026, 10, 4),
+        msgID: 'pending-clear-cq',
+      );
+      final content = jsonEncode({
+        'version': 2,
+        'conversationId': kPeerKey,
+        'messages': [message.toJson()],
+      });
+      final pending = await Directory(
+        '$directory/$kPeerKey.json.clear-pending.tmp',
+      ).create();
+      final discarded = await Directory(
+        '$directory/${'F' * 64}.json.clear-discarded.tmp',
+      ).create();
+      await File('${pending.path}/primary.tmp').writeAsString(content);
+      await File('${discarded.path}/primary.tmp').writeAsString(content);
 
-    final reopened = await newEngineService(ffi, store, tempRoot, 'identity');
-    addTearDown(reopened.dispose);
-    final loaded = await reopened.messageHistoryPersistence.loadAllHistories();
-    expect(loaded.keys, [kPeerKey]);
-    expect(loaded[kPeerKey]!.single.text, 'Restore pending history');
-    expect(await pending.exists(), isFalse);
-    expect(await discarded.exists(), isFalse);
-  });
+      final reopened = await newEngineService(ffi, store, tempRoot, 'identity');
+      addTearDown(reopened.dispose);
+      final loaded = await reopened.messageHistoryPersistence
+          .loadAllHistories();
+      expect(loaded.keys, [kPeerKey]);
+      expect(loaded[kPeerKey]!.single.text, 'Restore pending history');
+      expect(await pending.exists(), isFalse);
+      expect(await discarded.exists(), isFalse);
+    },
+  );
 
   test('an inbound message survives a failed conversation reveal', () async {
     const id = 'c2c_$kPeerKey';
@@ -585,26 +628,33 @@ void main() {
     expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
   });
 
-  test('a message received during deletion keeps the conversation visible', () async {
-    const id = 'c2c_$kPeerKey';
-    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
-    await bind();
-    final metadata = Completer<void>();
-    store
-      ..holdOnlyKeyContaining = 'ditmesh_pinned_conversations'
-      ..holdSetStringList = metadata;
-    final deleting = chat.deleteConversation(id);
-    await store.heldStringList.future;
-    final received = chat.messageEvents.first;
-    engineService.ingestC2cText(peer: kPeerKey, text: 'New CQ', isSelf: false);
-    expect((await received).text, 'New CQ');
-    store.holdSetStringList = null;
-    metadata.complete();
-    await deleting;
+  test(
+    'a message received during deletion keeps the conversation visible',
+    () async {
+      const id = 'c2c_$kPeerKey';
+      ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+      await bind();
+      final metadata = Completer<void>();
+      store
+        ..holdOnlyKeyContaining = 'ditmesh_pinned_conversations'
+        ..holdSetStringList = metadata;
+      final deleting = chat.deleteConversation(id);
+      await store.heldStringList.future;
+      final received = chat.messageEvents.first;
+      engineService.ingestC2cText(
+        peer: kPeerKey,
+        text: 'New CQ',
+        isSelf: false,
+      );
+      expect((await received).text, 'New CQ');
+      store.holdSetStringList = null;
+      metadata.complete();
+      await deleting;
 
-    expect(_peers(chat).single.lastMessage?.text, 'New CQ');
-    expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
-  });
+      expect(_peers(chat).single.lastMessage?.text, 'New CQ');
+      expect(ConversationMetaStoreProbe(store, prefix).hidden, isEmpty);
+    },
+  );
 
   test(
     'groups map from Tim2Tox known groups + local name/kind records',
@@ -827,30 +877,33 @@ void main() {
     },
   );
 
-  test('a slow queued-invite flush does not stall the refresh rounds', () async {
-    await store.setStringList('ditmesh_queued_group_invites_$prefix', [
-      'tox_x\t$kPeerKey',
-    ]);
-    ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
-    // Only the queue write parks; the request store keeps saving.
-    store
-      ..holdOnlyKeyContaining = 'queued_group_invites'
-      ..holdSetStringList = Completer<void>();
-    engine.bind(engineService);
-    await store.heldStringList.future;
-    ffi.applications.add((userId: 'a' * 64, wording: 'CQ?'));
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    expect(chat.friendRequests.map((r) => r.message), ['CQ?']);
-    store.holdSetStringList!.complete();
-    store
-      ..holdSetStringList = null
-      ..holdOnlyKeyContaining = null;
-    await pumpEventQueue();
-    expect(
-      ConversationMetaStoreProbe(store, prefix).queuedGroupsFor(kPeerKey),
-      isEmpty,
-    );
-  });
+  test(
+    'a slow queued-invite flush does not stall the refresh rounds',
+    () async {
+      await store.setStringList('ditmesh_queued_group_invites_$prefix', [
+        'tox_x\t$kPeerKey',
+      ]);
+      ffi.friends.add((userId: kPeerKey, nick: 'W1AW', online: true));
+      // Only the queue write parks; the request store keeps saving.
+      store
+        ..holdOnlyKeyContaining = 'queued_group_invites'
+        ..holdSetStringList = Completer<void>();
+      engine.bind(engineService);
+      await store.heldStringList.future;
+      ffi.applications.add((userId: 'a' * 64, wording: 'CQ?'));
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(chat.friendRequests.map((r) => r.message), ['CQ?']);
+      store.holdSetStringList!.complete();
+      store
+        ..holdSetStringList = null
+        ..holdOnlyKeyContaining = null;
+      await pumpEventQueue();
+      expect(
+        ConversationMetaStoreProbe(store, prefix).queuedGroupsFor(kPeerKey),
+        isEmpty,
+      );
+    },
+  );
 
   test(
     'forgetting a removed friend stops between its writes at detach',

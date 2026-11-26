@@ -96,7 +96,7 @@ class SEs extends S {
   String get errorWrongPassword => 'Contraseña incorrecta. Inténtalo de nuevo.';
 
   @override
-  String get errorPeerOffline => 'Este contacto está desconectado. Tox no tiene servidor, así que el mensaje espera hasta que vuelva a conectarse.';
+  String get errorPeerOffline => 'El contacto está desconectado. El mensaje queda en la cola local hasta que esté disponible.';
 
   @override
   String get errorInvalidToxId => 'El Tox ID no es válido (debe tener 76 caracteres hexadecimales).';
@@ -296,10 +296,10 @@ class SEs extends S {
   String get accountWelcomeTitle => 'Tu identidad reside en este dispositivo';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh usa la red entre pares Tox. No hay servidor ni cuenta que registrar: tu identidad es un par de claves guardado únicamente aquí.';
+  String get accountWelcomeIntro => 'DitMesh usa la red entre pares de Tox. No requiere registro. Tu identidad es un par de claves guardado en este dispositivo.';
 
   @override
-  String get accountWelcomePointNoServer => 'Sin servidor, número de teléfono ni correo electrónico. Los operadores hablan directamente en Morse.';
+  String get accountWelcomePointNoServer => 'No hace falta un servidor central de mensajería, un número de teléfono ni un correo. La comunicación en Morse es directa.';
 
   @override
   String get accountWelcomePointTraining => 'Chatea con una persona o en grupo usando código Morse, con una llave recta o paletas iámbicas.';
@@ -329,7 +329,7 @@ class SEs extends S {
   String get accountBackupTitle => 'Crea ahora una copia de tu identidad';
 
   @override
-  String get accountBackupBody => 'Tu identidad solo existe en este dispositivo. Si lo pierdes, lo restableces o te lo roban, no podrás recuperarla: tus contactos no reconocerán una identidad nueva y perderás tu progreso.';
+  String get accountBackupBody => 'Si pierdes los datos del equipo y no tienes una copia utilizable, no podrás recuperar esta identidad. Guarda el archivo y su frase de contraseña.';
 
   @override
   String get accountBackupWhatIsInside => 'La copia contiene tu clave de identidad, cifrada con tu contraseña, y tu progreso. Guárdala en un lugar seguro fuera de este dispositivo.';
@@ -344,6 +344,9 @@ class SEs extends S {
   String get accountSectionNotifications => 'Notificaciones';
 
   @override
+  String get accountNotificationsSystemManaged => 'El dispositivo administra los permisos de notificaciones.';
+
+  @override
   String get accountNotificationsEnable => 'Mostrar notificaciones';
 
   @override
@@ -353,7 +356,7 @@ class SEs extends S {
   String get accountNotificationsContent => 'Mostrar el contenido de los mensajes';
 
   @override
-  String get accountNotificationsContentSubtitle => 'Texto y Morse en los avisos y en la pantalla de bloqueo. Desactivado: solo que llegó un mensaje.';
+  String get accountNotificationsContentSubtitle => 'Al desactivarlo, los avisos de mensajes ocultan el nombre del chat, el remitente, el texto y el morse. El sistema controla la vista previa en pantalla bloqueada.';
 
   @override
   String get accountNotificationsAllow => 'Permitir notificaciones';
@@ -365,7 +368,7 @@ class SEs extends S {
   String get accountNotificationsBlocked => 'Bloqueadas en los ajustes del sistema';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'Las notificaciones de mensajes de DitMesh están desactivadas en los ajustes del sistema. Vuelve a activarlas allí.';
+  String get accountNotificationsBlockedSubtitle => 'En Android, ve a Ajustes → Aplicaciones → DitMesh → Notificaciones y activa las notificaciones de mensajes.';
 
   @override
   String get accountNotificationsDenied => 'Las notificaciones de DitMesh están desactivadas en los ajustes del sistema.';
@@ -377,16 +380,19 @@ class SEs extends S {
   String get accountBackupShareFile => 'Compartir copia de seguridad';
 
   @override
-  String get accountBackupSaved => 'Copia de seguridad guardada';
+  String get accountBackupSaved => 'Copia guardada. Busca el archivo .mcqbackup en la ubicación que elegiste.';
 
   @override
-  String get accountBackupNotSaved => 'No se guardó la copia de seguridad';
+  String get accountBackupNotSaved => 'Se canceló este guardado. Puedes volver a exportar.';
+
+  @override
+  String get accountBackupShareReturned => 'Se abrió el menú del sistema para compartir. Busca el archivo .mcqbackup en la carpeta o en la aplicación de destino.';
 
   @override
   String get accountBackupFailed => 'No se pudo escribir la copia de seguridad';
 
   @override
-  String get accountBackupAcknowledge => 'Entiendo que sin esta copia no podré recuperar mi identidad.';
+  String get accountBackupAcknowledge => 'Entiendo que si el dispositivo pierde los datos y no tengo una copia de seguridad, no podré recuperar mi identidad.';
 
   @override
   String get accountBackupContinue => 'Continuar a DitMesh';
@@ -694,6 +700,9 @@ class SEs extends S {
   String get chatToxIdLabel => 'Tox ID (76 caracteres hexadecimales)';
 
   @override
+  String get chatRequestPublicKey => 'Clave pública de la solicitud (64 caracteres hexadecimales)';
+
+  @override
   String get chatToxIdInvalid => 'El Tox ID debe tener exactamente 76 caracteres hexadecimales';
 
   @override
@@ -719,6 +728,9 @@ class SEs extends S {
 
   @override
   String get chatScanQrDesktopHint => 'El escaneo con cámara no está disponible en esta plataforma. Pega un ID de Tox.';
+
+  @override
+  String get chatScanQrManualHint => 'La cámara no está disponible. Pega el ID de Tox completo o vuelve a escanear.';
 
   @override
   String get chatScanQrTitle => 'Escanear un Tox ID';
@@ -1818,7 +1830,7 @@ class SEs extends S {
   String get listenSettings => 'Ajustes de escucha';
 
   @override
-  String get listenDecoded => 'Decodificado';
+  String get listenDecoded => 'Decodificación en directo';
 
   @override
   String get listenEmptyHint => 'Acerca el micrófono a un tono Morse. El texto decodificado aparecerá aquí.';
@@ -1845,7 +1857,7 @@ class SEs extends S {
   String get listenTone => 'Frecuencia del tono';
 
   @override
-  String get listenToneLocked => 'Fijada';
+  String get listenToneLocked => 'Tono fijado';
 
   @override
   String get listenToneSearching => 'Buscando';
@@ -2259,7 +2271,7 @@ class SEs extends S {
   String get chatSearchHint => 'Buscar en esta conversación';
 
   @override
-  String get chatSearchAnyone => 'Todos';
+  String get chatSearchAnyone => 'Todos los remitentes';
 
   @override
   String get chatSearchMe => 'Yo';
@@ -2566,6 +2578,12 @@ class SEs extends S {
   String get diagTitle => 'Diagnóstico de conexión';
 
   @override
+  String get diagScopeIdentity => 'Todas las conversaciones de esta identidad';
+
+  @override
+  String get diagScopeConversation => 'Solo esta conversación';
+
+  @override
   String get diagOpenSubtitle => 'Por qué hay mensajes en espera y cómo reconectar';
 
   @override
@@ -2660,7 +2678,7 @@ class SEs extends S {
   String get diagPendingHint => 'Los mensajes en cola permanecen en este dispositivo y se envían solos cuando el contacto está disponible. El diagnóstico nunca los descarta ni los reenvía.';
 
   @override
-  String get diagReconnect => 'Reconectar';
+  String get diagReconnect => 'Reconectar este dispositivo';
 
   @override
   String get diagReconnecting => 'Reconectando…';
@@ -2677,7 +2695,7 @@ class SEs extends S {
   String get diagAboutTitle => 'Cómo se conecta DitMesh';
 
   @override
-  String get diagAboutBody => 'DitMesh no tiene servidor. Tu dispositivo habla directamente con tus contactos por la red entre pares Tox, así que ambos deben estar conectados a la vez para que llegue un mensaje. Los teléfonos pausan las apps en segundo plano: allí DitMesh no puede seguir conectado y se reconecta al volver.';
+  String get diagAboutBody => 'Los mensajes se intercambian directamente mediante Tox, sin servidor central de mensajería. Los nodos públicos de arranque permiten entrar en la red. Ambos deben estar en línea para la entrega. DitMesh se reconecta al volver del segundo plano.';
 
   @override
   String get diagDetailsTitle => 'Detalles técnicos';
@@ -2803,7 +2821,7 @@ class SEs extends S {
   String get backupXExporting => 'Creando copia…';
 
   @override
-  String get backupXMigrationNote => '¿Cambias de dispositivo? Tras restaurar allí, deja de usar esta identidad aquí: dos dispositivos con una identidad pueden enviar el mismo mensaje dos veces.';
+  String get backupXMigrationNote => '¿Cambias de dispositivo? Cierra DitMesh con esta identidad en el equipo anterior antes de confirmar la restauración en el nuevo. Al terminar se intentará conectar.';
 
   @override
   String get backupXBusy => 'Tus datos cambiaron mientras se hacía la copia. Inténtalo de nuevo.';
@@ -2850,8 +2868,8 @@ class SEs extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count mensajes sin enviar del dispositivo anterior no están en esta copia.',
-      one: '1 mensaje sin enviar del dispositivo anterior no está en esta copia.',
+      other: 'Había $count mensajes en cola al crear la copia. No están incluidos.',
+      one: 'Había un mensaje en cola al crear la copia. No está incluido.',
     );
     return '$_temp0';
   }
@@ -2866,7 +2884,7 @@ class SEs extends S {
   String get restoreXConfirmTitle => '¿Reemplazar la identidad de este dispositivo?';
 
   @override
-  String get restoreXConfirmBody => 'La identidad y los datos de este dispositivo se reemplazan por la copia. Deja de usar la identidad en el dispositivo anterior antes de conectarte aquí.';
+  String get restoreXConfirmBody => 'La copia reemplaza la identidad y los datos de este dispositivo. Cierra DitMesh con esta identidad en el equipo anterior antes de elegir Reemplazar y restaurar. Este dispositivo intentará conectarse al terminar.';
 
   @override
   String get restoreXConfirm => 'Reemplazar y restaurar';
@@ -2885,13 +2903,7 @@ class SEs extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count mensajes sin enviar esperan tu revisión en Chat.',
-      one: '1 mensaje sin enviar espera tu revisión en Chat.',
-    );
-    return '$_temp0';
+    return 'La copia trajo $count mensajes sin enviar. Abre la revisión inferior para comprobarlos.';
   }
 
   @override
@@ -2899,8 +2911,8 @@ class SEs extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count mensajes sin enviar del dispositivo anterior no se trasladaron.',
-      one: '1 mensaje sin enviar del dispositivo anterior no se trasladó.',
+      other: '$count mensajes en cola al crear la copia no se incluyeron. Consulta el equipo anterior antes de reenviarlos.',
+      one: 'Un mensaje en cola al crear la copia no se incluyó. Consulta el equipo anterior antes de reenviarlo.',
     );
     return '$_temp0';
   }
@@ -2917,7 +2929,7 @@ class SEs extends S {
   }
 
   @override
-  String get restoreXReportStopOld => 'Deja de usar esta identidad en el dispositivo anterior.';
+  String get restoreXReportStopOld => 'Si DitMesh sigue usando esta identidad en el equipo anterior, ciérralo ahora.';
 
   @override
   String get restoreXReportDone => 'Listo';
@@ -2937,7 +2949,7 @@ class SEs extends S {
   String get pendingReviewTitle => 'Mensajes sin enviar';
 
   @override
-  String get pendingReviewBody => 'Estaban pendientes de envío en tu dispositivo anterior. DitMesh nunca los envía automáticamente; vuelve a manipular uno si aún importa.';
+  String get pendingReviewBody => 'Estos mensajes estaban en cola en el dispositivo anterior al crear la copia. Las copias restauradas son para revisar y no se envían automáticamente. Comprueba si el dispositivo anterior los envió antes de repetirlos.';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2954,10 +2966,10 @@ class SEs extends S {
   String get pendingReviewEmpty => 'No queda nada por revisar.';
 
   @override
-  String get backupXWizardInside => 'El archivo de copia se cifra entero con una frase que eliges y contiene la clave de tu identidad y tu progreso. Guarda el archivo y la frase en un lugar seguro, fuera de este dispositivo.';
+  String get backupXWizardInside => 'El archivo completo se cifra con la frase que eliges. La identidad siempre se incluye. El entrenamiento y los demás datos se exportan según tu selección. Guarda el archivo y la frase en un lugar seguro fuera de este dispositivo.';
 
   @override
-  String get backupXMeSubtitle => 'Un archivo cifrado con tu identidad, chats y progreso, para guardarlo o llevarlo a otro dispositivo';
+  String get backupXMeSubtitle => 'Cifra la copia de tu identidad y elige si incluyes chats y progreso.';
 
   @override
   String get keysTitle => 'Teclas y manipuladores externos';
@@ -2966,7 +2978,7 @@ class SEs extends S {
   String get keysMeSubtitle => 'Asignación de teclas, paletas y adaptadores USB';
 
   @override
-  String get keysIntro => 'Elige qué teclas manipulan Morse. Los adaptadores USB de manipulador y paletas que emulan un teclado funcionan como tal: define aquí sus teclas. La app no sabe qué dispositivo envió una tecla, así que un perfil es un conjunto de asignaciones.';
+  String get keysIntro => 'Asigna los dispositivos que generen eventos de teclado, incluidos los adaptadores USB o Bluetooth que emulan un teclado. El perfil guarda esas teclas.';
 
   @override
   String get keysStandardProfile => 'Estándar';
@@ -2981,7 +2993,7 @@ class SEs extends S {
   String get keysNewProfile => 'Nuevo perfil';
 
   @override
-  String get keysLimitations => 'No se admiten manipuladores MIDI, serie ni Bluetooth, ajustes de firmware del adaptador ni control del transmisor. Los adaptadores probados figuran en la documentación.';
+  String get keysLimitations => 'No se admiten conexiones directas mediante protocolos propios de manipuladores Bluetooth, MIDI o puertos serie, ni control de firmware o de transmisor. Consulta los adaptadores probados en la documentación.';
 
   @override
   String get keysEditTitle => 'Perfil de teclas';
@@ -3255,13 +3267,13 @@ class SEs extends S {
   String get termsGateTitle => 'Normas de la comunidad';
 
   @override
-  String get termsGateIntro => 'El chat de DitMesh te conecta directamente con otras personas, sin servidor. Antes de empezar, acepta estas normas:';
+  String get termsGateIntro => 'DitMesh envía mensajes directamente mediante Tox, sin un servidor central de mensajería. Acepta estas reglas para empezar:';
 
   @override
   String get termsGateRuleZero => 'Tolerancia cero: nada de acoso, odio, amenazas, contenido sexual con menores, spam ni nada ilegal.';
 
   @override
-  String get termsGateRuleContacts => 'Solo las personas que aceptes pueden escribirte; a los grupos se entra por invitación o con su ID.';
+  String get termsGateRuleContacts => 'Los mensajes directos provienen de contactos aceptados. Al entrar en un grupo recibes los mensajes que cualquiera de sus miembros envíe allí.';
 
   @override
   String get termsGateRuleBlock => 'Bloquea a cualquiera desde una conversación, la lista de miembros de un grupo, una solicitud de amistad o una invitación.';
@@ -3315,7 +3327,7 @@ class SEs extends S {
   String get bootstrapTitle => 'Red y nodos de arranque';
 
   @override
-  String get bootstrapDescription => 'Elige los nodos públicos para entrar en la red Tox.';
+  String get bootstrapDescription => 'Los nodos públicos de arranque ayudan a entrar en Tox. Elige aquí los nodos.';
 
   @override
   String get bootstrapModeAuto => 'Automático';
@@ -3504,7 +3516,7 @@ class SEs extends S {
   String get firstChatListenTitle => '2. Escuchar y corregir';
 
   @override
-  String get firstChatListenBody => 'Antes de enviar, escucha la vista previa y borra los errores. Después, pulsa Reproducir en el mensaje. Los mensajes personales se guardan en este dispositivo.';
+  String get firstChatListenBody => 'Antes de enviar, usa el triángulo pequeño para escuchar el borrador y Eliminar para corregirlo. Después, reproduce el mensaje. Los mensajes para ti se quedan en el dispositivo.';
 
   @override
   String get firstChatFriendTitle => '3. Chatear con un amigo';
@@ -3744,7 +3756,7 @@ class SEs extends S {
   String get nearbyPrivacyTitle => 'Personas cercanas';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh comparte tu nombre visible y ubicación aproximada (con unos 100 m de precisión) en grupos públicos de Tox de tu zona. Cualquiera que se una a uno de esos grupos puede recibir estos datos, sea cual sea su ubicación real. Tu ID de Tox solo se comparte si envías o respondes a una solicitud de Personas cercanas de forma explícita. La función solo está activa cuando la aplicación está en primer plano.';
+  String get nearbyPrivacyBody => 'DitMesh comparte tu nombre visible y ubicación aproximada (con unos 100 m de precisión) en grupos públicos de Tox de tu zona. Cualquiera que se una a uno de esos grupos puede recibir estos datos, sea cual sea su ubicación real. Tu ID de Tox solo se comparte si envías o respondes a una solicitud de Personas cercanas de forma explícita. La función solo está activa cuando la aplicación está en primer plano. Al salir de Personas cerca, el uso compartido puede continuar hasta 5 minutos mientras la aplicación siga en primer plano. Desactiva la visibilidad para dejar de compartir.';
 
   @override
   String get nearbyPrivacyAccept => 'Activar';
@@ -3922,4 +3934,226 @@ class SEs extends S {
 
   @override
   String get firstChatReceiptBody => 'En cola significa guardado en este dispositivo; enviado, aceptado por el transporte; entregado requiere un acuse del destinatario. En grupos confirma al menos un miembro, no que todos hayan escuchado.';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return '¿Descartar $count mensajes restaurados? Esto elimina definitivamente las copias locales pendientes de revisión.';
+  }
+
+  @override
+  String get pendingReviewDismissed => 'Mensaje restaurado descartado.';
+
+  @override
+  String get pendingReviewUndo => 'Deshacer';
+
+  @override
+  String get pendingReviewSaveError => 'No se pudo guardar el cambio. Se conservó la lista.';
+
+  @override
+  String get restoreXCurrentIdentity => 'Identidad actual en este dispositivo';
+
+  @override
+  String get restoreXLockedIdentity => 'Bloqueada. El nombre y la huella no están disponibles.';
+
+  @override
+  String get restoreXNoCurrentIdentity => 'No hay identidad en este dispositivo.';
+
+  @override
+  String get restoreXBackupIdentity => 'Identidad de esta copia';
+
+  @override
+  String get restoreXPassphraseHelp => 'Introduce la frase de contraseña que configuraste al crear esta copia.';
+
+  @override
+  String get restoreXPendingReviewTitle => 'Mensajes restaurados para revisar';
+
+  @override
+  String get groupInviteAcceptanceFailed => 'No se pudo aceptar la invitación';
+
+  @override
+  String get groupInviteRetryAccept => 'Reintentar la aceptación';
+
+  @override
+  String get chatDraftOfflineQueue => 'Al enviarlo, el mensaje se guardará en este dispositivo hasta que el contacto esté en línea.';
+
+  @override
+  String get chatDraftQueued => 'En cola en este dispositivo.';
+
+  @override
+  String get chatKeyTouchHint => 'Mantén pulsada la tecla en la pantalla';
+
+  @override
+  String get chatPaddleTouchHint => 'Mantén pulsada una palanca en la pantalla';
+
+  @override
+  String get keysSpace => 'Espacio';
+
+  @override
+  String get keysLeftControl => 'Ctrl izquierdo';
+
+  @override
+  String get keysRightControl => 'Ctrl derecho';
+
+  @override
+  String get keysBindingUnchanged => 'La asignación anterior no ha cambiado.';
+
+  @override
+  String get backupXGoToPassphrase => 'Configurar la frase de la copia';
+
+  @override
+  String get restoreXFirstConfirmTitle => '¿Restaurar esta copia?';
+
+  @override
+  String get restoreXFirstConfirmBody => 'Se restaurarán la identidad y los datos de la copia. Cierra DitMesh con esta identidad en el equipo anterior antes de confirmar la restauración. Este dispositivo intentará conectarse al terminar.';
+
+  @override
+  String get restoreXFirstConfirm => 'Confirmar restauración';
+
+  @override
+  String get deliveryMessageTime => 'Hora del mensaje';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return 'De la conversación: $name';
+  }
+
+  @override
+  String get chatRefreshMembers => 'Actualizar miembros';
+
+  @override
+  String get pendingSendingUncancellable => 'Este envío ya no se puede cancelar.';
+
+  @override
+  String get diagWaitForPeer => 'Espera a que el contacto se conecte o consulta los mensajes pendientes.';
+
+  @override
+  String get diagReconnectOwnNote => 'Solo se reconecta este dispositivo. El contacto no se conecta por esta acción.';
+
+  @override
+  String get chatScanQrPermissionHelp => 'Permiso de cámara denegado. Permite el acceso a DitMesh en los ajustes del sistema o pega el ID de Tox completo.';
+
+  @override
+  String get groupInviteReconnectHint => 'Este dispositivo perdió la conexión con Tox. Espera a que se reconecte y vuelve a aceptar la invitación.';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return 'Revisar $count mensajes';
+  }
+
+  @override
+  String get locationEnableHere => 'Activa Ubicación en esta página para usar tu ubicación actual.';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return 'Buscar en la conversación con $name';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return 'Copia guardada: $name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => 'Copiar ubicación';
+
+  @override
+  String get accountNotificationsPermitted => 'Notificaciones permitidas por el sistema';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '¿Eliminar «$name»?';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => 'Se eliminarán el intervalo, la nota y la grabación local de DitMesh. El archivo original importado se conserva.';
+
+  @override
+  String get workbenchDeleteClipOnly => 'Se eliminarán el intervalo y la nota. Los archivos de grabación se conservan.';
+
+  @override
+  String get workbenchRemovedClipAndFile => 'Se eliminaron el fragmento y la grabación local.';
+
+  @override
+  String get workbenchRemovedClip => 'Fragmento eliminado. No se eliminó el archivo de audio.';
+
+  @override
+  String get workbenchRemovedClipFileError => 'El fragmento se eliminó, pero DitMesh no pudo eliminar la grabación local.';
+
+  @override
+  String get chatRejectRequestTitle => '¿Rechazar esta solicitud de amistad?';
+
+  @override
+  String get chatRejectRequestBody => 'Esta solicitud y las futuras de esta persona se ocultarán. Puedes volver a permitirlas en Contactos → Solicitudes rechazadas.';
+
+  @override
+  String get chatRequestRejected => 'Solicitud rechazada. Gestiona futuras solicitudes en Contactos → Solicitudes rechazadas.';
+
+  @override
+  String get chatRejectedRequests => 'Solicitudes rechazadas';
+
+  @override
+  String get chatRejectedRequestsHelp => 'Las solicitudes de estas claves se ocultan en este equipo. Permitir nuevas solicitudes no quita un bloqueo.';
+
+  @override
+  String get chatRejectedRequestsEmpty => 'Aquí no hay remitentes rechazados.';
+
+  @override
+  String get chatAllowFutureRequests => 'Permitir nuevas solicitudes';
+
+  @override
+  String get chatFutureRequestsAllowed => 'Filtro de solicitudes retirado. Los bloqueos independientes siguen vigentes.';
+
+  @override
+  String get moderationBlockRequestBody => 'Se rechazará la solicitud actual y se bloquearán en este equipo los próximos mensajes directos, solicitudes e invitaciones de esta persona. No se le avisará.';
+
+  @override
+  String get accountBackupShareClosed => 'Se cerró el menú del sistema. Puedes volver a compartir la copia.';
+
+  @override
+  String get nearbyHideSession => 'Ocultar esta sesión';
+
+  @override
+  String get nearbySessionHidden => 'Se ocultó esta sesión. Una nueva sesión de esta persona puede volver a aparecer.';
+
+  @override
+  String get pendingReviewOpenConversation => 'Abrir el chat original';
+
+  @override
+  String get pendingReviewMissingContact => 'El chat no está disponible. Restaura o agrega al contacto antes de volver a enviar.';
+
+  @override
+  String get pendingReviewMissingGroup => 'El grupo no está disponible. Vuelve a unirte antes de transmitir el mensaje.';
+
+  @override
+  String get pendingReviewIgnoreCopy => 'Ignorar esta copia';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se ignoraron $count copias restauradas.',
+      one: 'Se ignoró una copia restaurada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => '¿Finalizar esta práctica?';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return 'El equipo conserva los resultados de $done de $total rondas. Las pendientes siguen incompletas y los resultados quedan en modo de solo lectura.';
+  }
+
+  @override
+  String get groupPracticeEnded => 'Práctica finalizada. Las rondas y resultados guardados son de solo lectura.';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return 'La grabación dura $actual. Los fragmentos necesitan al menos $minimum. Elige un WAV más largo para recuperar los intervalos originales.';
+  }
+
+  @override
+  String get deliveryFailedNext => 'Abre la bandeja de salida para reintentar este mensaje.';
 }
