@@ -227,6 +227,7 @@ class _AddFriendFormState extends State<AddFriendForm> {
                   label: FieldLabel(s.chatToxIdLabel),
                   border: const OutlineInputBorder(),
                   errorText: serverError,
+                  errorMaxLines: 6,
                   // No suffixIcon on purpose. With a Tooltip in this slot the
                   // framework asserted "Invisible SemanticsNodes should not
                   // be added to the tree" while the sheet was dismissed after

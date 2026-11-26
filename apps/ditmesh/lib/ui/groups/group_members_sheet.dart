@@ -9,6 +9,7 @@ import '../account/account_widgets.dart';
 import '../chat/chat_layout.dart';
 import '../common/app_bar_title.dart';
 import '../moderation/block_actions.dart';
+import '../responsive.dart';
 
 /// Lists a group's members with online dots; every other
 /// member can be blocked (or unblocked) from here.
@@ -157,7 +158,9 @@ class _MembersBodyState extends State<_MembersBody> {
           ],
         );
         if (!wide) return SafeArea(child: list);
-        return SafeArea(
+        return ReadableBody(
+          maxWidth: 1680,
+          alignment: AlignmentDirectional.topStart,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
             child: Row(

@@ -468,7 +468,12 @@ class _Crawler {
       if (render is! RenderBox || !render.attached || !render.hasSize) {
         continue;
       }
-      final Rect rect = render.localToGlobal(Offset.zero) & render.size;
+      // FittedBox and other transforms change the painted width as well as
+      // the origin. Measuring the untransformed size misreports scaled text.
+      final Rect rect = MatrixUtils.transformRect(
+        render.getTransformTo(null),
+        Offset.zero & render.size,
+      );
       if (rect.width < 1 || rect.height < 1) continue;
       Axis? scroll;
       var field = false;

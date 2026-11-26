@@ -261,15 +261,28 @@ Future<void> walkShell(
   await shots.capture(tester, locale, 'conversation');
   await popIfCan(tester);
   await openContacts(tester);
-  for (var i = 0; i < copy.friends.length; i++) {
-    expect(
-      find.byKey(ValueKey<String>('friend_${seedKey(i + 1)}')),
-      findsOneWidget,
-      reason: 'friend ${copy.friends[i].name}',
-    );
-  }
   expect(find.text(copy.requestMessage), findsOneWidget);
   await shots.capture(tester, locale, 'contacts');
+  final rosterList = find
+      .descendant(
+        of: find.byType(ContactsPage),
+        matching: find.byType(ListView),
+      )
+      .last;
+  final roster = find
+      .descendant(of: rosterList, matching: find.byType(Scrollable))
+      .first;
+  final rosterPosition = tester.state<ScrollableState>(roster).position;
+  for (var i = 0; i < copy.friends.length; i++) {
+    final row = find.byKey(ValueKey<String>('friend_${seedKey(i + 1)}'));
+    if (row.evaluate().isEmpty) {
+      // Contacts are lazily laid out. Seed order may differ from display sort.
+      rosterPosition.jumpTo(rosterPosition.minScrollExtent);
+      await tester.pump();
+      await tester.scrollUntilVisible(row, 160, scrollable: roster);
+    }
+    expect(row, findsOneWidget, reason: 'friend ${copy.friends[i].name}');
+  }
   await popIfCan(tester);
 
   // Groups

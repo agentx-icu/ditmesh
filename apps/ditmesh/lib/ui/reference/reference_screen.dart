@@ -269,7 +269,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
             const VerticalDivider(width: 1),
             Expanded(
               child: ReadableBody(
-                maxWidth: 1280,
+                maxWidth: 1100,
                 alignment: AlignmentDirectional.topStart,
                 child: Column(
                   children: <Widget>[

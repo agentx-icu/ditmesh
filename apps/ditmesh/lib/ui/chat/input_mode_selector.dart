@@ -23,14 +23,7 @@ class InputModeSelector extends StatelessWidget {
   ) => ButtonSegment<InputMode>(
     value: value,
     icon: Icon(icon),
-    label: showLabels
-        ? Text(
-            label,
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.ellipsis,
-          )
-        : null,
+    label: showLabels ? Text(label, textAlign: TextAlign.center) : null,
     tooltip: label,
   );
 

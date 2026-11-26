@@ -311,7 +311,9 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
                 ],
               ),
             )
-          : SafeArea(
+          : ReadableBody(
+              maxWidth: 1400,
+              alignment: AlignmentDirectional.topStart,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                 child: Row(
