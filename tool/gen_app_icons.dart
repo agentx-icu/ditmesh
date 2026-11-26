@@ -85,6 +85,13 @@ void main(List<String> args) {
   _write('$_app/icon/app_icon_1024.png', img.encodePng(master));
   files++;
 
+  // Linux and Windows use a bundled PNG for native notification branding.
+  _write(
+    '$_app/assets/notification_icon.png',
+    img.encodePng(_icon(64, rounded: true)),
+  );
+  files++;
+
   // iOS: opaque squares in every size Contents.json lists (iOS applies the
   // mask itself and rejects alpha in the marketing icon).
   for (final entry in _appIconSet(_iosSet)) {
@@ -174,7 +181,9 @@ void main(List<String> args) {
 
   // Windows: one multi-resolution .ico, each size an independent entry
   // (addFrame would make an animated PNG inside the first entry).
-  final frames = [for (final size in _icoSizes) _icon(size, rounded: true)];
+  final frames = [
+    for (final size in _icoSizes) _icon(size, rounded: true, small: size <= 24),
+  ];
   _write(
     '$_app/windows/runner/resources/app_icon.ico',
     img.IcoEncoder().encodeImages(frames),
@@ -188,7 +197,7 @@ void main(List<String> args) {
       ..createSync(recursive: true);
     _write(
       '${dir.path}/ditmesh.png',
-      img.encodePng(_icon(size, rounded: true)),
+      img.encodePng(_icon(size, rounded: true, small: size <= 24)),
     );
     files++;
   }
@@ -224,12 +233,12 @@ List<_IconEntry> _appIconSet(String dir) {
 
 /// The icon at [size]: the tile (rounded on transparent, or full-bleed
 /// square) with the signal tower centred on it.
-img.Image _icon(int size, {required bool rounded}) {
+img.Image _icon(int size, {required bool rounded, bool small = false}) {
   // Drawn opaque (RGB) first. Square icons stay RGB: App Store Connect
   // rejects an alpha channel in the 1024 marketing icon.
   final opaque = img.Image(width: size, height: size);
   img.fill(opaque, color: _tile);
-  drawTowerOnTile(opaque, _white);
+  drawTowerOnTile(opaque, _white, small: small);
   if (!rounded) return opaque;
 
   // Rounded: the tile shape as an anti-aliased coverage mask moved into the
@@ -270,7 +279,7 @@ img.Image _macIcon(int size) {
   final offset = (size - body) ~/ 2;
   // Copied, not composited: blending the tile's soft edge over transparent
   // black would darken it again.
-  for (final pixel in _icon(body, rounded: true)) {
+  for (final pixel in _icon(body, rounded: true, small: size <= 24)) {
     image.setPixelRgba(
       pixel.x + offset,
       pixel.y + offset,

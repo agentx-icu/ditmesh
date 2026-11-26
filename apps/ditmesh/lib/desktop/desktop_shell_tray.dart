@@ -2,6 +2,11 @@ part of 'desktop_shell_controller.dart';
 
 /// Private tray registration and updates share the controller's lifetime.
 extension _DesktopShellTray on DesktopShellController {
+  String? get _desiredTrayIcon => TrayIconAssets.forPlatform(
+    config.effectivePlatform,
+    hasUnread: _unreadCount > 0,
+  );
+
   bool _ownsTray(int generation, {bool restoringAfterQuit = false}) =>
       _active &&
       generation == _trayGeneration &&
@@ -23,12 +28,13 @@ extension _DesktopShellTray on DesktopShellController {
     bool current() =>
         _ownsTray(generation, restoringAfterQuit: restoringAfterQuit);
     if (!current() || _trayAvailable) return;
-    final icon = TrayIconAssets.forPlatform(config.effectivePlatform);
-    if (icon == null) return;
     try {
       if (!await _hasTrayHost() || !current()) return;
+      final icon = _desiredTrayIcon;
+      if (icon == null) return;
       _tray.setEventHandler(this);
       await _tray.setIcon(icon, isTemplate: config.isMacOS);
+      _appliedTrayIcon = icon;
       if (!current()) {
         _tray.setEventHandler(null);
         await _tolerate('destroy stale tray', _tray.destroy);
@@ -64,6 +70,14 @@ extension _DesktopShellTray on DesktopShellController {
     bool current() =>
         _ownsTray(generation, restoringAfterQuit: restoringAfterQuit);
     if (!_trayAvailable || !current()) return;
+    final icon = _desiredTrayIcon;
+    if (icon != null && icon != _appliedTrayIcon) {
+      await _tolerate('setIcon', () async {
+        await _tray.setIcon(icon, isTemplate: config.isMacOS);
+        _appliedTrayIcon = icon;
+      });
+      if (!current()) return;
+    }
     await _tolerate('setToolTip', () => _tray.setToolTip(trayTooltip));
     if (!current()) return;
     if (config.isMacOS) {

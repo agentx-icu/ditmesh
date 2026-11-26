@@ -25,12 +25,17 @@ abstract final class TrayIconAssets {
   static const String macTemplate = 'assets/tray/tray_template_36.png';
   static const String linuxPng = 'assets/tray/tray_icon_64.png';
   static const String windowsIco = 'assets/tray/tray_icon.ico';
+  static const String _linuxUnread = 'assets/tray/tray_unread_64.png';
+  static const String _windowsUnread = 'assets/tray/tray_unread.ico';
 
   /// The icon [platform] should load, or null when it has no tray.
-  static String? forPlatform(TargetPlatform platform) => switch (platform) {
+  static String? forPlatform(
+    TargetPlatform platform, {
+    bool hasUnread = false,
+  }) => switch (platform) {
     TargetPlatform.macOS => macTemplate,
-    TargetPlatform.linux => linuxPng,
-    TargetPlatform.windows => windowsIco,
+    TargetPlatform.linux => hasUnread ? _linuxUnread : linuxPng,
+    TargetPlatform.windows => hasUnread ? _windowsUnread : windowsIco,
     _ => null,
   };
 }

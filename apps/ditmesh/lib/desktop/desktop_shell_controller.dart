@@ -65,6 +65,7 @@ class DesktopShellController extends ChangeNotifier
   bool _initialized = false;
   bool _active = false;
   bool _trayAvailable = false;
+  String? _appliedTrayIcon;
   bool _windowVisible = false;
   bool _closing = false;
   Rect? _normalBounds;
@@ -208,7 +209,7 @@ class DesktopShellController extends ChangeNotifier
     }
   }
 
-  /// Updates the window title, tray tooltip and macOS badge. Negative counts
+  /// Updates the unread state of the window title and tray. Negative counts
   /// clamp to zero. Safe to call before [initialize] and on mobile (state
   /// only).
   void setUnreadCount(int count) {

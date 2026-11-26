@@ -8,6 +8,7 @@
 //   tray_icon_{16,22,32,36,64}.png      Linux (AppIndicator): white glyph on a
 //                                 rounded dark-teal tile so it reads on any
 //                                 panel colour.
+//   tray_unread_64.png, tray_unread.ico: the same tray marks with an unread dot.
 //   tray_icon.ico                 Windows: tile renders at the small-icon
 //                                 sizes of 100–300 % DPI (16/20/24/32/40/48,
 //                                 SM_CXSMICON) packed into one multi-resolution
@@ -34,6 +35,8 @@ const String _outDir = 'apps/ditmesh/assets/tray';
 final img.Color _black = img.ColorRgb8(0, 0, 0);
 final img.Color _white = img.ColorRgb8(255, 255, 255);
 final img.Color _tile = img.ColorRgb8(0x1D, 0x60, 0x63);
+final img.Color _dot = img.ColorRgb8(0xFF, 0xBF, 0x5A);
+final img.Color _dotOutline = img.ColorRgb8(0x14, 0x3B, 0x3D);
 
 void main(List<String> args) {
   if (!File('pubspec.yaml').existsSync() || !Directory('apps').existsSync()) {
@@ -50,21 +53,27 @@ void main(List<String> args) {
     _write('${dir.path}/tray_icon_$size.png', img.encodePng(tile));
   }
 
-  // Each size is an independent .ico entry (addFrame would nest the other
-  // sizes as an animated PNG inside the 16 px entry).
-  final tiles = [for (final size in _icoSizes) _glyph(size, template: false)];
-  _write('${dir.path}/tray_icon.ico', img.IcoEncoder().encodeImages(tiles));
-  stdout.writeln(
-    '[gen_tray_icons] wrote ${_sizes.length * 2 + 1} files to '
-    '${dir.path}',
+  // Each DPI gets its own frame. A 48px tray frame still renders as a
+  // small logical icon and uses the same geometry as the 16px frame.
+  for (final hasUnread in [false, true]) {
+    final name = hasUnread ? 'tray_unread' : 'tray_icon';
+    final tiles = [
+      for (final size in _icoSizes)
+        _glyph(size, template: false, hasUnread: hasUnread),
+    ];
+    _write('${dir.path}/$name.ico', img.IcoEncoder().encodeImages(tiles));
+  }
+  _write(
+    '${dir.path}/tray_unread_64.png',
+    img.encodePng(_glyph(64, template: false, hasUnread: true)),
   );
 }
 
 /// The tower mask is black/transparent on macOS, white/teal elsewhere.
-img.Image _glyph(int size, {required bool template}) {
+img.Image _glyph(int size, {required bool template, bool hasUnread = false}) {
   final image = img.Image(width: size, height: size, numChannels: 4);
   if (template) {
-    final mask = towerMask(size, scale: 1.2);
+    final mask = towerMask(size, scale: 1.14, small: true);
     for (final pixel in mask) {
       image.setPixelRgba(pixel.x, pixel.y, 0, 0, 0, pixel.r);
     }
@@ -72,7 +81,28 @@ img.Image _glyph(int size, {required bool template}) {
   }
   final opaque = img.Image(width: size, height: size);
   img.fill(opaque, color: _tile);
-  drawTowerOnTile(opaque, _white);
+  drawTowerOnTile(opaque, _white, small: true);
+  if (hasUnread) {
+    final x = (size * 0.84).round();
+    final y = (size * 0.22).round();
+    final radius = (size * 0.08).round().clamp(2, size);
+    img.fillCircle(
+      opaque,
+      x: x,
+      y: y,
+      radius: radius + (size * 0.055).round(),
+      color: _dotOutline,
+      antialias: true,
+    );
+    img.fillCircle(
+      opaque,
+      x: x,
+      y: y,
+      radius: radius,
+      color: _dot,
+      antialias: true,
+    );
+  }
   final shape = img.Image(width: size, height: size);
   img.fill(shape, color: _black);
   img.fillRect(

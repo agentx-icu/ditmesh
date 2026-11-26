@@ -1,23 +1,25 @@
-// The selected signal-tower/Morse vector is the single geometry source for
-// launcher, adaptive, notification and tray icons. The checked-in coverage
-// mask is rendered from apps/ditmesh/icon/signal_tower_mask.svg.
+// The signal tower uses full and small-size coverage masks. Regenerate a mask
+// from its SVG after editing the geometry, for example:
+// rsvg-convert -o apps/ditmesh/icon/signal_tower_small_mask_1024.png apps/ditmesh/icon/signal_tower_small_mask.svg
 // ignore_for_file: depend_on_referenced_packages
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
 
-final img.Image _source = img.decodePng(
-  File('apps/ditmesh/icon/signal_tower_mask_1024.png').readAsBytesSync(),
+img.Image _loadMask(String name) => img.decodePng(
+  File('apps/ditmesh/icon/${name}_1024.png').readAsBytesSync(),
 )!;
 
-final img.Image _glyphSource = _cropGlyph();
+final img.Image _source = _loadMask('signal_tower_mask');
+final img.Image _smallSource = _loadMask('signal_tower_small_mask');
+final img.Image _statusGlyph = _cropGlyph(_smallSource);
 
-img.Image _cropGlyph() {
-  var left = _source.width;
-  var top = _source.height;
+img.Image _cropGlyph(img.Image source) {
+  var left = source.width;
+  var top = source.height;
   var right = 0;
   var bottom = 0;
-  for (final pixel in _source) {
+  for (final pixel in source) {
     if (pixel.r == 0) continue;
     if (pixel.x < left) left = pixel.x;
     if (pixel.y < top) top = pixel.y;
@@ -25,7 +27,7 @@ img.Image _cropGlyph() {
     if (pixel.y > bottom) bottom = pixel.y;
   }
   return img.copyCrop(
-    _source,
+    source,
     x: left,
     y: top,
     width: right - left + 1,
@@ -36,11 +38,11 @@ img.Image _cropGlyph() {
 /// Fit the coverage bounds in the notification's centered 20dp live area.
 img.Image fittedTowerMask(int size) {
   final edge = (size * 20 / 24).round();
-  final ratio = _glyphSource.width / _glyphSource.height;
+  final ratio = _statusGlyph.width / _statusGlyph.height;
   final width = ratio > 1 ? edge : (edge * ratio).round();
   final height = ratio > 1 ? (edge / ratio).round() : edge;
   final scaled = img.copyResize(
-    _glyphSource,
+    _statusGlyph,
     width: width,
     height: height,
     interpolation: img.Interpolation.average,
@@ -62,10 +64,10 @@ img.Image fittedTowerMask(int size) {
 }
 
 /// White geometry on black; RGB coverage becomes alpha for template icons.
-img.Image towerMask(int size, {double scale = 1}) {
+img.Image towerMask(int size, {double scale = 1, bool small = false}) {
   final edge = (size * scale).round().clamp(1, 8192);
   final scaled = img.copyResize(
-    _source,
+    small ? _smallSource : _source,
     width: edge,
     height: edge,
     interpolation: img.Interpolation.average,
@@ -83,8 +85,8 @@ img.Image towerMask(int size, {double scale = 1}) {
   return output;
 }
 
-void drawTowerOnTile(img.Image image, img.Color color) {
-  final mask = towerMask(image.width);
+void drawTowerOnTile(img.Image image, img.Color color, {bool small = false}) {
+  final mask = towerMask(image.width, small: small);
   for (final pixel in mask) {
     final old = image.getPixel(pixel.x, pixel.y);
     final coverage = pixel.r / 255;

@@ -81,4 +81,5 @@ flutter:
   assets:
     - assets/legal/
     - assets/tray/
+    - assets/notification_icon.png
     - icon/app_icon_1024.png

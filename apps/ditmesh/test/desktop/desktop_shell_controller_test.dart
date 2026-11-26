@@ -736,6 +736,43 @@ void main() {
       expect(h.tray.calls, isNot(contains('setTitle')));
     });
 
+    for (final platform in [TargetPlatform.windows, TargetPlatform.linux]) {
+      test(
+        '$platform changes the tray image only at the unread boundary',
+        () async {
+          final h = _harness(platform: platform);
+          addTearDown(h.controller.dispose);
+          await h.controller.initialize();
+          final normal = h.tray.iconAsset;
+
+          h.controller.setUnreadCount(1);
+          await h.controller.flushTrayUpdates();
+          final unread = h.tray.iconAsset;
+          expect(unread, isNot(normal));
+
+          h.controller.setUnreadCount(2);
+          await h.controller.flushTrayUpdates();
+          expect(h.tray.iconAsset, unread);
+          expect(h.tray.calls.where((call) => call == 'setIcon'), hasLength(2));
+
+          h.controller.setUnreadCount(0);
+          await h.controller.flushTrayUpdates();
+          expect(h.tray.iconAsset, normal);
+          expect(h.tray.calls.where((call) => call == 'setIcon'), hasLength(3));
+        },
+      );
+    }
+
+    test('initial tray registration reflects a pending unread count', () async {
+      final h = _harness(platform: TargetPlatform.linux);
+      addTearDown(h.controller.dispose);
+      h.controller.setUnreadCount(1);
+      await h.controller.initialize();
+
+      expect(h.tray.iconAsset, isNot(TrayIconAssets.linuxPng));
+      expect(h.tray.calls.where((call) => call == 'setIcon'), hasLength(1));
+    });
+
     test('unchanged count is a no-op', () async {
       final h = _harness();
       await h.controller.initialize();

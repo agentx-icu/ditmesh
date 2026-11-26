@@ -20,15 +20,8 @@ img.Image _png(String path) {
   return image!;
 }
 
-List<int> _icoSizes(String path) {
-  final Uint8List bytes = File(path).readAsBytesSync();
-  final img.IcoDecoder decoder = img.IcoDecoder();
-  final img.DecodeInfo? info = decoder.startDecode(bytes);
-  expect(info, isNotNull, reason: '$path is not an .ico');
-  return [
-    for (int i = 0; i < info!.numFrames; i++) decoder.decodeFrame(i)!.width,
-  ];
-}
+List<int> _icoSizes(String path) =>
+    _icoFrames(path).map((frame) => frame.width).toList();
 
 /// Asset entries under `flutter: assets:` in pubspec.yaml.
 List<String> _declaredAssets() {
@@ -72,7 +65,76 @@ void _expectGlyphOnTransparent(img.Image image, String reason) {
 bool _transparentAt(img.Image image, int x, int y) =>
     image.getPixel(x, y).a == 0;
 
+List<img.Image> _icoFrames(String path) {
+  final decoder = img.IcoDecoder();
+  final count = decoder.startDecode(File(path).readAsBytesSync())!.numFrames;
+  return [for (var i = 0; i < count; i++) decoder.decodeFrame(i)!];
+}
+
+int _visibleWidth(img.Image image, {bool white = false}) {
+  var left = image.width;
+  var right = -1;
+  for (final pixel in image) {
+    if (pixel.a < 128 || (white && pixel.r < 180)) continue;
+    if (pixel.x < left) left = pixel.x;
+    if (pixel.x > right) right = pixel.x;
+  }
+  return right - left + 1;
+}
+
 void main() {
+  test('taskbar artwork uses a wide mark at 16 px', () {
+    final windows = _icoFrames(
+      'windows/runner/resources/app_icon.ico',
+    ).singleWhere((icon) => icon.width == 16);
+    final linux = _png('linux/icons/hicolor/16x16/apps/ditmesh.png');
+    final mac = _png(
+      'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png',
+    );
+    expect(_visibleWidth(windows, white: true), greaterThanOrEqualTo(10));
+    expect(_visibleWidth(linux, white: true), greaterThanOrEqualTo(10));
+    expect(_visibleWidth(mac, white: true), greaterThanOrEqualTo(7));
+  });
+
+  test('small monochrome tray and notification keep a wide silhouette', () {
+    final template = _png('assets/tray/tray_template_16.png');
+    final status = _png(
+      'android/app/src/main/res/drawable-mdpi/ic_stat_ditmesh.png',
+    );
+    expect(_visibleWidth(template), greaterThanOrEqualTo(10));
+    expect(_visibleWidth(status), greaterThanOrEqualTo(16));
+  });
+
+  test('Linux and Windows unread tray art has a visible upper-right dot', () {
+    final linux = _png('assets/tray/tray_unread_64.png');
+    final windowsFrames = _icoFrames('assets/tray/tray_unread.ico');
+    expect(windowsFrames.map((image) => image.width), [16, 20, 24, 32, 40, 48]);
+    for (final icon in [linux, ...windowsFrames]) {
+      final dot = icon.where(
+        (pixel) =>
+            pixel.a > 200 && pixel.r > 200 && pixel.g > 100 && pixel.b < 144,
+      );
+      expect(dot.length, greaterThanOrEqualTo(3), reason: '${icon.width}px');
+      expect(
+        dot.every(
+          (pixel) => pixel.x >= icon.width ~/ 2 && pixel.y < icon.height ~/ 2,
+        ),
+        isTrue,
+        reason: '${icon.width}px dot is in the upper-right',
+      );
+      expect(_transparentAt(icon, 0, 0), isTrue);
+    }
+  });
+
+  test('desktop notification art is a bundled 64px PNG', () {
+    const asset = 'assets/notification_icon.png';
+    expect(_declaredAssets(), contains(asset));
+    final icon = _png(asset);
+    expect(icon.width, 64);
+    expect(icon.height, 64);
+    expect(_transparentAt(icon, 0, 0), isTrue);
+  });
+
   group('tray icons', () {
     final Map<TargetPlatform, String?> byPlatform = {
       for (final TargetPlatform p in TargetPlatform.values)
@@ -92,7 +154,12 @@ void main() {
       // data/flutter_assets/ and macOS ones through rootBundle, so an
       // undeclared path is missing from every release bundle.
       final List<String> declared = _declaredAssets();
-      for (final String path in byPlatform.values.whereType<String>()) {
+      final icons = {
+        for (final platform in TargetPlatform.values)
+          for (final hasUnread in [false, true])
+            TrayIconAssets.forPlatform(platform, hasUnread: hasUnread),
+      };
+      for (final String path in icons.whereType<String>()) {
         expect(File(path).existsSync(), isTrue, reason: path);
         expect(
           declared.any(
