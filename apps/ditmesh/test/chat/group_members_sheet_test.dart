@@ -49,6 +49,47 @@ void main() {
     expect(dots.where((d) => d.backgroundColor != Colors.green), hasLength(1));
   });
 
+  testWidgets('member presence updates in place', (tester) async {
+    late final Group group;
+    final peer = GroupMember(
+      publicKey: kPeerKey,
+      displayName: 'Ann',
+      online: false,
+    );
+    final h = await pumpChat(tester, (h) {
+      group = h.service.addFakeGroup(
+        const Group(id: 'tox_7', name: 'Weekend net', kind: GroupKind.group),
+      );
+      h.service.addFakeGroupMember(group.id, peer);
+      return _opener(h, group);
+    }, size: kPhone);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(s.connectionOffline), findsOneWidget);
+
+    h.service.addFakeGroupMember(
+      group.id,
+      GroupMember(publicKey: kPeerKey, displayName: 'Ann'),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(s.connectionOffline), findsNothing);
+    expect(find.text(s.connectionOnline), findsNWidgets(2));
+  });
+
+  testWidgets('phone names the group in the member list', (tester) async {
+    await pumpChat(tester, (h) {
+      final group = h.service.addFakeGroup(
+        const Group(id: 'tox_7', name: 'Weekend net', kind: GroupKind.group),
+      );
+      return _opener(h, group);
+    }, size: kPhone);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Weekend net'), findsOneWidget);
+    expect(find.text(s.chatMembersTitleCount(1)), findsOneWidget);
+  });
+
   testWidgets('a group we no longer belong to shows the error text', (
     tester,
   ) async {

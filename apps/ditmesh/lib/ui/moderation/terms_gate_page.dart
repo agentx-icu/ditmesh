@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../di/app_settings.dart';
 import '../../i18n/l10n_extension.dart';
 import '../chat/chat_layout.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../legal/legal_pages.dart';
 
@@ -49,55 +50,54 @@ class _TermsGatePageState extends State<TermsGatePage> {
     );
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.termsGateTitle)),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                Text(s.termsGateIntro, style: theme.textTheme.bodyLarge),
-                const SizedBox(height: 16),
-                rule(Icons.gpp_bad_outlined, s.termsGateRuleZero),
-                rule(Icons.how_to_reg_outlined, s.termsGateRuleContacts),
-                rule(Icons.block, s.termsGateRuleBlock),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton.icon(
-                    key: const ValueKey('terms-read-full'),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const TermsOfUsePage(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.description_outlined, size: 18),
-                    label: Text(s.termsGateReadFull),
+      body: AccountPageBody(
+        maxWidth: 640,
+        aside: [
+          AccountPanel(
+            children: [
+              ListTile(
+                key: const ValueKey('terms-read-full'),
+                leading: const Icon(Icons.description_outlined),
+                title: Text(s.termsGateReadFull),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const TermsOfUsePage(),
                   ),
                 ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton.icon(
-                    key: const ValueKey('terms-privacy'),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PrivacyPolicyPage(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.privacy_tip_outlined, size: 18),
-                    label: Text(s.aboutPrivacyPolicy),
+              ),
+              ListTile(
+                key: const ValueKey('terms-privacy'),
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: Text(s.aboutPrivacyPolicy),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrivacyPolicyPage(),
                   ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton(
+              ),
+            ],
+          ),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              Text(s.termsGateIntro, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 16),
+              rule(Icons.gpp_bad_outlined, s.termsGateRuleZero),
+              rule(Icons.how_to_reg_outlined, s.termsGateRuleContacts),
+              rule(Icons.block, s.termsGateRuleBlock),
+              const SizedBox(height: 16),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FilledButton(
                   key: const ValueKey('terms-agree'),
                   onPressed: _saving ? null : () => unawaited(_agree()),
                   child: Text(s.termsGateAgree),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }

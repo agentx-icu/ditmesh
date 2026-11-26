@@ -9,7 +9,9 @@ import 'package:ditmesh/l10n/generated/s.dart';
 import 'package:ditmesh/ui/account/delete_identity_dialog.dart';
 import 'package:ditmesh/ui/chat/conversation_header.dart';
 import 'package:ditmesh/ui/chat/conversation_list.dart';
+import 'package:ditmesh/ui/chat/conversation_timeline.dart';
 import 'package:ditmesh/ui/chat/conversation_tile.dart';
+import 'package:ditmesh/ui/chat/keying_input.dart';
 import 'package:ditmesh/ui/chat/message_input.dart';
 import 'package:ditmesh/ui/chat/search/message_bookmarks.dart';
 import 'package:ditmesh/ui/chat/search/message_search_screen.dart';
@@ -302,17 +304,27 @@ void main() {
       expect(find.byType(ConversationTile), findsWidgets);
     });
 
-    testWidgets('lists and the composer stop at a readable width', (
+    testWidgets('the wide conversation fills its pane with bounded controls', (
       tester,
     ) async {
       applyProfile(tester, profileNamed('desktop-ultrawide'));
       final seed = await pumpSeededApp(tester);
       await tester.tap(find.byKey(ValueKey<String>(seed.qsoConversationId)));
       await settle(tester);
-      expect(
-        tester.getSize(find.byType(MessageInput)).width,
-        lessThanOrEqualTo(960),
+      final Finder composer = find.byType(MessageInput);
+      final Rect pane = tester.getRect(find.byType(ConversationTimeline));
+      final Rect keyer = tester.getRect(find.byType(KeyingInput));
+      final Rect draft = tester.getRect(
+        find.descendant(of: composer, matching: find.byType(TextField)),
       );
+      final Rect send = tester.getRect(
+        find.widgetWithIcon(IconButton, Icons.send),
+      );
+      expect(tester.getRect(composer).width, pane.width);
+      expect(keyer.left - pane.left, closeTo(24, .01));
+      expect(pane.right - send.right, closeTo(24, .01));
+      expect(keyer.width, lessThanOrEqualTo(460));
+      expect(draft.width, lessThanOrEqualTo(680));
       await tester.tap(find.byIcon(Icons.people_outline));
       await settle(tester);
       for (final Element tile

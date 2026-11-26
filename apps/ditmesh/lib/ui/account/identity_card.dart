@@ -10,9 +10,14 @@ import 'tox_id_qr_dialog.dart';
 /// Header card on the Me page: avatar initial, name, status message,
 /// connection chip, and the Tox ID with copy + QR actions.
 class IdentityCard extends StatelessWidget {
-  const IdentityCard({super.key, required this.identity});
+  const IdentityCard({
+    super.key,
+    required this.identity,
+    this.showConnection = true,
+  });
 
   final Identity identity;
+  final bool showConnection;
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +62,12 @@ class IdentityCard extends StatelessWidget {
                         children: [
                           // Flexible: on a 320 px phone at large text the
                           // chip is wider than the column; let it ellipsize.
-                          const Flexible(
-                            child: ConnectionChip(alwaysVisible: true),
-                          ),
+                          if (showConnection)
+                            const Flexible(
+                              child: ConnectionChip(alwaysVisible: true),
+                            ),
                           if (identity.hasPassword) ...[
-                            const SizedBox(width: 6),
+                            if (showConnection) const SizedBox(width: 6),
                             Tooltip(
                               message: s.accountPassword,
                               child: Icon(

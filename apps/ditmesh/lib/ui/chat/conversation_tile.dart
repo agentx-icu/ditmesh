@@ -180,11 +180,13 @@ class ConversationTile extends StatelessWidget {
                           : scheme.onSurfaceVariant,
                     ),
                   ),
-                  MorsePatternText(
-                    pattern,
-                    maxLines: 1,
-                    style: theme.textTheme.bodySmall,
-                  ),
+                  if (pattern.isNotEmpty)
+                    MorsePatternText(
+                      pattern,
+                      maxLines: 1,
+                      style: theme.textTheme.bodySmall,
+                      completeCharacters: true,
+                    ),
                 ],
               ),
         trailing: Row(

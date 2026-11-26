@@ -96,7 +96,7 @@ class SZh extends S {
   String get errorWrongPassword => '密码错误，请重试。';
 
   @override
-  String get errorPeerOffline => '该好友离线。Tox 没有服务器，消息会等到对方上线后再送达。';
+  String get errorPeerOffline => '该好友离线。消息会在本机排队，等对方可达后发送。';
 
   @override
   String get errorInvalidToxId => '这不是有效的 Tox ID（应为 76 位十六进制字符）。';
@@ -293,10 +293,10 @@ class SZh extends S {
   String get accountWelcomeTitle => '你的身份只保存在这台设备上';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh 使用 Tox 点对点网络。没有服务器，也无需注册账号：你的身份是一对只保存在本机的密钥。';
+  String get accountWelcomeIntro => 'DitMesh 使用 Tox 点对点网络，无需注册账号。你的身份是一对保存在本机的密钥。';
 
   @override
-  String get accountWelcomePointNoServer => '没有服务器，不需要手机号或电子邮件。报务员之间直接用莫尔斯电码通联。';
+  String get accountWelcomePointNoServer => '无需中心消息服务器、手机号或电子邮件。报务员之间直接用莫尔斯电码通联。';
 
   @override
   String get accountWelcomePointTraining => '使用直键或双桨键拍发 Morse code，进行单聊和群聊。';
@@ -326,7 +326,7 @@ class SZh extends S {
   String get accountBackupTitle => '现在就备份你的身份';
 
   @override
-  String get accountBackupBody => '你的身份只存在于这台设备上。如果设备丢失、重置或被盗，将无法找回：好友不会认出新的身份，训练进度也会丢失。';
+  String get accountBackupBody => '如果本机数据丢失且没有可用备份，就无法找回此身份。请妥善保管备份文件和备份口令。';
 
   @override
   String get accountBackupWhatIsInside => '备份文件包含用密码加密的身份密钥和你的训练进度。请把它保存在本机以外的安全位置。';
@@ -341,6 +341,9 @@ class SZh extends S {
   String get accountSectionNotifications => '通知';
 
   @override
+  String get accountNotificationsSystemManaged => '通知权限由系统管理。';
+
+  @override
   String get accountNotificationsEnable => '显示通知';
 
   @override
@@ -350,7 +353,7 @@ class SZh extends S {
   String get accountNotificationsContent => '显示消息内容';
 
   @override
-  String get accountNotificationsContentSubtitle => '在横幅和锁屏上显示文字和摩尔斯码。关闭后只提示收到了消息。';
+  String get accountNotificationsContentSubtitle => '关闭后，消息通知隐藏会话名、发言人、正文和电码。锁屏是否显示通知由系统设置决定。';
 
   @override
   String get accountNotificationsAllow => '允许通知';
@@ -362,7 +365,7 @@ class SZh extends S {
   String get accountNotificationsBlocked => '已在系统设置中屏蔽';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'DitMesh 的消息通知已在系统设置中关闭。请在系统设置中重新开启。';
+  String get accountNotificationsBlockedSubtitle => '在 Android 中打开“设置 → 应用 → DitMesh → 通知”，然后开启消息通知。';
 
   @override
   String get accountNotificationsDenied => 'DitMesh 的通知已在系统设置中关闭。';
@@ -374,16 +377,19 @@ class SZh extends S {
   String get accountBackupShareFile => '分享备份文件';
 
   @override
-  String get accountBackupSaved => '备份已保存';
+  String get accountBackupSaved => '备份已保存。请在所选位置查找 .mcqbackup 备份文件。';
 
   @override
-  String get accountBackupNotSaved => '备份未保存';
+  String get accountBackupNotSaved => '已取消本次保存。你可以再次导出备份。';
+
+  @override
+  String get accountBackupShareReturned => '已打开系统分享。请在所选文件夹或接收应用中查找 .mcqbackup 备份文件。';
 
   @override
   String get accountBackupFailed => '无法写入备份';
 
   @override
-  String get accountBackupAcknowledge => '我了解：没有这份备份，我的身份将无法找回。';
+  String get accountBackupAcknowledge => '我了解如果设备数据丢失且没有备份，我将无法找回身份。';
 
   @override
   String get accountBackupContinue => '进入 DitMesh';
@@ -691,6 +697,9 @@ class SZh extends S {
   String get chatToxIdLabel => 'Tox ID（76 位十六进制字符）';
 
   @override
+  String get chatRequestPublicKey => '申请者公钥（64 位十六进制）';
+
+  @override
   String get chatToxIdInvalid => 'Tox ID 必须正好是 76 位十六进制字符';
 
   @override
@@ -716,6 +725,9 @@ class SZh extends S {
 
   @override
   String get chatScanQrDesktopHint => '当前平台不支持摄像头扫码，请粘贴 Tox ID。';
+
+  @override
+  String get chatScanQrManualHint => '相机不可用。请粘贴完整 Tox ID，或重新尝试扫码。';
 
   @override
   String get chatScanQrTitle => '扫描 Tox ID';
@@ -1815,7 +1827,7 @@ class SZh extends S {
   String get listenSettings => '收听设置';
 
   @override
-  String get listenDecoded => '解码结果';
+  String get listenDecoded => '实时解码';
 
   @override
   String get listenEmptyHint => '把麦克风对准莫尔斯电码音，解码文本会显示在这里。';
@@ -1842,7 +1854,7 @@ class SZh extends S {
   String get listenTone => '音调频率';
 
   @override
-  String get listenToneLocked => '已锁定';
+  String get listenToneLocked => '已锁定音调';
 
   @override
   String get listenToneSearching => '搜索中';
@@ -2252,7 +2264,7 @@ class SZh extends S {
   String get chatSearchHint => '在此会话中搜索';
 
   @override
-  String get chatSearchAnyone => '所有人';
+  String get chatSearchAnyone => '全部发言人';
 
   @override
   String get chatSearchMe => '我';
@@ -2559,6 +2571,12 @@ class SZh extends S {
   String get diagTitle => '连接诊断';
 
   @override
+  String get diagScopeIdentity => '当前身份的所有会话';
+
+  @override
+  String get diagScopeConversation => '仅当前会话';
+
+  @override
   String get diagOpenSubtitle => '消息为何在等待，以及如何重新连接';
 
   @override
@@ -2652,7 +2670,7 @@ class SZh extends S {
   String get diagPendingHint => '排队的消息保存在本机，对方可达时会自动发送。诊断页面不会丢弃或重发它们。';
 
   @override
-  String get diagReconnect => '重新连接';
+  String get diagReconnect => '重新连接本机';
 
   @override
   String get diagReconnecting => '正在重新连接…';
@@ -2669,7 +2687,7 @@ class SZh extends S {
   String get diagAboutTitle => 'DitMesh 如何连接';
 
   @override
-  String get diagAboutBody => 'DitMesh 没有服务器。你的设备通过 Tox 点对点网络直接与联系人通信，因此双方必须同时在线消息才能送达。手机会暂停后台应用：DitMesh 在后台无法保持连接，回到应用时会重新连接。';
+  String get diagAboutBody => '设备通过 Tox 点对点传输消息，无中心消息服务器。公共引导节点帮助设备加入 Tox 网络。消息送达需要双方在线。手机可能暂停后台应用，回到 DitMesh 时会重新连接。';
 
   @override
   String get diagDetailsTitle => '技术详情';
@@ -2793,7 +2811,7 @@ class SZh extends S {
   String get backupXExporting => '正在创建备份…';
 
   @override
-  String get backupXMigrationNote => '要换设备？在新设备恢复后，请停止在本机使用此身份：同一身份的两台设备可能把同一条消息发送两次。';
+  String get backupXMigrationNote => '换设备时，请先在旧设备上关闭正在使用此身份的 DitMesh，再在新设备上点击「确认恢复」或「替换并恢复」。恢复成功后，新设备会尝试连接。';
 
   @override
   String get backupXBusy => '备份过程中数据持续变化，请重试。';
@@ -2839,7 +2857,7 @@ class SZh extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '旧设备上的 $count 条未发送消息不在此备份中。',
+      other: '制作此备份时有 $count 条消息待发，但这些记录不在本备份中。',
     );
     return '$_temp0';
   }
@@ -2854,7 +2872,7 @@ class SZh extends S {
   String get restoreXConfirmTitle => '替换本机上的身份？';
 
   @override
-  String get restoreXConfirmBody => '本机上的身份和数据将被备份替换。在此连接之前，请先停止在旧设备上使用该身份。';
+  String get restoreXConfirmBody => '备份将替换本机身份及数据。点击「替换并恢复」前，请先关闭旧设备上正在使用此身份的 DitMesh。恢复成功后，本机会尝试连接。';
 
   @override
   String get restoreXConfirm => '替换并恢复';
@@ -2873,12 +2891,7 @@ class SZh extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '有 $count 条未发送的消息在“聊天”中等你查看。',
-    );
-    return '$_temp0';
+    return '已从备份带回 $count 条未发送消息。请打开下方复核入口查看。';
   }
 
   @override
@@ -2886,7 +2899,7 @@ class SZh extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '旧设备上的 $count 条未发送消息未被带过来。',
+      other: '制作此备份时有 $count 条消息待发，但备份未包含这些记录。重新拍发前，请先在旧设备上确认是否已经发出。',
     );
     return '$_temp0';
   }
@@ -2902,7 +2915,7 @@ class SZh extends S {
   }
 
   @override
-  String get restoreXReportStopOld => '请停止在旧设备上使用此身份。';
+  String get restoreXReportStopOld => '如果旧设备上的 DitMesh 仍在使用此身份，请立即关闭旧设备上的 DitMesh。';
 
   @override
   String get restoreXReportDone => '完成';
@@ -2921,7 +2934,7 @@ class SZh extends S {
   String get pendingReviewTitle => '未发送的消息';
 
   @override
-  String get pendingReviewBody => '这些消息在旧设备上等待发送。DitMesh 绝不会自动发送；如仍需要，请重新拍发。';
+  String get pendingReviewBody => '制作备份时，这些消息仍在旧设备上排队。本机只恢复供核对的副本，不会自动发送。重新拍发前，请确认旧设备是否已经发出。';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2938,10 +2951,10 @@ class SZh extends S {
   String get pendingReviewEmpty => '没有需要查看的内容了。';
 
   @override
-  String get backupXWizardInside => '备份文件会用你自选的口令整体加密，包含身份密钥和训练进度。请把文件和口令保存在本机以外的安全位置。';
+  String get backupXWizardInside => '整份备份用你设置的口令加密。身份始终包含，训练和其他数据按所选类别导出。请把文件和口令保存在本机以外的安全位置。';
 
   @override
-  String get backupXMeSubtitle => '包含身份、聊天和进度的加密文件，可留存或迁移到其他设备';
+  String get backupXMeSubtitle => '加密备份身份，可按需加入聊天记录与训练进度。';
 
   @override
   String get keysTitle => '按键与外接电键';
@@ -2950,7 +2963,7 @@ class SZh extends S {
   String get keysMeSubtitle => '按键绑定、双桨与 USB 电键适配器';
 
   @override
-  String get keysIntro => '选择用哪些键拍发莫尔斯。模拟键盘的 USB 电键/双桨适配器与键盘相同，请在此设置其按键。应用无法分辨按键来自哪个设备，因此配置方案就是一组按键绑定。';
+  String get keysIntro => '可绑定发送系统键盘按键的设备，包括以键盘方式工作的 USB 或蓝牙适配器。DitMesh 只接收按键事件，方案保存的是一组键位。';
 
   @override
   String get keysStandardProfile => '标准';
@@ -2965,7 +2978,7 @@ class SZh extends S {
   String get keysNewProfile => '新建方案';
 
   @override
-  String get keysLimitations => '不支持 MIDI、串口和蓝牙电键，也不支持适配器固件设置和电台控制。已测试的适配器列在文档中。';
+  String get keysLimitations => '不直接连接专用蓝牙电键协议、MIDI 或串口，也不支持设置适配器固件和控制电台。文档列出了已测试的适配器。';
 
   @override
   String get keysEditTitle => '按键方案';
@@ -3236,13 +3249,13 @@ class SZh extends S {
   String get termsGateTitle => '社区准则';
 
   @override
-  String get termsGateIntro => 'DitMesh 聊天让你与他人直接连接，中间没有服务器。开始之前，请同意以下规则：';
+  String get termsGateIntro => 'DitMesh 通过 Tox 直接传送消息，无中心消息服务器。开始之前，请同意以下规则：';
 
   @override
   String get termsGateRuleZero => '零容忍：禁止骚扰、仇恨、威胁、涉及未成年人的性内容、垃圾信息以及任何违法内容。';
 
   @override
-  String get termsGateRuleContacts => '只有你接受的人才能给你发消息；群组须通过邀请或群组 ID 加入。';
+  String get termsGateRuleContacts => '单聊只接收已接受的好友发来的消息。加入群组后，你会收到该群成员发在群里的消息，其中也可能有你尚未添加的好友。';
 
   @override
   String get termsGateRuleBlock => '可以在会话、群成员列表、好友请求或群组邀请中屏蔽任何人。';
@@ -3296,7 +3309,7 @@ class SZh extends S {
   String get bootstrapTitle => '网络与引导节点';
 
   @override
-  String get bootstrapDescription => '选择加入 Tox 网络所使用的公共节点。';
+  String get bootstrapDescription => '公共引导节点帮助本机加入 Tox 网络。你可以在此选择使用的节点。';
 
   @override
   String get bootstrapModeAuto => '自动';
@@ -3485,7 +3498,7 @@ class SZh extends S {
   String get firstChatListenTitle => '2. 试听与纠错';
 
   @override
-  String get firstChatListenBody => '发送前点试听来听草稿，用退格删除错误。发送后点消息上的播放按钮。发给自己的消息只保存在本机。';
+  String get firstChatListenBody => '发送前，点小三角图标「试听草稿」，用草稿旁的「删除」纠错。发送后，点消息上的播放按钮。发给自己的消息只保存在本机。';
 
   @override
   String get firstChatFriendTitle => '3. 与好友聊天';
@@ -3725,7 +3738,7 @@ class SZh extends S {
   String get nearbyPrivacyTitle => '附近的人';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh 会在你所在区域的公开 Tox 群组中分享你的显示名和大致位置（约 100 米精度）。任何加入这些群组的人都可以收到这些信息，无需验证实际位置。只有你主动发送或回应附近请求时才会分享 Tox ID。此功能仅在应用处于前台时运行。';
+  String get nearbyPrivacyBody => 'DitMesh 会在你所在区域的公开 Tox 群组中分享你的显示名和大致位置（约 100 米精度）。任何加入这些群组的人都可以收到这些信息，无需验证实际位置。只有你主动发送或回应附近请求时才会分享 Tox ID。此功能仅在应用处于前台时运行。 离开附近的人页面后，如果应用仍在前台，分享可能继续最多 5 分钟。关闭“对附近的人可见”即可停止分享。';
 
   @override
   String get nearbyPrivacyAccept => '开启';
@@ -3903,6 +3916,222 @@ class SZh extends S {
 
   @override
   String get firstChatReceiptBody => '已排队表示保存在本机，已发送表示传输层接受，已送达需要对端回执。群回执只确认至少一名成员收到，不代表所有人都已收听。';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return '要忽略 $count 条已恢复消息吗？这会永久删除本机待复核的副本。';
+  }
+
+  @override
+  String get pendingReviewDismissed => '已忽略这条已恢复消息。';
+
+  @override
+  String get pendingReviewUndo => '撤销';
+
+  @override
+  String get pendingReviewSaveError => '无法保存更改，消息列表已保留。';
+
+  @override
+  String get restoreXCurrentIdentity => '本机当前身份';
+
+  @override
+  String get restoreXLockedIdentity => '身份已锁定，暂时无法读取名称和指纹。';
+
+  @override
+  String get restoreXNoCurrentIdentity => '本机没有身份。';
+
+  @override
+  String get restoreXBackupIdentity => '将恢复的备份身份';
+
+  @override
+  String get restoreXPassphraseHelp => '输入创建这份备份时设置的口令。';
+
+  @override
+  String get restoreXPendingReviewTitle => '待人工复核的已恢复消息';
+
+  @override
+  String get groupInviteAcceptanceFailed => '接受邀请失败';
+
+  @override
+  String get groupInviteRetryAccept => '重试接受';
+
+  @override
+  String get chatDraftOfflineQueue => '发送后先保存在本机，联系人在线后继续发送。';
+
+  @override
+  String get chatDraftQueued => '已在本机排队。';
+
+  @override
+  String get chatKeyTouchHint => '按住屏幕上的电键';
+
+  @override
+  String get chatPaddleTouchHint => '按住屏幕上的点桨或划桨';
+
+  @override
+  String get keysSpace => '空格';
+
+  @override
+  String get keysLeftControl => '左 Ctrl';
+
+  @override
+  String get keysRightControl => '右 Ctrl';
+
+  @override
+  String get keysBindingUnchanged => '原有键位未更改。';
+
+  @override
+  String get backupXGoToPassphrase => '设置备份口令';
+
+  @override
+  String get restoreXFirstConfirmTitle => '恢复此备份？';
+
+  @override
+  String get restoreXFirstConfirmBody => '将恢复备份所列的身份和数据。点击「确认恢复」前，请先关闭旧设备上正在使用此身份的 DitMesh。恢复成功后，本机会尝试连接。';
+
+  @override
+  String get restoreXFirstConfirm => '确认恢复';
+
+  @override
+  String get deliveryMessageTime => '消息时间';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return '来自会话：$name';
+  }
+
+  @override
+  String get chatRefreshMembers => '刷新成员';
+
+  @override
+  String get pendingSendingUncancellable => '开始发送后无法取消。';
+
+  @override
+  String get diagWaitForPeer => '请等待对方上线，或查看待发消息。';
+
+  @override
+  String get diagReconnectOwnNote => '只重新连接本机，无法让对方上线。';
+
+  @override
+  String get chatScanQrPermissionHelp => '相机权限已被拒绝。请在系统设置中允许 DitMesh 访问相机后再扫码，也可以粘贴完整 Tox ID。';
+
+  @override
+  String get groupInviteReconnectHint => '本机与 Tox 网络的连接已中断。请等本机重新连接，再重试接受邀请。';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return '查看 $count 条待复核消息';
+  }
+
+  @override
+  String get locationEnableHere => '打开本页的「位置」开关即可使用当前位置。';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return '在「$name」会话中搜索';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return '备份已保存：$name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => '复制保存位置';
+
+  @override
+  String get accountNotificationsPermitted => '系统已允许通知';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '删除「$name」？';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => '这会移除保存的选区及备注，并删除 DitMesh 内这份本机录音。原先导入的文件仍保留在原位置。';
+
+  @override
+  String get workbenchDeleteClipOnly => '这会移除保存的选区及备注，并保留录音文件。';
+
+  @override
+  String get workbenchRemovedClipAndFile => '已删除片段和 DitMesh 内的本机录音。';
+
+  @override
+  String get workbenchRemovedClip => '已删除片段。录音文件未删除。';
+
+  @override
+  String get workbenchRemovedClipFileError => '片段已删除，但未能删除 DitMesh 内的本机录音。';
+
+  @override
+  String get chatRejectRequestTitle => '拒绝这条好友申请？';
+
+  @override
+  String get chatRejectRequestBody => '这条申请及此人的后续好友申请会在本机隐藏。你可以在「联系人 → 已拒绝的申请」中重新允许。';
+
+  @override
+  String get chatRequestRejected => '已拒绝申请。可在「联系人 → 已拒绝的申请」中管理后续申请。';
+
+  @override
+  String get chatRejectedRequests => '已拒绝的申请';
+
+  @override
+  String get chatRejectedRequestsHelp => '来自这些公钥的好友申请已在本机隐藏。允许新的申请不会解除联系人屏蔽。';
+
+  @override
+  String get chatRejectedRequestsEmpty => '暂无被拒绝的申请人。';
+
+  @override
+  String get chatAllowFutureRequests => '允许新的申请';
+
+  @override
+  String get chatFutureRequestsAllowed => '已移除申请过滤。若另有联系人屏蔽，该屏蔽仍有效。';
+
+  @override
+  String get moderationBlockRequestBody => '这会拒绝当前申请，并在本机屏蔽此人之后的私聊、好友申请和群组邀请。对方不会收到通知。';
+
+  @override
+  String get accountBackupShareClosed => '已关闭系统分享。你可以再次分享备份。';
+
+  @override
+  String get nearbyHideSession => '隐藏此次附近会话';
+
+  @override
+  String get nearbySessionHidden => '已隐藏对方此次附近会话。对方开始新的附近会话后可能再次出现。';
+
+  @override
+  String get pendingReviewOpenConversation => '打开原会话';
+
+  @override
+  String get pendingReviewMissingContact => '此会话当前不可用。请先恢复或添加对应联系人，再重新拍发。';
+
+  @override
+  String get pendingReviewMissingGroup => '此群组当前不可用。请先重新加入原群组，再重新拍发。';
+
+  @override
+  String get pendingReviewIgnoreCopy => '忽略此副本';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    return '已忽略 $count 份恢复副本。';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => '结束这次练习？';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return '本机会保留已完成的 $done/$total 轮成绩。尚未完成的轮次保留原状态。结束后不能修改轮次和成绩。';
+  }
+
+  @override
+  String get groupPracticeEnded => '本机练习已结束。轮次和成绩已保留，可查看。';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return '所选录音只有 $actual。保存的片段需要至少 $minimum。请选择更长的 WAV 以保留原选区。';
+  }
+
+  @override
+  String get deliveryFailedNext => '可在「待发送与失败消息」中重试这条消息。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -3997,7 +4226,7 @@ class SZhHant extends SZh {
   String get errorWrongPassword => '密碼錯誤，請重試。';
 
   @override
-  String get errorPeerOffline => '該聯絡人離線。Tox 沒有伺服器，訊息會等到對方上線後再送達。';
+  String get errorPeerOffline => '此聯絡人已離線。訊息會留在本機排隊，等對方可連線後傳送。';
 
   @override
   String get errorInvalidToxId => '這不是有效的 Tox ID（應為 76 位十六進位字元）。';
@@ -4194,10 +4423,10 @@ class SZhHant extends SZh {
   String get accountWelcomeTitle => '你的身分只儲存在這台裝置上';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh 使用 Tox 點對點網路。沒有伺服器，也無需註冊帳號：你的身分是一對只儲存在本機的密鑰。';
+  String get accountWelcomeIntro => 'DitMesh 使用 Tox 點對點網路，無需註冊帳號。你的身分是一對儲存在本機的金鑰。';
 
   @override
-  String get accountWelcomePointNoServer => '沒有伺服器，不需要手機號或電子郵件。報務員之間直接用摩斯電碼通聯。';
+  String get accountWelcomePointNoServer => '不需中央訊息伺服器、電話號碼或電子郵件。報務員之間直接以摩斯電碼通聯。';
 
   @override
   String get accountWelcomePointTraining => '使用直鍵或雙槳鍵拍發 Morse code，進行單聊和群聊。';
@@ -4227,7 +4456,7 @@ class SZhHant extends SZh {
   String get accountBackupTitle => '現在就備份你的身分';
 
   @override
-  String get accountBackupBody => '你的身分只存在於這台裝置上。若裝置遺失、重設或遭竊，身分將無法找回：聯絡人不會認出新的身分，訓練進度也會遺失。';
+  String get accountBackupBody => '如果本機資料遺失且沒有可用的備份，就無法找回此身分。請妥善保管備份檔和備份密語。';
 
   @override
   String get accountBackupWhatIsInside => '備份檔案包含以密碼加密的身分金鑰和你的訓練進度。請把它儲存在本機以外的安全位置。';
@@ -4242,6 +4471,9 @@ class SZhHant extends SZh {
   String get accountSectionNotifications => '通知';
 
   @override
+  String get accountNotificationsSystemManaged => '通知權限由系統管理。';
+
+  @override
   String get accountNotificationsEnable => '顯示通知';
 
   @override
@@ -4251,7 +4483,7 @@ class SZhHant extends SZh {
   String get accountNotificationsContent => '顯示訊息內容';
 
   @override
-  String get accountNotificationsContentSubtitle => '在橫幅和鎖定畫面上顯示文字和摩斯碼。關閉後只提示收到了訊息。';
+  String get accountNotificationsContentSubtitle => '關閉後，訊息通知會隱藏會話名稱、發言人、正文和電碼。鎖定螢幕是否顯示通知由系統設定決定。';
 
   @override
   String get accountNotificationsAllow => '允許通知';
@@ -4263,7 +4495,7 @@ class SZhHant extends SZh {
   String get accountNotificationsBlocked => '已在系統設定中封鎖';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'DitMesh 的訊息通知已在系統設定中關閉。請在系統設定中重新開啟。';
+  String get accountNotificationsBlockedSubtitle => '在 Android 中開啟「設定 → 應用程式 → DitMesh → 通知」，然後開啟訊息通知。';
 
   @override
   String get accountNotificationsDenied => 'DitMesh 的通知已在系統設定中關閉。';
@@ -4275,16 +4507,19 @@ class SZhHant extends SZh {
   String get accountBackupShareFile => '分享備份檔案';
 
   @override
-  String get accountBackupSaved => '備份已儲存';
+  String get accountBackupSaved => '備份已儲存。請在所選位置查找 .mcqbackup 備份檔案。';
 
   @override
-  String get accountBackupNotSaved => '備份未儲存';
+  String get accountBackupNotSaved => '已取消本次儲存。你可以再次匯出備份。';
+
+  @override
+  String get accountBackupShareReturned => '已開啟系統分享。請在所選資料夾或接收的 App 中尋找 .mcqbackup 備份檔案。';
 
   @override
   String get accountBackupFailed => '無法寫入備份';
 
   @override
-  String get accountBackupAcknowledge => '我瞭解：沒有這份備份，我的身分將無法找回。';
+  String get accountBackupAcknowledge => '我了解如果裝置資料遺失且沒有備份，我將無法找回身分。';
 
   @override
   String get accountBackupContinue => '進入 DitMesh';
@@ -4592,6 +4827,9 @@ class SZhHant extends SZh {
   String get chatToxIdLabel => 'Tox ID（76 位十六進位字元）';
 
   @override
+  String get chatRequestPublicKey => '申請者公鑰（64 位十六進位）';
+
+  @override
   String get chatToxIdInvalid => 'Tox ID 必須正好是 76 位十六進位字元';
 
   @override
@@ -4617,6 +4855,9 @@ class SZhHant extends SZh {
 
   @override
   String get chatScanQrDesktopHint => '目前的平台不支援相機掃碼，請貼上 Tox ID。';
+
+  @override
+  String get chatScanQrManualHint => '相機無法使用。請貼上完整的 Tox ID，或重新嘗試掃描。';
 
   @override
   String get chatScanQrTitle => '掃描 Tox ID';
@@ -5716,7 +5957,7 @@ class SZhHant extends SZh {
   String get listenSettings => '收聽設定';
 
   @override
-  String get listenDecoded => '解碼結果';
+  String get listenDecoded => '即時解碼';
 
   @override
   String get listenEmptyHint => '把麥克風對準摩斯電碼音，解碼文字會顯示在這裡。';
@@ -5743,7 +5984,7 @@ class SZhHant extends SZh {
   String get listenTone => '音調頻率';
 
   @override
-  String get listenToneLocked => '已鎖定';
+  String get listenToneLocked => '已鎖定音調';
 
   @override
   String get listenToneSearching => '搜尋中';
@@ -6153,7 +6394,7 @@ class SZhHant extends SZh {
   String get chatSearchHint => '在此對話中搜尋';
 
   @override
-  String get chatSearchAnyone => '所有人';
+  String get chatSearchAnyone => '所有發言者';
 
   @override
   String get chatSearchMe => '我';
@@ -6460,6 +6701,12 @@ class SZhHant extends SZh {
   String get diagTitle => '連線診斷';
 
   @override
+  String get diagScopeIdentity => '目前身分的所有對話';
+
+  @override
+  String get diagScopeConversation => '僅目前對話';
+
+  @override
   String get diagOpenSubtitle => '訊息為何在等待，以及如何重新連線';
 
   @override
@@ -6553,7 +6800,7 @@ class SZhHant extends SZh {
   String get diagPendingHint => '排隊的訊息保存在本機，對方可達時會自動傳送。診斷頁面不會捨棄或重送它們。';
 
   @override
-  String get diagReconnect => '重新連線';
+  String get diagReconnect => '重新連線本機';
 
   @override
   String get diagReconnecting => '正在重新連線…';
@@ -6570,7 +6817,7 @@ class SZhHant extends SZh {
   String get diagAboutTitle => 'DitMesh 如何連線';
 
   @override
-  String get diagAboutBody => 'DitMesh 沒有伺服器。你的裝置透過 Tox 點對點網路直接與聯絡人通訊，因此雙方必須同時在線訊息才能送達。手機會暫停背景應用程式：DitMesh 在背景無法保持連線，回到應用程式時會重新連線。';
+  String get diagAboutBody => '裝置透過 Tox 點對點傳送訊息，無中央訊息伺服器。公共引導節點協助裝置加入 Tox 網路。訊息送達需要雙方上線。手機可能暫停背景 App，回到 DitMesh 時會重新連線。';
 
   @override
   String get diagDetailsTitle => '技術詳情';
@@ -6694,7 +6941,7 @@ class SZhHant extends SZh {
   String get backupXExporting => '正在建立備份…';
 
   @override
-  String get backupXMigrationNote => '要換裝置？在新裝置還原後，請停止在本機使用此身分：同一身分的兩台裝置可能把同一則訊息傳送兩次。';
+  String get backupXMigrationNote => '換裝置時，請先在舊裝置上關閉正在使用此身分的 DitMesh，再在新裝置點選「確認還原」或「取代並還原」。還原成功後，新裝置會嘗試連線。';
 
   @override
   String get backupXBusy => '備份過程中資料持續變化，請重試。';
@@ -6740,7 +6987,7 @@ class SZhHant extends SZh {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '舊裝置上的 $count 則未傳送訊息不在此備份中。',
+      other: '製作此備份時有 $count 則訊息待傳，但這些記錄不在此備份中。',
     );
     return '$_temp0';
   }
@@ -6755,7 +7002,7 @@ class SZhHant extends SZh {
   String get restoreXConfirmTitle => '取代本機上的身分？';
 
   @override
-  String get restoreXConfirmBody => '本機上的身分與資料將被備份取代。在此連線之前，請先停止在舊裝置上使用該身分。';
+  String get restoreXConfirmBody => '備份將取代本機身分和資料。點選「取代並還原」前，請先關閉舊裝置上正在使用此身分的 DitMesh。還原成功後，本機會嘗試連線。';
 
   @override
   String get restoreXConfirm => '取代並還原';
@@ -6774,12 +7021,7 @@ class SZhHant extends SZh {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '有 $count 則未傳送的訊息在「聊天」中等你查看。',
-    );
-    return '$_temp0';
+    return '已從備份帶回 $count 則未傳送訊息。請開啟下方的檢閱入口。';
   }
 
   @override
@@ -6787,7 +7029,7 @@ class SZhHant extends SZh {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '舊裝置上的 $count 則未傳送訊息未被帶過來。',
+      other: '製作此備份時有 $count 則訊息待傳，但備份未包含這些記錄。重新拍發前，請先在舊裝置上確認是否已傳送。',
     );
     return '$_temp0';
   }
@@ -6803,7 +7045,7 @@ class SZhHant extends SZh {
   }
 
   @override
-  String get restoreXReportStopOld => '請停止在舊裝置上使用此身分。';
+  String get restoreXReportStopOld => '如果舊裝置上的 DitMesh 仍在使用此身分，請立即關閉舊裝置上的 DitMesh。';
 
   @override
   String get restoreXReportDone => '完成';
@@ -6822,7 +7064,7 @@ class SZhHant extends SZh {
   String get pendingReviewTitle => '未傳送的訊息';
 
   @override
-  String get pendingReviewBody => '這些訊息在舊裝置上等待傳送。DitMesh 絕不會自動傳送；如仍需要，請重新拍發。';
+  String get pendingReviewBody => '製作備份時，這些訊息仍在舊裝置上排隊。本機只還原供核對的副本，不會自動傳送。重新拍發前，請確認舊裝置是否已傳送。';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -6839,10 +7081,10 @@ class SZhHant extends SZh {
   String get pendingReviewEmpty => '沒有需要查看的內容了。';
 
   @override
-  String get backupXWizardInside => '備份檔案會用你自選的通關密語整體加密，包含身分金鑰與訓練進度。請把檔案與通關密語保存在本機以外的安全位置。';
+  String get backupXWizardInside => '整份備份以你設定的通關密語加密。身分一定包含在內，訓練及其他資料依所選類別匯出。請將檔案和通關密語儲存在本機以外的安全位置。';
 
   @override
-  String get backupXMeSubtitle => '包含身分、聊天與進度的加密檔案，可留存或移轉到其他裝置';
+  String get backupXMeSubtitle => '加密備份身分，可依需要加入聊天記錄與訓練進度。';
 
   @override
   String get keysTitle => '按鍵與外接電鍵';
@@ -6851,7 +7093,7 @@ class SZhHant extends SZh {
   String get keysMeSubtitle => '按鍵綁定、雙槳與 USB 電鍵轉接器';
 
   @override
-  String get keysIntro => '選擇用哪些鍵拍發摩斯。模擬鍵盤的 USB 電鍵／雙槳轉接器與鍵盤相同，請在此設定其按鍵。應用程式無法分辨按鍵來自哪個裝置，因此設定方案就是一組按鍵綁定。';
+  String get keysIntro => '可綁定傳送系統鍵盤按鍵的裝置，包括以鍵盤方式運作的 USB 或藍牙轉接器。DitMesh 只接收按鍵事件，方案儲存的是一組鍵位。';
 
   @override
   String get keysStandardProfile => '標準';
@@ -6866,7 +7108,7 @@ class SZhHant extends SZh {
   String get keysNewProfile => '新增方案';
 
   @override
-  String get keysLimitations => '不支援 MIDI、序列埠與藍牙電鍵，也不支援轉接器韌體設定與電台控制。已測試的轉接器列在文件中。';
+  String get keysLimitations => '不直接連接專用藍牙電鍵協定、MIDI 或序列埠，也不支援設定轉接器韌體和控制電台。文件列出了已測試的轉接器。';
 
   @override
   String get keysEditTitle => '按鍵方案';
@@ -7137,13 +7379,13 @@ class SZhHant extends SZh {
   String get termsGateTitle => '社群準則';
 
   @override
-  String get termsGateIntro => 'DitMesh 聊天讓你與他人直接連線，中間沒有伺服器。開始之前，請同意以下規則：';
+  String get termsGateIntro => 'DitMesh 透過 Tox 直接傳送訊息，無中央訊息伺服器。開始之前，請同意下列規則：';
 
   @override
   String get termsGateRuleZero => '零容忍：禁止騷擾、仇恨、威脅、涉及未成年人的性內容、垃圾訊息以及任何違法內容。';
 
   @override
-  String get termsGateRuleContacts => '只有你接受的人才能傳訊息給你；群組須透過邀請或群組 ID 加入。';
+  String get termsGateRuleContacts => '單聊只接收已接受的聯絡人發來的訊息。加入群組後，你會收到該群成員發在群裡的訊息，其中也可能有尚未加入的聯絡人。';
 
   @override
   String get termsGateRuleBlock => '可以在對話、群組成員清單、好友請求或群組邀請中封鎖任何人。';
@@ -7197,7 +7439,7 @@ class SZhHant extends SZh {
   String get bootstrapTitle => '網路與引導節點';
 
   @override
-  String get bootstrapDescription => '選擇加入 Tox 網路所使用的公共節點。';
+  String get bootstrapDescription => '公共引導節點協助本機加入 Tox 網路。你可以在此選擇使用的節點。';
 
   @override
   String get bootstrapModeAuto => '自動';
@@ -7386,7 +7628,7 @@ class SZhHant extends SZh {
   String get firstChatListenTitle => '2. 試聽與更正';
 
   @override
-  String get firstChatListenBody => '傳送前點試聽來聽草稿，用退格刪除錯誤。傳送後點訊息上的播放按鈕。傳給自己的訊息只儲存在本機。';
+  String get firstChatListenBody => '傳送前，點小三角圖示「試聽草稿」，用草稿旁的「刪除」修正錯誤。傳送後點訊息上的播放按鈕。給自己的訊息只保存在本機。';
 
   @override
   String get firstChatFriendTitle => '3. 與好友聊天';
@@ -7626,7 +7868,7 @@ class SZhHant extends SZh {
   String get nearbyPrivacyTitle => '附近的人';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh 會在你所在區域的公開 Tox 群組中分享你的顯示名稱和大致位置（約 100 公尺精度）。任何加入這些群組的人都可以收到這些資訊，無須驗證實際位置。只有你主動傳送或回應附近請求時才會分享 Tox ID。這項功能僅在應用程式處於前景時運作。';
+  String get nearbyPrivacyBody => 'DitMesh 會在你所在區域的公開 Tox 群組中分享你的顯示名稱和大致位置（約 100 公尺精度）。任何加入這些群組的人都可以收到這些資訊，無須驗證實際位置。只有你主動傳送或回應附近請求時才會分享 Tox ID。這項功能僅在應用程式處於前景時運作。 離開附近的人頁面後，如果應用程式仍在前景，分享可能繼續最多 5 分鐘。關閉「對附近的人可見」即可停止分享。';
 
   @override
   String get nearbyPrivacyAccept => '開啟';
@@ -7804,4 +8046,220 @@ class SZhHant extends SZh {
 
   @override
   String get firstChatReceiptBody => '已排隊表示儲存在本機，已傳送表示傳輸層接受，已送達需要對端回執。群組回執只確認至少一名成員收到，不代表所有人都已收聽。';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return '要忽略 $count 則已復原訊息嗎？這會永久刪除本機待覆核的副本。';
+  }
+
+  @override
+  String get pendingReviewDismissed => '已忽略這則已復原訊息。';
+
+  @override
+  String get pendingReviewUndo => '復原';
+
+  @override
+  String get pendingReviewSaveError => '無法儲存變更，訊息清單已保留。';
+
+  @override
+  String get restoreXCurrentIdentity => '本機目前的身分';
+
+  @override
+  String get restoreXLockedIdentity => '身分已鎖定，暫時無法讀取名稱和指紋。';
+
+  @override
+  String get restoreXNoCurrentIdentity => '本機沒有身分。';
+
+  @override
+  String get restoreXBackupIdentity => '將復原的備份身分';
+
+  @override
+  String get restoreXPassphraseHelp => '輸入建立此備份時設定的通關密語。';
+
+  @override
+  String get restoreXPendingReviewTitle => '待人工覆核的已復原訊息';
+
+  @override
+  String get groupInviteAcceptanceFailed => '接受邀請失敗';
+
+  @override
+  String get groupInviteRetryAccept => '重試接受';
+
+  @override
+  String get chatDraftOfflineQueue => '傳送後會先儲存在本機，聯絡人上線後繼續傳送。';
+
+  @override
+  String get chatDraftQueued => '已在本機排隊。';
+
+  @override
+  String get chatKeyTouchHint => '按住螢幕上的電鍵';
+
+  @override
+  String get chatPaddleTouchHint => '按住螢幕上的點槳或劃槳';
+
+  @override
+  String get keysSpace => '空白鍵';
+
+  @override
+  String get keysLeftControl => '左 Ctrl';
+
+  @override
+  String get keysRightControl => '右 Ctrl';
+
+  @override
+  String get keysBindingUnchanged => '原有按鍵未更改。';
+
+  @override
+  String get backupXGoToPassphrase => '設定備份通關密語';
+
+  @override
+  String get restoreXFirstConfirmTitle => '還原這份備份？';
+
+  @override
+  String get restoreXFirstConfirmBody => '將還原備份所列的身分和資料。點選「確認還原」前，請先關閉舊裝置上正在使用此身分的 DitMesh。還原成功後，本機會嘗試連線。';
+
+  @override
+  String get restoreXFirstConfirm => '確認還原';
+
+  @override
+  String get deliveryMessageTime => '訊息時間';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return '來自對話：$name';
+  }
+
+  @override
+  String get chatRefreshMembers => '重新整理成員';
+
+  @override
+  String get pendingSendingUncancellable => '開始傳送後無法取消。';
+
+  @override
+  String get diagWaitForPeer => '請等待對方上線，或查看待傳送訊息。';
+
+  @override
+  String get diagReconnectOwnNote => '只重新連線本機，無法讓對方上線。';
+
+  @override
+  String get chatScanQrPermissionHelp => '相機權限已遭拒絕。請在系統設定中允許 DitMesh 使用相機後再掃描，或貼上完整 Tox ID。';
+
+  @override
+  String get groupInviteReconnectHint => '本機與 Tox 網路的連線已中斷。請等本機重新連線，再重試接受邀請。';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return '查看 $count 則待核對訊息';
+  }
+
+  @override
+  String get locationEnableHere => '開啟本頁的「位置」開關即可使用目前位置。';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return '在「$name」對話中搜尋';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return '備份已儲存：$name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => '複製儲存位置';
+
+  @override
+  String get accountNotificationsPermitted => '系統已允許通知';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '刪除「$name」？';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => '這會移除儲存的選取範圍及備註，並刪除 DitMesh 內這份本機錄音。原匯入檔案會留在原位置。';
+
+  @override
+  String get workbenchDeleteClipOnly => '這會移除儲存的選取範圍及備註，並保留錄音檔。';
+
+  @override
+  String get workbenchRemovedClipAndFile => '已刪除片段和 DitMesh 內的本機錄音。';
+
+  @override
+  String get workbenchRemovedClip => '已刪除片段。錄音檔未刪除。';
+
+  @override
+  String get workbenchRemovedClipFileError => '片段已刪除，但無法刪除 DitMesh 內的本機錄音。';
+
+  @override
+  String get chatRejectRequestTitle => '拒絕這則好友申請？';
+
+  @override
+  String get chatRejectRequestBody => '這則申請及此人的後續好友申請會在本機隱藏。你可以在「聯絡人 → 已拒絕的申請」中重新允許。';
+
+  @override
+  String get chatRequestRejected => '已拒絕申請。可在「聯絡人 → 已拒絕的申請」中管理後續申請。';
+
+  @override
+  String get chatRejectedRequests => '已拒絕的申請';
+
+  @override
+  String get chatRejectedRequestsHelp => '來自這些公鑰的好友申請已在本機隱藏。允許新的申請不會解除聯絡人封鎖。';
+
+  @override
+  String get chatRejectedRequestsEmpty => '暫無被拒絕的申請人。';
+
+  @override
+  String get chatAllowFutureRequests => '允許新的申請';
+
+  @override
+  String get chatFutureRequestsAllowed => '已移除申請篩選。若另有聯絡人封鎖，該封鎖仍有效。';
+
+  @override
+  String get moderationBlockRequestBody => '這會拒絕目前的申請，並在本機封鎖此人之後的私聊、好友申請和群組邀請。對方不會收到通知。';
+
+  @override
+  String get accountBackupShareClosed => '已關閉系統分享。你可以再次分享備份。';
+
+  @override
+  String get nearbyHideSession => '隱藏此附近工作階段';
+
+  @override
+  String get nearbySessionHidden => '已隱藏對方此次附近工作階段。對方開始新的工作階段後可能再次出現。';
+
+  @override
+  String get pendingReviewOpenConversation => '開啟原對話';
+
+  @override
+  String get pendingReviewMissingContact => '此對話目前無法使用。請先還原或新增對應聯絡人，再重新拍發。';
+
+  @override
+  String get pendingReviewMissingGroup => '此群組目前無法使用。請先重新加入原群組，再重新拍發。';
+
+  @override
+  String get pendingReviewIgnoreCopy => '忽略此副本';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    return '已忽略 $count 份還原副本。';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => '結束這次練習？';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return '本機會保留已完成的 $done/$total 輪成績。未完成的輪次保留原狀態。結束後無法修改輪次和成績。';
+  }
+
+  @override
+  String get groupPracticeEnded => '本機練習已結束。輪次和成績已保留，可檢視。';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return '所選錄音只有 $actual。儲存的片段需要至少 $minimum。請選擇更長的 WAV 以保留原選取範圍。';
+  }
+
+  @override
+  String get deliveryFailedNext => '可在「待傳送與失敗訊息」中重試這則訊息。';
 }

@@ -11,6 +11,9 @@ enum BlockScope {
   /// key. Blocking removes the friendship and deletes the conversation.
   contact,
 
+  /// A pending application from a person who is not a friend.
+  friendRequest,
+
   /// A group member: Tox NGC gives every member a separate key per group,
   /// so this hides them in that group only.
   groupMember,
@@ -29,9 +32,11 @@ Future<bool> confirmAndBlock(
   final bool ok = await confirm(
     context,
     title: s.moderationBlockTitle(name),
-    body: scope == BlockScope.contact
-        ? s.moderationBlockFriendBody
-        : s.moderationBlockMemberBody,
+    body: switch (scope) {
+      BlockScope.contact => s.moderationBlockFriendBody,
+      BlockScope.friendRequest => s.moderationBlockRequestBody,
+      BlockScope.groupMember => s.moderationBlockMemberBody,
+    },
     confirmLabel: s.moderationBlock,
   );
   if (!ok || !context.mounted) return false;

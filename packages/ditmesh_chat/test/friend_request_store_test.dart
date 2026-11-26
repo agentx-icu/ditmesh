@@ -51,6 +51,23 @@ void main() {
     expect(kept, isNot(contains('A' * 64)), reason: 'oldest rolls off');
   });
 
+  test(
+    'empty refresh does not write, but blocking seals the migration',
+    () async {
+      final store = MemoryKeyValueStore();
+      final requests = FriendRequestStore(store, accountPrefix: 'P');
+      expect(await requests.dismissedKeys([]), isEmpty);
+      expect(
+        store.getStringList('ditmesh_dismissed_friend_requests_P'),
+        isNull,
+      );
+      expect(await requests.dismissedKeys([], sealLegacy: true), isEmpty);
+      // Blocking can add a native fingerprint without adding a sender-wide
+      // reject. Two separate user operations keep two separate filters.
+      expect(await requests.dismissedKeys(['${'A' * 64}|CQ']), isEmpty);
+    },
+  );
+
   test('persisted wording is cleaned when read back', () async {
     final store = MemoryKeyValueStore();
     final requests = FriendRequestStore(store, accountPrefix: 'P');

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
+import '../common/app_bar_title.dart';
 import 'band_tool.dart';
 import 'beacon_tool.dart';
 import 'circuit_tool.dart';
@@ -13,7 +15,6 @@ import 'power_tool.dart';
 import 'rst_tool.dart';
 import 'sun_tool.dart';
 import 'swr_tool.dart';
-import 'tool_page.dart';
 import 'utc_clock_tool.dart';
 
 /// The radio tools, in menu order.
@@ -104,28 +105,38 @@ class RadioToolsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return ToolPage(
-      title: s.toolsTitle,
-      children: <Widget>[
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: <Widget>[
-              for (final tool in RadioTool.values)
-                ListTile(
-                  key: tool.tileKey,
-                  leading: Icon(tool.icon),
-                  title: Text(tool.title(s)),
-                  subtitle: Text(tool.hint(s)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute<void>(builder: (_) => tool.build())),
-                ),
-            ],
+    const common = [
+      RadioTool.grid,
+      RadioTool.bands,
+      RadioTool.power,
+      RadioTool.speed,
+    ];
+    Widget tools(Iterable<RadioTool> items) => AccountPanel(
+      children: [
+        for (final tool in items)
+          ListTile(
+            key: tool.tileKey,
+            leading: Icon(tool.icon),
+            title: Text(tool.title(s)),
+            subtitle: Text(tool.hint(s)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => tool.build())),
           ),
-        ),
       ],
+    );
+    return Scaffold(
+      appBar: AppBar(title: AppBarTitle(s.toolsTitle)),
+      body: AccountPageBody(
+        maxWidth: 640,
+        aside: const [PowerTool(quick: true)],
+        children: [
+          tools(common),
+          const SizedBox(height: 12),
+          tools(RadioTool.values.where((tool) => !common.contains(tool))),
+        ],
+      ),
     );
   }
 }

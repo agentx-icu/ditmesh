@@ -96,7 +96,7 @@ class SDe extends S {
   String get errorWrongPassword => 'Falsches Passwort. Versuche es erneut.';
 
   @override
-  String get errorPeerOffline => 'Dieser Kontakt ist offline. Tox hat keinen Server, daher wartet die Nachricht, bis der Kontakt wieder online ist.';
+  String get errorPeerOffline => 'Der Kontakt ist offline. Die Nachricht bleibt lokal in der Warteschlange.';
 
   @override
   String get errorInvalidToxId => 'Dies ist keine gültige Tox-ID (76 Hexadezimalzeichen).';
@@ -296,10 +296,10 @@ class SDe extends S {
   String get accountWelcomeTitle => 'Deine Identität ist auf diesem Gerät gespeichert';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh nutzt das Peer-to-Peer-Netzwerk Tox. Es gibt keinen Server und keine Registrierung: Deine Identität ist ein Schlüsselpaar, das nur hier gespeichert wird.';
+  String get accountWelcomeIntro => 'DitMesh nutzt das Peer-to-Peer-Netz Tox. Keine Registrierung erforderlich. Deine Identität ist ein lokal gespeichertes Schlüsselpaar.';
 
   @override
-  String get accountWelcomePointNoServer => 'Kein Server, keine Telefonnummer, keine E-Mail. Kontakte kommunizieren direkt miteinander in Morse.';
+  String get accountWelcomePointNoServer => 'Kein zentraler Nachrichtenserver, keine Telefonnummer und keine E-Mail nötig. Gefunkt wird direkt in Morsecode.';
 
   @override
   String get accountWelcomePointTraining => 'Chatte einzeln oder in Gruppen mit Morsecode, einer Handtaste oder iambischen Paddles.';
@@ -329,7 +329,7 @@ class SDe extends S {
   String get accountBackupTitle => 'Sichere jetzt deine Identität';
 
   @override
-  String get accountBackupBody => 'Deine Identität existiert nur auf diesem Gerät. Geht das Gerät verloren, wird es zurückgesetzt oder gestohlen, kannst du sie nicht wiederherstellen: Deine Kontakte erkennen eine neue Identität nicht und dein Lernfortschritt geht verloren.';
+  String get accountBackupBody => 'Gehen die Daten dieses Geräts verloren und fehlt eine verwendbare Sicherung, lässt sich diese Identität nicht wiederherstellen. Bewahre Sicherungsdatei und Passphrase auf.';
 
   @override
   String get accountBackupWhatIsInside => 'Die Sicherungsdatei enthält deinen mit dem Passwort verschlüsselten Identitätsschlüssel und deinen Lernfortschritt. Bewahre sie an einem sicheren Ort außerhalb dieses Geräts auf.';
@@ -344,6 +344,9 @@ class SDe extends S {
   String get accountSectionNotifications => 'Benachrichtigungen';
 
   @override
+  String get accountNotificationsSystemManaged => 'Dein Gerät verwaltet die Benachrichtigungsberechtigungen.';
+
+  @override
   String get accountNotificationsEnable => 'Benachrichtigungen anzeigen';
 
   @override
@@ -353,7 +356,7 @@ class SDe extends S {
   String get accountNotificationsContent => 'Nachrichteninhalt anzeigen';
 
   @override
-  String get accountNotificationsContentSubtitle => 'Text und Morse in Bannern und auf dem Sperrbildschirm. Aus: nur der Hinweis, dass eine Nachricht kam.';
+  String get accountNotificationsContentSubtitle => 'Aus: Nachrichtenhinweise verbergen Gesprächsnamen, Absender, Text und Morsecode. Die Sperrbildschirmvorschau wird vom System gesteuert.';
 
   @override
   String get accountNotificationsAllow => 'Benachrichtigungen erlauben';
@@ -365,7 +368,7 @@ class SDe extends S {
   String get accountNotificationsBlocked => 'In den Systemeinstellungen blockiert';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'Nachrichtenbenachrichtigungen von DitMesh sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort wieder ein.';
+  String get accountNotificationsBlockedSubtitle => 'Öffne unter Android Einstellungen → Apps → DitMesh → Benachrichtigungen und aktiviere Nachrichtenbenachrichtigungen.';
 
   @override
   String get accountNotificationsDenied => 'Benachrichtigungen für DitMesh sind in den Systemeinstellungen ausgeschaltet.';
@@ -377,16 +380,19 @@ class SDe extends S {
   String get accountBackupShareFile => 'Sicherungsdatei teilen';
 
   @override
-  String get accountBackupSaved => 'Sicherung gespeichert';
+  String get accountBackupSaved => 'Sicherung gespeichert. Suche die .mcqbackup-Datei am gewählten Speicherort.';
 
   @override
-  String get accountBackupNotSaved => 'Sicherung wurde nicht gespeichert';
+  String get accountBackupNotSaved => 'Dieser Speichervorgang wurde abgebrochen. Du kannst erneut exportieren.';
+
+  @override
+  String get accountBackupShareReturned => 'Das Freigabemenü wurde geöffnet. Suchen Sie die .mcqbackup-Datei im gewählten Ordner oder in der Empfänger-App.';
 
   @override
   String get accountBackupFailed => 'Sicherung konnte nicht geschrieben werden';
 
   @override
-  String get accountBackupAcknowledge => 'Ich verstehe, dass meine Identität ohne diese Sicherung nicht wiederhergestellt werden kann.';
+  String get accountBackupAcknowledge => 'Mir ist bewusst, dass ich meine Identität bei einem Datenverlust ohne Sicherung nicht wiederherstellen kann.';
 
   @override
   String get accountBackupContinue => 'Weiter zu DitMesh';
@@ -694,6 +700,9 @@ class SDe extends S {
   String get chatToxIdLabel => 'Tox-ID (76 Hexadezimalzeichen)';
 
   @override
+  String get chatRequestPublicKey => 'Öffentlicher Schlüssel der Anfrage (64 Hex-Zeichen)';
+
+  @override
   String get chatToxIdInvalid => 'Die Tox-ID muss genau 76 Hexadezimalzeichen lang sein';
 
   @override
@@ -719,6 +728,9 @@ class SDe extends S {
 
   @override
   String get chatScanQrDesktopHint => 'Auf dieser Plattform ist das Scannen mit der Kamera nicht verfügbar. Füge eine Tox-ID ein.';
+
+  @override
+  String get chatScanQrManualHint => 'Die Kamera ist nicht verfügbar. Füge die vollständige Tox-ID ein oder versuche erneut zu scannen.';
 
   @override
   String get chatScanQrTitle => 'Tox-ID scannen';
@@ -1818,7 +1830,7 @@ class SDe extends S {
   String get listenSettings => 'Mithöreinstellungen';
 
   @override
-  String get listenDecoded => 'Decodiert';
+  String get listenDecoded => 'Live-Dekodierung';
 
   @override
   String get listenEmptyHint => 'Richte das Mikrofon auf einen Morseton. Der decodierte Text erscheint hier.';
@@ -1845,7 +1857,7 @@ class SDe extends S {
   String get listenTone => 'Tonfrequenz';
 
   @override
-  String get listenToneLocked => 'Erfasst';
+  String get listenToneLocked => 'Ton eingerastet';
 
   @override
   String get listenToneSearching => 'Wird gesucht';
@@ -2259,7 +2271,7 @@ class SDe extends S {
   String get chatSearchHint => 'Diesen Chat durchsuchen';
 
   @override
-  String get chatSearchAnyone => 'Alle';
+  String get chatSearchAnyone => 'Alle Absender';
 
   @override
   String get chatSearchMe => 'Ich';
@@ -2566,6 +2578,12 @@ class SDe extends S {
   String get diagTitle => 'Verbindungsdiagnose';
 
   @override
+  String get diagScopeIdentity => 'Alle Unterhaltungen dieser Identität';
+
+  @override
+  String get diagScopeConversation => 'Nur diese Unterhaltung';
+
+  @override
   String get diagOpenSubtitle => 'Warum Nachrichten warten und wie du neu verbindest';
 
   @override
@@ -2660,7 +2678,7 @@ class SDe extends S {
   String get diagPendingHint => 'Wartende Nachrichten bleiben auf diesem Gerät und werden automatisch gesendet, sobald der Kontakt erreichbar ist. Die Diagnose verwirft oder wiederholt sie nie.';
 
   @override
-  String get diagReconnect => 'Neu verbinden';
+  String get diagReconnect => 'Dieses Gerät neu verbinden';
 
   @override
   String get diagReconnecting => 'Verbinde neu …';
@@ -2677,7 +2695,7 @@ class SDe extends S {
   String get diagAboutTitle => 'Wie sich DitMesh verbindet';
 
   @override
-  String get diagAboutBody => 'DitMesh hat keinen Server. Dein Gerät spricht über das Tox-Peer-to-Peer-Netzwerk direkt mit deinen Kontakten; damit eine Nachricht ankommt, müsst ihr beide gleichzeitig online sein. Smartphones pausieren Apps im Hintergrund: Dort kann DitMesh nicht verbunden bleiben und verbindet sich neu, wenn du zurückkehrst.';
+  String get diagAboutBody => 'Nachrichten laufen direkt über Tox ohne zentralen Nachrichtenserver. Öffentliche Einstiegsknoten helfen beim Netzzugang. Zum Zustellen müssen beide Seiten online sein. Nach einer Hintergrundpause verbindet sich DitMesh erneut.';
 
   @override
   String get diagDetailsTitle => 'Technische Details';
@@ -2803,7 +2821,7 @@ class SDe extends S {
   String get backupXExporting => 'Sicherung wird erstellt …';
 
   @override
-  String get backupXMigrationNote => 'Wechselst du das Gerät? Nach der Wiederherstellung dort diese Identität hier nicht mehr verwenden: Zwei Geräte mit einer Identität können dieselbe Nachricht doppelt senden.';
+  String get backupXMigrationNote => 'Gerätewechsel? Schließe DitMesh mit dieser Identität auf dem alten Gerät, bevor du am neuen Gerät die Wiederherstellung bestätigst. Danach versucht das neue Gerät, sich zu verbinden.';
 
   @override
   String get backupXBusy => 'Deine Daten haben sich während der Sicherung ständig geändert. Versuche es erneut.';
@@ -2850,8 +2868,8 @@ class SDe extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nicht gesendete Nachrichten des alten Geräts sind nicht in dieser Sicherung.',
-      one: '1 nicht gesendete Nachricht des alten Geräts ist nicht in dieser Sicherung.',
+      other: 'Bei der Sicherung warteten $count Nachrichten auf den Versand. Sie sind nicht enthalten.',
+      one: 'Bei der Sicherung wartete eine Nachricht auf den Versand. Sie ist nicht enthalten.',
     );
     return '$_temp0';
   }
@@ -2866,7 +2884,7 @@ class SDe extends S {
   String get restoreXConfirmTitle => 'Identität auf diesem Gerät ersetzen?';
 
   @override
-  String get restoreXConfirmBody => 'Eine Identität und Daten auf diesem Gerät werden durch die Sicherung ersetzt. Verwende die Identität auf dem alten Gerät nicht mehr, bevor du dich hier verbindest.';
+  String get restoreXConfirmBody => 'Die Sicherung ersetzt Identität und Daten auf diesem Gerät. Schließe DitMesh mit dieser Identität auf dem alten Gerät, bevor du Ersetzen und wiederherstellen wählst. Danach versucht dieses Gerät, sich zu verbinden.';
 
   @override
   String get restoreXConfirm => 'Ersetzen und wiederherstellen';
@@ -2885,13 +2903,7 @@ class SDe extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count nicht gesendete Nachrichten warten im Chat auf deine Durchsicht.',
-      one: '1 nicht gesendete Nachricht wartet im Chat auf deine Durchsicht.',
-    );
-    return '$_temp0';
+    return 'Die Sicherung brachte $count ungesendete Nachrichten zurück. Öffne unten die Prüfung.';
   }
 
   @override
@@ -2899,8 +2911,8 @@ class SDe extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nicht gesendete Nachrichten vom alten Gerät wurden nicht übernommen.',
-      one: '1 nicht gesendete Nachricht vom alten Gerät wurde nicht übernommen.',
+      other: '$count bei der Sicherung wartende Nachrichten wurden nicht übernommen. Prüfe dein altes Gerät vor dem erneuten Senden.',
+      one: 'Eine bei der Sicherung wartende Nachricht wurde nicht übernommen. Prüfe dein altes Gerät vor dem erneuten Senden.',
     );
     return '$_temp0';
   }
@@ -2917,7 +2929,7 @@ class SDe extends S {
   }
 
   @override
-  String get restoreXReportStopOld => 'Verwende diese Identität auf dem alten Gerät nicht mehr.';
+  String get restoreXReportStopOld => 'Falls DitMesh diese Identität auf dem alten Gerät noch verwendet, schließe es jetzt.';
 
   @override
   String get restoreXReportDone => 'Fertig';
@@ -2937,7 +2949,7 @@ class SDe extends S {
   String get pendingReviewTitle => 'Nicht gesendete Nachrichten';
 
   @override
-  String get pendingReviewBody => 'Diese warteten auf deinem vorherigen Gerät auf den Versand. DitMesh sendet sie nie automatisch; taste eine erneut, wenn sie noch wichtig ist.';
+  String get pendingReviewBody => 'Beim Erstellen der Sicherung warteten diese Nachrichten auf dem alten Gerät. Die wiederhergestellten Kopien dienen nur zur Prüfung und werden nicht automatisch gesendet. Prüfe vor dem erneuten Geben, ob das alte Gerät sie gesendet hat.';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2954,10 +2966,10 @@ class SDe extends S {
   String get pendingReviewEmpty => 'Nichts mehr zu prüfen.';
 
   @override
-  String get backupXWizardInside => 'Die Sicherungsdatei wird vollständig mit einer selbst gewählten Passphrase verschlüsselt und enthält deinen Identitätsschlüssel und deinen Trainingsfortschritt. Bewahre Datei und Passphrase sicher und außerhalb dieses Geräts auf.';
+  String get backupXWizardInside => 'Die ganze Datei wird mit deiner Passphrase verschlüsselt. Deine Identität ist immer enthalten. Training und andere Daten werden nach Auswahl exportiert. Bewahre Datei und Passphrase sicher außerhalb dieses Geräts auf.';
 
   @override
-  String get backupXMeSubtitle => 'Eine verschlüsselte Datei mit Identität, Chats und Fortschritt – zum Aufbewahren oder für ein anderes Gerät';
+  String get backupXMeSubtitle => 'Sichere deine Identität verschlüsselt. Chats und Trainingsfortschritt kannst du hinzufügen.';
 
   @override
   String get keysTitle => 'Tasten und externe Keyer';
@@ -2966,7 +2978,7 @@ class SDe extends S {
   String get keysMeSubtitle => 'Tastenbelegung, Paddles und USB-Keyer-Adapter';
 
   @override
-  String get keysIntro => 'Wähle, welche Tasten Morse geben. USB-Adapter für Tasten und Paddles, die eine Tastatur nachbilden, verhalten sich wie eine Tastatur: Lege ihre Tasten hier fest. Die App erkennt nicht, welches Gerät eine Taste gesendet hat; ein Profil ist daher eine Tastenbelegung.';
+  String get keysIntro => 'Belege Tasten von Geräten, die System-Tastaturereignisse senden, etwa von USB- oder Bluetooth-Adaptern im Tastaturmodus. Das Profil speichert die Belegung.';
 
   @override
   String get keysStandardProfile => 'Standard';
@@ -2981,7 +2993,7 @@ class SDe extends S {
   String get keysNewProfile => 'Neues Profil';
 
   @override
-  String get keysLimitations => 'MIDI-, serielle und Bluetooth-Keyer, Adapter-Firmware-Einstellungen und Sendersteuerung werden nicht unterstützt. Getestete Adapter stehen in der Dokumentation.';
+  String get keysLimitations => 'Spezielle Bluetooth-Tastenprotokolle, MIDI und serielle Anschlüsse werden nicht direkt unterstützt. Firmware und Sender lassen sich nicht steuern. Getestete Adapter stehen in der Dokumentation.';
 
   @override
   String get keysEditTitle => 'Tastenprofil';
@@ -3255,13 +3267,13 @@ class SDe extends S {
   String get termsGateTitle => 'Community-Richtlinien';
 
   @override
-  String get termsGateIntro => 'Der DitMesh-Chat verbindet dich ohne Server direkt mit anderen. Bitte stimme vorher diesen Regeln zu:';
+  String get termsGateIntro => 'DitMesh sendet Nachrichten direkt über Tox ohne zentralen Nachrichtenserver. Stimme zunächst diesen Regeln zu:';
 
   @override
   String get termsGateRuleZero => 'Null Toleranz: keine Belästigung, kein Hass, keine Drohungen, keine sexuellen Inhalte mit Minderjährigen, kein Spam, nichts Illegales.';
 
   @override
-  String get termsGateRuleContacts => 'Nur Personen, die du annimmst, können dir schreiben; Gruppen betrittst du per Einladung oder Gruppen-ID.';
+  String get termsGateRuleContacts => 'Direktnachrichten kommen von angenommenen Kontakten. Nach dem Gruppenbeitritt erhältst du Beiträge aller Gruppenmitglieder.';
 
   @override
   String get termsGateRuleBlock => 'Blockiere jede Person aus einer Unterhaltung, der Mitgliederliste einer Gruppe, einer Freundschaftsanfrage oder einer Einladung.';
@@ -3315,7 +3327,7 @@ class SDe extends S {
   String get bootstrapTitle => 'Netzwerk und Bootstrap';
 
   @override
-  String get bootstrapDescription => 'Wähle die öffentlichen Knoten für den Zugang zum Tox-Netzwerk.';
+  String get bootstrapDescription => 'Öffentliche Einstiegsknoten helfen beim Zugang zu Tox. Wähle hier die Knoten.';
 
   @override
   String get bootstrapModeAuto => 'Automatisch';
@@ -3504,7 +3516,7 @@ class SDe extends S {
   String get firstChatListenTitle => '2. Anhören und korrigieren';
 
   @override
-  String get firstChatListenBody => 'Höre vor dem Senden die Vorschau an und lösche Fehler mit der Rücktaste. Tippe nach dem Senden auf Wiedergabe. Nachrichten an dich selbst bleiben auf diesem Gerät.';
+  String get firstChatListenBody => 'Höre den Entwurf über das kleine Dreieck vorab an und korrigiere ihn mit Löschen neben dem Entwurf. Spiele danach die Nachricht ab. Nachrichten an dich selbst bleiben auf dem Gerät.';
 
   @override
   String get firstChatFriendTitle => '3. Mit Freunden chatten';
@@ -3744,7 +3756,7 @@ class SDe extends S {
   String get nearbyPrivacyTitle => 'Personen in der Nähe';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh teilt deinen Anzeigenamen und ungefähren Standort (auf etwa 100 m genau) in öffentlichen Tox-Gruppen für deine Region. Wer einer dieser Gruppen beitritt, kann diese Daten unabhängig vom tatsächlichen Standort empfangen. Deine Tox-ID wird nur geteilt, wenn du ausdrücklich eine Anfrage in der Umgebungssuche sendest oder beantwortest. Die Umgebungssuche funktioniert nur im Vordergrund.';
+  String get nearbyPrivacyBody => 'DitMesh teilt deinen Anzeigenamen und ungefähren Standort (auf etwa 100 m genau) in öffentlichen Tox-Gruppen für deine Region. Wer einer dieser Gruppen beitritt, kann diese Daten unabhängig vom tatsächlichen Standort empfangen. Deine Tox-ID wird nur geteilt, wenn du ausdrücklich eine Anfrage in der Umgebungssuche sendest oder beantwortest. Die Umgebungssuche funktioniert nur im Vordergrund. Wenn du die Seite „Personen in der Nähe“ verlässt, kann die Freigabe bei geöffneter App noch bis zu 5 Minuten weiterlaufen. Deaktiviere die Sichtbarkeit, um die Freigabe zu beenden.';
 
   @override
   String get nearbyPrivacyAccept => 'Aktivieren';
@@ -3922,4 +3934,232 @@ class SDe extends S {
 
   @override
   String get firstChatReceiptBody => 'In der Warteschlange bedeutet lokal gespeichert; gesendet bedeutet vom Transport angenommen; zugestellt erfordert eine Empfangsbestätigung. In Gruppen bestätigt sie mindestens ein Mitglied, nicht dass alle zugehört haben.';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wiederhergestellte Nachrichten verwerfen?',
+      one: 'Eine wiederhergestellte Nachricht verwerfen?',
+    );
+    return '$_temp0 Die lokalen Kopien zur Prüfung werden dauerhaft gelöscht.';
+  }
+
+  @override
+  String get pendingReviewDismissed => 'Wiederhergestellte Nachricht verworfen.';
+
+  @override
+  String get pendingReviewUndo => 'Rückgängig';
+
+  @override
+  String get pendingReviewSaveError => 'Änderung konnte nicht gespeichert werden. Die Liste wurde beibehalten.';
+
+  @override
+  String get restoreXCurrentIdentity => 'Aktuelle Identität auf diesem Gerät';
+
+  @override
+  String get restoreXLockedIdentity => 'Gesperrt. Name und Fingerabdruck sind nicht verfügbar.';
+
+  @override
+  String get restoreXNoCurrentIdentity => 'Keine Identität auf diesem Gerät.';
+
+  @override
+  String get restoreXBackupIdentity => 'Identität in dieser Sicherung';
+
+  @override
+  String get restoreXPassphraseHelp => 'Gib die beim Erstellen dieser Sicherung gewählte Passphrase ein.';
+
+  @override
+  String get restoreXPendingReviewTitle => 'Wiederhergestellte Nachrichten zur Prüfung';
+
+  @override
+  String get groupInviteAcceptanceFailed => 'Einladung konnte nicht angenommen werden';
+
+  @override
+  String get groupInviteRetryAccept => 'Erneut annehmen';
+
+  @override
+  String get chatDraftOfflineQueue => 'Nach dem Senden wartet die Nachricht auf diesem Gerät, bis dein Kontakt online ist.';
+
+  @override
+  String get chatDraftQueued => 'Auf diesem Gerät in die Warteschlange gestellt.';
+
+  @override
+  String get chatKeyTouchHint => 'Halte die Taste auf dem Bildschirm';
+
+  @override
+  String get chatPaddleTouchHint => 'Halte eines der Paddles auf dem Bildschirm';
+
+  @override
+  String get keysSpace => 'Leertaste';
+
+  @override
+  String get keysLeftControl => 'Strg links';
+
+  @override
+  String get keysRightControl => 'Strg rechts';
+
+  @override
+  String get keysBindingUnchanged => 'Die bisherige Belegung bleibt erhalten.';
+
+  @override
+  String get backupXGoToPassphrase => 'Sicherungs-Passphrase festlegen';
+
+  @override
+  String get restoreXFirstConfirmTitle => 'Dieses Backup wiederherstellen?';
+
+  @override
+  String get restoreXFirstConfirmBody => 'Identität und Daten aus der Sicherung werden wiederhergestellt. Schließe DitMesh mit dieser Identität auf dem alten Gerät, bevor du die Wiederherstellung bestätigst. Danach versucht dieses Gerät, sich zu verbinden.';
+
+  @override
+  String get restoreXFirstConfirm => 'Wiederherstellung bestätigen';
+
+  @override
+  String get deliveryMessageTime => 'Nachrichtenzeit';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return 'Aus Unterhaltung: $name';
+  }
+
+  @override
+  String get chatRefreshMembers => 'Mitglieder aktualisieren';
+
+  @override
+  String get pendingSendingUncancellable => 'Dieser Sendevorgang kann nicht mehr abgebrochen werden.';
+
+  @override
+  String get diagWaitForPeer => 'Warte auf den Kontakt oder prüfe die ausstehenden Nachrichten.';
+
+  @override
+  String get diagReconnectOwnNote => 'Nur dieses Gerät wird neu verbunden. Der Kontakt geht dadurch nicht online.';
+
+  @override
+  String get chatScanQrPermissionHelp => 'Der Kamerazugriff wurde verweigert. Erlaube DitMesh den Zugriff in den Systemeinstellungen oder füge die vollständige Tox-ID ein.';
+
+  @override
+  String get groupInviteReconnectHint => 'Dieses Gerät hat die Tox-Verbindung verloren. Warte auf die Verbindung und versuche es erneut.';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return '$count Nachrichten prüfen';
+  }
+
+  @override
+  String get locationEnableHere => 'Aktiviere hier den Standortschalter, um den aktuellen Standort zu verwenden.';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return 'In der Unterhaltung mit $name suchen';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return 'Sicherung gespeichert: $name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => 'Speicherort kopieren';
+
+  @override
+  String get accountNotificationsPermitted => 'Systembenachrichtigungen erlaubt';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return '„$name“ löschen?';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => 'Der gespeicherte Bereich und die Notiz sowie die lokale Aufnahme in DitMesh werden gelöscht. Die importierte Originaldatei bleibt erhalten.';
+
+  @override
+  String get workbenchDeleteClipOnly => 'Der gespeicherte Bereich und die Notiz werden entfernt. Aufnahmedateien bleiben erhalten.';
+
+  @override
+  String get workbenchRemovedClipAndFile => 'Clip und lokale Aufnahme gelöscht.';
+
+  @override
+  String get workbenchRemovedClip => 'Clip gelöscht. Die Aufnahmedatei wurde nicht gelöscht.';
+
+  @override
+  String get workbenchRemovedClipFileError => 'Der Clip wurde gelöscht. DitMesh konnte die lokale Aufnahme nicht löschen.';
+
+  @override
+  String get chatRejectRequestTitle => 'Diese Kontaktanfrage ablehnen?';
+
+  @override
+  String get chatRejectRequestBody => 'Diese und künftige Anfragen dieser Person werden ausgeblendet. Unter Kontakte → Abgelehnte Anfragen kannst du sie wieder zulassen.';
+
+  @override
+  String get chatRequestRejected => 'Anfrage abgelehnt. Weitere Anfragen kannst du unter Kontakte → Abgelehnte Anfragen verwalten.';
+
+  @override
+  String get chatRejectedRequests => 'Abgelehnte Anfragen';
+
+  @override
+  String get chatRejectedRequestsHelp => 'Anfragen von diesen öffentlichen Schlüsseln werden ausgeblendet. Neue Anfragen zuzulassen hebt eine Sperre nicht auf.';
+
+  @override
+  String get chatRejectedRequestsEmpty => 'Hier gibt es keine abgelehnten Absender.';
+
+  @override
+  String get chatAllowFutureRequests => 'Neue Anfragen zulassen';
+
+  @override
+  String get chatFutureRequestsAllowed => 'Anfragefilter entfernt. Eine separate Sperre bleibt bestehen.';
+
+  @override
+  String get moderationBlockRequestBody => 'Die Anfrage wird abgelehnt. Weitere Direktnachrichten, Kontaktanfragen und Gruppeneinladungen dieser Person werden hier ausgeblendet. Sie wird nicht benachrichtigt.';
+
+  @override
+  String get accountBackupShareClosed => 'Die Systemfreigabe wurde geschlossen. Du kannst die Sicherung erneut teilen.';
+
+  @override
+  String get nearbyHideSession => 'Diese Sitzung ausblenden';
+
+  @override
+  String get nearbySessionHidden => 'Diese Sitzung wurde ausgeblendet. Eine neue Sitzung dieser Person kann wieder erscheinen.';
+
+  @override
+  String get pendingReviewOpenConversation => 'Ursprünglichen Chat öffnen';
+
+  @override
+  String get pendingReviewMissingContact => 'Dieser Chat ist nicht verfügbar. Stelle den Kontakt wieder her oder füge ihn hinzu, bevor du erneut sendest.';
+
+  @override
+  String get pendingReviewMissingGroup => 'Diese Gruppe ist nicht verfügbar. Tritt ihr erneut bei, bevor du die Nachricht sendest.';
+
+  @override
+  String get pendingReviewIgnoreCopy => 'Diese Kopie verwerfen';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wiederhergestellte Kopien verworfen.',
+      one: 'Eine wiederhergestellte Kopie verworfen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => 'Diese Übung beenden?';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return 'Die Ergebnisse für $done von $total Runden bleiben auf diesem Gerät. Offene Runden bleiben offen. Runden und Ergebnisse können danach nicht mehr geändert werden.';
+  }
+
+  @override
+  String get groupPracticeEnded => 'Übung beendet. Gespeicherte Runden und Ergebnisse sind schreibgeschützt.';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return 'Diese Aufnahme ist $actual lang. Die gespeicherten Ausschnitte benötigen mindestens $minimum. Wähle eine längere WAV-Datei, um die Originalbereiche zu erhalten.';
+  }
+
+  @override
+  String get deliveryFailedNext => 'Öffne den Postausgang, um diese Nachricht erneut zu senden.';
 }

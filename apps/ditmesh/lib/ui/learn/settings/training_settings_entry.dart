@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/training_controller.dart';
 import '../../../training/training_controller_host.dart';
+import '../../chat/morse_playback_settings.dart';
 import '../../common/app_bar_title.dart';
 import '../learn_playback.dart';
 import '../learning_unavailable.dart';
@@ -47,6 +48,7 @@ class _TrainingSettingsEntryState extends State<TrainingSettingsEntry> {
           return TrainingSettingsScreen(
             controller: controller,
             playback: widget.playback,
+            chatPlayback: MorsePlaybackSettings.of(context, listen: false),
           );
         }
         return Scaffold(

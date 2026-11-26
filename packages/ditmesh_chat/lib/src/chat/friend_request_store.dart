@@ -29,8 +29,9 @@ class FriendRequestStore {
   /// recorded before this list existed; after that Tim2Tox's own (uncapped)
   /// list is not consulted, so the cap holds.
   Future<Set<String>> dismissedKeys(
-    Iterable<String> tim2toxFingerprints,
-  ) async {
+    Iterable<String> tim2toxFingerprints, {
+    bool sealLegacy = false,
+  }) async {
     final own = _store.getStringList(_dismissedKey);
     if (own != null) return own.toSet();
     final migrated = <String>{
@@ -38,11 +39,14 @@ class FriendRequestStore {
         if (fingerprint.contains('|'))
           ConversationIds.normalizeKey(fingerprint.split('|').first),
     }.toList();
-    if (migrated.isEmpty) return const <String>{};
     if (migrated.length > maxDismissed) {
       migrated.removeRange(0, migrated.length - maxDismissed);
     }
-    await _store.setStringList(_dismissedKey, migrated);
+    // An empty inbox refresh is read-only. Seal an empty migration when the
+    // caller is about to write a native fingerprint for a blocked request.
+    if (migrated.isNotEmpty || sealLegacy) {
+      await _store.setStringList(_dismissedKey, migrated);
+    }
     return migrated.toSet();
   }
 
@@ -53,14 +57,21 @@ class FriendRequestStore {
     required Iterable<String> tim2toxFingerprints,
   }) async {
     final current = await dismissedKeys(tim2toxFingerprints);
-    final list = [
-      ...current.where((k) => k != publicKey),
-      publicKey,
-    ];
+    final list = [...current.where((k) => k != publicKey), publicKey];
     if (list.length > maxDismissed) {
       list.removeRange(0, list.length - maxDismissed);
     }
     await _store.setStringList(_dismissedKey, list);
+  }
+
+  Future<void> allow(String publicKey, Iterable<String> fingerprints) async {
+    final current = await dismissedKeys(fingerprints);
+    if (current.contains(publicKey)) {
+      await _store.setStringList(
+        _dismissedKey,
+        current.where((key) => key != publicKey).toList(),
+      );
+    }
   }
 
   List<FriendRequest> get pending {

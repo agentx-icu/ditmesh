@@ -80,8 +80,10 @@ void main() {
     await tester.tap(find.byKey(const Key('settings_nearby_visible_switch')));
     await tester.pumpAndSettle();
     expect(controller.nearbyVisible, isFalse);
-    expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
+    final strings = lookupS(const Locale('en'));
+    expect(find.text(strings.nearbyPrivacyBody), findsOneWidget);
+    expect(find.textContaining('up to 5 minutes'), findsOneWidget);
+    await tester.tap(find.text(strings.actionCancel));
     await tester.pumpAndSettle();
     expect(controller.nearbyVisible, isFalse);
   });

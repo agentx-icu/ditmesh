@@ -8,14 +8,15 @@ import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/nearby_controller.dart';
 import '../nearby/nearby_page.dart';
+import '../account/account_widgets.dart';
 import '../account/avatar_initial.dart';
 import '../chat/chat_layout.dart';
 import '../chat/conversation_target.dart';
 import '../common/app_bar_title.dart';
-import '../responsive.dart';
 import 'add_friend_sheet.dart';
 import 'friend_request_inbox.dart';
 import 'my_tox_id_sheet.dart';
+import 'rejected_friend_requests_page.dart';
 import 'self_contact_tile.dart';
 
 /// The note-to-self entry, friends (with online dots), the request inbox,
@@ -110,48 +111,122 @@ class ContactsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: ReadableBody(
+      body: SafeArea(
+        top: false,
         child: StreamBuilder<List<Friend>>(
           stream: service.friendChanges,
           initialData: service.friends,
           builder: (context, snapshot) {
-            final List<Friend> friends =
-                List<Friend>.of(snapshot.data ?? const <Friend>[])
-                  ..sort((a, b) {
-                    if (a.online != b.online) return a.online ? -1 : 1;
-                    return a.displayName.toLowerCase().compareTo(
-                      b.displayName.toLowerCase(),
-                    );
-                  });
-            return ListView(
+            final friends = List<Friend>.of(snapshot.data ?? const [])
+              ..sort((a, b) {
+                if (a.online != b.online) return a.online ? -1 : 1;
+                return a.displayName.toLowerCase().compareTo(
+                  b.displayName.toLowerCase(),
+                );
+              });
+            final requests = AccountPanel(
               children: [
-                SelfContactTile(
+                FriendRequestInbox(
                   service: service,
-                  identity: identity,
-                  onOpen: onOpenConversation,
+                  showWhenEmpty: true,
+                  showPublicKeys: true,
                 ),
-                FriendRequestInbox(service: service),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Text(
-                    s.chatFriendsCount(friends.length),
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-                if (friends.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(s.chatNoFriends, textAlign: TextAlign.center),
-                  ),
-                for (final Friend f in friends)
-                  _FriendTile(
-                    key: ValueKey<String>('friend_${f.publicKey}'),
-                    friend: f,
-                    onTap: () =>
-                        onOpenConversation(ConversationTarget.fromFriend(f)),
-                    onRemove: () => unawaited(_removeFriend(context, f)),
+                if (service case final FriendRequestFilter filter)
+                  ListTile(
+                    leading: const Icon(Icons.group_remove_outlined),
+                    trailing: const Icon(Icons.chevron_right),
+                    title: Text(s.chatRejectedRequests),
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            RejectedFriendRequestsPage(filter: filter),
+                      ),
+                    ),
                   ),
               ],
+            );
+            final share = AccountPanel(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.qr_code_2),
+                  title: Text(s.chatMyToxId),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      unawaited(showMyToxIdSheet(context, identity?.current)),
+                ),
+              ],
+            );
+            final friendEntries = <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  s.chatFriendsCount(friends.length),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              SelfContactTile(
+                service: service,
+                identity: identity,
+                onOpen: onOpenConversation,
+              ),
+              if (friends.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(s.chatNoFriends, textAlign: TextAlign.center),
+                ),
+              for (final f in friends)
+                _FriendTile(
+                  key: ValueKey<String>('friend_${f.publicKey}'),
+                  friend: f,
+                  onTap: () =>
+                      onOpenConversation(ConversationTarget.fromFriend(f)),
+                  onRemove: () => unawaited(_removeFriend(context, f)),
+                ),
+              const SizedBox(height: 12),
+              share,
+            ];
+            return LayoutBuilder(
+              builder: (context, bounds) {
+                const padding = EdgeInsets.all(16);
+                if (bounds.maxWidth < kMasterDetailMinWidth) {
+                  return ListView(
+                    padding: padding,
+                    children: [
+                      requests,
+                      const SizedBox(height: 12),
+                      ...friendEntries,
+                    ],
+                  );
+                }
+                return Align(
+                  alignment: AlignmentDirectional.topStart,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: ListView(
+                              padding: padding.copyWith(left: 0),
+                              children: [requests],
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: ListView(
+                              padding: padding.copyWith(right: 0),
+                              children: friendEntries,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

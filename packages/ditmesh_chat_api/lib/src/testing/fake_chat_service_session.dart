@@ -61,6 +61,7 @@ extension _FakeSession on FakeChatService {
     _sessionGeneration++;
     _friends.clear();
     _friendRequests.clear();
+    _rejectedRequestKeys.clear();
     _conversations.clear();
     _messages.clear();
     _groups.clear();

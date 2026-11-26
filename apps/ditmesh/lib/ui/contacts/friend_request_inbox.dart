@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/nearby_controller.dart';
+import '../account/account_widgets.dart';
 import '../chat/chat_layout.dart';
 import '../moderation/block_actions.dart';
 import 'tox_id.dart';
@@ -20,10 +21,12 @@ class FriendRequestInbox extends StatefulWidget {
     super.key,
     required this.service,
     this.showWhenEmpty = false,
+    this.showPublicKeys = false,
   });
 
   final ChatService service;
   final bool showWhenEmpty;
+  final bool showPublicKeys;
 
   @override
   State<FriendRequestInbox> createState() => _FriendRequestInboxState();
@@ -33,6 +36,19 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
   final Set<String> _busy = <String>{};
 
   ChatService get service => widget.service;
+
+  Future<void> _reject(FriendRequest request) async {
+    final s = context.s;
+    final agrees = await confirm(
+      context,
+      title: s.chatRejectRequestTitle,
+      body: s.chatRejectRequestBody,
+      confirmLabel: s.chatReject,
+    );
+    if (!agrees || !mounted) return;
+    await service.rejectFriendRequest(request.publicKey);
+    if (mounted) showSnack(context, s.chatRequestRejected);
+  }
 
   Future<void> _run(String key, Future<void> Function() op) async {
     if (!_busy.add(key)) return;
@@ -97,7 +113,7 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                 child: Text(s.chatNoRequests),
               ),
-            for (final FriendRequest r in requests)
+            for (final FriendRequest r in requests) ...[
               ListTile(
                 key: ValueKey<String>('req_${r.publicKey}'),
                 leading: const CircleAvatar(child: Icon(Icons.person_add_alt)),
@@ -107,55 +123,86 @@ class _FriendRequestInboxState extends State<FriendRequestInbox> {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+              if (widget.showPublicKeys)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.chatRequestPublicKey,
+                        style: theme.textTheme.labelMedium,
+                      ),
+                      SelectableText(
+                        groupToxId(r.publicKey),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 12),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
-                    IconButton(
-                      key: ValueKey<String>('req_block_${r.publicKey}'),
-                      tooltip: s.moderationBlock,
-                      icon: const Icon(Icons.block),
-                      onPressed: _busy.contains(r.publicKey)
-                          ? null
-                          : () => unawaited(
-                              _run(
-                                r.publicKey,
-                                () => confirmAndBlock(
-                                  context,
-                                  service: service,
-                                  publicKey: r.publicKey,
-                                  name: shortKey(r.publicKey, length: 16),
-                                  scope: BlockScope.contact,
+                    Tooltip(
+                      message: s.chatAccept,
+                      child: FilledButton.icon(
+                        onPressed: _busy.contains(r.publicKey)
+                            ? null
+                            : () => unawaited(
+                                _run(
+                                  r.publicKey,
+                                  () =>
+                                      service.acceptFriendRequest(r.publicKey),
                                 ),
                               ),
-                            ),
+                        icon: const Icon(Icons.check),
+                        label: Text(s.chatAccept),
+                      ),
                     ),
-                    IconButton(
-                      tooltip: s.chatReject,
-                      icon: Icon(Icons.close, color: theme.colorScheme.error),
-                      onPressed: _busy.contains(r.publicKey)
-                          ? null
-                          : () => unawaited(
-                              _run(
-                                r.publicKey,
-                                () => service.rejectFriendRequest(r.publicKey),
+                    Tooltip(
+                      message: s.chatReject,
+                      child: OutlinedButton.icon(
+                        onPressed: _busy.contains(r.publicKey)
+                            ? null
+                            : () => unawaited(
+                                _run(r.publicKey, () => _reject(r)),
                               ),
-                            ),
+                        icon: const Icon(Icons.close),
+                        label: Text(s.chatReject),
+                      ),
                     ),
-                    IconButton.filled(
-                      tooltip: s.chatAccept,
-                      icon: const Icon(Icons.check),
-                      onPressed: _busy.contains(r.publicKey)
-                          ? null
-                          : () => unawaited(
-                              _run(
-                                r.publicKey,
-                                () => service.acceptFriendRequest(r.publicKey),
+                    Tooltip(
+                      message: s.moderationBlock,
+                      child: TextButton.icon(
+                        key: ValueKey<String>('req_block_${r.publicKey}'),
+                        onPressed: _busy.contains(r.publicKey)
+                            ? null
+                            : () => unawaited(
+                                _run(
+                                  r.publicKey,
+                                  () => confirmAndBlock(
+                                    context,
+                                    service: service,
+                                    publicKey: r.publicKey,
+                                    name: shortKey(r.publicKey, length: 16),
+                                    scope: BlockScope.friendRequest,
+                                  ),
+                                ),
                               ),
-                            ),
+                        icon: const Icon(Icons.block),
+                        label: Text(s.moderationBlock),
+                      ),
                     ),
                   ],
                 ),
               ),
+            ],
             const Divider(),
           ],
         );

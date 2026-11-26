@@ -7,14 +7,23 @@ import '../../i18n/l10n_extension.dart';
 import '../common/app_bar_title.dart';
 import 'tox_id.dart';
 
+enum QrCameraIssue { permissionDenied, unavailable, unsupported }
+
 /// Full-screen camera scanner that pops with the first valid Tox ID it sees.
 /// The add-friend sheet exposes this on Android, iOS and macOS.
 class QrScanPage extends StatefulWidget {
-  const QrScanPage({super.key});
+  const QrScanPage({super.key, this.onUnavailable});
 
-  static Future<String?> open(BuildContext context) => Navigator.of(
-    context,
-  ).push<String>(MaterialPageRoute<String>(builder: (_) => const QrScanPage()));
+  final ValueChanged<QrCameraIssue>? onUnavailable;
+
+  static Future<String?> open(
+    BuildContext context, {
+    ValueChanged<QrCameraIssue>? onUnavailable,
+  }) => Navigator.of(context).push<String>(
+    MaterialPageRoute<String>(
+      builder: (_) => QrScanPage(onUnavailable: onUnavailable),
+    ),
+  );
 
   @override
   State<QrScanPage> createState() => _QrScanPageState();
@@ -70,6 +79,7 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
     _startupTimer = Timer(const Duration(seconds: 12), () {
       if (_mayScan && !_camera.value.isInitialized) {
         setState(() => _startupTimedOut = true);
+        widget.onUnavailable?.call(QrCameraIssue.unavailable);
       }
     });
   }
@@ -114,6 +124,15 @@ class _QrScanPageState extends State<QrScanPage> with WidgetsBindingObserver {
       _startupTimer?.cancel();
     }
     if (_camera.value.isRunning) _cameraOwner = this;
+    if (_camera.value.error case final MobileScannerException error
+        when _mayScan) {
+      widget.onUnavailable?.call(switch (error.errorCode) {
+        MobileScannerErrorCode.permissionDenied =>
+          QrCameraIssue.permissionDenied,
+        MobileScannerErrorCode.unsupported => QrCameraIssue.unsupported,
+        _ => QrCameraIssue.unavailable,
+      });
+    }
   }
 
   Future<void> _stopCamera() async {

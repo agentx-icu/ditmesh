@@ -9,12 +9,23 @@ import '../../i18n/l10n_extension.dart';
 import '../../keying/key_profile.dart';
 import '../../keying/key_profiles.dart';
 import '../../training/training_settings.dart';
+import '../account/account_widgets.dart';
 import '../chat/chat_layout.dart';
 import '../common/app_bar_title.dart';
 import '../common/close_owned_route.dart';
 import '../common/field_label.dart';
-import '../responsive.dart';
+import '../responsive.dart' show edgeLabelTextScaler;
 import 'key_test_area.dart';
+
+String _keyLabels(S s, Iterable<LogicalKeyboardKey> keys) => keyLabels(
+  keys,
+  localize: (key) => switch (key) {
+    LogicalKeyboardKey.space => s.keysSpace,
+    LogicalKeyboardKey.controlLeft => s.keysLeftControl,
+    LogicalKeyboardKey.controlRight => s.keysRightControl,
+    _ => null,
+  },
+);
 
 /// Keys and external keyers (F12): the device's key profiles, which one is
 /// in use, and an editor for each. Profiles are keyboard-binding presets
@@ -22,8 +33,9 @@ import 'key_test_area.dart';
 class KeySetupPage extends StatelessWidget {
   const KeySetupPage({super.key});
 
-  static Future<void> open(BuildContext context) => Navigator.of(context)
-      .push(MaterialPageRoute<void>(builder: (_) => const KeySetupPage()));
+  static Future<void> open(BuildContext context) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => const KeySetupPage()));
 
   Future<void> _edit(BuildContext context, KeyProfile? profile) =>
       Navigator.of(context).push(
@@ -49,16 +61,13 @@ class KeySetupPage extends StatelessWidget {
         key: const Key('keys-new'),
         onPressed: () => _edit(context, null),
         icon: const Icon(Icons.add),
-        label: Text(
-          s.keysNewProfile,
-          textScaler: edgeLabelTextScaler(context),
-        ),
+        label: Text(s.keysNewProfile, textScaler: edgeLabelTextScaler(context)),
       ),
-      body: ReadableBody(
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
+      body: AccountPageBody(
+        maxWidth: 720,
+        aside: [KeyTestArea(profile: active)],
+        children: [
+          AccountPanel(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -83,14 +92,22 @@ class KeySetupPage extends StatelessWidget {
                       key: const Key('keys-profile-default'),
                       value: KeyProfile.defaults.id,
                       title: Text(s.keysStandardProfile),
-                      subtitle: Text(keyLabels(KeyProfile.defaults.effectiveKeys)),
+                      subtitle: Text(
+                        [
+                          '${s.keysActionStraight}: ${s.keysSpace}',
+                          '${s.keysActionDit}: ${s.keysLeftControl}',
+                          '${s.keysActionDah}: ${s.keysRightControl}',
+                          '${s.keysKeyerMode}: ${s.keysIambicB}',
+                        ].join('\n'),
+                      ),
+                      isThreeLine: true,
                     ),
                     for (final p in profiles.saved)
                       RadioListTile<String>(
                         key: Key('keys-profile-${p.id}'),
                         value: p.id,
                         title: Text(p.name.isEmpty ? s.keysUnnamed : p.name),
-                        subtitle: Text(keyLabels(p.effectiveKeys)),
+                        subtitle: Text(_keyLabels(s, p.effectiveKeys)),
                         secondary: IconButton(
                           tooltip: s.keysEdit,
                           icon: const Icon(Icons.edit_outlined),
@@ -109,7 +126,8 @@ class KeySetupPage extends StatelessWidget {
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 76),
+        ],
       ),
     );
   }
@@ -119,11 +137,7 @@ class KeySetupPage extends StatelessWidget {
 /// keyer mode, adapter and sidetone switches, and a test area. Saving
 /// refuses duplicate and reserved keys.
 class KeyProfileEditorPage extends StatefulWidget {
-  const KeyProfileEditorPage({
-    super.key,
-    required this.profile,
-    this.testSink,
-  });
+  const KeyProfileEditorPage({super.key, required this.profile, this.testSink});
 
   final KeyProfile profile;
 
@@ -171,6 +185,16 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
     _captureFocus.requestFocus();
   }
 
+  void _stopCapture() {
+    setState(() {
+      _capturing = null;
+      _error = null;
+    });
+    _captureFocus.unfocus(
+      disposition: UnfocusDisposition.previouslyFocusedChild,
+    );
+  }
+
   KeyEventResult _onCaptureKey(FocusNode node, KeyEvent event) {
     final action = _capturing;
     if (action == null || event is! KeyDownEvent) {
@@ -178,15 +202,22 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
       return action == null ? KeyEventResult.ignored : KeyEventResult.handled;
     }
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.escape) {
+      _stopCapture();
+      return KeyEventResult.handled;
+    }
     final s = context.s;
     if (KeyProfile.reservedKeys.contains(key)) {
-      setState(() => _error = s.keysReserved(keyLabels({key})));
+      setState(() => _error = s.keysReserved(_keyLabels(s, {key})));
       return KeyEventResult.handled;
     }
     for (final other in KeyerAction.values) {
       if (other != action && _keysOf(other).contains(key)) {
         setState(
-          () => _error = s.keysConflict(keyLabels({key}), _actionLabel(s, other)),
+          () => _error = s.keysConflict(
+            _keyLabels(s, {key}),
+            _actionLabel(s, other),
+          ),
         );
         return KeyEventResult.handled;
       }
@@ -231,8 +262,8 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
       if (!mounted) return;
       setState(
         () => _error = switch (e.error) {
-          KeyProfileError.conflict => s.keysConflictSave(keyLabels(e.keys)),
-          KeyProfileError.reserved => s.keysReserved(keyLabels(e.keys)),
+          KeyProfileError.conflict => s.keysConflictSave(_keyLabels(s, e.keys)),
+          KeyProfileError.reserved => s.keysReserved(_keyLabels(s, e.keys)),
           KeyProfileError.missing => s.keysMissing,
         },
       );
@@ -247,10 +278,9 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final theme = Theme.of(context);
-    final exists = context
-        .watch<KeyProfiles>()
-        .saved
-        .any((p) => p.id == widget.profile.id);
+    final exists = context.watch<KeyProfiles>().saved.any(
+      (p) => p.id == widget.profile.id,
+    );
     return Scaffold(
       appBar: AppBar(
         title: AppBarTitle(s.keysEditTitle),
@@ -263,14 +293,14 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
             ),
         ],
       ),
-      body: ReadableBody(
-        child: Focus(
-          focusNode: _captureFocus,
-          onKeyEvent: _onCaptureKey,
-          child: SafeArea(
-            top: false,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+      body: Focus(
+        focusNode: _captureFocus,
+        onKeyEvent: _onCaptureKey,
+        child: AccountPageBody(
+          maxWidth: 720,
+          aside: [KeyTestArea(profile: _draft, sink: widget.testSink)],
+          children: [
+            AccountPanel(
               children: [
                 TextField(
                   key: const Key('keys-name'),
@@ -287,16 +317,24 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                     key: Key('keys-capture-${a.name}'),
                     contentPadding: EdgeInsets.zero,
                     title: Text(_actionLabel(s, a)),
-                    subtitle: Text(
-                      _capturing == a
-                          ? s.keysPressKey
-                          : _keysOf(a).isEmpty
-                          ? s.keysNone
-                          : keyLabels(_keysOf(a)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _keysOf(a).isEmpty
+                              ? s.keysNone
+                              : _keyLabels(s, _keysOf(a)),
+                        ),
+                        if (_capturing == a) Text(s.keysPressKey),
+                      ],
                     ),
                     trailing: TextButton(
-                      onPressed: _saving ? null : () => _startCapture(a),
-                      child: Text(s.keysSet),
+                      onPressed: _saving
+                          ? null
+                          : (_capturing == a
+                                ? _stopCapture
+                                : () => _startCapture(a)),
+                      child: Text(_capturing == a ? s.actionCancel : s.keysSet),
                     ),
                   ),
                 if (_error case final String e)
@@ -305,6 +343,8 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                     key: const Key('keys-error'),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
+                if (_capturing != null && _error != null)
+                  Text(s.keysBindingUnchanged),
                 SwitchListTile(
                   key: const Key('keys-swap'),
                   contentPadding: EdgeInsets.zero,
@@ -363,16 +403,14 @@ class _KeyProfileEditorPageState extends State<KeyProfileEditorPage> {
                         ),
                 ),
                 const SizedBox(height: 8),
-                KeyTestArea(profile: _draft, sink: widget.testSink),
-                const SizedBox(height: 16),
                 FilledButton(
                   key: const Key('keys-save'),
-                  onPressed: _saving ? null : _save,
+                  onPressed: _saving || _capturing != null ? null : _save,
                   child: Text(s.actionSave),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );

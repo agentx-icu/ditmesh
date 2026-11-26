@@ -6,11 +6,15 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../../i18n/chat_error_messages.dart';
 import '../../../i18n/l10n_extension.dart';
+import '../../account/account_widgets.dart';
+import '../../common/app_bar_title.dart';
 import '../../common/fitting_hint.dart';
 import '../../responsive.dart';
 import '../chat_layout.dart';
 import '../conversation_timeline.dart';
 import '../local_message_sends.dart';
+import '../morse_pattern_text.dart';
+import '../playback_timeline.dart';
 import 'message_bookmarks.dart';
 
 enum _Sender { anyone, me, them }
@@ -200,95 +204,156 @@ class _MessageSearchScreenState extends State<MessageSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final field = LayoutBuilder(
+      builder: (context, box) => TextField(
+        controller: _query,
+        autofocus: true,
+        decoration: InputDecoration(
+          // "Search" when the full hint does not fit the bar.
+          hintText: fittingHint(
+            context,
+            s.chatSearchHint,
+            // Less the field's own horizontal content padding.
+            width: box.maxWidth - 32,
+          ),
+          border: InputBorder.none,
+        ),
+        onChanged: (_) => _changed(),
+        onSubmitted: (_) => unawaited(_search()),
+      ),
+    );
+    final filters = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: <Widget>[
+          for (final sender in _Sender.values)
+            if (sender != _Sender.them || widget.peerKey != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text(switch (sender) {
+                    _Sender.anyone => s.chatSearchAnyone,
+                    _Sender.me => s.chatSearchMe,
+                    _Sender.them => s.chatSearchThem,
+                  }),
+                  selected: _sender == sender,
+                  onSelected: (_) {
+                    setState(() => _sender = sender);
+                    unawaited(_search());
+                  },
+                ),
+              ),
+          if (_range case final range?)
+            InputChip(
+              avatar: const Icon(Icons.date_range, size: 18),
+              label: Text(
+                s.chatSearchDateRange(
+                  MaterialLocalizations.of(
+                    context,
+                  ).formatShortDate(range.start),
+                  MaterialLocalizations.of(context).formatShortDate(range.end),
+                ),
+              ),
+              onPressed: () => unawaited(_pickRange()),
+              onDeleted: _clearRange,
+              deleteButtonTooltipMessage: s.chatSearchClearDates,
+            )
+          else
+            ActionChip(
+              avatar: const Icon(Icons.date_range, size: 18),
+              label: Text(s.chatSearchAnyDate),
+              onPressed: () => unawaited(_pickRange()),
+            ),
+          const SizedBox(width: 6),
+          FilterChip(
+            label: Text(s.chatSearchBookmarked),
+            selected: _bookmarkedOnly,
+            onSelected: (v) {
+              setState(() => _bookmarkedOnly = v);
+              unawaited(_search());
+            },
+          ),
+        ],
+      ),
+    );
+    final wide = isMasterDetail(context);
+    final title = widget.service.conversations
+        .where((conversation) => conversation.id == widget.conversationId)
+        .firstOrNull
+        ?.title;
+    final scope = title == null || title.trim().isEmpty
+        ? s.chatSearchHint
+        : s.chatSearchConversationScope(title);
     return Scaffold(
       appBar: AppBar(
-        // As wide as the results below it, not the whole monitor.
-        title: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: kReadableMaxWidth),
-          child: LayoutBuilder(
-            builder: (context, box) => TextField(
-              controller: _query,
-              autofocus: true,
-              decoration: InputDecoration(
-                // "Search" when the full hint does not fit the bar.
-                hintText: fittingHint(
-                  context,
-                  s.chatSearchHint,
-                  // Less the field's own horizontal content padding.
-                  width: box.maxWidth - 32,
-                ),
-                border: InputBorder.none,
+        title: wide
+            ? AppBarTitle(s.chatSearchMessages)
+            : ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: kReadableMaxWidth),
+                child: field,
               ),
-              onChanged: (_) => _changed(),
-              onSubmitted: (_) => unawaited(_search()),
-            ),
-          ),
-        ),
       ),
-      body: ReadableBody(
-        child: Column(
-          children: <Widget>[
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Row(
-                children: <Widget>[
-                  for (final sender in _Sender.values)
-                    if (sender != _Sender.them || widget.peerKey != null)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
-                          label: Text(switch (sender) {
-                            _Sender.anyone => s.chatSearchAnyone,
-                            _Sender.me => s.chatSearchMe,
-                            _Sender.them => s.chatSearchThem,
-                          }),
-                          selected: _sender == sender,
-                          onSelected: (_) {
-                            setState(() => _sender = sender);
-                            unawaited(_search());
-                          },
-                        ),
-                      ),
-                  if (_range case final range?)
-                    InputChip(
-                      avatar: const Icon(Icons.date_range, size: 18),
-                      label: Text(
-                        s.chatSearchDateRange(
-                          MaterialLocalizations.of(
-                            context,
-                          ).formatShortDate(range.start),
-                          MaterialLocalizations.of(
-                            context,
-                          ).formatShortDate(range.end),
-                        ),
-                      ),
-                      onPressed: () => unawaited(_pickRange()),
-                      onDeleted: _clearRange,
-                      deleteButtonTooltipMessage: s.chatSearchClearDates,
-                    )
-                  else
-                    ActionChip(
-                      avatar: const Icon(Icons.date_range, size: 18),
-                      label: Text(s.chatSearchAnyDate),
-                      onPressed: () => unawaited(_pickRange()),
+      body: !wide
+          ? ReadableBody(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
+                    child: Text(
+                      scope,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                  const SizedBox(width: 6),
-                  FilterChip(
-                    label: Text(s.chatSearchBookmarked),
-                    selected: _bookmarkedOnly,
-                    onSelected: (v) {
-                      setState(() => _bookmarkedOnly = v);
-                      unawaited(_search());
-                    },
                   ),
+                  filters,
+                  Expanded(child: _list(context)),
                 ],
               ),
+            )
+          : ReadableBody(
+              maxWidth: 1400,
+              alignment: AlignmentDirectional.topStart,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AccountPanel(children: [field, filters]),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: Card(
+                              margin: EdgeInsets.zero,
+                              clipBehavior: Clip.antiAlias,
+                              child: _list(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    SizedBox(
+                      width: 264,
+                      child: AccountPanel(
+                        children: [
+                          Text(
+                            s.chatSearchMessages,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(scope),
+                          if (_results.isNotEmpty)
+                            Text(s.referenceEntryCount(_results.length)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            Expanded(child: _list(context)),
-          ],
-        ),
-      ),
     );
   }
 
@@ -381,7 +446,18 @@ class _ResultTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-      subtitle: Text('$who · ${formatMessageTime(context, message.timestamp)}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!hidden && !message.isLocation)
+            MorsePatternText(
+              PlaybackTimeline.patternFor(message.text),
+              completeCharacters: true,
+              maxLines: 1,
+            ),
+          Text('$who · ${formatMessageTime(context, message.timestamp)}'),
+        ],
+      ),
       trailing: hidden
           ? TextButton(onPressed: onReveal, child: Text(s.chatReveal))
           : null,

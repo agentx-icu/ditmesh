@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -361,6 +362,24 @@ void main() {
     expect(missing, findsOneWidget);
 
     picker.error = null;
+    picker.next = PickedRecording(
+      name: 'too-short.wav',
+      bytes: wavOf(Int16List(8000), sampleRate: 8000),
+    );
+    await tester.tap(find.byTooltip(en.workbenchRelink));
+    await waitForWorkbench(
+      tester,
+      find.text(en.workbenchRelinkTooShort('0:01.00', '0:02.00')),
+    );
+    expect(missing, findsOneWidget);
+    expect(
+      await tester.runAsync(
+        () => RecordingLibrary(dataDir).exists('media/recordings/rec_1.wav'),
+      ),
+      isFalse,
+    );
+
+    picker.next = PickedRecording(name: 'valid.wav', bytes: cwWav('SOS TEST'));
     await tester.tap(find.byTooltip(en.workbenchRelink));
     await waitForWorkbench(tester, missing, absent: true);
     expect(missing, findsNothing);
@@ -371,6 +390,70 @@ void main() {
       ),
       isTrue,
     );
+  });
+
+  testWidgets('cancelling clip deletion preserves the entry and audio', (
+    tester,
+  ) async {
+    final (t, _, _) = await pumpScreen(tester);
+    final audio = File(p.join(dataDir, 'media/recordings/rec_confirm.wav'));
+    await tester.runAsync(() async {
+      await audio.parent.create(recursive: true);
+      await audio.writeAsBytes(cwWav('E'));
+    });
+    var seeded = false;
+    unawaited(
+      t.controller
+          .upsertAudioMaterial(
+            AudioMaterial(
+              id: 'rec_confirm',
+              title: 'Friday net',
+              file: 'media/recordings/rec_confirm.wav',
+              originalName: 'friday.wav',
+              start: Duration.zero,
+              end: const Duration(milliseconds: 60),
+              sampleRate: 8000,
+              channels: 1,
+              createdAt: DateTime.utc(2026),
+            ),
+          )
+          .then((_) => seeded = true),
+    );
+    await waitForWorkbenchCondition(
+      tester,
+      () => seeded,
+      description: 'save the library fixture',
+    );
+    await tester.tap(find.byTooltip(en.workbenchLibrary));
+    await waitForWorkbench(tester, find.text('Friday net'));
+    await tester.tap(find.byTooltip(en.workbenchDelete));
+    final confirm = find.byType(AlertDialog);
+    await waitForWorkbench(tester, confirm);
+    expect(confirm, findsOneWidget);
+    expect(
+      find.descendant(of: confirm, matching: find.textContaining('Friday net')),
+      findsWidgets,
+    );
+    expect(
+      find.descendant(
+        of: confirm,
+        matching: find.textContaining('local recording'),
+      ),
+      findsWidgets,
+    );
+    await tester.tap(
+      find.descendant(of: confirm, matching: find.text(en.actionCancel)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Friday net'), findsOneWidget);
+    expect(await tester.runAsync(audio.exists), isTrue);
+    await waitForWorkbench(tester, find.byTooltip(en.workbenchDelete));
+    await tester.tap(find.byTooltip(en.workbenchDelete));
+    await waitForWorkbench(tester, confirm);
+    await tester.tap(find.byKey(const ValueKey('workbench-confirm-delete')));
+    await waitForWorkbench(tester, find.text(en.workbenchRemovedClipAndFile));
+    expect(find.text('Friday net'), findsNothing);
+    expect(await tester.runAsync(audio.exists), isFalse);
   });
 
   testWidgets('recovering an older index keeps its missing WAVs on disk', (
@@ -414,7 +497,13 @@ void main() {
       description: 'enable the library',
     );
     await tester.tap(library);
-    await waitForWorkbench(tester, find.text(en.workbenchLibraryEmpty));
+    await waitForWorkbench(
+      tester,
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text(en.workbenchLibraryEmpty),
+      ),
+    );
     expect(await tester.runAsync(audio.exists), isTrue);
   });
 
@@ -473,10 +562,19 @@ void main() {
     expect(saved.single.file, startsWith('media/recordings/rec_'));
 
     await tester.tap(find.byTooltip(en.workbenchLibrary));
-    await waitForWorkbench(tester, find.text('First call'));
-    await tester.tap(find.text('First call'));
+    final savedClip = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text('First call'),
+    );
+    await waitForWorkbench(tester, savedClip);
+    await tester.tap(savedClip);
     await waitForWorkbench(tester, find.byType(BottomSheet), absent: true);
-    expect(find.text('First call'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('workbench-loaded-name')))
+          .data,
+      'First call',
+    );
   });
 
   testWidgets('fits a 320 px phone with large text', (tester) async {

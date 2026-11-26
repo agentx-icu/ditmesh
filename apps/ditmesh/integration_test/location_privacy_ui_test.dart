@@ -41,6 +41,11 @@ void main() {
     await selectTab(tester, ShellTab.me);
     await scrollToAndTap(
       tester,
+      find.byKey(const Key('me-privacy-open')),
+      'privacy and permissions',
+    );
+    await scrollToAndTap(
+      tester,
       find.byKey(const Key('about-privacy')),
       'privacy',
     );
@@ -56,6 +61,7 @@ void main() {
       'permissions',
     );
     expect(find.text(s.permissionListText), findsOneWidget);
+    await _back(tester);
     await _back(tester);
 
     await selectTab(tester, ShellTab.chat);

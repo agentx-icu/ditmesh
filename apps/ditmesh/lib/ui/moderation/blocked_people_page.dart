@@ -12,7 +12,7 @@ import '../contacts/tox_id.dart';
 import '../responsive.dart';
 
 /// Me → Blocked people: everyone the open identity blocked, with Unblock.
-class BlockedPeoplePage extends StatefulWidget {
+class BlockedPeoplePage extends StatelessWidget {
   const BlockedPeoplePage({super.key});
 
   static Future<void> open(BuildContext context) => Navigator.of(
@@ -20,10 +20,22 @@ class BlockedPeoplePage extends StatefulWidget {
   ).push(MaterialPageRoute<void>(builder: (_) => const BlockedPeoplePage()));
 
   @override
-  State<BlockedPeoplePage> createState() => _BlockedPeoplePageState();
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: AppBarTitle(context.s.moderationBlockedTitle)),
+    body: const ReadableBody(
+      child: SingleChildScrollView(child: BlockedPeopleSection()),
+    ),
+  );
 }
 
-class _BlockedPeoplePageState extends State<BlockedPeoplePage> {
+class BlockedPeopleSection extends StatefulWidget {
+  const BlockedPeopleSection({super.key});
+
+  @override
+  State<BlockedPeopleSection> createState() => _BlockedPeopleSectionState();
+}
+
+class _BlockedPeopleSectionState extends State<BlockedPeopleSection> {
   final Set<String> _busy = <String>{};
 
   Future<void> _unblock(ChatService service, String key) async {
@@ -45,48 +57,44 @@ class _BlockedPeoplePageState extends State<BlockedPeoplePage> {
     final S s = context.s;
     final ThemeData theme = Theme.of(context);
     final ChatService service = context.read<ChatService>();
-    return Scaffold(
-      appBar: AppBar(title: AppBarTitle(s.moderationBlockedTitle)),
-      body: ReadableBody(
-        child: StreamBuilder<Set<String>>(
-          stream: service.blockedPeerChanges,
-          initialData: service.blockedPeers,
-          builder: (context, snapshot) {
-            final List<String> keys =
-                (snapshot.data ?? const <String>{}).toList()..sort();
-            return ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    s.moderationBlockedNote,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+    return StreamBuilder<Set<String>>(
+      stream: service.blockedPeerChanges,
+      initialData: service.blockedPeers,
+      builder: (context, snapshot) {
+        final List<String> keys = (snapshot.data ?? const <String>{}).toList()
+          ..sort();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                s.moderationBlockedNote,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                if (keys.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(s.moderationBlockedEmpty),
-                  ),
-                for (final String key in keys)
-                  ListTile(
-                    key: ValueKey<String>('blocked_$key'),
-                    leading: const CircleAvatar(child: Icon(Icons.block)),
-                    title: Text(shortKey(key, length: 16)),
-                    trailing: TextButton(
-                      onPressed: _busy.contains(key)
-                          ? null
-                          : () => unawaited(_unblock(service, key)),
-                      child: Text(s.moderationUnblock),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ),
+              ),
+            ),
+            if (keys.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(s.moderationBlockedEmpty),
+              ),
+            for (final String key in keys)
+              ListTile(
+                key: ValueKey<String>('blocked_$key'),
+                leading: const CircleAvatar(child: Icon(Icons.block)),
+                title: Text(shortKey(key, length: 16)),
+                trailing: TextButton(
+                  onPressed: _busy.contains(key)
+                      ? null
+                      : () => unawaited(_unblock(service, key)),
+                  child: Text(s.moderationUnblock),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

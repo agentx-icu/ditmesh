@@ -89,144 +89,227 @@ class _MeBody extends StatelessWidget {
     final desktop = context.watch<DesktopShellController?>();
     return AccountPageBody(
       maxWidth: 640,
-      children: [
-        IdentityCard(identity: identity),
-        _SectionHeader(s.accountSectionAccount),
-        ListTile(
-          leading: const Icon(Icons.edit_outlined),
-          title: Text(s.accountEditProfile),
-          subtitle: Text(s.accountEditProfileBody),
-          onTap: () => _push(context, EditProfilePage(identity: identity)),
-        ),
-        ListTile(
-          leading: const Icon(Icons.password),
-          title: Text(
-            identity.hasPassword
-                ? s.accountChangePassword
-                : s.accountSetPassword,
-          ),
-          onTap: () => _push(
-            context,
-            ChangePasswordPage(hasPassword: identity.hasPassword),
-          ),
-        ),
-        // The tile's own context anchors the iPad share popover.
-        Builder(
-          builder: (tile) => ListTile(
-            leading: const Icon(Icons.save_alt),
-            title: Text(s.accountExportBackup),
-            subtitle: Text(
-              context.read<IdentityService>() is EncryptedBackupService
-                  ? s.backupXMeSubtitle
-                  : s.accountExportBackupSubtitle,
+      aside: [
+        AccountPanel(
+          children: [
+            _SectionHeader(s.accountSectionTraining),
+            ListTile(
+              key: const ValueKey('me-location'),
+              leading: const Icon(Icons.location_on_outlined),
+              title: Text(s.locationServices),
+              subtitle: Text(s.locationServicesDesc),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => LocationSettingsPage.open(context),
             ),
-            onTap: () => exportBackupWithFeedback(context, anchor: tile),
-          ),
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: Text(s.accountTrainingDefaults),
+              subtitle: Text(s.accountTrainingDefaultsSubtitle),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(kTrainingSettingsRoute),
+            ),
+            ListTile(
+              key: const ValueKey('me-keys'),
+              leading: const Icon(Icons.keyboard_outlined),
+              title: Text(s.keysTitle),
+              subtitle: Text(s.keysMeSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => KeySetupPage.open(context),
+            ),
+            const LanguageSettingsTile(),
+            if (desktop != null && desktop.isActive)
+              SwitchListTile(
+                key: const ValueKey('desktop-close-to-tray'),
+                title: Text(s.desktopCloseToTray),
+                subtitle: Text(s.desktopCloseToTrayDescription),
+                secondary: const Icon(Icons.desktop_windows_outlined),
+                value: desktop.closeToTray,
+                onChanged: (value) => unawaited(desktop.setCloseToTray(value)),
+              ),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: Text(s.appearanceTitle),
+              subtitle: Text(styleLabel(s, context.watch<AppSettings>().style)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => AppearancePage.open(context),
+            ),
+            ListTile(
+              key: const ValueKey('me-notifications-open'),
+              leading: const Icon(Icons.notifications_outlined),
+              title: Text(s.accountSectionNotifications),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _push(context, const _NotificationSettingsPage()),
+            ),
+            ListTile(
+              key: const ValueKey('me-privacy-open'),
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(s.accountSectionPrivacy),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _push(context, const _PrivacySettingsPage()),
+            ),
+            _SectionHeader(s.accountSectionAbout),
+            const MeNotes(),
+            ListTile(
+              leading: const Icon(Icons.gavel_outlined),
+              title: Text(s.accountAboutLicence),
+              subtitle: Text(s.accountAboutLicenceValue),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: Text(s.accountAboutSource),
+              subtitle: const Text(kAboutSourceUrl),
+              trailing: const Icon(Icons.copy, size: 18),
+              onTap: () => copyToClipboard(
+                context,
+                kAboutSourceUrl,
+                confirmation: s.accountAboutSourceCopied,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.hub_outlined),
+              title: Text(s.accountAboutBackend),
+              subtitle: Text(backend),
+            ),
+            _SectionHeader(
+              s.accountSectionDanger,
+              color: theme.colorScheme.error,
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete_forever,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                s.accountDeleteIdentity,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              subtitle: Text(s.accountDeleteIdentitySubtitle),
+              onTap: () => _delete(context),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
-        ListTile(
-          key: const ValueKey('me-blocked-people'),
-          leading: const Icon(Icons.block),
-          title: Text(s.moderationBlockedTitle),
-          subtitle: Text(s.moderationBlockedSubtitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => BlockedPeoplePage.open(context),
-        ),
-        ListTile(
-          key: const ValueKey('me-connection-diagnostics'),
-          leading: const Icon(Icons.network_check),
-          title: Text(s.diagTitle),
-          subtitle: Text(s.diagOpenSubtitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => ConnectionDiagnosticsPage.open(context),
-        ),
-        ListTile(
-          key: const ValueKey('me-network-bootstrap'),
-          leading: const Icon(Icons.hub_outlined),
-          title: Text(s.bootstrapTitle),
-          subtitle: Text(s.bootstrapDescription),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => BootstrapPage.open(context),
-        ),
-        _SectionHeader(s.accountSectionTraining),
-        ListTile(
-          key: const ValueKey('me-location'),
-          leading: const Icon(Icons.location_on_outlined),
-          title: Text(s.locationServices),
-          subtitle: Text(s.locationServicesDesc),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => LocationSettingsPage.open(context),
-        ),
-        ListTile(
-          leading: const Icon(Icons.tune),
-          title: Text(s.accountTrainingDefaults),
-          subtitle: Text(s.accountTrainingDefaultsSubtitle),
-          onTap: () => Navigator.of(context).pushNamed(kTrainingSettingsRoute),
-        ),
-        ListTile(
-          key: const ValueKey('me-keys'),
-          leading: const Icon(Icons.keyboard_outlined),
-          title: Text(s.keysTitle),
-          subtitle: Text(s.keysMeSubtitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => KeySetupPage.open(context),
-        ),
-        const LanguageSettingsTile(),
-        if (desktop != null && desktop.isActive)
-          SwitchListTile(
-            key: const ValueKey('desktop-close-to-tray'),
-            title: Text(s.desktopCloseToTray),
-            subtitle: Text(s.desktopCloseToTrayDescription),
-            secondary: const Icon(Icons.desktop_windows_outlined),
-            value: desktop.closeToTray,
-            onChanged: (value) => unawaited(desktop.setCloseToTray(value)),
-          ),
-        ListTile(
-          leading: const Icon(Icons.palette_outlined),
-          title: Text(s.appearanceTitle),
-          subtitle: Text(styleLabel(s, context.watch<AppSettings>().style)),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => AppearancePage.open(context),
-        ),
-        NotificationSettingsSection(
-          header: _SectionHeader(s.accountSectionNotifications),
-        ),
-        _SectionHeader(s.accountSectionPrivacy),
-        const LegalLinksSection(),
-        _SectionHeader(s.accountSectionAbout),
-        const MeNotes(),
-        ListTile(
-          leading: const Icon(Icons.gavel_outlined),
-          title: Text(s.accountAboutLicence),
-          subtitle: Text(s.accountAboutLicenceValue),
-        ),
-        ListTile(
-          leading: const Icon(Icons.code),
-          title: Text(s.accountAboutSource),
-          subtitle: const Text(kAboutSourceUrl),
-          trailing: const Icon(Icons.copy, size: 18),
-          onTap: () => copyToClipboard(
-            context,
-            kAboutSourceUrl,
-            confirmation: s.accountAboutSourceCopied,
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.hub_outlined),
-          title: Text(s.accountAboutBackend),
-          subtitle: Text(backend),
-        ),
-        _SectionHeader(s.accountSectionDanger, color: theme.colorScheme.error),
-        ListTile(
-          leading: Icon(Icons.delete_forever, color: theme.colorScheme.error),
-          title: Text(
-            s.accountDeleteIdentity,
-            style: TextStyle(color: theme.colorScheme.error),
-          ),
-          subtitle: Text(s.accountDeleteIdentitySubtitle),
-          onTap: () => _delete(context),
-        ),
-        const SizedBox(height: 24),
       ],
+      children: [
+        AccountPanel(
+          children: [
+            IdentityCard(identity: identity),
+            _SectionHeader(s.accountSectionAccount),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(s.accountEditProfile),
+              subtitle: Text(s.accountEditProfileBody),
+              onTap: () => _push(context, EditProfilePage(identity: identity)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.password),
+              title: Text(
+                identity.hasPassword
+                    ? s.accountChangePassword
+                    : s.accountSetPassword,
+              ),
+              onTap: () => _push(
+                context,
+                ChangePasswordPage(hasPassword: identity.hasPassword),
+              ),
+            ),
+            // The tile's own context anchors the iPad share popover.
+            Builder(
+              builder: (tile) => ListTile(
+                leading: const Icon(Icons.save_alt),
+                title: Text(s.accountExportBackup),
+                subtitle: Text(
+                  context.read<IdentityService>() is EncryptedBackupService
+                      ? s.backupXMeSubtitle
+                      : s.accountExportBackupSubtitle,
+                ),
+                onTap: () => exportBackupWithFeedback(context, anchor: tile),
+              ),
+            ),
+            ListTile(
+              key: const ValueKey('me-blocked-people'),
+              leading: const Icon(Icons.block),
+              title: Text(s.moderationBlockedTitle),
+              subtitle: Text(s.moderationBlockedSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => BlockedPeoplePage.open(context),
+            ),
+            ListTile(
+              key: const ValueKey('me-connection-diagnostics'),
+              leading: const Icon(Icons.network_check),
+              title: Text(s.diagTitle),
+              subtitle: Text(s.diagOpenSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => ConnectionDiagnosticsPage.open(context),
+            ),
+            ListTile(
+              key: const ValueKey('me-network-bootstrap'),
+              leading: const Icon(Icons.hub_outlined),
+              title: Text(s.bootstrapTitle),
+              subtitle: Text(s.bootstrapDescription),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => BootstrapPage.open(context),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _NotificationSettingsPage extends StatelessWidget {
+  const _NotificationSettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    return Scaffold(
+      appBar: AppBar(title: AppBarTitle(s.accountSectionNotifications)),
+      body: const AccountPageBody(
+        maxWidth: 640,
+        aside: [
+          AccountPanel(children: [NotificationSystemStatus(showSummary: true)]),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              NotificationSettingsSection(
+                header: SizedBox.shrink(),
+                showSystemStatus: false,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrivacySettingsPage extends StatelessWidget {
+  const _PrivacySettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    return Scaffold(
+      appBar: AppBar(title: AppBarTitle(s.accountSectionPrivacy)),
+      body: AccountPageBody(
+        maxWidth: 640,
+        aside: [
+          AccountPanel(
+            children: [
+              Text(
+                s.moderationBlockedTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const BlockedPeopleSection(),
+            ],
+          ),
+        ],
+        children: const [
+          AccountPanel(children: [LegalLinksSection()]),
+        ],
+      ),
     );
   }
 }

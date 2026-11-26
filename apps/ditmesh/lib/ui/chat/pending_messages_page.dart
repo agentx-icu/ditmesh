@@ -5,11 +5,13 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
-import '../responsive.dart';
+import 'chat_scope.dart';
 import 'conversation_menu.dart';
 import 'local_message_sends.dart';
 import 'message_status_icon.dart';
+import 'restored_pending.dart';
 
 /// Reads the whole persisted history, including queue rows older than the
 /// conversation's loaded page. Live status events override a scan's snapshot.
@@ -187,6 +189,13 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
     final rows = _rows.values.toList()
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     final s = context.s;
+    final sections = [
+      (MessageStatus.pending, s.messageStatusPending),
+      (MessageStatus.sending, s.messageStatusSending),
+      (MessageStatus.failed, s.messageStatusFailed),
+    ];
+    final title = Theme.of(context).textTheme.titleMedium;
+    final hasArchive = maybeIdentityService(context) != null;
     return Scaffold(
       appBar: AppBar(
         title: AppBarTitle(s.pendingMessagesTitle),
@@ -198,30 +207,34 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
           ),
         ],
       ),
-      // One scrolling list, explanation included: above an `Expanded` list
-      // the explanation and an error left no room on a landscape phone at
-      // large text.
-      body: ReadableBody(
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(s.pendingMessagesExplanation),
-            ),
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(describeChatError(s, _error!)),
+      body: AccountPageBody(
+        maxWidth: 640,
+        aside: [
+          AccountPanel(
+            children: [
+              Text(s.pendingMessagesExplanation),
+              if (hasArchive) const RestoredPendingBanner(),
+            ],
+          ),
+        ],
+        children: [
+          if (_loading) const LinearProgressIndicator(),
+          if (_error case final error?)
+            AccountPanel(children: [Text(describeChatError(s, error))]),
+          if (rows.isEmpty && !_loading && _error == null)
+            AccountPanel(children: [Text(s.pendingMessagesEmpty)]),
+          for (final (status, label) in sections)
+            if (rows.any((message) => message.status == status))
+              AccountPanel(
+                children: [
+                  Text(label, style: title),
+                  if (status == MessageStatus.sending)
+                    Text(s.pendingSendingUncancellable),
+                  for (final m in rows.where((m) => m.status == status))
+                    _row(context, m),
+                ],
               ),
-            if (rows.isEmpty && !_loading && _error == null)
-              Padding(
-                padding: const EdgeInsets.all(32),
-                child: Center(child: Text(s.pendingMessagesEmpty)),
-              ),
-            for (final m in rows) _row(context, m),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -237,7 +250,9 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
         overflow: TextOverflow.ellipsis,
       ),
       leading: MessageStatusIcon(m.status, message: m),
-      trailing: !widget.service.supportsSendControl
+      trailing:
+          !widget.service.supportsSendControl ||
+              m.status == MessageStatus.sending
           ? null
           : IconButton(
               key: ValueKey(
@@ -248,14 +263,12 @@ class _PendingMessagesPageState extends State<PendingMessagesPage> {
               tooltip: m.status == MessageStatus.failed
                   ? s.chatRetrySend
                   : s.chatCancelSend,
-              onPressed: m.status == MessageStatus.sending
-                  ? null
-                  : () => ConversationMenu.sendControl(
-                      context,
-                      widget.service,
-                      m,
-                      retry: m.status == MessageStatus.failed,
-                    ),
+              onPressed: () => ConversationMenu.sendControl(
+                context,
+                widget.service,
+                m,
+                retry: m.status == MessageStatus.failed,
+              ),
               icon: Icon(
                 m.status == MessageStatus.failed ? Icons.refresh : Icons.close,
               ),

@@ -5,6 +5,7 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../chat/chat_layout.dart';
 import '../chat/chat_scope.dart';
 import '../chat/conversation_route.dart';
@@ -13,6 +14,7 @@ import '../chat/conversation_target.dart';
 import '../common/app_bar_title.dart';
 import '../groups/create_group_sheet.dart';
 import '../groups/group_join_feedback.dart';
+import '../groups/group_invites_page.dart';
 import '../groups/group_list.dart';
 import '../groups/join_group_sheet.dart';
 import '../shell/shell_router.dart';
@@ -39,6 +41,7 @@ class GroupsPage extends StatefulWidget {
 class _GroupsPageState extends State<GroupsPage> {
   ConversationTarget? _selected;
   bool _selectedWasListed = false;
+  bool _joinInline = false;
   final DetailPaneKey _detailKey = DetailPaneKey();
   StreamSubscription<ConversationTarget>? _shellConversations;
 
@@ -130,11 +133,36 @@ class _GroupsPageState extends State<GroupsPage> {
       appBar: AppBar(
         title: AppBarTitle(GroupsPage.title(s)),
         actions: [
-          IconButton(
-            tooltip: s.chatJoinGroup,
-            icon: const Icon(Icons.login),
-            onPressed: () => unawaited(_join(context, service)),
+          StreamBuilder<List<GroupInvite>>(
+            stream: service.groupInviteChanges,
+            initialData: service.groupInvites,
+            builder: (context, snapshot) {
+              final count = snapshot.data?.length ?? 0;
+              if (count == 0) return const SizedBox.shrink();
+              return IconButton(
+                key: const ValueKey('groups-invites-open'),
+                tooltip: s.chatGroupInvitesCount(count),
+                onPressed: () =>
+                    Navigator.of(context).push(GroupInvitesPage.route(service)),
+                icon: Badge(
+                  label: Text('$count'),
+                  child: const Icon(Icons.mail_outline),
+                ),
+              );
+            },
           ),
+          if (!twoPane || _selected != null)
+            IconButton(
+              tooltip: s.chatJoinGroup,
+              icon: const Icon(Icons.login),
+              onPressed: () {
+                if (twoPane) {
+                  unawaited(_join(context, service));
+                } else {
+                  setState(() => _joinInline = !_joinInline);
+                }
+              },
+            ),
           IconButton(
             tooltip: s.chatCreateGroup,
             icon: const Icon(Icons.group_add_outlined),
@@ -182,6 +210,22 @@ class _GroupsPageState extends State<GroupsPage> {
                   service: service,
                   selectedId: _selected?.peerId,
                   onOpen: (g) => _open(context, g),
+                  footer: !twoPane && _joinInline
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                          child: AccountPanel(
+                            children: [
+                              JoinGroupForm(
+                                service: service,
+                                onJoined: () {
+                                  setState(() => _joinInline = false);
+                                  showSnack(context, s.chatJoinRequested);
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
                 ),
               ),
             ],
@@ -204,7 +248,25 @@ class _GroupsPageState extends State<GroupsPage> {
     return GroupJoinFeedback(
       service: service,
       child: twoPane
-          ? MasterDetail(master: list, detail: detail)
+          ? MasterDetail(
+              master: list,
+              detail:
+                  detail ??
+                  AccountPageBody(
+                    maxWidth: 640,
+                    children: [
+                      AccountPanel(
+                        children: [
+                          JoinGroupForm(
+                            service: service,
+                            onJoined: () =>
+                                showSnack(context, s.chatJoinRequested),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+            )
           : singlePaneLayout(list: list, parkedDetail: parked ? detail : null),
     );
   }

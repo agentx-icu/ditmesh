@@ -13,7 +13,6 @@ import '../diagnostics/connection_diagnostics_page.dart';
 import '../groups/group_members_sheet.dart';
 import '../groups/practice/group_practice_page.dart';
 import '../moderation/block_actions.dart';
-import '../responsive.dart';
 import 'chat_layout.dart';
 import 'conversation_actions.dart';
 import 'conversation_location_actions.dart';
@@ -35,6 +34,7 @@ import 'conversation_playback_preferences.dart';
 import 'first_contact_card.dart';
 
 part 'conversation_screen_menu.dart';
+part 'conversation_screen_view.dart';
 
 /// One conversation (c2c or group): history + live events, Morse bubbles,
 /// training mode, auto-play, playback settings and the keyed input.
@@ -398,48 +398,7 @@ class _ConversationScreenState extends State<ConversationScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final settings = ConversationPlaybackPreferences.settingsFor(context, _id);
-    _autoPlay.update(context, settings: settings);
-    final Group? group = _group();
-    final bool conference = group?.kind == GroupKind.conference;
-
-    return Scaffold(
-      appBar: ConversationAppBar(
-        service: _service,
-        target: widget.target,
-        settings: settings,
-        embedded: widget.embedded,
-        onMenu: (a) => unawaited(_onMenu(a)),
-      ),
-      // Landscape phones (~320-430 px tall) and large text make the keyed
-      // composer taller than the body; cap it and let it scroll instead.
-      // On a wide monitor the timeline and the key pad stop at a width a
-      // reader (and a keying hand) can span.
-      body: ReadableBody(
-        maxWidth: 960,
-        child: LayoutBuilder(
-          builder: (context, box) => Column(
-            children: [
-              if (conference) const ConferenceNote(),
-              Expanded(child: _buildList(settings)),
-              ConversationComposer(
-                service: _service,
-                conversationId: _id,
-                playback: _playback,
-                settings: settings,
-                maxHeight: box.maxHeight * .75,
-                onSent: (_) => _showLatest(),
-                guidance: widget.target.isSelf && _messages.isNotEmpty
-                    ? FirstContactCard(service: _service)
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _buildRoom(context);
 
   Widget _buildList(MorsePlaybackSettings settings) {
     final Object? error = _error;
@@ -481,7 +440,7 @@ class _ConversationScreenState extends State<ConversationScreen>
         isGroup: _isGroup,
         revealed: _revealed.contains(m.id),
         onReveal: () => setState(() => _revealed.add(m.id)),
-        fallbackTitle: widget.target.title,
+        conversationTitle: conversationTitleText(context.s, widget.target),
         service: _service,
         isSelf: widget.target.isSelf,
         bookmarked: _bookmarkStore?.contains(_id, m.id) ?? false,

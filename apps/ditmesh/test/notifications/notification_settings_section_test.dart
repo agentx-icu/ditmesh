@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ditmesh/l10n/generated/s.dart';
@@ -89,5 +88,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.permissionRequests, 1);
     expect(find.text(en.accountNotificationsDenied), findsOneWidget);
+  });
+
+  testWidgets('a confirmed grant replaces the permission request', (
+    tester,
+  ) async {
+    api.permissionGranted = false;
+    api.grantOnRequest = true;
+    await pump(tester);
+    await tester.tap(find.text(en.accountNotificationsAllow));
+    await tester.pumpAndSettle();
+    expect(find.text(en.accountNotificationsAllow), findsNothing);
+    expect(find.text(en.accountNotificationsPermitted), findsOneWidget);
   });
 }

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../i18n/l10n_extension.dart';
 import '../../nearby/nearby_controller.dart';
 import '../../nearby/nearby_service.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../contacts/friend_request_inbox.dart';
 import 'location_settings_page.dart';
@@ -81,64 +82,70 @@ class _NearbyPageState extends State<NearbyPage> {
             ),
         ],
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: ListView(
-              key: const Key('nearby_peer_list'),
-              padding: const EdgeInsets.all(16),
-              children: [
-                FriendRequestInbox(service: chat),
-                if (!enabled || nearby == null) ...[
-                  const SizedBox(height: 32),
-                  Icon(
-                    enabled ? Icons.cloud_off : Icons.location_off_outlined,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    enabled ? s.nearbyUnavailable : s.nearbyOff,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: FilledButton(
-                      key: const Key('nearby-open-settings'),
-                      onPressed: () => LocationSettingsPage.open(context),
-                      child: Text(s.actionSettings),
-                    ),
-                  ),
-                ] else ...[
-                  if (nearby.status == NearbyStatus.locating ||
-                      nearby.status == NearbyStatus.joining)
-                    const LinearProgressIndicator(),
-                  const SizedBox(height: 12),
-                  Text(status),
-                  if (nearby.status == NearbyStatus.noLocation)
-                    TextButton(
-                      onPressed: () => LocationSettingsPage.open(context),
-                      child: Text(s.actionSettings),
-                    ),
-                  const SizedBox(height: 16),
-                  for (final intent in incoming)
-                    NearbyIncomingCard(
-                      key: ValueKey(intent.nonceHex),
-                      intent: intent,
-                      nearby: nearby,
-                      service: chat,
-                    ),
-                  for (final peer in peers)
-                    NearbyPeerCard(
-                      key: ValueKey(peer.skHex),
-                      peer: peer,
-                      nearby: nearby,
-                    ),
-                ],
-              ],
-            ),
+      body: AccountPageBody(
+        key: const Key('nearby_peer_list'),
+        maxWidth: 720,
+        aside: [
+          AccountPanel(
+            children: [
+              Text(
+                s.nearbyPrivacyTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(s.nearbyPrivacyBody),
+            ],
           ),
-        ),
+        ],
+        children: [
+          FriendRequestInbox(service: chat),
+          AccountPanel(
+            children: [
+              if (!enabled || nearby == null) ...[
+                Icon(
+                  enabled ? Icons.cloud_off : Icons.location_off_outlined,
+                  size: 40,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  enabled ? s.nearbyUnavailable : s.nearbyOff,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: FilledButton(
+                    key: const Key('nearby-open-settings'),
+                    onPressed: () => LocationSettingsPage.open(context),
+                    child: Text(s.actionSettings),
+                  ),
+                ),
+              ] else ...[
+                if (nearby.status == NearbyStatus.locating ||
+                    nearby.status == NearbyStatus.joining)
+                  const LinearProgressIndicator(),
+                Text(status, style: Theme.of(context).textTheme.titleMedium),
+                if (nearby.status == NearbyStatus.noLocation)
+                  TextButton(
+                    onPressed: () => LocationSettingsPage.open(context),
+                    child: Text(s.actionSettings),
+                  ),
+                for (final intent in incoming)
+                  NearbyIncomingCard(
+                    key: ValueKey(intent.nonceHex),
+                    intent: intent,
+                    nearby: nearby,
+                    service: chat,
+                  ),
+                for (final peer in peers)
+                  NearbyPeerCard(
+                    key: ValueKey(peer.skHex),
+                    peer: peer,
+                    nearby: nearby,
+                  ),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -22,6 +22,7 @@ Future<(ChatHarness, TestTraining)> _pump(
   WidgetTester tester, {
   bool listenOnly = false,
   bool autoPlay = false,
+  bool group = false,
 }) async {
   final t = await TestTraining.create(
     progress: TrainerProgress(currentLesson: 40),
@@ -29,6 +30,19 @@ Future<(ChatHarness, TestTraining)> _pump(
   late final TrainingControllerHost host;
   final h = await pumpChat(tester, (h) {
     h.addAnn();
+    var target = _ann();
+    if (group) {
+      final net = h.service.addFakeGroup(
+        const Group(id: 'tox_7', name: 'Weekend net', kind: GroupKind.group),
+      );
+      target = ConversationTarget.fromGroup(net);
+      h.service.receiveMessage(
+        target.id,
+        'CQ CQ DE ANN',
+        senderId: kPeerKey,
+        senderName: 'Ann',
+      );
+    }
     h.settings
       ..listenOnly = listenOnly
       ..autoPlay = autoPlay;
@@ -41,7 +55,7 @@ Future<(ChatHarness, TestTraining)> _pump(
         Provider<TrainingControllerHost?>.value(value: host),
         Provider<LearnPlaybackFactory>.value(value: FakeLearnPlaybackFactory()),
       ],
-      child: ConversationScreen(target: _ann()),
+      child: ConversationScreen(target: target),
     );
   });
   addTearDown(host.dispose);
@@ -56,6 +70,15 @@ Future<void> _openMenu(WidgetTester tester, String item) async {
 }
 
 void main() {
+  testWidgets('group message practice names the conversation, not sender', (
+    tester,
+  ) async {
+    await _pump(tester, group: true);
+    await _openMenu(tester, s.chatPracticeMessage);
+    expect(find.text('From conversation: Weekend net'), findsOneWidget);
+    expect(find.text('CQ CQ DE ANN'), findsNothing);
+  });
+
   testWidgets('listen-only hides text and dots/dashes, also for semantics', (
     tester,
   ) async {
@@ -78,6 +101,12 @@ void main() {
     final before = await h.service.loadHistory('c2c_$kPeerKey');
     await _openMenu(tester, s.chatPracticeMessage);
     expect(find.text(s.chatPracticeTitle), findsOneWidget);
+    expect(find.text('From conversation: Ann'), findsOneWidget);
+    expect(
+      find.text('CQ CQ DE ANN'),
+      findsNothing,
+      reason: 'practice origin must not reveal the answer',
+    );
     // Auto-play is paused while practising.
     expect(h.settings.autoPlay, isFalse);
     await tester.tap(find.byKey(const ValueKey('chat-practice-play')));

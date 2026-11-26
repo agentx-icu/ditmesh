@@ -12,6 +12,7 @@ class MorsePatternText extends StatelessWidget {
     this.maxLines,
     this.color,
     this.highlightColor,
+    this.completeCharacters = false,
   });
 
   final String pattern;
@@ -24,6 +25,9 @@ class MorsePatternText extends StatelessWidget {
   final Color? color;
   final Color? highlightColor;
 
+  /// A one-line list preview must never show half of a Morse character.
+  final bool completeCharacters;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -35,6 +39,37 @@ class MorsePatternText extends StatelessWidget {
           color: color ?? theme.colorScheme.onSurfaceVariant,
         );
     final int? active = activeMark;
+    if (completeCharacters && (active == null || active < 0)) {
+      return LayoutBuilder(
+        builder: (context, bounds) {
+          final painter = TextPainter(
+            textDirection: Directionality.of(context),
+            textScaler: MediaQuery.textScalerOf(context),
+            maxLines: 1,
+          );
+          bool fits(String value) {
+            painter.text = TextSpan(text: value, style: base);
+            painter.layout();
+            return painter.width <= bounds.maxWidth;
+          }
+
+          var display = pattern;
+          if (!fits(pattern)) {
+            display = '…';
+            var prefix = '';
+            for (final token in pattern.split(' ')) {
+              if (token.isEmpty) continue;
+              final candidate = prefix.isEmpty ? token : '$prefix $token';
+              if (!fits('$candidate …')) break;
+              prefix = candidate;
+              if (token != '/') display = '$prefix …';
+            }
+          }
+          painter.dispose();
+          return Text(display, style: base, maxLines: 1);
+        },
+      );
+    }
     if (active == null || active < 0) {
       return Text(
         pattern,

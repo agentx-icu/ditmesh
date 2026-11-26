@@ -29,12 +29,12 @@ abstract final class DitmeshTheme {
     final dark = brightness == Brightness.dark;
     final (canvas, surface, primary, text) = switch ((style, dark)) {
       (UiStyle.white, false) => (
+        0xFFF2F7F6,
         0xFFFFFFFF,
-        0xFFF5F6F8,
-        0xFF273343,
-        0xFF1D2632,
+        0xFF126A5B,
+        0xFF162E28,
       ),
-      (UiStyle.white, true) => (0xFF151719, 0xFF22252A, 0xFFDDE4EE, 0xFFF2F4F6),
+      (UiStyle.white, true) => (0xFF101C19, 0xFF1B2E28, 0xFF85DCBF, 0xFFE9F5EF),
       (UiStyle.classic, false) => (
         0xFFF6EEDD,
         0xFFFFF8E9,
@@ -83,7 +83,7 @@ abstract final class DitmeshTheme {
             dark ? 0.22 : 0.13,
           ),
           onPrimaryContainer: Color(text),
-          surface: Color(canvas),
+          surface: Color(style == UiStyle.white ? surface : canvas),
           onSurface: Color(text),
           onSurfaceVariant: Color.lerp(
             Color(text),
@@ -95,7 +95,7 @@ abstract final class DitmeshTheme {
                 : 0.27,
           ),
           surfaceContainerLowest: Color(canvas),
-          surfaceContainerLow: Color(surface),
+          surfaceContainerLow: Color(style == UiStyle.white ? canvas : surface),
           surfaceContainer: Color(surface),
           surfaceContainerHigh: raisedSurface,
           surfaceContainerHighest: Color.lerp(
@@ -118,6 +118,13 @@ abstract final class DitmeshTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: Color(canvas),
+      fontFamily: 'Roboto',
+      fontFamilyFallback: const [
+        'PingFang SC',
+        'Noto Sans CJK SC',
+        'Microsoft YaHei',
+        'Arial Unicode MS',
+      ],
       visualDensity: VisualDensity.adaptivePlatformDensity,
       extensions: [tokens],
       pageTransitionsTheme: kSafeSidesPageTransitions,
@@ -132,7 +139,7 @@ abstract final class DitmeshTheme {
         ),
       ),
       appBarTheme: AppBarThemeData(
-        backgroundColor: Color(canvas),
+        backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -160,12 +167,12 @@ abstract final class DitmeshTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
-        backgroundColor: Color(surface),
+        backgroundColor: scheme.surfaceContainerLow,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: control,
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: Color(surface),
+        backgroundColor: scheme.surfaceContainerLow,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: control,
         labelType: NavigationRailLabelType.all,

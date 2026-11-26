@@ -56,52 +56,65 @@ class _UnlockPageState extends State<UnlockPage> {
     final theme = Theme.of(context);
     return Scaffold(
       body: AccountPageBody(
-        children: [
-          const SizedBox(height: 48),
-          Icon(Icons.lock_outline, size: 56, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
-          Text(
-            s.accountUnlockTitle,
-            style: theme.textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            s.accountUnlockBody,
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          PasswordField(
-            controller: _password,
-            label: s.accountPassword,
-            errorText: _error,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _unlock(),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _busy || _password.text.isEmpty ? null : _unlock,
-            child: Text(_busy ? s.accountUnlocking : s.accountUnlockButton),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const RestoreBackupPage(),
+        aside: [
+          AccountPanel(
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RestoreBackupPage(),
+                  ),
+                ),
+                child: Text(s.accountUnlockRestoreInstead),
               ),
-            ),
-            child: Text(s.accountUnlockRestoreInstead),
+              TextButton.icon(
+                key: const ValueKey('onboarding-network-bootstrap'),
+                onPressed: () => BootstrapPage.open(context),
+                icon: const Icon(Icons.hub_outlined),
+                label: Text(s.bootstrapTitle),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          TextButton.icon(
-            key: const ValueKey('onboarding-network-bootstrap'),
-            onPressed: () => BootstrapPage.open(context),
-            icon: const Icon(Icons.hub_outlined),
-            label: Text(s.bootstrapTitle),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              const SizedBox(height: 48),
+              Icon(
+                Icons.lock_outline,
+                size: 56,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                s.accountUnlockTitle,
+                style: theme.textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.accountUnlockBody,
+                style: theme.textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              PasswordField(
+                controller: _password,
+                label: s.accountPassword,
+                errorText: _error,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _unlock(),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _busy || _password.text.isEmpty ? null : _unlock,
+                child: Text(_busy ? s.accountUnlocking : s.accountUnlockButton),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );

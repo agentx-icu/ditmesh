@@ -221,9 +221,7 @@ class _FriendsPart {
       nextByKey[key] = FriendRequest(
         publicKey: key,
         message: wording,
-        receivedAt: old?.message == wording
-            ? old!.receivedAt
-            : DateTime.now(),
+        receivedAt: old?.message == wording ? old!.receivedAt : DateTime.now(),
       );
     }
     final fingerprints =
@@ -347,17 +345,71 @@ class _FriendsPart {
   Future<void> reject(FfiChatService svc, String publicKey) =>
       _serializeRequests(svc, () => _reject(svc, publicKey));
 
-  Future<void> _reject(FfiChatService svc, String publicKey) async {
+  Future<List<String>> rejectedKeys(
+    FfiChatService svc, {
+    bool sealLegacy = false,
+  }) async {
+    final fingerprints =
+        await _owner._prefs.getStringList('dismissed_friend_applications') ??
+        [];
+    _owner._ensureCurrent(svc);
+    final dismissed = await _owner._requestStore.dismissedKeys(
+      fingerprints,
+      sealLegacy: sealLegacy,
+    );
+    _owner._ensureCurrent(svc);
+    return dismissed.toList().reversed.toList(growable: false);
+  }
+
+  Future<void> allow(FfiChatService svc, String publicKey) =>
+      _serializeRequests(svc, () async {
+        final key = ConversationIds.normalizeKey(publicKey);
+        final fingerprints =
+            await _owner._prefs.getStringList(
+              'dismissed_friend_applications',
+            ) ??
+            [];
+        _owner._ensureCurrent(svc);
+        final store = _owner._requestStore;
+        final rejected = await store.dismissedKeys(fingerprints);
+        if (!rejected.contains(key)) return;
+        _owner._ensureCurrent(svc);
+        // Drop the SDK wording fingerprint as well as our sender-wide filter.
+        await svc.clearDismissedApplicationsAfterAccept(key);
+        _owner._ensureCurrent(svc);
+        await store.allow(key, fingerprints);
+        _owner._ensureCurrent(svc);
+        await _refreshRequests(svc);
+      });
+
+  Future<void> discardBlockedRequest(FfiChatService svc, String publicKey) =>
+      _serializeRequests(
+        svc,
+        () => _reject(svc, publicKey, rememberSender: false),
+      );
+
+  Future<void> _reject(
+    FfiChatService svc,
+    String publicKey, {
+    bool rememberSender = true,
+  }) async {
     final key = ConversationIds.normalizeKey(publicKey);
     final store = _owner._requestStore;
     // Keyed by sender alone: rewording the request must not bring a
     // rejected sender back into the inbox.
-    await store.dismiss(
-      key,
-      tim2toxFingerprints:
-          await _owner._prefs.getStringList('dismissed_friend_applications') ??
-          const [],
-    );
+    if (rememberSender) {
+      await store.dismiss(
+        key,
+        tim2toxFingerprints:
+            await _owner._prefs.getStringList(
+              'dismissed_friend_applications',
+            ) ??
+            const [],
+      );
+    } else {
+      // Complete legacy migration before native dismissal adds a fingerprint.
+      await rejectedKeys(svc, sealLegacy: true);
+    }
     _owner._ensureCurrent(svc);
     await svc.refuseFriendApplication(key);
     _owner._ensureCurrent(svc);

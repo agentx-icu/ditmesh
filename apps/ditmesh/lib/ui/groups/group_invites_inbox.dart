@@ -5,7 +5,6 @@ import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/chat_error_messages.dart';
 import '../../i18n/l10n_extension.dart';
-import '../chat/chat_layout.dart';
 import '../chat/chat_session_epoch.dart';
 import '../contacts/tox_id.dart';
 import '../moderation/block_actions.dart';
@@ -27,6 +26,7 @@ class GroupInvitesInbox extends StatefulWidget {
 
 class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
   final Set<String> _busy = <String>{};
+  final Map<String, ({Object reason, bool? withPassword})> _errors = {};
 
   /// Bumped when the service or its session changes: an answer of the old
   /// one finishing later must not release the new one's busy marker.
@@ -56,6 +56,7 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
   void _forgetSession() {
     _needsPassword.clear();
     _busy.clear();
+    _errors.clear();
     _busyGeneration++;
   }
 
@@ -84,7 +85,9 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
       if (id == null || r.reason != GroupJoinRefusalReason.invalidPassword) {
         return;
       }
-      if (mounted) setState(() => _needsPassword.add(id));
+      if (mounted) {
+        setState(() => _needsPassword.add(id));
+      }
     });
   }
 
@@ -106,7 +109,7 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
   }
 
   Future<void> _menu(GroupInvite i, String action) => switch (action) {
-    'password' => _run(i.inviteId, () => _accept(i, withPassword: true)),
+    'password' => _answer(i, withPassword: true),
     'reject' => _run(i.inviteId, () async {
       await service.rejectGroupInvite(i.inviteId);
       _needsPassword.remove(i.inviteId);
@@ -123,15 +126,27 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
     ),
   };
 
-  Future<void> _run(String id, Future<void> Function() op) async {
+  Future<void> _answer(GroupInvite invite, {required bool withPassword}) =>
+      _run(
+        invite.inviteId,
+        () => _accept(invite, withPassword: withPassword),
+        withPassword: withPassword,
+      );
+
+  Future<void> _run(
+    String id,
+    Future<void> Function() op, {
+    bool? withPassword,
+  }) async {
     if (!_busy.add(id)) return;
     final int generation = _busyGeneration;
-    setState(() {});
-    final S s = context.s;
+    setState(() => _errors.remove(id));
     try {
       await op();
     } on Object catch (e) {
-      if (mounted) showSnack(context, describeChatError(s, e));
+      if (mounted && generation == _busyGeneration) {
+        setState(() => _errors[id] = (reason: e, withPassword: withPassword));
+      }
     } finally {
       if (mounted && generation == _busyGeneration) {
         setState(() => _busy.remove(id));
@@ -162,14 +177,20 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
                 ),
               ),
             ),
-            for (final GroupInvite i in invites)
+            for (final GroupInvite i in invites) ...[
               ListTile(
                 key: ValueKey<String>('invite_${i.inviteId}'),
                 leading: const CircleAvatar(child: Icon(Icons.group_add)),
                 title: Text(i.groupName),
                 subtitle: Text(
                   [
-                    s.chatInvitedByName(shortKey(i.fromPublicKey, length: 12)),
+                    s.chatInvitedByName(
+                      service.friends
+                              .where((f) => f.publicKey == i.fromPublicKey)
+                              .firstOrNull
+                              ?.displayName ??
+                          shortKey(i.fromPublicKey, length: 12),
+                    ),
                     if (i.kind == GroupKind.conference) s.chatConferenceBadge,
                   ].join(' · '),
                   maxLines: 1,
@@ -201,16 +222,17 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
                     IconButton.filled(
                       tooltip: s.chatAccept,
                       icon: const Icon(Icons.check),
+                      style: IconButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                      ),
                       onPressed: _busy.contains(i.inviteId)
                           ? null
                           : () => unawaited(
-                              _run(
-                                i.inviteId,
-                                () => _accept(
-                                  i,
-                                  withPassword: _needsPassword.contains(
-                                    i.inviteId,
-                                  ),
+                              _answer(
+                                i,
+                                withPassword: _needsPassword.contains(
+                                  i.inviteId,
                                 ),
                               ),
                             ),
@@ -218,10 +240,84 @@ class _GroupInvitesInboxState extends State<GroupInvitesInbox> {
                   ],
                 ),
               ),
+              if (_errors[i.inviteId] case final error?)
+                _InviteFailure(
+                  key: ValueKey('invite-error-${i.inviteId}'),
+                  label: switch (error.reason) {
+                    ChatException(code: 'not_connected') =>
+                      s.groupInviteReconnectHint,
+                    _ => describeChatError(s, error.reason),
+                  },
+                  retry: error.withPassword == null
+                      ? null
+                      : () => unawaited(
+                          _answer(
+                            i,
+                            withPassword:
+                                error.withPassword! ||
+                                _needsPassword.contains(i.inviteId),
+                          ),
+                        ),
+                ),
+            ],
             const Divider(),
           ],
         );
       },
+    );
+  }
+}
+
+class _InviteFailure extends StatelessWidget {
+  const _InviteFailure({super.key, required this.label, this.retry});
+
+  final String label;
+  final VoidCallback? retry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Semantics(
+        liveRegion: true,
+        child: Material(
+          borderRadius: BorderRadius.circular(8),
+          color: colors.errorContainer,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.error_outline,
+                  color: colors.onErrorContainer,
+                ),
+                title: Text(
+                  retry == null ? label : context.s.groupInviteAcceptanceFailed,
+                  style: TextStyle(color: colors.onErrorContainer),
+                ),
+                subtitle: retry == null
+                    ? null
+                    : Text(
+                        label,
+                        style: TextStyle(color: colors.onErrorContainer),
+                      ),
+              ),
+              if (retry != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
+                  child: OutlinedButton(
+                    onPressed: retry,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.onErrorContainer,
+                    ),
+                    child: Text(context.s.groupInviteRetryAccept),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

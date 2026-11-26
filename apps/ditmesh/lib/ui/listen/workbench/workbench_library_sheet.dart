@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:morse_dsp/morse_dsp.dart';
 
 import '../../../i18n/l10n_extension.dart';
 import '../../../training/audio_material_store.dart';
@@ -95,6 +96,7 @@ Future<void> showWorkbenchLibrary(
   required TrainingController training,
   required RecordingPicker? picker,
   required VoidCallback onFailure,
+  required VoidCallback onChanged,
 }) => showModalBottomSheet<void>(
   context: context,
   showDragHandle: true,
@@ -104,6 +106,7 @@ Future<void> showWorkbenchLibrary(
     training: training,
     picker: picker,
     onFailure: onFailure,
+    onChanged: onChanged,
   ),
 );
 
@@ -113,12 +116,14 @@ class _LibrarySheet extends StatefulWidget {
     required this.training,
     required this.picker,
     required this.onFailure,
+    required this.onChanged,
   });
 
   final WorkbenchController controller;
   final TrainingController training;
   final RecordingPicker? picker;
   final VoidCallback onFailure;
+  final VoidCallback onChanged;
 
   @override
   State<_LibrarySheet> createState() => _LibrarySheetState();
@@ -128,7 +133,9 @@ class _LibrarySheetState extends State<_LibrarySheet> {
   List<(AudioMaterial, bool)>? _items;
   bool _loadFailed = false;
   bool _opening = false;
+  bool _deleting = false;
   String? _error;
+  String? _outcome;
 
   @override
   void initState() {
@@ -155,7 +162,7 @@ class _LibrarySheetState extends State<_LibrarySheet> {
   }
 
   Future<void> _open(AudioMaterial m) async {
-    if (_opening) return;
+    if (_opening || _deleting) return;
     _opening = true;
     final route = ModalRoute.of<void>(context);
     final bool ok;
@@ -180,6 +187,7 @@ class _LibrarySheetState extends State<_LibrarySheet> {
 
   Future<void> _relink(AudioMaterial m) async {
     final s = context.s;
+    final onChanged = widget.onChanged;
     setState(() => _error = null);
     try {
       final picked =
@@ -187,32 +195,114 @@ class _LibrarySheetState extends State<_LibrarySheet> {
                   PlatformRecordingPicker(dialogTitle: s.workbenchRelink))
               .pick();
       if (picked == null || !mounted) return;
+      final clips = await widget.training.loadAudioMaterials();
+      Duration minimum = m.end;
+      for (final clip in clips) {
+        if (clip.file == m.file && clip.end > minimum) minimum = clip.end;
+      }
       final reader = await widget.controller.library.importTo(
         picked,
         relativePath: m.file,
+        minimumDuration: minimum,
       );
       await closeReader(reader);
+    } on RecordingTooShortException catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = s.workbenchRelinkTooShort(
+            formatClock(error.actualLength),
+            formatClock(error.requiredLength),
+          );
+        });
+      }
+      return;
+    } on WavFormatException catch (error) {
+      if (mounted) setState(() => _error = workbenchWavError(s, error.error));
+      return;
     } on Object {
       if (mounted) setState(() => _error = s.workbenchErrorIo);
       return;
     }
+    onChanged();
     await _reload();
   }
 
   Future<void> _delete(AudioMaterial m) async {
+    if (_deleting || _opening) return;
     final s = context.s;
-    setState(() => _error = null);
+    final onChanged = widget.onChanged;
+    setState(() {
+      _deleting = true;
+      _error = null;
+      _outcome = null;
+    });
+    var removed = false;
     try {
+      final materials = await widget.training.loadAudioMaterials();
+      final deleteFile =
+          m.file != widget.controller.file &&
+          m.file != RecordingLibrary.workingFile &&
+          !materials.any((item) => item.id != m.id && item.file == m.file) &&
+          await widget.controller.library.exists(m.file);
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(s.workbenchDeleteClipTitle(m.title)),
+          content: Text(
+            deleteFile
+                ? s.workbenchDeleteClipAndFile
+                : s.workbenchDeleteClipOnly,
+          ),
+          actions: [
+            TextButton(
+              autofocus: true,
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(s.actionCancel),
+            ),
+            FilledButton(
+              key: const ValueKey('workbench-confirm-delete'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(s.workbenchDelete),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
       final stillUsed = await widget.training.deleteAudioMaterial(m.id);
-      // Keep the open recording available for further selections.
-      final open = m.file == widget.controller.file;
-      if (!stillUsed && !open && m.file != RecordingLibrary.workingFile) {
+      removed = true;
+      // Remove audio only within the scope approved in the dialog.
+      final deleteNow =
+          deleteFile && !stillUsed && m.file != widget.controller.file;
+      if (deleteNow) {
         await widget.controller.library.delete(m.file);
       }
+      if (mounted) {
+        setState(
+          () => _outcome = deleteNow
+              ? s.workbenchRemovedClipAndFile
+              : s.workbenchRemovedClip,
+        );
+      }
     } on Object {
-      if (mounted) setState(() => _error = s.workbenchErrorIo);
+      if (mounted) {
+        setState(
+          () => _error = removed
+              ? s.workbenchRemovedClipFileError
+              : s.workbenchErrorIo,
+        );
+      }
+    } finally {
+      if (removed) onChanged();
+      if (mounted) {
+        setState(() => _deleting = false);
+        await _reload();
+      }
     }
-    if (mounted) await _reload();
   }
 
   @override
@@ -236,6 +326,8 @@ class _LibrarySheetState extends State<_LibrarySheet> {
                 error,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
+            if (_outcome case final outcome?)
+              Semantics(liveRegion: true, child: Text(outcome)),
             if (_loadFailed)
               TextButton(onPressed: _reload, child: Text(s.actionRetry))
             else if (items == null)
@@ -268,12 +360,16 @@ class _LibrarySheetState extends State<_LibrarySheet> {
                             if (!present)
                               IconButton(
                                 tooltip: s.workbenchRelink,
-                                onPressed: () => unawaited(_relink(m)),
+                                onPressed: _deleting
+                                    ? null
+                                    : () => unawaited(_relink(m)),
                                 icon: const Icon(Icons.link),
                               ),
                             IconButton(
                               tooltip: s.workbenchDelete,
-                              onPressed: () => unawaited(_delete(m)),
+                              onPressed: _deleting
+                                  ? null
+                                  : () => unawaited(_delete(m)),
                               icon: const Icon(Icons.delete_outline),
                             ),
                           ],
@@ -288,3 +384,17 @@ class _LibrarySheetState extends State<_LibrarySheet> {
     );
   }
 }
+
+String workbenchWavError(S s, WavError? error) => switch (error) {
+  WavError.notRiff || WavError.notWave => s.workbenchErrorNotWav,
+  WavError.unsupportedFormat ||
+  WavError.unsupportedBitDepth => s.workbenchErrorFormat,
+  WavError.unsupportedChannels => s.workbenchErrorChannels,
+  WavError.unsupportedRate => s.workbenchErrorRate,
+  WavError.tooLarge => s.workbenchErrorTooLarge,
+  WavError.tooLong => s.workbenchErrorTooLong,
+  WavError.missingFmt ||
+  WavError.missingData ||
+  WavError.truncated ||
+  null => s.workbenchErrorDamaged,
+};

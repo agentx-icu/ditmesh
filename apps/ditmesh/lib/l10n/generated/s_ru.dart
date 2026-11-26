@@ -96,7 +96,7 @@ class SRu extends S {
   String get errorWrongPassword => 'Неверный пароль. Попробуйте ещё раз.';
 
   @override
-  String get errorPeerOffline => 'Этот контакт не в сети. У Tox нет сервера, поэтому сообщение ждёт, пока контакт снова подключится.';
+  String get errorPeerOffline => 'Контакт не в сети. Сообщение останется в локальной очереди, пока контакт недоступен.';
 
   @override
   String get errorInvalidToxId => 'Недопустимый Tox ID (должно быть 76 шестнадцатеричных символов).';
@@ -302,10 +302,10 @@ class SRu extends S {
   String get accountWelcomeTitle => 'Ваши ключи хранятся на этом устройстве';
 
   @override
-  String get accountWelcomeIntro => 'DitMesh использует одноранговую сеть Tox. Здесь нет сервера и не нужно регистрироваться: ваша учётная запись — это пара ключей, которая хранится только на этом устройстве.';
+  String get accountWelcomeIntro => 'DitMesh использует одноранговую сеть Tox. Регистрация не требуется. Личность — пара ключей, хранящихся на этом устройстве.';
 
   @override
-  String get accountWelcomePointNoServer => 'Нет сервера, номера телефона или электронной почты. Операторы общаются напрямую азбукой Морзе.';
+  String get accountWelcomePointNoServer => 'Не нужны центральный сервер сообщений, телефон и электронная почта. Операторы напрямую обмениваются азбукой Морзе.';
 
   @override
   String get accountWelcomePointTraining => 'Общайтесь лично или в группах азбукой Морзе с помощью обычного ключа или ямбического манипулятора.';
@@ -335,7 +335,7 @@ class SRu extends S {
   String get accountBackupTitle => 'Создайте резервную копию сейчас';
 
   @override
-  String get accountBackupBody => 'Ваши ключи существуют только на этом устройстве. При его потере, сбросе или краже восстановить их не получится: контакты не узнают новую учётную запись, а прогресс обучения будет потерян.';
+  String get accountBackupBody => 'Если данные устройства потеряны и нет пригодной резервной копии, профиль не восстановить. Храните файл резервной копии и пароль к нему.';
 
   @override
   String get accountBackupWhatIsInside => 'Резервная копия содержит ключ личности, зашифрованный вашим паролем, и прогресс обучения. Храните её в безопасном месте вне этого устройства.';
@@ -350,6 +350,9 @@ class SRu extends S {
   String get accountSectionNotifications => 'Уведомления';
 
   @override
+  String get accountNotificationsSystemManaged => 'Разрешения на уведомления управляются устройством.';
+
+  @override
   String get accountNotificationsEnable => 'Показывать уведомления';
 
   @override
@@ -359,7 +362,7 @@ class SRu extends S {
   String get accountNotificationsContent => 'Показывать содержимое сообщений';
 
   @override
-  String get accountNotificationsContentSubtitle => 'Текст и морзе в баннерах и на экране блокировки. Выключено: только сам факт сообщения.';
+  String get accountNotificationsContentSubtitle => 'При отключении в уведомлениях о сообщениях скрываются имя чата, отправитель, текст и код Морзе. Предпросмотр на экране блокировки настраивается в системе.';
 
   @override
   String get accountNotificationsAllow => 'Разрешить уведомления';
@@ -371,7 +374,7 @@ class SRu extends S {
   String get accountNotificationsBlocked => 'Заблокированы в настройках системы';
 
   @override
-  String get accountNotificationsBlockedSubtitle => 'Уведомления о сообщениях DitMesh отключены в настройках системы. Включите их там снова.';
+  String get accountNotificationsBlockedSubtitle => 'В Android откройте Настройки → Приложения → DitMesh → Уведомления и включите уведомления о сообщениях.';
 
   @override
   String get accountNotificationsDenied => 'Уведомления DitMesh выключены в системных настройках.';
@@ -383,16 +386,19 @@ class SRu extends S {
   String get accountBackupShareFile => 'Поделиться резервной копией';
 
   @override
-  String get accountBackupSaved => 'Резервная копия сохранена';
+  String get accountBackupSaved => 'Копия сохранена. Найдите файл .mcqbackup в выбранной папке.';
 
   @override
-  String get accountBackupNotSaved => 'Резервная копия не сохранена';
+  String get accountBackupNotSaved => 'Это сохранение отменено. Можно повторить экспорт.';
+
+  @override
+  String get accountBackupShareReturned => 'Открыто системное меню отправки. Найдите файл .mcqbackup в выбранной папке или в приложении-получателе.';
 
   @override
   String get accountBackupFailed => 'Не удалось записать резервную копию';
 
   @override
-  String get accountBackupAcknowledge => 'Я понимаю, что без этой резервной копии моя учётная запись не может быть восстановлена.';
+  String get accountBackupAcknowledge => 'Я понимаю, что при потере данных устройства без резервной копии восстановить мою учётную запись не удастся.';
 
   @override
   String get accountBackupContinue => 'Перейти в DitMesh';
@@ -700,6 +706,9 @@ class SRu extends S {
   String get chatToxIdLabel => 'Tox ID (76 шестнадцатеричных символов)';
 
   @override
+  String get chatRequestPublicKey => 'Открытый ключ отправителя (64 шестнадцатеричных знака)';
+
+  @override
   String get chatToxIdInvalid => 'Tox ID должен содержать ровно 76 шестнадцатеричных символов';
 
   @override
@@ -725,6 +734,9 @@ class SRu extends S {
 
   @override
   String get chatScanQrDesktopHint => 'На этой платформе сканирование камерой недоступно. Вставьте Tox ID.';
+
+  @override
+  String get chatScanQrManualHint => 'Камера недоступна. Вставьте полный Tox ID или повторите сканирование.';
 
   @override
   String get chatScanQrTitle => 'Сканировать Tox ID';
@@ -1824,7 +1836,7 @@ class SRu extends S {
   String get listenSettings => 'Настройки прослушивания';
 
   @override
-  String get listenDecoded => 'Расшифровано';
+  String get listenDecoded => 'Декодирование в реальном времени';
 
   @override
   String get listenEmptyHint => 'Направьте микрофон на источник сигнала Морзе. Здесь появится расшифрованный текст.';
@@ -1851,7 +1863,7 @@ class SRu extends S {
   String get listenTone => 'Частота тона';
 
   @override
-  String get listenToneLocked => 'Частота найдена';
+  String get listenToneLocked => 'Тон захвачен';
 
   @override
   String get listenToneSearching => 'Поиск';
@@ -2273,7 +2285,7 @@ class SRu extends S {
   String get chatSearchHint => 'Искать в этом чате';
 
   @override
-  String get chatSearchAnyone => 'Все';
+  String get chatSearchAnyone => 'Все отправители';
 
   @override
   String get chatSearchMe => 'Я';
@@ -2580,6 +2592,12 @@ class SRu extends S {
   String get diagTitle => 'Диагностика подключения';
 
   @override
+  String get diagScopeIdentity => 'Все чаты этой учётной записи';
+
+  @override
+  String get diagScopeConversation => 'Только этот чат';
+
+  @override
   String get diagOpenSubtitle => 'Почему сообщения ждут отправки и как переподключиться';
 
   @override
@@ -2676,7 +2694,7 @@ class SRu extends S {
   String get diagPendingHint => 'Сообщения в очереди хранятся на этом устройстве и отправятся сами, когда контакт станет доступен. Диагностика никогда их не удаляет и не отправляет повторно.';
 
   @override
-  String get diagReconnect => 'Переподключиться';
+  String get diagReconnect => 'Переподключить это устройство';
 
   @override
   String get diagReconnecting => 'Переподключение…';
@@ -2693,7 +2711,7 @@ class SRu extends S {
   String get diagAboutTitle => 'Как подключается DitMesh';
 
   @override
-  String get diagAboutBody => 'У DitMesh нет сервера. Устройство общается с контактами напрямую через одноранговую сеть Tox, поэтому для доставки сообщения вы оба должны быть в сети одновременно. Телефоны приостанавливают фоновые приложения: там DitMesh не может оставаться на связи и переподключается, когда вы возвращаетесь.';
+  String get diagAboutBody => 'Устройства передают сообщения напрямую через Tox без центрального сервера сообщений. Публичные загрузочные узлы помогают войти в сеть. Для доставки обе стороны должны быть онлайн. При возврате из фона DitMesh подключится заново.';
 
   @override
   String get diagDetailsTitle => 'Технические подробности';
@@ -2823,7 +2841,7 @@ class SRu extends S {
   String get backupXExporting => 'Создание копии…';
 
   @override
-  String get backupXMigrationNote => 'Переезжаете на новое устройство? После восстановления там перестаньте пользоваться этой личностью здесь: два устройства с одной личностью могут отправить одно сообщение дважды.';
+  String get backupXMigrationNote => 'Меняете устройство? Закройте DitMesh с этим профилем на старом устройстве до подтверждения восстановления на новом. После восстановления новое устройство попытается подключиться.';
 
   @override
   String get backupXBusy => 'Данные менялись во время создания копии. Попробуйте ещё раз.';
@@ -2872,10 +2890,10 @@ class SRu extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count неотправленного сообщения не вошли в копию.',
-      many: '$count неотправленных сообщений со старого устройства не вошли в копию.',
-      few: '$count неотправленных сообщения со старого устройства не вошли в копию.',
-      one: '$count неотправленное сообщение со старого устройства не вошло в копию.',
+      other: 'На момент создания копии было $count сообщений в очереди. В копию они не вошли.',
+      many: 'На момент создания копии в очереди было $count сообщений. В копию они не вошли.',
+      few: 'На момент создания копии в очереди было $count сообщения. В копию они не вошли.',
+      one: 'На момент создания копии в очереди было $count сообщение. В копию оно не вошло.',
     );
     return '$_temp0';
   }
@@ -2890,7 +2908,7 @@ class SRu extends S {
   String get restoreXConfirmTitle => 'Заменить личность на этом устройстве?';
 
   @override
-  String get restoreXConfirmBody => 'Личность и данные на этом устройстве будут заменены копией. Перестаньте пользоваться личностью на старом устройстве, прежде чем подключаться здесь.';
+  String get restoreXConfirmBody => 'Копия заменит профиль и данные на этом устройстве. Закройте DitMesh с этим профилем на старом устройстве, прежде чем выбирать «Заменить и восстановить». После восстановления это устройство попытается подключиться.';
 
   @override
   String get restoreXConfirm => 'Заменить и восстановить';
@@ -2909,15 +2927,7 @@ class SRu extends S {
 
   @override
   String restoreXReportPendingReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count неотправленного сообщения ждут просмотра.',
-      many: '$count неотправленных сообщений ждут просмотра в Чате.',
-      few: '$count неотправленных сообщения ждут просмотра в Чате.',
-      one: '$count неотправленное сообщение ждёт просмотра в Чате.',
-    );
-    return '$_temp0';
+    return 'Из резервной копии восстановлено сообщений для проверки: $count. Откройте список ниже.';
   }
 
   @override
@@ -2925,10 +2935,10 @@ class SRu extends S {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count неотправленного сообщения не перенесены.',
-      many: '$count неотправленных сообщений со старого устройства не перенесены.',
-      few: '$count неотправленных сообщения со старого устройства не перенесены.',
-      one: '$count неотправленное сообщение со старого устройства не перенесено.',
+      other: 'Из $count сообщений в очереди при создании копии ни одно не вошло в неё. Перед отправкой проверьте старое устройство.',
+      many: 'При создании копии в очереди было $count сообщений, не вошедших в копию. Перед отправкой проверьте старое устройство.',
+      few: 'При создании копии в очереди было $count сообщения, не вошедших в копию. Перед отправкой проверьте старое устройство.',
+      one: 'При создании копии в очереди было $count сообщение, не вошедшее в копию. Перед отправкой проверьте старое устройство.',
     );
     return '$_temp0';
   }
@@ -2947,7 +2957,7 @@ class SRu extends S {
   }
 
   @override
-  String get restoreXReportStopOld => 'Больше не используйте эту личность на старом устройстве.';
+  String get restoreXReportStopOld => 'Если DitMesh на старом устройстве ещё использует этот профиль, закройте его сейчас.';
 
   @override
   String get restoreXReportDone => 'Готово';
@@ -2969,7 +2979,7 @@ class SRu extends S {
   String get pendingReviewTitle => 'Неотправленные сообщения';
 
   @override
-  String get pendingReviewBody => 'Эти сообщения ждали отправки на прежнем устройстве. DitMesh никогда не отправляет их сам; передайте ключом заново, если ещё нужно.';
+  String get pendingReviewBody => 'На момент создания резервной копии эти сообщения ожидали отправки на старом устройстве. Восстановленные копии предназначены для проверки и не отправляются автоматически. Перед повторной передачей проверьте, отправило ли их старое устройство.';
 
   @override
   String pendingReviewQueuedAt(String time) {
@@ -2986,10 +2996,10 @@ class SRu extends S {
   String get pendingReviewEmpty => 'Больше нечего просматривать.';
 
   @override
-  String get backupXWizardInside => 'Файл копии целиком шифруется выбранной вами парольной фразой и содержит ключ личности и прогресс тренировок. Храните файл и фразу в надёжном месте вне этого устройства.';
+  String get backupXWizardInside => 'Весь файл шифруется выбранной парольной фразой. Профиль включается всегда. Тренировки и другие данные экспортируются по выбору. Храните файл и парольную фразу в безопасном месте вне устройства.';
 
   @override
-  String get backupXMeSubtitle => 'Зашифрованный файл с личностью, чатами и прогрессом — для хранения или переноса на другое устройство';
+  String get backupXMeSubtitle => 'Зашифруйте резервную копию профиля. Чаты и прогресс тренировок можно добавить по желанию.';
 
   @override
   String get keysTitle => 'Клавиши и внешние ключи';
@@ -2998,7 +3008,7 @@ class SRu extends S {
   String get keysMeSubtitle => 'Назначение клавиш, манипуляторы и USB-адаптеры';
 
   @override
-  String get keysIntro => 'Выберите клавиши для передачи Морзе. USB-адаптеры ключа и манипулятора, эмулирующие клавиатуру, работают как она: задайте их клавиши здесь. Приложение не знает, какое устройство прислало клавишу, поэтому профиль — это набор назначений.';
+  String get keysIntro => 'Настройте устройства, посылающие системные события клавиатуры, в том числе USB и Bluetooth-адаптеры в режиме клавиатуры. Профиль хранит привязки клавиш.';
 
   @override
   String get keysStandardProfile => 'Стандарт';
@@ -3013,7 +3023,7 @@ class SRu extends S {
   String get keysNewProfile => 'Новый профиль';
 
   @override
-  String get keysLimitations => 'MIDI-, последовательные и Bluetooth-ключи, настройки прошивки адаптеров и управление передатчиком не поддерживаются. Проверенные адаптеры перечислены в документации.';
+  String get keysLimitations => 'Прямое подключение по специальным протоколам ключей Bluetooth, MIDI и последовательному порту не поддерживается. Настройка прошивки и управление передатчиком недоступны. Проверенные адаптеры перечислены в документации.';
 
   @override
   String get keysEditTitle => 'Профиль клавиш';
@@ -3293,13 +3303,13 @@ class SRu extends S {
   String get termsGateTitle => 'Правила сообщества';
 
   @override
-  String get termsGateIntro => 'Чат DitMesh соединяет вас с людьми напрямую, без сервера. Прежде чем начать, примите эти правила:';
+  String get termsGateIntro => 'DitMesh передаёт сообщения напрямую через Tox без центрального сервера сообщений. Перед началом примите правила:';
 
   @override
   String get termsGateRuleZero => 'Нулевая терпимость: никакой травли, ненависти, угроз, сексуального контента с участием несовершеннолетних, спама и ничего незаконного.';
 
   @override
-  String get termsGateRuleContacts => 'Писать вам могут только те, кого вы приняли; в группы входят по приглашению или по ID группы.';
+  String get termsGateRuleContacts => 'Личные сообщения приходят от подтверждённых контактов. В группе вы получаете сообщения, которые отправляют её участники.';
 
   @override
   String get termsGateRuleBlock => 'Блокируйте кого угодно из переписки, списка участников группы, запроса дружбы или приглашения.';
@@ -3353,7 +3363,7 @@ class SRu extends S {
   String get bootstrapTitle => 'Сеть и узлы начальной загрузки';
 
   @override
-  String get bootstrapDescription => 'Выберите публичные узлы для подключения к сети Tox.';
+  String get bootstrapDescription => 'Публичные загрузочные узлы помогают этому устройству войти в сеть Tox. Выберите узлы здесь.';
 
   @override
   String get bootstrapModeAuto => 'Автоматически';
@@ -3542,7 +3552,7 @@ class SRu extends S {
   String get firstChatListenTitle => '2. Прослушайте и исправьте';
 
   @override
-  String get firstChatListenBody => 'Перед отправкой прослушайте черновик и удалите ошибки. Затем нажмите воспроизведение у сообщения. Сообщения себе остаются на этом устройстве.';
+  String get firstChatListenBody => 'Перед отправкой прослушайте черновик с помощью маленького треугольника и исправьте его кнопкой «Удалить» рядом с черновиком. После отправки воспроизведите сообщение. Сообщения себе хранятся на этом устройстве.';
 
   @override
   String get firstChatFriendTitle => '3. Общайтесь с другом';
@@ -3782,7 +3792,7 @@ class SRu extends S {
   String get nearbyPrivacyTitle => 'Люди рядом';
 
   @override
-  String get nearbyPrivacyBody => 'DitMesh передаёт ваше отображаемое имя и приблизительное местоположение (с точностью около 100 м) в открытых группах Tox вашей зоны. Эти сведения может получить любой участник такой группы, где бы он ни находился. Ваш Tox ID передаётся, только когда вы сами отправляете запрос пользователю поблизости или отвечаете на него. Поиск работает только на переднем плане.';
+  String get nearbyPrivacyBody => 'DitMesh передаёт ваше отображаемое имя и приблизительное местоположение (с точностью около 100 м) в открытых группах Tox вашей зоны. Эти сведения может получить любой участник такой группы, где бы он ни находился. Ваш Tox ID передаётся, только когда вы сами отправляете запрос пользователю поблизости или отвечаете на него. Поиск работает только на переднем плане. После выхода с экрана людей поблизости данные могут передаваться ещё до 5 минут, пока приложение открыто. Отключите видимость, чтобы остановить передачу.';
 
   @override
   String get nearbyPrivacyAccept => 'Включить';
@@ -3960,4 +3970,220 @@ class SRu extends S {
 
   @override
   String get firstChatReceiptBody => 'В очереди означает сохранение на устройстве; отправлено — принятие транспортом; доставлено требует подтверждения получателя. В группе оно подтверждает хотя бы одного участника, а не то, что все прослушали.';
+
+  @override
+  String pendingReviewDismissAllBody(int count) {
+    return 'Удалить восстановленные сообщения ($count)? Локальные копии, ожидающие проверки, будут удалены навсегда.';
+  }
+
+  @override
+  String get pendingReviewDismissed => 'Восстановленное сообщение удалено.';
+
+  @override
+  String get pendingReviewUndo => 'Отменить';
+
+  @override
+  String get pendingReviewSaveError => 'Не удалось сохранить изменение. Список сообщений сохранён.';
+
+  @override
+  String get restoreXCurrentIdentity => 'Текущий профиль на этом устройстве';
+
+  @override
+  String get restoreXLockedIdentity => 'Заблокирован. Имя и отпечаток недоступны.';
+
+  @override
+  String get restoreXNoCurrentIdentity => 'На этом устройстве нет профиля.';
+
+  @override
+  String get restoreXBackupIdentity => 'Профиль в резервной копии';
+
+  @override
+  String get restoreXPassphraseHelp => 'Введите парольную фразу, заданную при создании этой копии.';
+
+  @override
+  String get restoreXPendingReviewTitle => 'Восстановленные сообщения для проверки';
+
+  @override
+  String get groupInviteAcceptanceFailed => 'Не удалось принять приглашение';
+
+  @override
+  String get groupInviteRetryAccept => 'Повторить попытку';
+
+  @override
+  String get chatDraftOfflineQueue => 'Сообщение останется на этом устройстве, пока собеседник не появится в сети.';
+
+  @override
+  String get chatDraftQueued => 'Добавлено в очередь на этом устройстве.';
+
+  @override
+  String get chatKeyTouchHint => 'Удерживайте ключ на экране';
+
+  @override
+  String get chatPaddleTouchHint => 'Удерживайте одну из лапок на экране';
+
+  @override
+  String get keysSpace => 'Пробел';
+
+  @override
+  String get keysLeftControl => 'Левый Ctrl';
+
+  @override
+  String get keysRightControl => 'Правый Ctrl';
+
+  @override
+  String get keysBindingUnchanged => 'Прежняя привязка сохранена.';
+
+  @override
+  String get backupXGoToPassphrase => 'Задать парольную фразу копии';
+
+  @override
+  String get restoreXFirstConfirmTitle => 'Восстановить эту резервную копию?';
+
+  @override
+  String get restoreXFirstConfirmBody => 'Профиль и перечисленные данные будут восстановлены из копии. Закройте DitMesh с этим профилем на старом устройстве до подтверждения восстановления. Затем это устройство попытается подключиться.';
+
+  @override
+  String get restoreXFirstConfirm => 'Подтвердить восстановление';
+
+  @override
+  String get deliveryMessageTime => 'Время сообщения';
+
+  @override
+  String chatPracticeFromConversation(String name) {
+    return 'Из беседы: $name';
+  }
+
+  @override
+  String get chatRefreshMembers => 'Обновить список участников';
+
+  @override
+  String get pendingSendingUncancellable => 'Начатую отправку уже нельзя отменить.';
+
+  @override
+  String get diagWaitForPeer => 'Дождитесь подключения собеседника или откройте очередь отправки.';
+
+  @override
+  String get diagReconnectOwnNote => 'Переподключится только это устройство. Это не подключит собеседника.';
+
+  @override
+  String get chatScanQrPermissionHelp => 'Доступ к камере запрещён. Разрешите камеру для DitMesh в системных настройках или вставьте полный Tox ID.';
+
+  @override
+  String get groupInviteReconnectHint => 'Это устройство потеряло связь с Tox. Дождитесь подключения и повторите принятие приглашения.';
+
+  @override
+  String restoreXReviewAction(int count) {
+    return 'Проверить сообщения ($count)';
+  }
+
+  @override
+  String get locationEnableHere => 'Включите переключатель местоположения на этой странице.';
+
+  @override
+  String chatSearchConversationScope(String name) {
+    return 'Поиск в беседе с $name';
+  }
+
+  @override
+  String accountBackupSavedNamed(String name) {
+    return 'Копия сохранена: $name';
+  }
+
+  @override
+  String get accountBackupCopyLocation => 'Копировать место сохранения';
+
+  @override
+  String get accountNotificationsPermitted => 'Системные уведомления разрешены';
+
+  @override
+  String workbenchDeleteClipTitle(String name) {
+    return 'Удалить «$name»?';
+  }
+
+  @override
+  String get workbenchDeleteClipAndFile => 'Сохранённый отрезок, заметка и локальная запись в DitMesh будут удалены. Исходный импортированный файл останется.';
+
+  @override
+  String get workbenchDeleteClipOnly => 'Сохранённый отрезок и заметка будут удалены. Файлы записи останутся.';
+
+  @override
+  String get workbenchRemovedClipAndFile => 'Фрагмент и локальная запись удалены.';
+
+  @override
+  String get workbenchRemovedClip => 'Фрагмент удалён. Файл записи не удалялся.';
+
+  @override
+  String get workbenchRemovedClipFileError => 'Фрагмент удалён, но DitMesh не смог удалить локальную запись.';
+
+  @override
+  String get chatRejectRequestTitle => 'Отклонить этот запрос в друзья?';
+
+  @override
+  String get chatRejectRequestBody => 'Этот и последующие запросы будут скрыты. Их можно снова разрешить в «Контакты → Отклонённые запросы».';
+
+  @override
+  String get chatRequestRejected => 'Запрос отклонён. Управляйте будущими запросами в «Контакты → Отклонённые запросы».';
+
+  @override
+  String get chatRejectedRequests => 'Отклонённые запросы';
+
+  @override
+  String get chatRejectedRequestsHelp => 'Запросы с этих открытых ключей скрыты на этом устройстве. Разрешение новых запросов не снимает блокировку.';
+
+  @override
+  String get chatRejectedRequestsEmpty => 'Здесь нет отклонённых отправителей.';
+
+  @override
+  String get chatAllowFutureRequests => 'Разрешить новые запросы';
+
+  @override
+  String get chatFutureRequestsAllowed => 'Фильтр запросов снят. Отдельная блокировка сохраняется.';
+
+  @override
+  String get moderationBlockRequestBody => 'Текущий запрос будет отклонён. Будущие личные сообщения, запросы и приглашения от этого человека будут заблокированы на этом устройстве. Он не получит уведомление.';
+
+  @override
+  String get accountBackupShareClosed => 'Системное меню общего доступа закрыто. Можно снова поделиться копией.';
+
+  @override
+  String get nearbyHideSession => 'Скрыть этот сеанс';
+
+  @override
+  String get nearbySessionHidden => 'Этот сеанс скрыт. Новый сеанс этого человека может снова появиться.';
+
+  @override
+  String get pendingReviewOpenConversation => 'Открыть исходный чат';
+
+  @override
+  String get pendingReviewMissingContact => 'Чат недоступен. Перед повторной отправкой восстановите или добавьте контакт.';
+
+  @override
+  String get pendingReviewMissingGroup => 'Группа недоступна. Вступите в неё снова перед повторной отправкой.';
+
+  @override
+  String get pendingReviewIgnoreCopy => 'Пропустить эту копию';
+
+  @override
+  String pendingReviewDismissedCount(int count) {
+    return 'Пропущенные восстановленные копии: $count.';
+  }
+
+  @override
+  String get groupPracticeCompleteTitle => 'Завершить это упражнение?';
+
+  @override
+  String groupPracticeCompleteBody(int done, int total) {
+    return 'Результаты $done из $total раундов сохраняются на этом устройстве. Незавершённые раунды сохраняют статус. Раунды и результаты нельзя будет изменить.';
+  }
+
+  @override
+  String get groupPracticeEnded => 'Упражнение завершено. Раунды и результаты доступны для просмотра.';
+
+  @override
+  String workbenchRelinkTooShort(String actual, String minimum) {
+    return 'Длина записи: $actual. Для фрагментов нужно не менее $minimum. Выберите более длинный WAV, чтобы восстановить прежние интервалы.';
+  }
+
+  @override
+  String get deliveryFailedNext => 'Откройте исходящие, чтобы повторить отправку этого сообщения.';
 }

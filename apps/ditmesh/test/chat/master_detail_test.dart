@@ -85,7 +85,9 @@ void main() {
 
       await tester.tap(find.byType(PopupMenuButton<ConversationAction>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(s.chatDelete));
+      await tester.tap(
+        find.widgetWithText(PopupMenuItem<ConversationAction>, s.chatDelete),
+      );
       await tester.pumpAndSettle();
       if (shrink) {
         tester.view.physicalSize = const Size(820, 1180);

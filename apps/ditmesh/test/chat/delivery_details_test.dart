@@ -114,6 +114,18 @@ void main() {
     },
   );
 
+  testWidgets('details label the original message time', (tester) async {
+    final m = message(MessageStatus.delivered, 'c2c_$kPeerKey');
+    await pumpChat(
+      tester,
+      (_) => Scaffold(body: MessageStatusIcon(m.status, message: m)),
+    );
+    await tester.tap(find.byIcon(Icons.done_all));
+    await tester.pumpAndSettle();
+    expect(find.text('Message time'), findsOneWidget);
+    expect(find.text(s.deliveryPeerDetail), findsOneWidget);
+  });
+
   testWidgets('self note details describe local storage', (tester) async {
     final m = message(MessageStatus.sent, 'c2c_$kSelfKey');
     await pumpChat(
@@ -159,6 +171,29 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.single.id, failed.id);
     expect(rows.single.status, MessageStatus.pending);
+  });
+
+  testWidgets('failed delivery details open the canonical outbox', (
+    tester,
+  ) async {
+    final h = ChatHarness()..addAnn(withMessage: false);
+    final queued = await h.service.sendText('c2c_$kPeerKey', 'CQ');
+    h.service.failMessage(queued.id);
+    final failed = (await h.service.loadAround(
+      queued.conversationId,
+      queued.id,
+    )).single;
+    await pumpChat(
+      tester,
+      (_) => Scaffold(body: MessageStatusIcon(failed.status, message: failed)),
+      harness: h,
+    );
+    await tester.tap(find.byIcon(Icons.error_outline));
+    await tester.pumpAndSettle();
+    expect(find.text(s.deliveryFailedNext), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, s.pendingMessagesTitle));
+    await tester.pumpAndSettle();
+    expect(find.byKey(ValueKey('pending-retry-${failed.id}')), findsOneWidget);
   });
 
   testWidgets('tapping a queued status opens accessible delivery details', (
@@ -214,5 +249,24 @@ void main() {
     h.service.setFriendOnline(kPeerKey, true);
     await tester.pumpAndSettle();
     expect(find.byKey(ValueKey('pending-row-${queued.id}')), findsNothing);
+  });
+
+  testWidgets('sending leaves the cancellable queue and explains why', (
+    tester,
+  ) async {
+    final h = await pumpChat(tester, (h) {
+      h.addAnn(withMessage: false);
+      return const ChatPage();
+    });
+    final queued = await h.service.sendText('c2c_$kPeerKey', 'CQ');
+    await tester.tap(find.byKey(const ValueKey('pending-messages-open')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(ValueKey('pending-cancel-${queued.id}')), findsOneWidget);
+    h.service.claimMessage(queued.id);
+    await tester.pumpAndSettle();
+    expect(find.byKey(ValueKey('pending-cancel-${queued.id}')), findsNothing);
+    expect(find.text('This send can no longer be cancelled.'), findsOneWidget);
+    expect(find.text(s.messageStatusPending), findsNothing);
+    expect(find.byKey(ValueKey('pending-row-${queued.id}')), findsOneWidget);
   });
 }

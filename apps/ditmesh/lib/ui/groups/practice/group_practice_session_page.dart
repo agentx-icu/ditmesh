@@ -8,12 +8,12 @@ import '../../../i18n/l10n_extension.dart';
 import '../../../training/chat_copy_session.dart';
 import '../../../training/group_practice.dart';
 import '../../../training/training_controller.dart';
+import '../../account/account_widgets.dart';
 import '../../chat/chat_layout.dart';
 import '../../chat/morse_playback_settings.dart';
 import '../../common/app_bar_title.dart';
 import '../../learn/chat_copy/chat_copy_screen.dart';
 import '../../learn/learn_playback.dart';
-import '../../responsive.dart';
 import 'group_practice_page.dart';
 
 /// One local group practice session (F14): its rounds (references to
@@ -124,6 +124,18 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
       if (mounted) showSnack(context, context.s.learnProgressSaveFailed);
       return false;
     }
+  }
+
+  Future<void> _complete(GroupPracticeSession session) async {
+    final s = context.s;
+    final summary = session.summary;
+    final agrees = await confirm(
+      context,
+      title: s.groupPracticeCompleteTitle,
+      body: s.groupPracticeCompleteBody(summary.done, summary.rounds),
+      confirmLabel: s.groupPracticeComplete,
+    );
+    if (agrees && mounted) await _update((book) => book.complete(session.id));
   }
 
   Future<void> _delete(GroupPracticeSession session) async {
@@ -278,6 +290,18 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
     final missing = session.rounds
         .where((r) => _missing.contains(r.messageId))
         .length;
+    final bool useFooter = MediaQuery.sizeOf(context).width < 840;
+    final addRound = FilledButton.tonalIcon(
+      key: const Key('gp-add-round'),
+      onPressed: _addRounds,
+      icon: const Icon(Icons.playlist_add),
+      label: Text(s.groupPracticeAddRound),
+    );
+    final complete = OutlinedButton(
+      key: const Key('gp-complete'),
+      onPressed: () => _complete(session),
+      child: Text(s.groupPracticeComplete),
+    );
     return Scaffold(
       appBar: AppBar(
         title: AppBarTitle(session.title),
@@ -289,22 +313,65 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
           ),
         ],
       ),
-      floatingActionButton: session.completed
-          ? null
-          : FloatingActionButton.extended(
-              key: const Key('gp-add-round'),
-              onPressed: _addRounds,
-              icon: const Icon(Icons.playlist_add),
-              label: Text(
-                s.groupPracticeAddRound,
-                textScaler: edgeLabelTextScaler(context),
+      bottomNavigationBar: useFooter && !session.completed
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  spacing: 8,
+                  overflowSpacing: 4,
+                  children: [addRound, complete],
+                ),
+              ),
+            )
+          : null,
+      body: AccountPageBody(
+        maxWidth: 680,
+        aside: [
+          Card(
+            key: const Key('gp-summary'),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s.groupPracticeSummary,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  Text(s.groupPracticeRoundsDone(sum.done, sum.rounds)),
+                  if (session.completed)
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(s.groupPracticeEnded),
+                    ),
+                  if (missing > 0)
+                    Text(s.groupPracticeUnavailableCount(missing)),
+                  if (sum.attempts > 0) ...[
+                    Text(s.groupPracticeAccuracy((sum.accuracy * 100).round())),
+                    if (sum.assisted > 0)
+                      Text(s.groupPracticeAssisted(sum.assisted)),
+                    const SizedBox(height: 8),
+                    Text(
+                      s.groupPracticeShareHint(
+                        sum.done,
+                        sum.rounds,
+                        (sum.accuracy * 100).round(),
+                      ),
+                      key: const Key('gp-share'),
+                    ),
+                  ],
+                ],
               ),
             ),
-      body: ReadableBody(
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          ),
+          if (!useFooter && !session.completed) complete,
+        ],
+        children: [
+          AccountPanel(
             children: [
               Text(
                 '${groupRoleLabel(s, session.role)} · '
@@ -329,57 +396,26 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
                 ),
               ],
               const SizedBox(height: 8),
-              for (final (i, r) in session.rounds.indexed)
-                _round(i, r, instructor),
-              const Divider(height: 32),
-              Card(
-                key: const Key('gp-summary'),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        s.groupPracticeSummary,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      Text(s.groupPracticeRoundsDone(sum.done, sum.rounds)),
-                      if (missing > 0)
-                        Text(s.groupPracticeUnavailableCount(missing)),
-                      if (sum.attempts > 0) ...[
-                        Text(
-                          s.groupPracticeAccuracy((sum.accuracy * 100).round()),
-                        ),
-                        if (sum.assisted > 0)
-                          Text(s.groupPracticeAssisted(sum.assisted)),
-                        const SizedBox(height: 8),
-                        Text(
-                          s.groupPracticeShareHint(
-                            sum.done,
-                            sum.rounds,
-                            (sum.accuracy * 100).round(),
-                          ),
-                          key: const Key('gp-share'),
-                        ),
-                      ],
-                    ],
-                  ),
+              if (sum.rounds > 0)
+                LinearProgressIndicator(value: sum.done / sum.rounds),
+              if (!useFooter && !session.completed) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: addRound,
                 ),
-              ),
-              if (!session.completed)
-                OutlinedButton(
-                  key: const Key('gp-complete'),
-                  onPressed: () => _update((b) => b.complete(session.id)),
-                  child: Text(s.groupPracticeComplete),
-                ),
+              ],
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          for (final (i, r) in session.rounds.indexed)
+            _round(i, r, instructor, session.completed),
+        ],
       ),
     );
   }
 
-  Widget _round(int i, GroupPracticeRound r, bool instructor) {
+  Widget _round(int i, GroupPracticeRound r, bool instructor, bool completed) {
     final s = context.s;
     final message = _messages[r.messageId];
     final unavailable = _missing.contains(r.messageId);
@@ -411,42 +447,46 @@ class _GroupPracticeSessionPageState extends State<GroupPracticeSessionPage> {
               : s.groupPracticeRoundOpen,
         ),
         subtitle: Text(subtitle),
-        trailing: Wrap(
-          children: [
-            if (unavailable)
-              IconButton(
-                key: Key('gp-recheck-$i'),
-                tooltip: s.actionRetry,
-                icon: const Icon(Icons.refresh),
-                onPressed: () => _resolve(_session!, r),
-              ),
-            if (!instructor && message != null && !unavailable)
-              IconButton(
-                key: Key('gp-copy-$i'),
-                tooltip: s.groupPracticeCopy,
-                icon: const Icon(Icons.hearing),
-                onPressed: () => _copy(r),
-              ),
-            if (instructor && !unavailable)
-              Checkbox(
-                key: Key('gp-done-$i'),
-                value: r.state == GroupRoundState.done,
-                onChanged: (v) => _update(
-                  (b) => b.setRoundState(
-                    widget.sessionId,
-                    r.id,
-                    v == true ? GroupRoundState.done : GroupRoundState.open,
+        trailing: completed
+            ? null
+            : Wrap(
+                children: [
+                  if (unavailable)
+                    IconButton(
+                      key: Key('gp-recheck-$i'),
+                      tooltip: s.actionRetry,
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () => _resolve(_session!, r),
+                    ),
+                  if (!instructor && message != null && !unavailable)
+                    IconButton(
+                      key: Key('gp-copy-$i'),
+                      tooltip: s.groupPracticeCopy,
+                      icon: const Icon(Icons.hearing),
+                      onPressed: () => _copy(r),
+                    ),
+                  if (instructor && !unavailable)
+                    Checkbox(
+                      key: Key('gp-done-$i'),
+                      value: r.state == GroupRoundState.done,
+                      onChanged: (v) => _update(
+                        (b) => b.setRoundState(
+                          widget.sessionId,
+                          r.id,
+                          v == true
+                              ? GroupRoundState.done
+                              : GroupRoundState.open,
+                        ),
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: s.groupPracticeRemoveRound,
+                    icon: const Icon(Icons.close),
+                    onPressed: () =>
+                        _update((b) => b.removeRound(widget.sessionId, r.id)),
                   ),
-                ),
+                ],
               ),
-            IconButton(
-              tooltip: s.groupPracticeRemoveRound,
-              icon: const Icon(Icons.close),
-              onPressed: () =>
-                  _update((b) => b.removeRound(widget.sessionId, r.id)),
-            ),
-          ],
-        ),
       ),
     );
   }

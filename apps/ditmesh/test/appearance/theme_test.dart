@@ -13,11 +13,19 @@ double contrast(Color foreground, Color background) {
 }
 
 void main() {
-  test('the default light appearance has a white canvas', () {
-    final theme = DitmeshTheme.light();
-    expect(theme.scaffoldBackgroundColor, Colors.white);
-    expect(theme.colorScheme.surface, Colors.white);
-  });
+  test(
+    'the default appearance keeps the canvas, controls and panels distinct',
+    () {
+      final light = DitmeshTheme.light();
+      expect(light.scaffoldBackgroundColor, const Color(0xFFF2F7F6));
+      expect(light.colorScheme.surface, Colors.white);
+      expect(light.colorScheme.primary, const Color(0xFF126A5B));
+      expect(light.appBarTheme.backgroundColor, light.colorScheme.surface);
+      final dark = DitmeshTheme.dark();
+      expect(dark.scaffoldBackgroundColor, const Color(0xFF101C19));
+      expect(dark.colorScheme.primary, const Color(0xFF85DCBF));
+    },
+  );
 
   for (final style in UiStyle.values) {
     for (final dark in [false, true]) {

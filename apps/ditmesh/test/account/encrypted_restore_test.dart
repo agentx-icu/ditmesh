@@ -21,8 +21,10 @@ import 'test_app.dart';
 
 final S en = lookupS(const Locale('en'));
 
-Finder _field(String key) =>
-    find.descendant(of: find.byKey(ValueKey(key)), matching: find.byType(TextField));
+Finder _field(String key) => find.descendant(
+  of: find.byKey(ValueKey(key)),
+  matching: find.byType(TextField),
+);
 
 /// F10 restore UI: passphrase → validated preview → identity password when
 /// needed → explicit confirmation → report. Nothing changes before the
@@ -67,7 +69,9 @@ void main() {
             jsonEncode({
               'version': ?preferencesVersion,
               'chat.playback': {'wpm': 23},
-              'notifications': {'muted': ['c2c_${'A' * 64}']},
+              'notifications': {
+                'muted': ['c2c_${'A' * 64}'],
+              },
             }),
           ),
         ),
@@ -84,7 +88,13 @@ void main() {
 
   testWidgets('wrong passphrase, preview, confirm, report', (tester) async {
     files.pickResult = await backupOf(pending: 2);
+    files.pickName = 'identity-archive.mcqebackup';
     await openRestore(tester);
+    expect(
+      find.text('Enter the passphrase you set when creating this backup.'),
+      findsOneWidget,
+    );
+    expect(find.text('identity-archive.mcqebackup'), findsOneWidget);
     // Restore stays disabled until the backup has been opened.
     final restore = find.byKey(const ValueKey('restore-button'));
     expect(tester.widget<FilledButton>(restore).onPressed, isNull);
@@ -102,7 +112,22 @@ void main() {
 
     // Cancelling the confirmation keeps everything as it was.
     await tapVisible(tester, restore);
-    expect(find.text(en.restoreXConfirmTitle), findsOneWidget);
+    expect(find.text('Restore this backup?'), findsOneWidget);
+    expect(find.text('Confirm restore'), findsOneWidget);
+    expect(
+      find.textContaining('before selecting Confirm restore'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('will try to connect'), findsOneWidget);
+    expect(find.text(en.restoreXConfirmTitle), findsNothing);
+    expect(
+      find.byKey(const ValueKey('restore-current-identity')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('restore-backup-identity')),
+      findsOneWidget,
+    );
     await tapVisible(tester, find.text(en.actionCancel));
     expect(identity.current, isNull);
 
@@ -135,9 +160,24 @@ void main() {
 
     await tester.enterText(_field('restore-x-identity-password'), 'id-pass');
     await tapVisible(tester, restore);
+    expect(find.text(en.restoreXIdentityPasswordNote), findsNothing);
     await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
     expect(find.byType(RestoreReportPage), findsOneWidget);
     expect(identity.current?.hasPassword, isTrue);
+  });
+
+  testWidgets('restored pending items have a dedicated review section', (
+    tester,
+  ) async {
+    files.pickResult = await backupOf(pending: 2, withPending: true);
+    await openRestore(tester);
+    await tester.enterText(_field('restore-x-passphrase'), 'correct horse');
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-open')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-button')));
+    await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
+    expect(find.text(en.restoreXPendingReviewTitle), findsOneWidget);
+    expect(find.text(en.restoreXReportPendingReview(2)), findsOneWidget);
+    expect(find.text(en.restoreXReportPendingNotResumed(2)), findsNothing);
   });
 
   testWidgets('an unsupported preferences version is reported as unapplied', (
@@ -166,6 +206,9 @@ void main() {
     await tester.enterText(_field('restore-x-passphrase'), 'correct horse');
     await tapVisible(tester, find.byKey(const ValueKey('restore-x-open')));
     await tapVisible(tester, find.byKey(const ValueKey('restore-button')));
+    expect(find.text(en.restoreXLockedIdentity), findsOneWidget);
+    expect(find.text(en.restoreXConfirmTitle), findsOneWidget);
+    expect(find.text(en.restoreXConfirm), findsOneWidget);
     await tapVisible(tester, find.byKey(const ValueKey('restore-x-confirm')));
 
     final report = find.byType(RestoreReportPage);

@@ -42,16 +42,16 @@ void main() {
       final FocusNode node = _editable(tester, inputKey).focusNode;
       expect(node.hasFocus, isTrue);
 
-      // The keyboard slides up: the pane drops below its minimum height
-      // and starts scrolling. The field must survive that, not remount.
+      // The keyboard shrinks the available height. The input stays within
+      // the page's scroll surface and keeps the same focus node.
       tester.view.viewInsets = _keyboard;
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(_editable(tester, inputKey).focusNode, same(node));
       expect(node.hasFocus, isTrue);
       expect(
-        find.descendant(
-          of: find.byType(MinHeightScrollView),
+        find.ancestor(
+          of: find.byKey(inputKey),
           matching: find.byType(Scrollable),
         ),
         findsWidgets,

@@ -19,24 +19,20 @@ import 'notification_prefs.dart';
 /// [NotificationPrefs.showPattern]: a Morse pattern reveals the text as well,
 /// so hiding one but not the other would not hide anything.
 class NotificationSettingsSection extends StatelessWidget {
-  const NotificationSettingsSection({super.key, required this.header});
+  const NotificationSettingsSection({
+    super.key,
+    required this.header,
+    this.showSystemStatus = true,
+  });
 
   /// The section header, styled by the page.
   final Widget header;
-
-  Future<void> _allow(BuildContext context, NotificationCenter center) async {
-    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
-    final String denied = context.s.accountNotificationsDenied;
-    if (!await center.ensurePermission()) {
-      messenger?.showSnackBar(SnackBar(content: Text(denied)));
-    }
-  }
+  final bool showSystemStatus;
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     final NotificationPrefs prefs = context.watch<NotificationPrefs>();
-    final NotificationCenter? center = context.read<NotificationCenter?>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -59,24 +55,70 @@ class NotificationSettingsSection extends StatelessWidget {
                   ..showPattern = on
               : null,
         ),
-        if (center != null && center.needsPermission)
+        if (showSystemStatus) const NotificationSystemStatus(),
+      ],
+    );
+  }
+}
+
+/// The separate OS permission and channel status can also appear beside the
+/// user's saved notification preferences.
+class NotificationSystemStatus extends StatelessWidget {
+  const NotificationSystemStatus({super.key, this.showSummary = false});
+
+  final bool showSummary;
+
+  Future<void> _allow(BuildContext context, NotificationCenter center) async {
+    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(
+      context,
+    );
+    final String denied = context.s.accountNotificationsDenied;
+    if (!await center.ensurePermission()) {
+      messenger?.showSnackBar(SnackBar(content: Text(denied)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    final center = context.read<NotificationCenter?>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showSummary)
           ListTile(
-            leading: const Icon(Icons.notification_add_outlined),
-            title: Text(s.accountNotificationsAllow),
-            subtitle: Text(s.accountNotificationsAllowSubtitle),
-            onTap: () => unawaited(_allow(context, center)),
+            leading: const Icon(Icons.settings_outlined),
+            title: Text(s.accountNotificationsSystemManaged),
           ),
         if (center != null)
           ValueListenableBuilder<Set<NotificationChannelKind>>(
             valueListenable: center.blockedChannels,
-            builder: (context, blocked, _) =>
-                blocked.contains(NotificationChannelKind.messages)
-                ? ListTile(
-                    leading: const Icon(Icons.notifications_off_outlined),
-                    title: Text(s.accountNotificationsBlocked),
-                    subtitle: Text(s.accountNotificationsBlockedSubtitle),
-                  )
-                : const SizedBox.shrink(),
+            builder: (context, blocked, _) {
+              if (blocked.contains(NotificationChannelKind.messages)) {
+                return ListTile(
+                  leading: const Icon(Icons.notifications_off_outlined),
+                  title: Text(s.accountNotificationsBlocked),
+                  subtitle: Text(s.accountNotificationsBlockedSubtitle),
+                );
+              }
+              if (!center.needsPermission) return const SizedBox.shrink();
+              return ValueListenableBuilder<bool>(
+                valueListenable: center.permissionGranted,
+                builder: (context, allowed, _) => allowed
+                    ? ListTile(
+                        leading: const Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        title: Text(s.accountNotificationsPermitted),
+                      )
+                    : ListTile(
+                        leading: const Icon(Icons.notification_add_outlined),
+                        title: Text(s.accountNotificationsAllow),
+                        subtitle: Text(s.accountNotificationsAllowSubtitle),
+                        onTap: () => unawaited(_allow(context, center)),
+                      ),
+              );
+            },
           ),
       ],
     );

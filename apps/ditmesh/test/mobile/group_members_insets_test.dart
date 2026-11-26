@@ -1,4 +1,4 @@
-// T6 (mobile review): the group members sheet on a 320 px phone at 2x and
+// T6 (mobile review): the group members page on a 320 px phone at 2x and
 // 3x text. The sheet's list scrolls, so overflow is not the question; the
 // last member's menu must still end above the home indicator (the sheet is
 // edge-to-edge) and the member rows must settle without an exception.
@@ -52,9 +52,9 @@ void main() {
       expect(tester.takeException(), isNull);
 
       // Scroll the list to its very end: the last row then sits at the
-      // sheet's bottom edge, which is the screen's bottom edge.
+      // viewport's bottom edge above the system gesture area.
       final Finder list = find.descendant(
-        of: find.byType(BottomSheet),
+        of: find.byKey(const ValueKey('group-members-list')),
         matching: find.byType(Scrollable),
       );
       final Finder lastMenu = find.byKey(
@@ -66,7 +66,9 @@ void main() {
       expect(lastMenu, findsOneWidget);
       expect(
         tester.getRect(lastMenu).bottom,
-        lessThanOrEqualTo(kSmallPhone.height - phonePaddingFor(kSmallPhone).bottom),
+        lessThanOrEqualTo(
+          kSmallPhone.height - phonePaddingFor(kSmallPhone).bottom,
+        ),
       );
       expect(lastMenu.hitTestable(), findsOneWidget);
     });

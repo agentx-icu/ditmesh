@@ -175,7 +175,7 @@ class _BlockingPart {
     final nativeRequests = await svc.getFriendApplications();
     _owner._ensureCurrent(svc);
     if (requested || nativeRequests.any((a) => _key(a.userId) == key)) {
-      await friends.reject(svc, key);
+      await friends.discardBlockedRequest(svc, key);
     }
     // A copy: declining edits the pending list.
     for (final invite in svc.getPendingGroupInvites().toList()) {
@@ -209,6 +209,11 @@ class _BlockingPart {
     final key = _validated(publicKey);
     return _serialized(() async {
       _owner._ensureCurrent(svc);
+      final rejected = await _owner._friendsPart.rejectedKeys(svc);
+      if (!rejected.contains(key)) {
+        await svc.clearDismissedApplicationsAfterAccept(key);
+        _owner._ensureCurrent(svc);
+      }
       await _store(
         svc,
         (scope) => _owner._prefs.removeFromBlackList([key], scope),

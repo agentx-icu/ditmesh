@@ -64,6 +64,14 @@ void main() {
     await pumpPage(tester, conversationId: c2c);
     expect(summary(tester), en.diagSummaryOnlinePeerOffline);
     expect(find.text(en.connectionOffline), findsOneWidget); // the contact
+    expect(find.text('K1ABC'), findsOneWidget);
+    expect(find.text(en.diagWaitForPeer), findsOneWidget);
+    expect(find.text(en.diagReconnectOwnNote), findsOneWidget);
+    expect(find.text(en.diagLastOnlineHint), findsNothing);
+    expect(
+      tester.widget(find.byKey(const ValueKey('diag-reconnect'))),
+      isA<OutlinedButton>(),
+    );
 
     identity.setStatus(ConnectionStatus.offline);
     await tester.pump();

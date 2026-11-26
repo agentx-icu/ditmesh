@@ -41,17 +41,23 @@ final class NotificationComposer {
   /// The identity payloads are tagged with ([NotificationTapTarget.account]).
   final String? Function() _account;
 
+  bool get _hideMessageContent => !_prefs.showText && !_prefs.showPattern;
+
   /// One inbox line: `text  pattern` (either part optional per prefs), with
   /// a `Sender: ` prefix inside groups where the title is the group name.
   String inboxLine(ChatMessage message, {required bool isGroup}) {
     final String line = _parts(message).join('  ');
-    return isGroup ? '${senderLabel(message)}: $line' : line;
+    return isGroup && !_hideMessageContent
+        ? '${senderLabel(message)}: $line'
+        : line;
   }
 
   /// Notification body: text and pattern on separate lines.
   String body(ChatMessage message, {required bool isGroup}) {
     final String text = _parts(message).join('\n');
-    return isGroup ? '${senderLabel(message)}: $text' : text;
+    return isGroup && !_hideMessageContent
+        ? '${senderLabel(message)}: $text'
+        : text;
   }
 
   NotificationRequest message({
@@ -69,13 +75,24 @@ final class NotificationComposer {
     return NotificationRequest(
       id: stableNotificationId(payload),
       channel: NotificationChannelKind.messages,
-      title: PeerText.singleLine(title),
+      title: _hideMessageContent
+          ? _strings().appName
+          : PeerText.singleLine(title),
       body: body(message, isGroup: isGroup),
       payload: payload,
       groupKey: _platform.supportsGrouping
           ? 'ditmesh.messages.$conversationId'
           : null,
-      lines: grouped ? List<String>.unmodifiable(lines) : const <String>[],
+      lines: grouped
+          ? _hideMessageContent
+                ? List<String>.unmodifiable(
+                    List.filled(
+                      lines.length,
+                      _strings().notificationNewMessage,
+                    ),
+                  )
+                : List<String>.unmodifiable(lines)
+          : const <String>[],
       summary: grouped
           ? _strings().notificationNewMessages(lines.length)
           : null,

@@ -21,12 +21,7 @@ abstract interface class KeyTestAudioFactory {
 /// it, and the decoded text. Testing only: nothing is sent, saved or
 /// credited.
 class KeyTestArea extends StatefulWidget {
-  const KeyTestArea({
-    super.key,
-    required this.profile,
-    this.sink,
-    this.clock,
-  });
+  const KeyTestArea({super.key, required this.profile, this.sink, this.clock});
 
   final KeyProfile profile;
 
@@ -65,7 +60,11 @@ class _KeyTestAreaState extends State<KeyTestArea> {
   @override
   void initState() {
     super.initState();
-    unawaited(_sink.prepare());
+    unawaited(
+      _sink.prepare().catchError((Object error) {
+        debugPrint('DitMesh key test audio unavailable: $error');
+      }),
+    );
     _events = _decoder.events.listen((_) {
       if (mounted) setState(() {});
     });
@@ -136,7 +135,10 @@ class _KeyTestAreaState extends State<KeyTestArea> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(s.keysTestTitle, style: theme.textTheme.titleSmall),
+                  child: Text(
+                    s.keysTestTitle,
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
                 TextButton(
                   key: KeyTestArea.releaseKey,

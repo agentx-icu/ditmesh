@@ -30,8 +30,10 @@ final class _DelayedPick implements BackupFileGateway {
   int _picks = 0;
 
   @override
-  Future<Uint8List?> pickBackup() =>
-      _picks++ == 0 ? Future.value(first) : next.future;
+  Future<PickedBackup?> pickBackup() async {
+    final bytes = _picks++ == 0 ? first : await next.future;
+    return bytes == null ? null : (bytes: bytes, name: null);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

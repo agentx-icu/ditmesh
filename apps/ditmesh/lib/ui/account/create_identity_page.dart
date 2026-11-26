@@ -108,66 +108,76 @@ class _CreateIdentityPageState extends State<CreateIdentityPage> {
     return Scaffold(
       appBar: AppBar(title: AppBarTitle(s.accountCreateTitle)),
       body: AccountPageBody(
-        children: [
-          Text(s.accountCreateBody, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _name,
-            autofocus: true,
-            textInputAction: TextInputAction.next,
-            maxLength: 64,
-            decoration: InputDecoration(
-              label: FieldLabel(s.accountDisplayName),
-              hintText: s.accountDisplayNameHint,
-              errorText: _nameError,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          PasswordField(
-            controller: _password,
-            label: s.accountPasswordOptional,
-            showStrength: true,
-            textInputAction: TextInputAction.next,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            s.accountPasswordScope,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (_wantsPassword) ...[
-            const SizedBox(height: 16),
-            PasswordField(
-              controller: _confirm,
-              label: s.accountConfirmPassword,
-              errorText: _confirmError,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-          if (_submitError != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              _submitError!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
+        aside: [
+          AccountPanel(
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                s.accountPasswordScope,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
-          if (_recoveryPending) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: _busy ? null : _discardPending,
-              child: Text(s.accountRecoveryPendingDiscard),
-            ),
-          ],
-          const SizedBox(height: 32),
-          FilledButton(
-            onPressed: _busy ? null : _submit,
-            child: Text(_busy ? s.accountCreating : s.accountCreateButton),
+            ],
+          ),
+        ],
+        children: [
+          AccountPanel(
+            children: [
+              Text(s.accountCreateBody, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _name,
+                autofocus: true,
+                textInputAction: TextInputAction.next,
+                maxLength: 64,
+                decoration: InputDecoration(
+                  label: FieldLabel(s.accountDisplayName),
+                  hintText: s.accountDisplayNameHint,
+                  errorText: _nameError,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              PasswordField(
+                controller: _password,
+                label: s.accountPasswordOptional,
+                showStrength: true,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+              ),
+              if (_wantsPassword) ...[
+                const SizedBox(height: 16),
+                PasswordField(
+                  controller: _confirm,
+                  label: s.accountConfirmPassword,
+                  errorText: _confirmError,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
+                ),
+              ],
+              if (_submitError != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _submitError!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ],
+              if (_recoveryPending) ...[
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: _busy ? null : _discardPending,
+                  child: Text(s.accountRecoveryPendingDiscard),
+                ),
+              ],
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: Text(_busy ? s.accountCreating : s.accountCreateButton),
+              ),
+            ],
           ),
         ],
       ),

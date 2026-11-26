@@ -4,7 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:ditmesh_chat_api/ditmesh_chat_api.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../../i18n/system_date_time.dart';
+import '../account/account_widgets.dart';
+import '../common/app_bar_title.dart';
 import 'chat_scope.dart';
+import 'morse_pattern_text.dart';
+import 'pending_messages_page.dart';
+import 'playback_timeline.dart';
 
 /// Delivery glyph for our own messages. Pending gets a tooltip explaining
 /// that Tox has no server: nothing is lost, it waits for the peer.
@@ -36,7 +42,7 @@ class MessageStatusIcon extends StatelessWidget {
         _group ? s.deliveryGroupDetail : s.deliveryPeerDetail,
       MessageStatus.pending => _pendingReason(context),
       MessageStatus.sending => s.messageStatusSending,
-      MessageStatus.failed => s.messageStatusFailed,
+      MessageStatus.failed => s.deliveryFailedNext,
       MessageStatus.cancelled => s.messageStatusCancelled,
       MessageStatus.received => s.deliveryPeerDetail,
     };
@@ -100,42 +106,111 @@ class MessageStatusIcon extends StatelessWidget {
             .catchError((Object _) {}),
       );
     }
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        builder: (sheetContext) => StreamBuilder<List<Friend>>(
+    Widget observe(Widget Function(BuildContext, ChatMessage?) content) =>
+        StreamBuilder<List<Friend>>(
           stream: service?.friendChanges,
           builder: (context, _) => StreamBuilder<ConnectionStatus>(
             stream: identity?.connectionChanges,
             builder: (context, _) => ValueListenableBuilder<ChatMessage?>(
               valueListenable: latest,
-              builder: (context, current, _) => SafeArea(
-                child: SingleChildScrollView(
-                  key: const ValueKey('delivery-details'),
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        context.s.deliveryDetailsTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(_detail(context, current?.status ?? status)),
-                    ],
-                  ),
-                ),
-              ),
+              builder: (context, current, _) => content(context, current ?? m),
             ),
           ),
+        );
+    final route = Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: AppBarTitle(context.s.deliveryDetailsTitle)),
+          body: observe(_detailPage),
         ),
-      ).whenComplete(() {
+      ),
+    );
+    unawaited(
+      route.whenComplete(() {
         active = false;
         unawaited(subscription?.cancel());
         latest.dispose();
       }),
+    );
+  }
+
+  Widget _detailPage(BuildContext context, ChatMessage? row) {
+    final s = context.s;
+    final state = row?.status ?? status;
+    final colors = Theme.of(context).colorScheme;
+    final acknowledged = state == MessageStatus.delivered && !_self;
+    final stages = <Widget>[
+      if (acknowledged)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(Icons.check, color: colors.primary),
+          title: Text(s.messageStatusSent),
+        ),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(
+          switch (state) {
+            MessageStatus.failed => Icons.error_outline,
+            MessageStatus.pending => Icons.schedule,
+            MessageStatus.sending => Icons.more_horiz,
+            MessageStatus.cancelled => Icons.block,
+            MessageStatus.delivered => Icons.done_all,
+            _ => _self ? Icons.save_outlined : Icons.check,
+          },
+          color: state == MessageStatus.failed ? colors.error : colors.primary,
+        ),
+        title: Text(
+          _self
+              ? s.deliveryLocalTitle
+              : switch (state) {
+                  MessageStatus.pending => s.messageStatusPending,
+                  MessageStatus.sending => s.messageStatusSending,
+                  MessageStatus.sent => s.messageStatusSent,
+                  MessageStatus.delivered =>
+                    _group ? s.deliveryGroupTitle : s.deliveryPeerTitle,
+                  MessageStatus.failed => s.messageStatusFailed,
+                  MessageStatus.cancelled => s.messageStatusCancelled,
+                  MessageStatus.received => s.deliveryPeerTitle,
+                },
+        ),
+        subtitle: Text(_detail(context, state)),
+      ),
+      if (maybeChatService(context) case final ChatService service
+          when state == MessageStatus.failed)
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            icon: const Icon(Icons.outbox_outlined),
+            label: Text(s.pendingMessagesTitle),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => PendingMessagesPage(service: service),
+              ),
+            ),
+          ),
+        ),
+    ];
+    return AccountPageBody(
+      key: const ValueKey('delivery-details'),
+      aside: [
+        if (row != null)
+          AccountPanel(
+            children: [
+              if (!row.isLocation) ...[
+                MorsePatternText(PlaybackTimeline.patternFor(row.text)),
+                const SizedBox(height: 8),
+                SelectableText(row.text),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                s.deliveryMessageTime,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              Text(formatSystemDateTime(context, row.timestamp)),
+            ],
+          ),
+      ],
+      children: [AccountPanel(children: stages)],
     );
   }
 

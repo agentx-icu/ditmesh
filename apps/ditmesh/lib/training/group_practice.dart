@@ -264,9 +264,8 @@ final class GroupPracticeBook {
   GroupPracticeSession? byId(String id) =>
       sessions.where((s) => s.id == id).firstOrNull;
 
-  GroupPracticeBook _replace(GroupPracticeSession next) => GroupPracticeBook([
-    for (final s in sessions) s.id == next.id ? next : s,
-  ]);
+  GroupPracticeBook _replace(GroupPracticeSession next) =>
+      GroupPracticeBook([for (final s in sessions) s.id == next.id ? next : s]);
 
   GroupPracticeBook add(GroupPracticeSession session) =>
       GroupPracticeBook([...sessions, session]);
@@ -283,7 +282,9 @@ final class GroupPracticeBook {
     required DateTime messageAt,
   }) {
     final s = byId(sessionId);
-    if (s == null || s.rounds.any((r) => r.messageId == messageId)) {
+    if (s == null ||
+        s.completed ||
+        s.rounds.any((r) => r.messageId == messageId)) {
       return this;
     }
     return _replace(
@@ -302,7 +303,7 @@ final class GroupPracticeBook {
 
   GroupPracticeBook removeRound(String sessionId, String roundId) {
     final s = byId(sessionId);
-    if (s == null) return this;
+    if (s == null || s.completed) return this;
     return _replace(
       s.copyWith(rounds: [...s.rounds.where((r) => r.id != roundId)]),
     );
@@ -345,9 +346,11 @@ final class GroupPracticeBook {
     GroupPracticeRound Function(GroupPracticeRound) f,
   ) {
     final s = byId(sessionId);
-    if (s == null) return this;
+    if (s == null || s.completed) return this;
     return _replace(
-      s.copyWith(rounds: [for (final r in s.rounds) r.id == roundId ? f(r) : r]),
+      s.copyWith(
+        rounds: [for (final r in s.rounds) r.id == roundId ? f(r) : r],
+      ),
     );
   }
 

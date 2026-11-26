@@ -33,8 +33,18 @@ void main() {
 
     test('rounds dedupe by message; attempts dedupe by exercise id', () {
       var b = GroupPracticeBook.empty.add(session);
-      b = b.addRound('s1', roundId: 'r1', messageId: 'm1', messageAt: DateTime.utc(2026));
-      b = b.addRound('s1', roundId: 'r2', messageId: 'm1', messageAt: DateTime.utc(2026));
+      b = b.addRound(
+        's1',
+        roundId: 'r1',
+        messageId: 'm1',
+        messageAt: DateTime.utc(2026),
+      );
+      b = b.addRound(
+        's1',
+        roundId: 'r2',
+        messageId: 'm1',
+        messageAt: DateTime.utc(2026),
+      );
       expect(b.byId('s1')!.rounds, hasLength(1));
       b = b.recordAttempt('s1', 'r1', _attempt('ex_1', 3));
       b = b.recordAttempt('s1', 'r1', _attempt('ex_1', 3)); // same attempt
@@ -49,7 +59,12 @@ void main() {
 
     test('an unavailable source is never turned into a completed round', () {
       var b = GroupPracticeBook.empty.add(session);
-      b = b.addRound('s1', roundId: 'r1', messageId: 'm1', messageAt: DateTime.utc(2026));
+      b = b.addRound(
+        's1',
+        roundId: 'r1',
+        messageId: 'm1',
+        messageAt: DateTime.utc(2026),
+      );
       b = b.setRoundState('s1', 'r1', GroupRoundState.unavailable);
       b = b.recordAttempt('s1', 'r1', _attempt('ex_1', 5));
       expect(b.byId('s1')!.rounds.single.state, GroupRoundState.unavailable);
@@ -59,9 +74,17 @@ void main() {
 
     test('json round trip and restart through the controller', () async {
       var b = GroupPracticeBook.empty.add(session);
-      b = b.addRound('s1', roundId: 'r1', messageId: 'm1', messageAt: DateTime.utc(2026));
+      b = b.addRound(
+        's1',
+        roundId: 'r1',
+        messageId: 'm1',
+        messageAt: DateTime.utc(2026),
+      );
       b = b.recordAttempt('s1', 'r1', _attempt('ex_1', 4));
-      expect(GroupPracticeBook.fromJson(b.toJson()).byId('s1')!.toJson(), b.byId('s1')!.toJson());
+      expect(
+        GroupPracticeBook.fromJson(b.toJson()).byId('s1')!.toJson(),
+        b.byId('s1')!.toJson(),
+      );
       expect(GroupPracticeBook.fromJson({'v': 9}).sessions, isEmpty);
 
       final t = await TestTraining.create();
@@ -80,11 +103,21 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final chat = FakeChatService(selfPublicKey: 'F' * 64, clock: () => DateTime.utc(2026, 10, 4, 9));
+    final chat = FakeChatService(
+      selfPublicKey: 'F' * 64,
+      clock: () => DateTime.utc(2026, 10, 4, 9),
+    );
     addTearDown(chat.dispose);
-    final group = chat.addFakeGroup(const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group));
+    final group = chat.addFakeGroup(
+      const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+    );
     const conv = 'group_tox_1';
-    final exercise = chat.receiveMessage(conv, 'KM KM', senderId: 'A' * 64, senderName: 'K1ABC');
+    final exercise = chat.receiveMessage(
+      conv,
+      'KM KM',
+      senderId: 'A' * 64,
+      senderName: 'K1ABC',
+    );
     final t = await TestTraining.create(settings: kShortSettings);
     addTearDown(t.controller.dispose);
     final c = t.controller;
@@ -99,18 +132,25 @@ void main() {
         ),
       ),
     );
-    final sentBefore = (await chat.loadHistory(conv)).where((m) => m.isMine).length;
+    final sentBefore = (await chat.loadHistory(
+      conv,
+    )).where((m) => m.isMine).length;
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           Provider<ChatService>.value(value: chat),
-          Provider<LearnPlaybackFactory>.value(value: FakeLearnPlaybackFactory()),
+          Provider<LearnPlaybackFactory>.value(
+            value: FakeLearnPlaybackFactory(),
+          ),
         ],
-        child: l10nApp(home: GroupPracticeSessionPage(controller: c, sessionId: 's1')),
+        child: l10nApp(
+          home: GroupPracticeSessionPage(controller: c, sessionId: 's1'),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(FloatingActionButton), findsNothing);
     await tester.tap(find.byKey(const Key('gp-add-round')));
     await tester.pumpAndSettle();
     // Picked by sender, not by the exercise text.
@@ -141,10 +181,16 @@ void main() {
     expect(round.state, GroupRoundState.done);
     expect(round.attempts.single.correct, round.attempts.single.total);
     // The shared exercise record carries the credit, once.
-    expect(c.progress.history.where((h) => h.id == round.attempts.single.exerciseId), hasLength(1));
+    expect(
+      c.progress.history.where((h) => h.id == round.attempts.single.exerciseId),
+      hasLength(1),
+    );
     expect(c.progress.history.last.source, ExerciseSource.chat);
     // Nothing went to the group; the draft is untouched.
-    expect((await chat.loadHistory(conv)).where((m) => m.isMine).length, sentBefore);
+    expect(
+      (await chat.loadHistory(conv)).where((m) => m.isMine).length,
+      sentBefore,
+    );
     expect(chat.conversations.firstWhere((x) => x.id == conv).draft, isEmpty);
 
     // The source is cleared from history: reopening marks it unavailable.
@@ -154,9 +200,13 @@ void main() {
       MultiProvider(
         providers: [
           Provider<ChatService>.value(value: chat),
-          Provider<LearnPlaybackFactory>.value(value: FakeLearnPlaybackFactory()),
+          Provider<LearnPlaybackFactory>.value(
+            value: FakeLearnPlaybackFactory(),
+          ),
         ],
-        child: l10nApp(home: GroupPracticeSessionPage(controller: c, sessionId: 's1')),
+        child: l10nApp(
+          home: GroupPracticeSessionPage(controller: c, sessionId: 's1'),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -165,17 +215,27 @@ void main() {
     expect(find.text(en.groupPracticeSourceGone), findsOneWidget);
     expect(find.byKey(const Key('gp-copy-0')), findsNothing);
     // Shown, not stored: an empty read may be a history still loading.
-    expect((await c.readGroupPractice()).byId('s1')!.rounds.single.state, GroupRoundState.done);
+    expect(
+      (await c.readGroupPractice()).byId('s1')!.rounds.single.state,
+      GroupRoundState.done,
+    );
   });
 
-  testWidgets('instructor: own exercise messages as a checklist, no copying', (tester) async {
+  testWidgets('instructor: own exercise messages as a checklist, no copying', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(600, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final chat = FakeChatService(selfPublicKey: 'F' * 64, clock: () => DateTime.utc(2026, 10, 4, 9));
+    final chat = FakeChatService(
+      selfPublicKey: 'F' * 64,
+      clock: () => DateTime.utc(2026, 10, 4, 9),
+    );
     addTearDown(chat.dispose);
-    chat.addFakeGroup(const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group));
+    chat.addFakeGroup(
+      const Group(id: 'tox_1', name: 'Net', kind: GroupKind.group),
+    );
     const conv = 'group_tox_1';
     final mine = await chat.sendText(conv, 'PARIS');
     chat.receiveMessage(conv, 'R R', senderId: 'A' * 64);
@@ -196,7 +256,9 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [Provider<ChatService>.value(value: chat)],
-        child: l10nApp(home: GroupPracticeSessionPage(controller: c, sessionId: 's2')),
+        child: l10nApp(
+          home: GroupPracticeSessionPage(controller: c, sessionId: 's2'),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -219,7 +281,10 @@ void main() {
   testWidgets('without a chat session the rounds say so and retry when chat '
       'connects', (tester) async {
     final identity = FakeIdentityService.withProfile(
-      identity: Identity(toxId: FakeIdentityService.toxIdForSeed(5), displayName: 'Me'),
+      identity: Identity(
+        toxId: FakeIdentityService.toxIdForSeed(5),
+        displayName: 'Me',
+      ),
       connectDelay: Duration.zero,
     );
     addTearDown(identity.dispose);
@@ -238,12 +303,19 @@ void main() {
         createdAt: DateTime.utc(2026, 10, 4),
       ),
     );
-    book = book.addRound('s3', roundId: 'r1', messageId: 'm_x', messageAt: DateTime.utc(2026));
+    book = book.addRound(
+      's3',
+      roundId: 'r1',
+      messageId: 'm_x',
+      messageAt: DateTime.utc(2026),
+    );
     await c.updateGroupPractice((_) => book);
     await tester.pumpWidget(
       MultiProvider(
         providers: [Provider<ChatService>.value(value: chat)],
-        child: l10nApp(home: GroupPracticeSessionPage(controller: c, sessionId: 's3')),
+        child: l10nApp(
+          home: GroupPracticeSessionPage(controller: c, sessionId: 's3'),
+        ),
       ),
     );
     await tester.pumpAndSettle();

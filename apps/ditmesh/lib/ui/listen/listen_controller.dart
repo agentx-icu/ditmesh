@@ -65,6 +65,12 @@ final class ListenController extends ChangeNotifier {
     const ListenMeter(),
   );
 
+  // Roughly the last four seconds, bucketed from live audio rather than
+  // synthesized from decoded text.
+  final ValueNotifier<List<double>> waveform = ValueNotifier(const []);
+  int _waveSamples = 0;
+  double _wavePeak = 0;
+
   ListenSettings _settings;
   late AudioMorseDecoder _decoder;
   StreamSubscription<DecodeEvent>? _eventSub;
@@ -183,6 +189,9 @@ final class ListenController extends ChangeNotifier {
     }
     _history = text;
     _decoder.reset();
+    waveform.value = const [];
+    _waveSamples = 0;
+    _wavePeak = 0;
     _shownHz = _decoder.detectedFrequency;
     _shownLocked = false;
     _pcmSub = stream.listen(
@@ -247,6 +256,18 @@ final class ListenController extends ChangeNotifier {
       toneOn: _decoder.isToneOn,
       hasSignal: _decoder.hasSignal,
     );
+    _waveSamples += bytes.length ~/ 2;
+    if (_decoder.currentLevel > _wavePeak) _wavePeak = _decoder.currentLevel;
+    final framesPerBar = sampleRate ~/ 20;
+    if (_waveSamples >= framesPerBar) {
+      final previous = waveform.value;
+      waveform.value = [
+        ...previous.skip(previous.length >= 80 ? 1 : 0),
+        _wavePeak,
+      ];
+      _waveSamples %= framesPerBar;
+      _wavePeak = 0;
+    }
     final hz = _decoder.detectedFrequency;
     final locked = _decoder.isToneLocked;
     if ((hz - _shownHz).abs() >= 1 || locked != _shownLocked) {
@@ -365,6 +386,7 @@ final class ListenController extends ChangeNotifier {
     unawaited(_eventSub?.cancel());
     _decoder.dispose();
     meter.dispose();
+    waveform.dispose();
     unawaited(_shutdownSource());
     super.dispose();
   }

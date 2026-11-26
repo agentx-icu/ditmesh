@@ -6,6 +6,77 @@ import '../responsive.dart';
 import 'listen_controller.dart';
 import 'listen_settings.dart';
 
+/// Recent observed signal envelope. The adjacent meter exposes the same
+/// audio level to assistive technology.
+class ListenWaveform extends StatelessWidget {
+  const ListenWaveform({super.key, required this.samples});
+
+  final ValueListenable<List<double>> samples;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return RepaintBoundary(
+      child: ExcludeSemantics(
+        child: ValueListenableBuilder<List<double>>(
+          valueListenable: samples,
+          builder: (context, values, _) => CustomPaint(
+            painter: _SignalBars(
+              values: values,
+              foreground: colors.primary,
+              background: colors.outlineVariant,
+            ),
+            child: const SizedBox(width: double.infinity, height: 58),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SignalBars extends CustomPainter {
+  const _SignalBars({
+    required this.values,
+    required this.foreground,
+    required this.background,
+  });
+
+  final List<double> values;
+  final Color foreground;
+  final Color background;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.height / 2;
+    canvas.drawLine(
+      Offset(0, center),
+      Offset(size.width, center),
+      Paint()..color = background,
+    );
+    final step = size.width / 80;
+    final paint = Paint()
+      ..color = foreground
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = (step * .6).clamp(1, 4);
+    for (var i = 0; i < values.length; i++) {
+      final peak = values[i].clamp(0.0, 1.0);
+      final x = size.width - (values.length - i - .5) * step;
+      final extent = 1 + (center - 4) * peak;
+      canvas.drawLine(
+        Offset(x, center - extent),
+        Offset(x, center + extent),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SignalBars oldDelegate) =>
+      !identical(oldDelegate.values, values) ||
+      oldDelegate.foreground != foreground ||
+      oldDelegate.background != background;
+}
+
 /// Signal meter plus tone indicator, rebuilt per audio chunk from
 /// [ListenController.meter] without touching the rest of the screen.
 class ListenLevelMeter extends StatelessWidget {
@@ -203,6 +274,14 @@ class ListenDecodedText extends StatelessWidget {
               ],
             ),
           ),
+          if (text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                s.workbenchToneNote,
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
           Expanded(
             child: Stack(
               children: <Widget>[

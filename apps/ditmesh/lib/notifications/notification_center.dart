@@ -14,6 +14,7 @@ import 'notification_payload.dart';
 import 'notification_platform.dart';
 import 'notification_prefs.dart';
 
+part 'notification_center_events.dart';
 part 'notification_center_session.dart';
 
 /// Posts OS notifications for chat events and keeps the unread badge in step
@@ -137,8 +138,16 @@ class NotificationCenter {
   bool _started = false;
   bool _ready = false;
   bool _disposed = false;
+  bool _hadMessagePreviews = false;
 
-  bool _permissionGranted = false;
+  final ValueNotifier<bool> _permissionState = ValueNotifier(false);
+
+  ValueListenable<bool> get permissionGranted => _permissionState;
+  bool get _permissionGranted => _permissionState.value;
+  set _permissionGranted(bool value) {
+    if (!_disposed) _permissionState.value = value;
+  }
+
   bool _permissionAsked = false;
   Future<bool>? _permissionRequest;
 
@@ -219,6 +228,8 @@ class NotificationCenter {
     // the plugin's initialisation included).
     final int tapsBefore = _tapCount;
     _isForeground.addListener(_onForegroundChanged);
+    _hadMessagePreviews = _prefs.showText || _prefs.showPattern;
+    _prefs.addListener(_onPreviewPreferenceChanged);
     if (_platform.supportsOsNotifications) {
       _ready = await _notifications.initialize(onTap: _onTap);
     }
@@ -273,8 +284,12 @@ class NotificationCenter {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
-    if (_started) _isForeground.removeListener(_onForegroundChanged);
+    if (_started) {
+      _isForeground.removeListener(_onForegroundChanged);
+      _prefs.removeListener(_onPreviewPreferenceChanged);
+    }
     _blocked.dispose();
+    _permissionState.dispose();
     final pending = <Future<void>>[
       ?_messageSub?.cancel(),
       ?_friendRequestSub?.cancel(),
@@ -295,122 +310,21 @@ class NotificationCenter {
 
   // ---- Inbound events --------------------------------------------------------
 
-  void _onMessage(ChatMessage message) {
-    if (message.isMine ||
-        message.isUpdate ||
-        message.status != MessageStatus.received) {
-      return;
-    }
-    final String id = message.conversationId;
-    if (_isForeground.value && _activeConversation == id) return;
-    if (!_prefs.enabled || _prefs.isMuted(id)) return;
-
-    final Conversation? conversation = _conversationFor(id);
-    final bool isGroup =
-        (conversation?.kind ?? NotificationComposer.kindFromId(id)) ==
-        ConversationKind.group;
-    final String title =
-        conversation?.title ??
-        (isGroup
-            ? NotificationComposer.shortKey(NotificationComposer.peerFromId(id))
-            : NotificationComposer.senderLabel(message));
-
-    final List<ChatMessage> recent = _inbox.putIfAbsent(
-      id,
-      () => <ChatMessage>[],
-    );
-    recent.add(message);
-    if (recent.length > NotificationComposer.maxInboxLines) {
-      recent.removeRange(0, recent.length - NotificationComposer.maxInboxLines);
-    }
-    final int generation = _ledger.posted(id, message);
-    unawaited(
-      _post(
-        () => _composer.message(
-          message: message,
-          title: title,
-          isGroup: isGroup,
-          lines: [
-            for (final m in recent) _composer.inboxLine(m, isGroup: isGroup),
-          ],
-        ),
-        stillWanted: () =>
-            !_prefs.isMuted(id) && _ledger.isCurrent(id, generation),
-      ),
-    );
-  }
-
-  void _onFriendRequests(List<FriendRequest> requests) {
-    final DateTime? since = _startedAt;
-    final Set<String> current = <String>{};
-    for (final FriendRequest request in requests) {
-      current.add(request.publicKey);
-      final bool fresh = since != null && !request.receivedAt.isBefore(since);
-      if (_knownFriendRequests.add(request.publicKey) &&
-          fresh &&
-          _prefs.enabled) {
-        final String key = request.publicKey;
-        unawaited(
-          _post(
-            () => _composer.friendRequest(request),
-            stillWanted: () => _knownFriendRequests.contains(key),
-          ),
-        );
+  void _onPreviewPreferenceChanged() {
+    final show = _prefs.showText || _prefs.showPattern;
+    final hiding = _hadMessagePreviews && !show;
+    _hadMessagePreviews = show;
+    if (!hiding) return;
+    for (final entry in _inbox.entries.toList()) {
+      if (entry.value.isNotEmpty) {
+        unawaited(_repostSilently(entry.key, entry.value));
       }
     }
-    // Answered (or withdrawn) requests: forget them so a repeat notifies
-    // again, and take their banner down.
-    for (final String gone in _knownFriendRequests.difference(current)) {
-      unawaited(_cancel(FriendRequestTarget(gone, account: _account).encode()));
-    }
-    _knownFriendRequests
-      ..clear()
-      ..addAll(current);
-  }
-
-  void _onGroupInvites(List<GroupInvite> invites) {
-    final Set<String> current = <String>{};
-    for (final GroupInvite invite in invites) {
-      current.add(invite.inviteId);
-      if (_knownInvites.add(invite.inviteId) && _prefs.enabled) {
-        final String inviteId = invite.inviteId;
-        unawaited(
-          _post(
-            () => _composer.groupInvite(
-              invite,
-              fromName: _friendName(invite.fromPublicKey),
-            ),
-            stillWanted: () => _knownInvites.contains(inviteId),
-          ),
-        );
-      }
-    }
-    for (final String gone in _knownInvites.difference(current)) {
-      unawaited(_cancel(GroupInviteTarget(gone, account: _account).encode()));
-    }
-    _knownInvites
-      ..clear()
-      ..addAll(current);
-  }
-
-  void _onConversations(List<Conversation> conversations) {
-    var total = 0;
-    final Set<String> live = <String>{};
-    for (final Conversation conversation in conversations) {
-      live.add(conversation.id);
-      total += conversation.unreadCount;
-      // Read in-app (markRead) or from another surface: drop the banner.
-      if (_inbox.containsKey(conversation.id) &&
-          _ledger.showsRead(conversation)) {
+    for (final conversation in _chat.conversations) {
+      if (!_inbox.containsKey(conversation.id)) {
         unawaited(_clearConversation(conversation.id));
       }
     }
-    // Deleted conversations: drop their banners (a materialised list:
-    // _clearConversation mutates _inbox synchronously).
-    for (final String id in _ledger.deleted(_inbox.keys, live)) {
-      unawaited(_clearConversation(id));
-    }
-    _updateBadge(total);
   }
 
   void _onForegroundChanged() {

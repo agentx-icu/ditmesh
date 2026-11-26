@@ -782,6 +782,24 @@ void main() {
 
   group('review regressions', () {
     test(
+      'closing previews silently removes details from an existing banner',
+      () async {
+        final h = await harness();
+        await h.receive('PRIVATE PAYLOAD');
+        expect(h.api.last?.body, contains('PRIVATE PAYLOAD'));
+        h.prefs
+          ..showText = false
+          ..showPattern = false;
+        await pumpEventQueue();
+        final result = h.api.last!;
+        expect(result.title, en.appName);
+        expect(result.body, en.notificationNewMessage);
+        expect(result.silentUpdate, isTrue);
+        expect(result.sound, isFalse);
+      },
+    );
+
+    test(
       'hiding message content also hides lines already in the inbox',
       () async {
         final Harness h = await harness();

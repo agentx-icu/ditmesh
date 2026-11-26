@@ -55,6 +55,41 @@ void main() {
     expect(find.textContaining(s.chatConferenceBadge), findsOneWidget);
   });
 
+  testWidgets('long group ID stays visible after typing on a 402 dp phone', (
+    tester,
+  ) async {
+    await pumpChat(
+      tester,
+      (_) => const GroupsPage(),
+      size: const Size(402, 874),
+    );
+    await tester.tap(find.byTooltip(s.chatJoinGroup));
+    await tester.pumpAndSettle();
+    final field = find.byType(TextFormField).first;
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
+    final id = '0123456789abcdef' * 4;
+    await tester.enterText(field, id);
+    await tester.pump();
+    final input = tester.widget<EditableText>(editable);
+    final render = tester.state<EditableTextState>(editable).renderEditable;
+    expect(input.controller.text, id);
+    final start = render.getLocalRectForCaret(const TextPosition(offset: 0));
+    final end = render.getLocalRectForCaret(TextPosition(offset: id.length));
+    expect(
+      start.top,
+      greaterThanOrEqualTo(0),
+      reason: 'the prefix stays above the first line',
+    );
+    expect(
+      end.bottom,
+      lessThanOrEqualTo(render.size.height),
+      reason: 'the suffix also fits',
+    );
+  });
+
   testWidgets('join by chat id validates then joins', (tester) async {
     final ChatHarness h = await pumpChat(
       tester,

@@ -6,6 +6,7 @@ import 'package:morse_io/morse_io.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/l10n_extension.dart';
+import '../account/account_widgets.dart';
 import '../common/app_bar_title.dart';
 import '../fill_or_scroll_view.dart';
 import '../responsive.dart';
@@ -237,6 +238,37 @@ class _ListenScreenState extends State<ListenScreen>
     final listening = _controller.isListening;
     final busy = _controller.isBusy;
     final S s = context.s;
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final livePanel = FillOrScrollView(
+      children: <Widget>[
+        ListenStatusBanner(
+          controller: _controller,
+          onRetry: () => unawaited(_start()),
+        ),
+        if (listening)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: ListenWaveform(samples: _controller.waveform),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: ListenLevelMeter(meter: _controller.meter),
+        ),
+        ListenFrequencyPanel(controller: _controller),
+        FlexFloor(
+          height: 160,
+          child: ListenDecodedText(
+            text: _controller.text,
+            isListening: listening,
+            scrollController: _scroll,
+            onCopy: _copy,
+            textKey: ListenScreen.decodedTextKey,
+          ),
+        ),
+        ListenStatsRow(controller: _controller),
+        const SizedBox(height: 72),
+      ],
+    );
     return Scaffold(
       appBar: AppBar(
         title: AppBarTitle(s.listenTitle),
@@ -260,39 +292,34 @@ class _ListenScreenState extends State<ListenScreen>
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            // Banner, meter, tone panel and stats are fixed; on a landscape
-            // phone, a split-screen half or at large text they leave the
-            // decoded text no room, so the page scrolls instead.
-            child: FillOrScrollView(
-              children: <Widget>[
-                ListenStatusBanner(
-                  controller: _controller,
-                  onRetry: () => unawaited(_start()),
+        child: wide
+            ? Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Card(margin: EdgeInsets.zero, child: livePanel),
+                    ),
+                    const SizedBox(width: 16),
+                    SizedBox(
+                      width: 280,
+                      child: SingleChildScrollView(
+                        child: AccountPanel(
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => unawaited(_openWorkbench()),
+                              icon: const Icon(Icons.audio_file_outlined),
+                              label: Text(s.workbenchOpen),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: ListenLevelMeter(meter: _controller.meter),
-                ),
-                ListenFrequencyPanel(controller: _controller),
-                FlexFloor(
-                  height: 160,
-                  child: ListenDecodedText(
-                    text: _controller.text,
-                    isListening: listening,
-                    scrollController: _scroll,
-                    onCopy: _copy,
-                    textKey: ListenScreen.decodedTextKey,
-                  ),
-                ),
-                ListenStatsRow(controller: _controller),
-                const SizedBox(height: 72),
-              ],
-            ),
-          ),
-        ),
+              )
+            : livePanel,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: busy ? null : _toggle,
